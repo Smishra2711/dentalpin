@@ -192,6 +192,20 @@ async def test_delete_category(client: AsyncClient, auth_headers: dict, catalog_
     )
     assert get_response.status_code == 404
 
+    # Soft-deleted → can be reactivated through PUT (the categories UI relies on it)
+    reactivate = await client.put(
+        f"/api/v1/catalog/categories/{category_id}",
+        json={"is_active": True},
+        headers=auth_headers,
+    )
+    assert reactivate.status_code == 200, reactivate.text
+    assert reactivate.json()["data"]["is_active"] is True
+    get_response = await client.get(
+        f"/api/v1/catalog/categories/{category_id}",
+        headers=auth_headers,
+    )
+    assert get_response.status_code == 200
+
 
 @pytest.mark.asyncio
 async def test_list_catalog_items(

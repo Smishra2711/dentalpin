@@ -1,14 +1,29 @@
 <script setup lang="ts">
 import type { TreatmentCatalogItem, TreatmentCatalogItemUpdate, TreatmentCatalogItemCreate, TreatmentCatalogCategory, VatTypeBrief } from '~~/app/types'
 
+import { PERMISSIONS } from '~~/app/config/permissions'
+
 const { t, locale } = useI18n()
-const { isAdmin } = usePermissions()
+const { isAdmin, can } = usePermissions()
 const catalog = useCatalog()
+const canAdmin = computed(() => can(PERMISSIONS.catalog.admin))
 
 // Modal state
 const showModal = ref(false)
 const editingItem = ref<TreatmentCatalogItem | null>(null)
 const isSaving = ref(false)
+const showCategoriesModal = ref(false)
+
+// Default catalog seed (empty-catalog repair path)
+const isSeeding = ref(false)
+const showSeedAction = computed(() =>
+  canAdmin.value && !searchQuery.value && !selectedCategoryId.value && catalog.totalItems.value === 0
+)
+async function handleSeedDefaults() {
+  isSeeding.value = true
+  await catalog.seedDefaults()
+  isSeeding.value = false
+}
 
 // Delete confirmation state
 const showDeleteConfirm = ref(false)
@@ -211,6 +226,14 @@ const categoryOptions = computed(() => [
         </p>
       </div>
       <div class="flex items-center gap-2">
+        <UButton
+          v-if="canAdmin"
+          variant="outline"
+          icon="i-lucide-tags"
+          @click="showCategoriesModal = true"
+        >
+          {{ t('catalog.categories') }}
+        </UButton>
         <UButton
           v-if="isAdmin"
           icon="i-lucide-plus"
@@ -483,6 +506,21 @@ const categoryOptions = computed(() => [
           class="w-12 h-12 mx-auto mb-4 opacity-50"
         />
         <p>{{ t('catalog.noItems') }}</p>
+        <div
+          v-if="showSeedAction"
+          class="mt-6 max-w-md mx-auto space-y-3"
+        >
+          <UButton
+            icon="i-lucide-download"
+            :loading="isSeeding"
+            @click="handleSeedDefaults"
+          >
+            {{ t('catalog.loadDefaults') }}
+          </UButton>
+          <p class="text-caption text-subtle">
+            {{ t('catalog.loadDefaultsHint') }}
+          </p>
+        </div>
       </div>
 
       <!-- Items table -->
@@ -616,6 +654,8 @@ const categoryOptions = computed(() => [
       @create="handleCreateItem"
       @save="handleSaveItem"
     />
+
+    <CatalogCategoriesModal v-model:open="showCategoriesModal" />
 
     <!-- Delete Confirmation Modal -->
     <UModal v-model:open="showDeleteConfirm">

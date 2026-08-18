@@ -2491,8 +2491,10 @@ TREATMENTS: dict[str, list[dict[str, Any]]] = {
 
 async def _ensure_vat_types(
     db: AsyncSession, clinic_id: UUID, vat_preset: str = "es"
-) -> dict[str, UUID]:
+) -> tuple[dict[str, UUID], int]:
+    """Return ``(key -> id map, number created)``."""
     vat_type_map: dict[str, UUID] = {}
+    created = 0
     for vat_data in VAT_PRESETS.get(vat_preset, VAT_PRESETS["generic"]):
         existing = await db.execute(
             select(VatType).where(
@@ -2511,8 +2513,9 @@ async def _ensure_vat_types(
             )
             db.add(vat)
             await db.flush()
+            created += 1
         vat_type_map[vat_data["key"]] = vat.id
-    return vat_type_map
+    return vat_type_map, created
 
 
 def _zero_pricing_config(config: dict[str, Any]) -> dict[str, Any]:
@@ -2537,7 +2540,7 @@ async def seed_catalog(
     ``with_prices=False`` seeds every price as 0 — used for non-EUR clinics
     where the Spanish reference prices would be meaningless.
     """
-    vat_type_map = await _ensure_vat_types(db, clinic_id, vat_preset)
+    vat_type_map, vat_types_created = await _ensure_vat_types(db, clinic_id, vat_preset)
 
     categories_created = 0
     items_created = 0
@@ -2638,8 +2641,32 @@ async def seed_catalog(
     return {
         "categories": categories_created,
         "items": items_created,
-        "vat_types": len(vat_type_map),
+        "vat_types": vat_types_created,
     }
+
+
+async def seed_clinic_defaults(db: AsyncSession, clinic_id: UUID) -> dict:
+    """Seed the default catalog using the clinic's own country / currency.
+
+    Single entry point for "give this clinic the stock catalog": the
+    ``clinic.created`` handler and the admin ``POST /catalog/seed`` endpoint
+    both go through here so the preset derivation lives in one place.
+    Idempotent (delegates to ``seed_catalog``).
+    """
+    from app.core.auth.country_presets import get_preset
+    from app.core.auth.models import Clinic
+
+    clinic = await db.get(Clinic, clinic_id)
+    if clinic is None:
+        raise ValueError(f"Clinic {clinic_id} not found")
+    country = (clinic.settings or {}).get("country")
+    # Reference prices are Spanish EUR figures — meaningless in other currencies.
+    return await seed_catalog(
+        db,
+        clinic_id,
+        vat_preset=get_preset(country).vat_preset,
+        with_prices=clinic.currency == "EUR",
+    )
 
 
 async def seed_all_clinics(db: AsyncSession) -> dict:
@@ -2651,5 +2678,5 @@ async def seed_all_clinics(db: AsyncSession) -> dict:
 
     summary = {}
     for clinic in clinics:
-        summary[str(clinic.id)] = await seed_catalog(db, clinic.id)
+        summary[str(clinic.id)] = await seed_clinic_defaults(db, clinic.id)
     return summary

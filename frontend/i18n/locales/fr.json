@@ -1553,7 +1553,21 @@
     "onboarding": {
       "label": "Catalogue de soins",
       "description": "Sans soins, pas de devis ni de plans. Chargez le catalogue par défaut ou créez les vôtres."
-    }
+    },
+    "manageCategories": "Gérer les catégories",
+    "newCategory": "Nouvelle catégorie",
+    "categoryName": "Nom",
+    "categoryNamePlaceholder": "p. ex. Orthodontie",
+    "categoryOrder": "Ordre",
+    "noCategories": "Aucune catégorie. Créez-en une ou chargez le catalogue par défaut.",
+    "inactiveCategories": "Catégories inactives",
+    "reactivate": "Réactiver",
+    "deleteCategoryConfirm": "La catégorie sera désactivée ; ses traitements sont conservés. Continuer ?",
+    "systemCategoryNote": "Les catégories système ne peuvent pas être modifiées ni supprimées.",
+    "loadDefaults": "Charger le catalogue par défaut",
+    "loadDefaultsHint": "Types de TVA, catégories et traitements de référence selon le pays de la clinique. Seules les lignes manquantes sont ajoutées.",
+    "defaultsLoaded": "Catalogue chargé : {categories} catégories, {items} traitements, {vat_types} types de TVA",
+    "defaultsFailed": "Impossible de charger le catalogue par défaut"
   },
   "placeholders": {
     "selectRole": "Sélectionner un rôle..."

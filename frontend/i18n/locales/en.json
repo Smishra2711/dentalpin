@@ -1553,7 +1553,21 @@
     "onboarding": {
       "label": "Treatment catalog",
       "description": "Without treatments there are no budgets or plans. Load the default catalog or create your own."
-    }
+    },
+    "manageCategories": "Manage categories",
+    "newCategory": "New category",
+    "categoryName": "Name",
+    "categoryNamePlaceholder": "e.g. Orthodontics",
+    "categoryOrder": "Order",
+    "noCategories": "No categories. Create one or load the default catalog.",
+    "inactiveCategories": "Inactive categories",
+    "reactivate": "Reactivate",
+    "deleteCategoryConfirm": "The category will be deactivated; its treatments are kept. Continue?",
+    "systemCategoryNote": "System categories cannot be edited or deleted.",
+    "loadDefaults": "Load default catalog",
+    "loadDefaultsHint": "VAT types, categories and reference treatments for the clinic country. Only missing rows are added.",
+    "defaultsLoaded": "Catalog loaded: {categories} categories, {items} treatments, {vat_types} VAT types",
+    "defaultsFailed": "Could not load the default catalog"
   },
   "placeholders": {
     "selectRole": "Select role..."
