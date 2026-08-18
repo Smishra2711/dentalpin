@@ -527,7 +527,11 @@ async def test_cancel_plan_removes_planned_treatments(
         f"/api/v1/treatment_plan/treatment-plans/{plan_id}",
         headers=auth_headers,
     )
-    treatment_id = plan_resp.json()["data"]["items"][0]["treatment"]["id"]
+    treatment_brief = plan_resp.json()["data"]["items"][0]["treatment"]
+    treatment_id = treatment_brief["id"]
+    # The nested brief carries the treatment notes (migrated treatments keep
+    # their legacy label there — issue #184).
+    assert "notes" in treatment_brief
 
     # draft → pending (auto-creates draft budget)
     r = await client.post(
@@ -549,9 +553,16 @@ async def test_cancel_plan_removes_planned_treatments(
     r = await client.post(
         f"/api/v1/treatment_plan/treatment-plans/{plan_id}/close",
         headers=auth_headers,
-        json={"closure_reason": "cancelled_by_clinic"},
+        json={"closure_reason": "cancelled_by_clinic", "closure_note": "moved abroad"},
     )
     assert r.status_code == 200, r.text
+    # Closure metadata is part of the response so the reactivate dialog can
+    # show the previous reason (issue #184).
+    closed = r.json()["data"]
+    assert closed["status"] == "closed"
+    assert closed["closure_reason"] == "cancelled_by_clinic"
+    assert closed["closure_note"] == "moved abroad"
+    assert closed["closed_at"] is not None
 
     assert await _treatment_is_deleted(client, auth_headers, setup["patient_id"], treatment_id)
 
