@@ -579,13 +579,29 @@ and namespace every top-level key under your module name
 (e.g. `"inventory": { "nav": { "items": "Items" } }`) to avoid
 collisions with the host and with other modules.
 
-TypeScript aliases inside layer files: `~` resolves per-layer, so use
-`~~` (rootDir, = host frontend root) to reach shared types:
+TypeScript aliases inside layer files: `~~` (rootDir, = host frontend
+root) reaches shared host code. `~` is a trap: Vite rewrites it to the
+layer at build time (`nuxt:layer-aliasing`), but `vue-tsc` maps it to
+the host `frontend/app`, so `~/composables/useFoo` type-checks against
+a file that does not exist. Use **relative imports** for sibling files
+inside your layer and `~~/app/...` for the host:
 
 ```ts
 import type { Patient } from '~~/app/types'
 import { PERMISSIONS } from '~~/app/config/permissions'
+import { useInventory } from '../composables/useInventory'   // sibling in the layer
 ```
+
+Type-check the host plus every layer before opening a PR — CI runs the
+same command (`frontend-typecheck`):
+
+```bash
+cd frontend && npm run typecheck:layers && git checkout modules.json
+```
+
+It rewrites `modules.json` to list every `module_layers/*/frontend`
+(the symlink ESLint uses), so stop the dev frontend container first —
+it watches that file and restarts on change.
 
 ### Backend-driven navigation
 
