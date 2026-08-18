@@ -11,6 +11,8 @@ frontend as a Nuxt layer under its own Python package.
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-08-18
+
 ### Added
 
 - **First-run onboarding redesign** (`/setup`, dashboard "Puesta en
@@ -36,6 +38,62 @@ frontend as a Nuxt layer under its own Python package.
     + public `POST /auth/set-password`; `UserCreate.password` optional;
     `/set-password` page; "access link" row action doubles as an
     admin-driven password reset.
+- **Treatment categories can be managed from the UI** (#190).
+  Settings → Catalog → *Categorías*: create, rename, reorder,
+  deactivate and reactivate. The category CRUD API existed with no
+  screen behind it, and the treatment form requires a category, so a
+  clinic with none could not create a single treatment.
+- **"Load default catalog"** (#190). `POST /catalog/seed` (admin) adds
+  the stock VAT types, categories and reference treatments for the
+  clinic's country — only what is missing, safe to repeat. Offered in
+  the empty state of Settings → Catalog, where the getting-started
+  card already sends you. This is the repair path for installs created
+  on 2.2.x (which seeded nothing on setup) or where the automatic seed
+  failed.
+- **Payments: reallocate a collection** from the patient ledger
+  ("Asignar a presupuesto…") and pick the destination when recording
+  one (`AllocationTargetSelect`), instead of typing a budget UUID (#178).
+
+### Fixed
+
+- **One collection now updates every surface** (#178). Recording a
+  payment on an invoice, on a quote or on account converged on
+  different tables and never met: invoice payments ignored the
+  invoice's budget, quote payments never reached the invoice, refunds
+  left the invoice status stale and the patient billing summary
+  ignored refunds. Billing now mirrors payment allocations onto the
+  budget's open invoices, invoices issued from a quote sweep the
+  anticipos already collected (they may be born *paid*), and refunds
+  are reflected everywhere. No schema change.
+- **Event handlers that silently did nothing** (#183). Handlers that
+  opened their own DB session ran before the publisher committed and
+  could not see its rows. Two were live production bugs: recall
+  auto-link on scheduling had never worked (FK violation swallowed by
+  the handler) and the welcome message on patient creation was never
+  queued. 23 handlers now run inside the publisher's transaction
+  ([ADR 0019](docs/adr/0019-transactional-event-handlers.md)); a CI
+  guard fails when a publisher of a transactional event forgets to
+  forward its session. Also removes the `SKIP LOCKED` / commit-first
+  workarounds that only existed because of the second session, and an
+  earned-revenue entry can no longer outlive a treatment whose request
+  rolled back.
+- **Production frontend image ships every module layer** (#174).
+  Modules installed after the image was built (e.g. `accounting_export`
+  on the demo) had no page and a raw sidebar label. The prod build now
+  bakes all layers; the backend's active-module list decides what is
+  visible, and permissions of inactive modules no longer surface
+  settings cards.
+- **Reactivating a deactivated treatment category** returned 404
+  (#190).
+- **Nuxt typecheck** of the host app is clean again (8 stale errors);
+  the module-layer backlog is tracked in #184.
+
+### Changed
+
+- **Module authoring docs no longer teach "publish after commit"** —
+  every module `events.md` states the mode each handler runs in, and
+  `creating-modules.md` §6 carries the decision tree and the savepoint
+  pattern (#183).
 
 ## [2.2.2] - 2026-08-15
 
