@@ -1574,7 +1574,8 @@
     },
     "onboarding": {
       "label": "Catálogo de tratamientos",
-      "description": "Sin tratamientos no se pueden crear presupuestos ni planes. Carga el catálogo por defecto o crea los tuyos."
+      "description": "Sin tratamientos no se pueden crear presupuestos ni planes. Carga el catálogo por defecto o crea los tuyos.",
+      "createOwn": "Prefiero crear los míos"
     },
     "manageCategories": "Gestionar categorías",
     "newCategory": "Nueva categoría",
