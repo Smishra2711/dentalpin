@@ -231,14 +231,14 @@ const { format: formatCurrency } = useCurrency()
                     {{ formatDate(budget.created_at) }}
                   </span>
                   <span
-                    v-if="budget.treatment_plan_id"
+                    v-if="budget.plan_number_snapshot"
                     class="text-caption text-subtle flex items-center gap-1"
                   >
                     <UIcon
                       name="i-lucide-link"
                       class="w-3 h-3"
                     />
-                    {{ t('budget.linkedToPlan') }}
+                    {{ t('budget.linkedToPlan') }} {{ budget.plan_number_snapshot }}
                   </span>
                 </div>
               </div>

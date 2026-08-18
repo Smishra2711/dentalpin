@@ -88,13 +88,8 @@ export function useDocuments() {
           headers: {
             Authorization: `Bearer ${auth.accessToken.value}`
           },
-          // Note: browser handles Content-Type for FormData automatically
-          onRequest({ options }) {
-            // Remove content-type to let browser set it with boundary
-            if (options.headers) {
-              delete (options.headers as Record<string, string>)['Content-Type']
-            }
-          },
+          // No Content-Type: ofetch leaves it unset for FormData bodies so
+          // the browser adds the multipart boundary.
           onRequestError() {
             uploadProgress.value = null
           },

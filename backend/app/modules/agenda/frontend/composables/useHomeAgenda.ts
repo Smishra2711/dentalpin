@@ -62,8 +62,10 @@ export function useHomeAgenda() {
   }
 
   return {
-    todayAppointments: readonly(todayAppointments),
-    tomorrowUnconfirmed: readonly(tomorrowUnconfirmed),
+    // shallowReadonly (see useAppointments): the list cannot be swapped,
+    // elements keep their `Appointment` type for child props.
+    todayAppointments: shallowReadonly(todayAppointments),
+    tomorrowUnconfirmed: shallowReadonly(tomorrowUnconfirmed),
     todayLoaded: readonly(todayLoaded),
     tomorrowLoaded: readonly(tomorrowLoaded),
     fetchToday,

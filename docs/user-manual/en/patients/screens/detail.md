@@ -14,7 +14,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/patients/router.py
   - backend/app/modules/patients/frontend/pages/patients/[id].vue
-last_verified_commit: 4752264
+last_verified_commit: e1d6873
 ---
 
 # Patient detail
@@ -97,6 +97,12 @@ a **Pending to charge** card at the top.
 - Each payment in the timeline has a row menu: **View detail**,
   **Assign to quote…** (moves an on-account deposit to the chosen
   quote and, if it has issued invoices, applies it) and **Refund**.
+
+## Budgets tab
+
+**Administration → Budgets** lists the patient's quotes. Quotes generated
+from a treatment plan carry a "Linked to plan `<plan number>`" tag next to
+their date, so reception can tell a plan quote from a standalone one.
 
 ## "Do not contact"
 

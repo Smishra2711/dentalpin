@@ -235,7 +235,7 @@ function getAppointmentDayIndex(appointment: Appointment): number {
 }
 
 // Get cabinet color
-function getCabinetColor(cabinetName: string): string {
+function getCabinetColor(cabinetName: string | null): string {
   const cabinet = props.cabinets?.find(c => c.name === cabinetName)
   return cabinet?.color || '#6B7280' // Default gray
 }

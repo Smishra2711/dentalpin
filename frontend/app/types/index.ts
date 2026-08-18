@@ -189,9 +189,25 @@ export interface PatientCreate {
   billing_email?: string
 }
 
-export interface PatientUpdate extends Partial<PatientCreate> {
+/**
+ * PATCH payload. Every field is optional and an explicit `null` clears the
+ * stored value (the backend applies `exclude_unset`), which is why this is
+ * not `Partial<PatientCreate>` — create never sends `null`.
+ */
+export interface PatientUpdate {
+  first_name?: string
+  last_name?: string
+  phone?: string | null
+  email?: string | null
+  date_of_birth?: string | null
+  notes?: string | null
   status?: 'active' | 'archived'
   do_not_contact?: boolean
+  // Billing fields
+  billing_name?: string | null
+  billing_tax_id?: string | null
+  billing_address?: PatientBillingAddress | null
+  billing_email?: string | null
 }
 
 // Appointment treatment brief (from planned treatment item)
@@ -565,6 +581,13 @@ export interface ToothRecordWithTreatments extends ToothRecord {
   is_rotated: boolean
   displacement_notes?: string
 }
+
+// ============================================================================
+// Clinical tab (patient record) — mode shared by the patients layer's tab and
+// the odontogram layer's <ClinicalModeToggle>.
+// ============================================================================
+
+export type ClinicalMode = 'history' | 'diagnosis' | 'plans' | 'appointments'
 
 // ============================================================================
 // VAT Type Types
@@ -996,6 +1019,8 @@ export interface BudgetListItem {
   valid_until?: string
   total: number
   created_at: string
+  /** Plan number when generated from a treatment plan (denormalized snapshot). */
+  plan_number_snapshot?: string | null
   patient?: PatientBrief
   creator?: UserBrief
 }
@@ -1927,15 +1952,15 @@ export interface PatientExtended extends Patient {
 }
 
 export interface PatientExtendedUpdate extends PatientUpdate {
-  // Extended demographics
-  gender?: string
-  national_id?: string
-  national_id_type?: string
-  profession?: string
-  workplace?: string
+  // Extended demographics (`null` clears, see PatientUpdate)
+  gender?: string | null
+  national_id?: string | null
+  national_id_type?: string | null
+  profession?: string | null
+  workplace?: string | null
   preferred_language?: string
-  address?: PatientAddress
-  photo_url?: string
+  address?: PatientAddress | null
+  photo_url?: string | null
 
   // Emergency contact
   emergency_contact?: EmergencyContact
