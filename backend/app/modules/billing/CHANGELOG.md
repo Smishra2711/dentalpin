@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- refactor(#184): the invoice edit page no longer casts the embedded patient brief to `Patient`; a `displayedPatient` computed falls back from the user's pick to the invoice brief, and `patient_id` is only sent when a different patient was actually chosen.
 - fix(#184): type-check clean. `GET /invoices/{id}/payments` returns `InvoicePaymentDetailResponse` (link row + embedded `PaymentResponse`) — the patient billing summary rendered `payment_date`/`method` the link row never had; `InvoiceDetail.invoice_payments` mirrors the API (`payments` did not exist); invoices embed billing's own patient brief (`InvoicePatientBrief`, with billing fields); the from-budget page loads the full patient for the billing card (the budget brief has no billing fields, so it always showed the fallback); the new-invoice form drops the dead billing inputs the API ignores; readonly items typed `DeepReadonly` where only read.
 - docs(#183): `on_clinic_created` documented as own-session — published after setup commits, and seeding series must not stretch the signup transaction.
 - fix(#178): budget ↔ invoice bridge (`payment_bridge.py`). Payments
