@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PatientBillingSummary, InvoiceListItem, PaginatedResponse, Payment } from '~~/app/types'
+import type { PatientBillingSummary, InvoiceListItem, InvoicePaymentDetail, PaginatedResponse } from '~~/app/types'
 import { PERMISSIONS } from '~~/app/config/permissions'
 
 const props = defineProps<{
@@ -20,7 +20,7 @@ const pageSize = 20
 const totalPages = computed(() => Math.ceil(invoicesTotal.value / pageSize))
 const isLoading = ref(true)
 const expandedInvoices = ref<Set<string>>(new Set())
-const invoicePayments = ref<Map<string, Payment[]>>(new Map())
+const invoicePayments = ref<Map<string, InvoicePaymentDetail[]>>(new Map())
 const loadingPayments = ref<Set<string>>(new Set())
 
 async function loadInvoices() {
@@ -367,31 +367,19 @@ watch(() => props.patientId, () => {
                         {{ t('invoice.payments.title') }}
                       </p>
                       <div
-                        v-for="payment in invoicePayments.get(invoice.id)"
-                        :key="payment.id"
+                        v-for="link in invoicePayments.get(invoice.id)"
+                        :key="link.id"
                         class="flex items-center gap-4 text-sm"
-                        :class="{ 'opacity-50': payment.is_voided }"
                       >
                         <span class="text-muted w-20">
-                          {{ formatDate(payment.payment_date) }}
+                          {{ formatDate(link.payment.payment_date) }}
                         </span>
                         <span class="text-muted w-28">
-                          {{ getPaymentMethodLabel(payment.payment_method) }}
+                          {{ getPaymentMethodLabel(link.payment.method) }}
                         </span>
-                        <span
-                          class="font-medium"
-                          :class="payment.is_voided ? 'line-through text-subtle' : 'text-default'"
-                        >
-                          {{ formatCurrency(payment.amount) }}
+                        <span class="font-medium text-default">
+                          {{ formatCurrency(link.amount) }}
                         </span>
-                        <UBadge
-                          v-if="payment.is_voided"
-                          color="error"
-                          variant="subtle"
-                          size="xs"
-                        >
-                          {{ t('invoice.payments.voided') }}
-                        </UBadge>
                       </div>
                     </div>
                   </td>

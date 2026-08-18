@@ -346,3 +346,30 @@ async def test_manual_invoice_still_collects_on_account(
         "data"
     ]
     assert (invj["status"], Decimal(str(invj["total_paid"]))) == ("paid", Decimal("50.00"))
+
+
+@pytest.mark.asyncio
+async def test_invoice_payments_list_embeds_payment(
+    client: AsyncClient,
+    auth_headers: dict,
+    test_clinic: Clinic,
+    test_patient: Patient,
+    db_session: AsyncSession,
+) -> None:
+    """GET /invoices/{id}/payments returns link rows with the Payment embedded.
+
+    Invoice-side views render date/method from it (issue #184).
+    """
+    inv = await _draft_invoice(db_session, test_clinic, test_patient, "50.00", None)
+    await _issue(client, auth_headers, inv.id)
+    link = await _pay_invoice(client, auth_headers, inv.id, "50.00")
+
+    r = await client.get(f"/api/v1/billing/invoices/{inv.id}/payments", headers=auth_headers)
+    assert r.status_code == 200, r.text
+    rows = r.json()["data"]
+    assert [row["id"] for row in rows] == [link["id"]]
+    assert Decimal(str(rows[0]["amount"])) == Decimal("50.00")
+    payment = rows[0]["payment"]
+    assert payment["id"] == link["payment_id"]
+    assert (payment["method"], payment["payment_date"]) == ("cash", TODAY)
+    assert Decimal(str(payment["net_amount"])) == Decimal("50.00")

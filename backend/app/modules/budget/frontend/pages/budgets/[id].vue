@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { DeepReadonly } from 'vue'
 import type { BudgetItem, InvoiceListItem, PaginatedResponse, SignatureCreate } from '~~/app/types'
 import { BUDGET_STATUS_ROLE } from '~~/app/config/severity'
 import { PERMISSIONS } from '~~/app/config/permissions'
@@ -167,7 +168,7 @@ function handleItemAdded() {
   loadBudget()
 }
 
-async function handleRemoveItem(item: BudgetItem) {
+async function handleRemoveItem(item: DeepReadonly<BudgetItem>) {
   if (!currentBudget.value) return
   if (!confirm(t('budget.items.remove') + '?')) return
 
@@ -542,7 +543,7 @@ const infoItems = computed<InfoItem[]>(() => {
   return items
 })
 
-function getItemName(item: BudgetItem): string {
+function getItemName(item: DeepReadonly<BudgetItem>): string {
   if (!item.catalog_item) return '-'
   return item.catalog_item.names[locale.value] || item.catalog_item.names.es || item.catalog_item.internal_code
 }

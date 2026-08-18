@@ -1423,6 +1423,19 @@ export interface PaymentsTrends {
 }
 
 // Billing-side link to a Payment (issue #53).
+/**
+ * Patient summary embedded in invoice responses (billing's own
+ * `PatientBrief`): unlike the shared brief it carries the billing party
+ * fields, because drafts take billing data from the patient dynamically.
+ */
+export interface InvoicePatientBrief extends PatientBrief {
+  billing_name?: string | null
+  billing_tax_id?: string | null
+  billing_address?: PatientBillingAddress | null
+  billing_email?: string | null
+  has_complete_billing_info: boolean
+}
+
 export interface InvoicePayment {
   id: string
   invoice_id: string
@@ -1430,6 +1443,11 @@ export interface InvoicePayment {
   amount: number
   created_by: string
   created_at: string
+}
+
+/** Invoice↔payment link row with the payment embedded (GET /invoices/{id}/payments). */
+export interface InvoicePaymentDetail extends InvoicePayment {
+  payment: PaymentRecord
 }
 
 export interface InvoicePaymentApply {
@@ -1546,39 +1564,6 @@ export interface InvoiceItemUpdate {
   display_order?: number
 }
 
-// Payment
-export interface Payment {
-  id: string
-  invoice_id: string
-  amount: number
-  payment_method: PaymentMethod
-  payment_date: string
-  reference?: string
-  notes?: string
-  recorded_by: string
-  created_at: string
-  // Voiding
-  is_voided: boolean
-  voided_at?: string
-  voided_by?: string
-  void_reason?: string
-  // Related
-  recorder?: UserBrief
-  voider?: UserBrief
-}
-
-export interface PaymentCreate {
-  amount: number
-  payment_method: PaymentMethod
-  payment_date?: string
-  reference?: string
-  notes?: string
-}
-
-export interface PaymentVoidRequest {
-  reason: string
-}
-
 // Invoice History
 export interface InvoiceHistoryEntry {
   id: string
@@ -1654,7 +1639,7 @@ export interface Invoice {
   updated_at: string
   deleted_at?: string
   // Related
-  patient?: PatientBrief
+  patient?: InvoicePatientBrief
   creator?: UserBrief
   issuer?: UserBrief
   budget?: BudgetBrief
@@ -1663,7 +1648,7 @@ export interface Invoice {
 
 export interface InvoiceDetail extends Invoice {
   items: InvoiceItem[]
-  payments: Payment[]
+  invoice_payments: InvoicePayment[]
 }
 
 export interface InvoiceListItem {
@@ -1680,7 +1665,7 @@ export interface InvoiceListItem {
   // {"ES": {state, severity, error_message, ...}}). Owned by the
   // active compliance module — billing exposes it raw.
   compliance_data?: Record<string, Record<string, unknown>> | null
-  patient?: PatientBrief
+  patient?: InvoicePatientBrief
   creator?: UserBrief
 }
 

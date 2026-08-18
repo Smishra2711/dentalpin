@@ -1230,7 +1230,14 @@ class InvoicePaymentService:
                 InvoicePayment.clinic_id == clinic_id,
                 InvoicePayment.invoice_id == invoice_id,
             )
-            .options(joinedload(InvoicePayment.payment))
+            .options(
+                joinedload(InvoicePayment.payment).options(
+                    selectinload(PaymentModel.allocations),
+                    selectinload(PaymentModel.refunds),
+                    joinedload(PaymentModel.recorder),
+                    joinedload(PaymentModel.patient),
+                )
+            )
             .order_by(desc(InvoicePayment.created_at))
         )
         return list(result.scalars().unique().all())

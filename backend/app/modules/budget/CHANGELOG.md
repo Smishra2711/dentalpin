@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix(#184): type-check clean — item helpers on the detail page accept the readonly item view.
 - feat(#184): `BudgetListResponse` exposes `plan_number_snapshot` so patient-side lists can show the plan link without importing treatment_plan.
 - fix(#183): the three plan-sync handlers are transactional (ADR 0019); a failed mirror now fails the request instead of leaving the quote out of sync with the plan.
 - fix(#183): `budget.superseded` is published before commit like every other event — the treatment_plan handler shares the session, so the FK to the new budget row resolves. Removes the documented "sole deviation from the publish-before-commit pattern".

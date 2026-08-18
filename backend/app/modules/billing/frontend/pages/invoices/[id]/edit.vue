@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { DeepReadonly } from 'vue'
 import type { InvoiceItem, Patient } from '~~/app/types'
 import { errorMessage } from '~~/app/utils/error'
 
@@ -37,14 +38,14 @@ const deletedItemIds = ref<Set<string>>(new Set())
 
 // Item modal state
 const isItemModalOpen = ref(false)
-const editingItem = ref<InvoiceItem | undefined>(undefined)
+const editingItem = ref<DeepReadonly<InvoiceItem> | undefined>(undefined)
 
 function openAddItemModal() {
   editingItem.value = undefined
   isItemModalOpen.value = true
 }
 
-function openEditItemModal(item: InvoiceItem) {
+function openEditItemModal(item: DeepReadonly<InvoiceItem>) {
   editingItem.value = item
   isItemModalOpen.value = true
 }
@@ -124,7 +125,7 @@ function markItemForDeletion(itemId: string) {
 }
 
 // Get item display name (from catalog if available)
-function getItemName(item: InvoiceItem): string {
+function getItemName(item: DeepReadonly<InvoiceItem>): string {
   if (item.catalog_item) {
     return item.catalog_item.names[locale.value] || item.catalog_item.names.es || item.catalog_item.internal_code
   }

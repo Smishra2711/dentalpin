@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import type { DeepReadonly } from 'vue'
 import type { InvoiceItem, InvoiceItemCreate, TreatmentCatalogItem, VatType } from '~~/app/types'
 import { errorMessage } from '~~/app/utils/error'
 
 const props = defineProps<{
   invoiceId: string
-  editItem?: InvoiceItem // If provided, modal is in edit mode
+  editItem?: DeepReadonly<InvoiceItem> // If provided, modal is in edit mode
 }>()
 
 const open = defineModel<boolean>('open', { default: false })
@@ -213,7 +214,7 @@ function populateFromEditItem() {
   form.quantity = item.quantity
   form.vat_type_id = item.vat_type_id
   form.tooth_number = item.tooth_number
-  form.surfaces = item.surfaces || []
+  form.surfaces = [...(item.surfaces ?? [])]
   form.discount_type = item.discount_type
   form.discount_value = item.discount_value
 

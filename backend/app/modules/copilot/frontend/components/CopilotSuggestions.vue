@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Empty-state starter chips. Each chip is gated by the same RBAC string the
 // underlying capability uses, so a user only ever sees what they could do.
-import { PERMISSIONS } from '~/config/permissions'
+import { PERMISSIONS } from '~~/app/config/permissions'
 
 const { t } = useI18n()
 const { can } = usePermissions()

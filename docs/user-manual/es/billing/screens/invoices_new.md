@@ -13,7 +13,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/billing/frontend/pages/invoices/new.vue
   - backend/app/modules/billing/router.py
-last_verified_commit: b1b82f5
+last_verified_commit: e1d6873
 ---
 
 # Nueva factura
@@ -28,9 +28,11 @@ Para facturar a partir de un presupuesto aceptado usa la
 
 ## De un vistazo
 
-- **Receptor.** Por defecto el paciente. *Pagador distinto* permite
-  apuntar a un tercero (compañía, mutua, familiar) con sus propios
-  datos fiscales.
+- **Receptor.** El paciente. Los datos de facturación (nombre, NIF,
+  dirección, email) no se teclean aquí: el borrador los lee en vivo
+  de la ficha del paciente y se congelan al emitir. Una etiqueta
+  indica si al paciente le faltan datos de facturación, con enlace
+  para completarlos en su ficha.
 - **Líneas libres.** Añade ítems del catálogo con cantidad,
   descuento, IVA. También puedes meter líneas manuales (sin ítem
   del catálogo) cuando lo necesites para cargos especiales.
@@ -44,8 +46,9 @@ Para facturar a partir de un presupuesto aceptado usa la
 
 > Requiere `billing.write`.
 
-1. Selecciona paciente. Si la factura va a otro pagador, pulsa
-   *Pagador distinto* y completa NIF, nombre y dirección fiscal.
+1. Selecciona paciente. Si la etiqueta indica que faltan datos de
+   facturación, complétalos en la ficha del paciente (enlace bajo el
+   selector).
 2. Añade líneas: ítem del catálogo, cantidad, descuento, IVA.
 3. Revisa totales (subtotal, descuento, IVA, total).
 4. **Guardar**. La factura nace en `draft`. Para emitirla, abre el

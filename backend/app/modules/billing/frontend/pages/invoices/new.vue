@@ -19,18 +19,10 @@ const vatTypes = ref<VatType[]>([])
 const selectedPatient = ref<Patient | null>(null)
 
 // Form data
+// Billing party is not part of the payload: drafts take it from the
+// patient dynamically and it is snapshotted on issue.
 const form = ref({
   patient_id: '',
-  billing_name: '',
-  billing_tax_id: '',
-  billing_email: '',
-  billing_address: {
-    street: '',
-    city: '',
-    postal_code: '',
-    province: '',
-    country: 'ES'
-  },
   payment_term_days: 30,
   due_date: '',
   internal_notes: '',
@@ -67,21 +59,7 @@ onMounted(async () => {
 // When patient is selected
 function handlePatientSelect(patient: Patient | null) {
   selectedPatient.value = patient
-  if (patient) {
-    form.value.patient_id = patient.id
-    // Auto-populate billing data: 1. Patient billing fields, 2. Patient personal info
-    form.value.billing_name = patient.billing_name || `${patient.first_name} ${patient.last_name}`
-    form.value.billing_tax_id = patient.billing_tax_id || ''
-    form.value.billing_email = patient.billing_email || patient.email || ''
-    if (patient.billing_address) {
-      form.value.billing_address = { ...patient.billing_address }
-    }
-  } else {
-    form.value.patient_id = ''
-    form.value.billing_name = ''
-    form.value.billing_tax_id = ''
-    form.value.billing_email = ''
-  }
+  form.value.patient_id = patient?.id ?? ''
 }
 
 // Remove item
@@ -152,10 +130,6 @@ async function handleSubmit() {
   try {
     const invoice = await createInvoice({
       patient_id: form.value.patient_id,
-      billing_name: form.value.billing_name || undefined,
-      billing_tax_id: form.value.billing_tax_id || undefined,
-      billing_email: form.value.billing_email || undefined,
-      billing_address: form.value.billing_address.street ? form.value.billing_address : undefined,
       payment_term_days: form.value.payment_term_days,
       due_date: form.value.due_date || undefined,
       internal_notes: form.value.internal_notes || undefined,
@@ -271,33 +245,15 @@ function goBack() {
           </p>
         </UCard>
 
-        <!-- Billing data -->
+        <!-- Payment terms (billing party comes from the patient) -->
         <UCard>
           <template #header>
             <h3 class="font-semibold text-default">
-              {{ t('invoice.billingData') }}
+              {{ t('invoice.paymentTerms') }}
             </h3>
           </template>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <UFormField :label="t('invoice.billingName')">
-              <UInput v-model="form.billing_name" />
-            </UFormField>
-
-            <UFormField :label="t('invoice.taxId')">
-              <UInput
-                v-model="form.billing_tax_id"
-                placeholder="NIF/CIF"
-              />
-            </UFormField>
-
-            <UFormField :label="t('invoice.billingEmail')">
-              <UInput
-                v-model="form.billing_email"
-                type="email"
-              />
-            </UFormField>
-
             <UFormField :label="t('invoice.paymentTermDays')">
               <UInput
                 v-model.number="form.payment_term_days"
