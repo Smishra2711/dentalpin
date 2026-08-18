@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { isAbsolute, join, resolve } from 'node:path'
 
 /**
  * Load Nuxt Layer paths from `modules.json`.
@@ -29,6 +29,13 @@ function loadModuleLayers(): { layers: string[], names: string[] } {
 
 const { layers: moduleLayers, names: moduleLayerNames } = loadModuleLayers()
 const modulesJsonPath = resolve(__dirname, 'modules.json')
+// Layers referenced by a path inside this directory (`./module_layers/...`,
+// the symlink CI and ESLint use). Nuxt only auto-includes layers that live
+// outside rootDir or under `layers/*/app` in the generated tsconfig, so
+// without an explicit include `nuxt typecheck` silently skips every layer
+// page. Absolute paths (the Docker mount) are outside rootDir and already
+// included by Nuxt itself.
+const localLayers = moduleLayers.filter(layer => !isAbsolute(layer))
 
 export default defineNuxtConfig({
 
@@ -107,6 +114,14 @@ export default defineNuxtConfig({
         '@vue/devtools-core',
         '@vue/devtools-kit'
       ]
+    }
+  },
+
+  typescript: {
+    tsConfig: {
+      include: localLayers.map(layer => join('..', layer, '**/*')),
+      // Layer nuxt.config files belong to the node tsconfig, not the app one.
+      exclude: localLayers.map(layer => join('..', layer, 'nuxt.config.*'))
     }
   },
 

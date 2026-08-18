@@ -100,6 +100,7 @@ docker-compose up
 docker-compose exec backend python -m pytest -v
 cd backend && ruff check . && ruff format --check .
 cd frontend && npm run lint
+cd frontend && npm run typecheck:layers && git checkout modules.json   # vue-tsc over host + all module layers (stop the frontend container first)
 
 # Reset DB + reseed demo data (use after tests wipe tables)
 ./scripts/reset-db.sh        # drop, alembic upgrade heads
