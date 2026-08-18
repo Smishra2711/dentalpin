@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix(#184): type-check clean — `sourceBadgeColor()` returns `UiColor` (plan notes use `neutral`, the design-system role, instead of `secondary`).
 - i18n: add Tamil locale (`ta.json`); add Tamil translations to seed
   data; add `body_i18n_key` to template responses so template bodies
   resolve in the active locale. Labels now resolve via

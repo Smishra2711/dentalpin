@@ -73,7 +73,7 @@ const categoryRows = computed(() => {
 })
 
 const newCategoryKey = ref('')
-const newCategoryReason = ref<string>('hygiene')
+const newCategoryReason = ref<(typeof reasons)[number]>('hygiene')
 
 function addCategory() {
   if (!settings.value || !newCategoryKey.value) return

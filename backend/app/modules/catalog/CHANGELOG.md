@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix(#184): type-check clean — VAT-type toasts use semantic colours; `useCatalog` passes typed payloads to `useApi` without `Record` casts; `CatalogItemModal` builds a typed payload (create narrows the required fields instead of casting), option lists are typed to the form's unions, `UTextarea :rows` is a number; VAT badge colours are `UiColor`.
 - feat(onboarding): the `catalog-empty` getting-started step resolves inline — `CatalogSeedQuickModal` calls `POST /catalog/seed` from the dashboard card, or hands off to `/settings/catalog`.
 
 - feat: `POST /catalog/seed` (`catalog.admin`) loads the stock VAT types, categories and treatments for the clinic — idempotent repair path for installs created before `clinic.created` seeding existed (≤ v2.2.2) or where that seed failed silently. Surfaced as "Load default catalog" in the empty state of `/settings/catalog`.
