@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { PipelineRow, PipelineTab } from '~/composables/usePipeline'
+import type { PipelineRow, PipelineTab } from '../../composables/usePipeline'
+import type { UiColor } from '~~/app/config/severity'
 
 const props = defineProps<{
   tab: PipelineTab
@@ -62,7 +63,7 @@ function formatDate(iso: string | null): string {
   }
 }
 
-function statusBadgeColor(status: string): string {
+function statusBadgeColor(status: string): UiColor {
   switch (status) {
     case 'draft':
       return 'neutral'

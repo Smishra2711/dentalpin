@@ -435,6 +435,10 @@ export type ClinicalType
     | 'band'
     | 'attachment'
     | 'retainer'
+  // Catch-all written by the migration importer for treatments whose
+  // legacy type has no mapping (see migration_import/mappers). Not creatable
+  // through the API; the original label lives in `Treatment.notes`.
+    | 'migrated'
 
 /** @deprecated — kept for gradual migration; prefer ClinicalType. */
 export type TreatmentType = ClinicalType
@@ -2062,7 +2066,7 @@ export interface AttachmentCreate {
 // Treatment Plan Types
 // ============================================================================
 
-export type TreatmentPlanStatus = 'draft' | 'active' | 'completed' | 'archived' | 'cancelled'
+export type TreatmentPlanStatus = 'draft' | 'pending' | 'active' | 'completed' | 'closed' | 'archived'
 
 export type PlannedItemStatus = 'pending' | 'completed' | 'cancelled'
 
@@ -2076,6 +2080,7 @@ export interface TreatmentBrief {
   catalog_item_id?: string | null
   catalog_item?: TreatmentCatalogItemBrief | null
   price_snapshot?: string | null
+  notes?: string | null
   teeth: Array<{
     tooth_number: number
     role?: 'pillar' | 'pontic' | null
@@ -2323,6 +2328,10 @@ export interface TreatmentPlan {
   item_count: number
   completed_count: number
   total: number
+  // Set while status === 'closed' (see treatment_plan/models.py).
+  closure_reason?: string | null
+  closure_note?: string | null
+  closed_at?: string | null
   patient?: PatientBrief
   budget?: BudgetBrief
 }

@@ -87,25 +87,6 @@ export const TREATMENT_STATUS_ROLE: Record<TreatmentStatus, SemanticRole> = {
 }
 
 // ---------------------------------------------------------------------------
-// Treatment plan status
-// ---------------------------------------------------------------------------
-
-export type TreatmentPlanStatus
-  = | 'draft'
-    | 'active'
-    | 'completed'
-    | 'cancelled'
-    | 'on_hold'
-
-export const TREATMENT_PLAN_STATUS_ROLE: Record<TreatmentPlanStatus, SemanticRole> = {
-  draft: 'neutral',
-  active: 'primary',
-  completed: 'success',
-  cancelled: 'neutral',
-  on_hold: 'warning'
-}
-
-// ---------------------------------------------------------------------------
 // Budget status
 // ---------------------------------------------------------------------------
 

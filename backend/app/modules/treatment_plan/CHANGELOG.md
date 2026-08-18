@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- fix(#184): the layer type-checks clean under `nuxt typecheck`. Real
+  bugs behind the type errors: `TreatmentPlanStatus` now matches the API
+  (`pending`/`closed` instead of the phantom `cancelled`), toasts use
+  Nuxt UI v4 semantic colours (`error`/`success` — they rendered
+  uncoloured), `TreatmentPlanResponse` exposes `closure_reason` /
+  `closure_note` / `closed_at` (the reactivate dialog read `undefined`),
+  `TreatmentBrief` exposes `notes` (migrated treatments' legacy label was
+  never shown), and `PlansMode` "activate" no longer calls an
+  out-of-scope helper.
 - fix(#183): the seven event handlers are transactional (ADR 0019). `on_appointment_completed` was reading `completed_in_appointment` flags the publisher had only flushed, so it closed nothing. The `SKIP LOCKED` in `on_treatment_performed` is gone — it only existed to dodge a deadlock between the handler's own session and the publisher awaiting it.
 - fix(sessions): accepting a quote now reprices the plan's pending
   sessions to the accepted line amounts (line + global discount, ex-tax),

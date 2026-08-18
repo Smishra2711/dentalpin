@@ -14,7 +14,7 @@ import { VueDraggable } from 'vue-draggable-plus'
 import CompletionNudgeModal from './notes/CompletionNudgeModal.vue'
 import PlanItemDoctorChip from './PlanItemDoctorChip.vue'
 import PlanItemSessionRow from '../treatment-plans/PlanItemSessionRow.vue'
-import { itemCatalogPrice, itemEffectivePrice } from '~/composables/useTreatmentPlans'
+import { itemCatalogPrice, itemEffectivePrice } from '../../composables/useTreatmentPlans'
 
 const props = defineProps<{
   items: PlannedTreatmentItem[]
