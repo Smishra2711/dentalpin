@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type {
   CatalogItemSessionInput,
+  PricingStrategy,
   TreatmentCatalogCategory,
   TreatmentCatalogItem,
   TreatmentCatalogItemUpdate,
@@ -195,7 +196,7 @@ watch(sessionsEnabled, (enabled) => {
 })
 
 // Scope options with icons
-const scopeOptionsVisual = computed(() => [
+const scopeOptionsVisual = computed<{ value: NonNullable<TreatmentCatalogItemCreate['treatment_scope']>, label: string, icon: string }[]>(() => [
   { value: 'tooth', label: t('catalog.scopeTypes.tooth'), icon: 'i-lucide-circle-dot' },
   { value: 'multi_tooth', label: t('catalog.scopeTypes.multi_tooth'), icon: 'i-lucide-grip' },
   { value: 'global_arch', label: t('catalog.scopeTypes.global_arch'), icon: 'i-lucide-rectangle-horizontal' },
@@ -203,7 +204,7 @@ const scopeOptionsVisual = computed(() => [
 ])
 
 // Pricing strategy with icons
-const strategyOptionsVisual = computed(() => [
+const strategyOptionsVisual = computed<{ value: PricingStrategy, label: string, icon: string }[]>(() => [
   { value: 'flat', label: t('catalog.pricingStrategy.flat'), icon: 'i-lucide-equal' },
   { value: 'per_tooth', label: t('catalog.pricingStrategy.per_tooth'), icon: 'i-lucide-x' },
   { value: 'per_surface', label: t('catalog.pricingStrategy.per_surface'), icon: 'i-lucide-layers' },
@@ -252,7 +253,7 @@ const categoryOptions = computed(() =>
   }))
 )
 
-const odontogramTypeOptions = computed(() => [
+const odontogramTypeOptions = computed<{ value: string | undefined, label: string }[]>(() => [
   { value: undefined, label: t('catalog.noOdontogramMapping') },
   ...ALL_TREATMENT_TYPES.map(type => ({
     value: type,
@@ -260,7 +261,7 @@ const odontogramTypeOptions = computed(() => [
   }))
 ])
 
-const clinicalCategoryOptions = computed(() =>
+const clinicalCategoryOptions = computed<{ value: string, label: string }[]>(() =>
   TREATMENT_CATEGORIES.map(c => ({
     value: c.key,
     label: t(c.labelKey, c.key)
@@ -314,15 +315,14 @@ const pricingHasError = computed(() =>
 function handleSubmit() {
   if (!isValid.value) return
 
-  const cleanData: Record<string, unknown> = {}
-  for (const [key, value] of Object.entries(formData.value)) {
-    if (value !== undefined) {
-      cleanData[key] = value
-    }
+  // `undefined` fields are dropped by JSON serialisation, so the form
+  // state is the payload as-is.
+  const payload: TreatmentCatalogItemUpdate = {
+    ...formData.value,
+    sessions: sessionsEnabled.value ? sessionsToPayload() : []
   }
-
   if (odontogramType.value && clinicalCategory.value) {
-    cleanData.odontogram_mapping = {
+    payload.odontogram_mapping = {
       odontogram_treatment_type: odontogramType.value,
       visualization_rules: getVisualizationRules(odontogramType.value),
       visualization_config: {},
@@ -330,12 +330,13 @@ function handleSubmit() {
     }
   }
 
-  cleanData.sessions = sessionsEnabled.value ? sessionsToPayload() : []
-
   if (isCreateMode.value) {
-    emit('create', cleanData as TreatmentCatalogItemCreate)
+    // isValid guarantees these; narrowing keeps the create payload honest.
+    const { internal_code, category_id, names } = payload
+    if (!internal_code || !category_id || !names) return
+    emit('create', { ...payload, internal_code, category_id, names })
   } else {
-    emit('save', cleanData as TreatmentCatalogItemUpdate)
+    emit('save', payload)
   }
 }
 
@@ -487,7 +488,7 @@ function handleClose() {
               <UFormField :label="t('catalog.materialNotes')">
                 <UTextarea
                   v-model="formData.material_notes"
-                  rows="2"
+                  :rows="2"
                   :placeholder="t('catalog.materialNotesPlaceholder')"
                 />
               </UFormField>

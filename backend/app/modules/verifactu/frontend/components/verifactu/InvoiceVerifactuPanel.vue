@@ -2,6 +2,8 @@
 // Inline panel rendered in the invoice detail page when the invoice
 // has Verifactu compliance metadata (clinic.country=ES + verifactu
 // installed and enabled).
+import type { UiColor } from '~~/app/config/severity'
+
 const props = defineProps<{
   complianceData?: Record<string, unknown> | null
 }>()
@@ -13,12 +15,12 @@ const data = computed(() => {
   return (cd.ES ?? null) as Record<string, string> | null
 })
 
-const stateColor = computed(() => {
-  if (!data.value) return 'gray'
-  if (data.value.state === 'accepted') return 'green'
-  if (data.value.state === 'rejected') return 'red'
-  if (data.value.state === 'accepted_with_errors') return 'amber'
-  return 'gray'
+const stateColor = computed<UiColor>(() => {
+  if (!data.value) return 'neutral'
+  if (data.value.state === 'accepted') return 'success'
+  if (data.value.state === 'rejected') return 'error'
+  if (data.value.state === 'accepted_with_errors') return 'warning'
+  return 'neutral'
 })
 </script>
 

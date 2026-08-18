@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix(#184): type-check clean — toasts/badges/alerts use Nuxt UI v4 semantic colours (`red/green/amber/blue/gray` were rendering uncoloured), `VatClassification` codes are typed once in `useVerifactu` and shared with the VAT-mapping page, the invoice slot's local `errorMessage` computed no longer shadows the `errorMessage()` util it calls, sibling composable imports are relative.
 - docs(#183): `on_invoice_paid` documented as own-session/payload-only (ADR 0019).
 - i18n: add Tamil locale (`ta.json`) with full UI coverage.
 
