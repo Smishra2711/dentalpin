@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Surface, ToothTreatmentView, TreatmentStatus } from '~~/app/types'
-import { TREATMENT_COLORS, isSurfaceTreatment, getAllowedStatusesForTreatment } from '~~/app/config/odontogramConstants'
+import { getTreatmentColor, isSurfaceTreatment, getAllowedStatusesForTreatment } from '~~/app/config/odontogramConstants'
+import type { UiColor } from '~~/app/config/severity'
 import { getTreatmentDisplayName } from '~~/app/utils/treatmentView'
 
 const props = defineProps<{
@@ -50,13 +51,13 @@ const treatmentLabel = computed(() => {
 // Treatment color
 const treatmentColor = computed(() => {
   if (!props.treatment) return '#9CA3AF'
-  return TREATMENT_COLORS[props.treatment.treatment_type] || '#9CA3AF'
+  return getTreatmentColor(props.treatment.treatment_type)
 })
 
 // All status options
-const allStatusOptions = [
-  { value: 'existing' as TreatmentStatus, label: () => t('odontogram.status.existing'), color: 'neutral' },
-  { value: 'planned' as TreatmentStatus, label: () => t('odontogram.status.planned'), color: 'warning' }
+const allStatusOptions: { value: TreatmentStatus, label: () => string, color: UiColor }[] = [
+  { value: 'existing', label: () => t('odontogram.status.existing'), color: 'neutral' },
+  { value: 'planned', label: () => t('odontogram.status.planned'), color: 'warning' }
 ]
 
 // Status options filtered by treatment type
@@ -163,7 +164,7 @@ function handleClose() {
                 :color="status === option.value ? option.color : 'neutral'"
                 :variant="status === option.value ? 'solid' : 'outline'"
                 size="sm"
-                @click="status = option.value as TreatmentStatus"
+                @click="status = option.value"
               >
                 {{ option.label }}
               </UButton>

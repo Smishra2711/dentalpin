@@ -37,11 +37,11 @@ const viewingDate = ref<string | null>(null)
 const isViewingHistory = computed(() => viewingDate.value !== null)
 
 async function loadCurrentView() {
+  const latest = timeline.value?.dates.at(-1)
   if (hasDraft.value && timeline.value?.draft) {
     await fetchSnapshot(timeline.value.draft.id)
-  } else if (timeline.value && timeline.value.dates.length > 0) {
-    const last = timeline.value.dates[timeline.value.dates.length - 1]
-    await fetchSnapshot(last.snapshot_id)
+  } else if (latest) {
+    await fetchSnapshot(latest.snapshot_id)
   } else {
     currentSnapshot.value = null
   }

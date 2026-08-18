@@ -10,6 +10,7 @@
  * Paths extracted from professional dental SVGs with anatomically accurate proportions.
  */
 
+import type { TreatmentStatus } from '~~/app/types'
 import {
   isDeciduousTooth as isDeciduousToothFn,
   isUpperTooth as isUpperToothFn,
@@ -44,14 +45,7 @@ export const TREATMENT_COLORS: Record<string, string> = Object.fromEntries(
 
 // Helper function to get icon anchors for a tooth
 export function getIconAnchors(toothNumber: number): IconAnchors | undefined {
-  const isDeciduous = isDeciduousToothFn(toothNumber)
-  let position = getToothPosition(toothNumber)
-
-  if (isDeciduous) {
-    position = DECIDUOUS_TO_PERMANENT_MAP[position] || 1
-  }
-
-  return LATERAL_PATHS_BY_POSITION[position]?.anchors
+  return getLateralPath(toothNumber).anchors
 }
 
 // Helper function to get partial pulp path
@@ -167,6 +161,24 @@ export function getToothPosition(toothNumber: number): number {
   return toothNumber % 10
 }
 
+/** Position within the quadrant (1 = central incisor … 8 = third molar). */
+export type ToothPosition = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
+
+function isToothPosition(n: number): n is ToothPosition {
+  return Number.isInteger(n) && n >= 1 && n <= 8
+}
+
+/**
+ * Position whose SVG shape draws this tooth: deciduous teeth reuse the
+ * permanent shapes (see DECIDUOUS_TO_PERMANENT_MAP); anything outside the
+ * FDI range falls back to the central incisor.
+ */
+function getShapePosition(toothNumber: number): ToothPosition {
+  const position = getToothPosition(toothNumber)
+  const shape = isDeciduousTooth(toothNumber) ? DECIDUOUS_TO_PERMANENT_MAP[position] : position
+  return shape !== undefined && isToothPosition(shape) ? shape : 1
+}
+
 // ============================================================================
 // LATERAL VIEW PATHS
 // Extracted from professional dental SVGs
@@ -215,7 +227,7 @@ interface ToothDisplayConfig {
 // Upper teeth: roots point UP, crown at BOTTOM - crown line should be aligned
 // Lower teeth: roots point DOWN, crown at TOP - crown line should be aligned
 // Scales calibrated so all teeth have similar visual height (~100px)
-const TOOTH_DISPLAY_CONFIG: Record<number, ToothDisplayConfig> = {
+const TOOTH_DISPLAY_CONFIG: Record<ToothPosition, ToothDisplayConfig> = {
   // Incisors - narrower teeth, need smaller scale to achieve similar height
   1: { scale: 0.65, offsetY: 0, displayHeight: 100 },
   2: { scale: 0.62, offsetY: 0, displayHeight: 100 },
@@ -231,18 +243,11 @@ const TOOTH_DISPLAY_CONFIG: Record<number, ToothDisplayConfig> = {
 }
 
 export function getToothDisplayConfig(toothNumber: number): ToothDisplayConfig {
-  const isDeciduous = isDeciduousTooth(toothNumber)
-  let position = getToothPosition(toothNumber)
-
-  if (isDeciduous) {
-    position = DECIDUOUS_TO_PERMANENT_MAP[position] || 1
-  }
-
-  return TOOTH_DISPLAY_CONFIG[position] || TOOTH_DISPLAY_CONFIG[1]
+  return TOOTH_DISPLAY_CONFIG[getShapePosition(toothNumber)]
 }
 
 // Paths indexed by position (1-8) - using actual SVG paths from reference
-const LATERAL_PATHS_BY_POSITION: Record<number, LateralPaths> = {
+const LATERAL_PATHS_BY_POSITION: Record<ToothPosition, LateralPaths> = {
   // Position 1: Central Incisor (tooth 11) - viewBox 46x134
   1: {
     viewBox: '0 0 46 134',
@@ -455,7 +460,7 @@ const CIRCULAR_DIVIDERS = [
 
 // All teeth use the same circular occlusal view
 // Quadrant symmetry is handled by CSS transform (napkin unfolding)
-const OCCLUSAL_PATHS_BY_POSITION: Record<number, OcclusalPaths> = {
+const OCCLUSAL_PATHS_BY_POSITION: Record<ToothPosition, OcclusalPaths> = {
   1: { outline: CIRCULAR_OUTLINE, highlight: CIRCULAR_DIVIDERS, surfaces: CIRCULAR_SURFACES },
   2: { outline: CIRCULAR_OUTLINE, highlight: CIRCULAR_DIVIDERS, surfaces: CIRCULAR_SURFACES },
   3: { outline: CIRCULAR_OUTLINE, highlight: CIRCULAR_DIVIDERS, surfaces: CIRCULAR_SURFACES },
@@ -471,7 +476,7 @@ const OCCLUSAL_PATHS_BY_POSITION: Record<number, OcclusalPaths> = {
 // ============================================================================
 
 // Map deciduous positions to permanent tooth shapes
-const DECIDUOUS_TO_PERMANENT_MAP: Record<number, number> = {
+const DECIDUOUS_TO_PERMANENT_MAP: Record<number, ToothPosition> = {
   1: 1, // Deciduous central incisor → Central incisor
   2: 2, // Deciduous lateral incisor → Lateral incisor
   3: 3, // Deciduous canine → Canine
@@ -484,27 +489,11 @@ const DECIDUOUS_TO_PERMANENT_MAP: Record<number, number> = {
 // ============================================================================
 
 export function getLateralPath(toothNumber: number): LateralPaths {
-  const isDeciduous = isDeciduousTooth(toothNumber)
-  let position = getToothPosition(toothNumber)
-
-  // Map deciduous positions to permanent shapes
-  if (isDeciduous) {
-    position = DECIDUOUS_TO_PERMANENT_MAP[position] || 1
-  }
-
-  return LATERAL_PATHS_BY_POSITION[position] || LATERAL_PATHS_BY_POSITION[1]
+  return LATERAL_PATHS_BY_POSITION[getShapePosition(toothNumber)]
 }
 
 export function getOcclusalPath(toothNumber: number): OcclusalPaths {
-  const isDeciduous = isDeciduousTooth(toothNumber)
-  let position = getToothPosition(toothNumber)
-
-  // Map deciduous positions to permanent shapes
-  if (isDeciduous) {
-    position = DECIDUOUS_TO_PERMANENT_MAP[position] || 1
-  }
-
-  return OCCLUSAL_PATHS_BY_POSITION[position] || OCCLUSAL_PATHS_BY_POSITION[1]
+  return OCCLUSAL_PATHS_BY_POSITION[getShapePosition(toothNumber)]
 }
 
 // ============================================================================
@@ -557,14 +546,23 @@ export const TREATMENT_OVERLAYS = {
 // ============================================================================
 
 // Convert from odontogramConstants format to local format
-export const STATUS_STYLES: Record<string, { opacity: number, border: string, borderWidth: number, borderDash?: string }> = Object.fromEntries(
-  Object.entries(STATUS_STYLES_CONFIG).map(([key, value]) => [
-    key,
-    {
-      opacity: value.opacity,
-      border: value.border || 'none',
-      borderWidth: value.borderWidth,
-      ...(value.borderDash ? { borderDash: value.borderDash } : {})
-    }
-  ])
-)
+interface StatusStyle {
+  opacity: number
+  border: string
+  borderWidth: number
+  borderDash?: string
+}
+
+function toStatusStyle(value: typeof STATUS_STYLES_CONFIG[TreatmentStatus]): StatusStyle {
+  return {
+    opacity: value.opacity,
+    border: value.border || 'none',
+    borderWidth: value.borderWidth,
+    ...(value.borderDash ? { borderDash: value.borderDash } : {})
+  }
+}
+
+export const STATUS_STYLES: Record<TreatmentStatus, StatusStyle> = {
+  existing: toStatusStyle(STATUS_STYLES_CONFIG.existing),
+  planned: toStatusStyle(STATUS_STYLES_CONFIG.planned)
+}

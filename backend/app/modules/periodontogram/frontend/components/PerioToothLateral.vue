@@ -53,10 +53,12 @@ const baseTransform = computed(() => getToothTransform(props.tooth.tooth_number)
 const GUM_LINE_Y_BY_POSITION: Record<number, number> = {
   1: 95, 2: 85, 3: 103, 4: 62.5, 5: 80, 6: 85, 7: 78, 8: 63
 }
+const DEFAULT_GUM_LINE_Y = 95 // central incisor
 
 const VIEWBOX_W_BY_POSITION: Record<number, number> = {
   1: 46, 2: 40, 3: 47, 4: 40, 5: 40, 6: 64, 7: 66, 8: 67
 }
+const DEFAULT_VIEWBOX_W = 46 // central incisor
 
 // Common 70 × 150 view window. 70 wide covers the widest molar
 // (vbW=67); 150 tall fits every tooth's crown bottom without cropping
@@ -70,8 +72,8 @@ const TARGET_GUM_VB_Y = 97.5
 
 const alignedViewBox = computed(() => {
   const position = getToothPosition(props.tooth.tooth_number)
-  const vbW = VIEWBOX_W_BY_POSITION[position] ?? VIEWBOX_W_BY_POSITION[1]
-  const gly = GUM_LINE_Y_BY_POSITION[position] ?? GUM_LINE_Y_BY_POSITION[1]
+  const vbW = VIEWBOX_W_BY_POSITION[position] ?? DEFAULT_VIEWBOX_W
+  const gly = GUM_LINE_Y_BY_POSITION[position] ?? DEFAULT_GUM_LINE_Y
   // Centre the tooth horizontally inside the common view window, then
   // shift the view vertically so its CEJ row lands on TARGET_GUM_VB_Y.
   const xV = vbW / 2 - VIEW_W / 2
@@ -114,7 +116,7 @@ const visualOpacity = computed(() => (props.tooth.is_present ? 1 : 0.35))
       <PerioSiteMarker
         v-for="code in visibleSites"
         :key="`above-${code}`"
-        :site="siteByCode[code]"
+        :site="siteByCode[code] ?? null"
         size="sm"
         readonly
       />
@@ -203,7 +205,7 @@ const visualOpacity = computed(() => (props.tooth.is_present ? 1 : 0.35))
       <PerioSiteMarker
         v-for="code in visibleSites"
         :key="`below-${code}`"
-        :site="siteByCode[code]"
+        :site="siteByCode[code] ?? null"
         size="sm"
         readonly
       />
