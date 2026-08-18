@@ -385,6 +385,34 @@ export function useCatalog() {
     }
   }
 
+  /**
+   * Load the stock catalog (VAT types, categories, treatments) for the clinic.
+   * Idempotent on the server — repair path for installs that missed the
+   * ``clinic.created`` seed. Refreshes categories + items on success.
+   */
+  async function seedDefaults(): Promise<boolean> {
+    try {
+      const response = await api.post<ApiResponse<{ categories: number, items: number, vat_types: number }>>(
+        '/api/v1/catalog/seed',
+        {}
+      )
+      toast.add({
+        title: t('common.success'),
+        description: t('catalog.defaultsLoaded', response.data),
+        color: 'success'
+      })
+      await Promise.all([fetchCategories(), fetchItems()])
+      return true
+    } catch (e: unknown) {
+      toast.add({
+        title: t('common.error'),
+        description: apiErrorDetail(e) || t('catalog.defaultsFailed'),
+        color: 'error'
+      })
+      return false
+    }
+  }
+
   // ============================================================================
   // Computed
   // ============================================================================
@@ -448,6 +476,7 @@ export function useCatalog() {
     updateItem,
     deleteItem,
     searchItems,
+    seedDefaults,
 
     // Computed
     totalPages,

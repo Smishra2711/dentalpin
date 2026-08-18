@@ -33,7 +33,10 @@ None.
 
 ## Events consumed
 
-None.
+- `clinic.created` → `events.on_clinic_created` (own-session) seeds VAT
+  types / categories / treatments via `seed.seed_clinic_defaults`. Failures
+  are logged, not raised; the `catalog-empty` getting-started rule surfaces
+  an empty catalog and `POST /catalog/seed` repairs it (same function).
 
 ## Lifecycle
 
@@ -55,7 +58,12 @@ None.
 - **Pricing rules live in `pricing.py`** — keep service code thin and
   delegate calculations there.
 - **Seed data** is shipped via `seed.py` and idempotent — re-running it
-  must not duplicate categories.
+  must not duplicate categories. `seed_clinic_defaults` is the single entry
+  point (derives preset/prices from the clinic); `seed_catalog` is the
+  low-level worker.
+- **Categories are mandatory on items** (`category_id` NOT NULL). Anything
+  that can leave a clinic with zero categories blocks treatment creation —
+  keep the seed endpoint and the categories UI working.
 
 ## Related ADRs
 
