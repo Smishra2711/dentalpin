@@ -1552,7 +1552,8 @@
     },
     "onboarding": {
       "label": "Treatment catalog",
-      "description": "Without treatments there are no budgets or plans. Load the default catalog or create your own."
+      "description": "Without treatments there are no budgets or plans. Load the default catalog or create your own.",
+      "createOwn": "I will create my own"
     },
     "manageCategories": "Manage categories",
     "newCategory": "New category",

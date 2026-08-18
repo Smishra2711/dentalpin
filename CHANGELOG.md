@@ -11,6 +11,13 @@ frontend as a Nuxt layer under its own Python package.
 
 ## [Unreleased]
 
+### Added
+
+- **Onboarding: "Treatment catalog" step loads the default catalog inline.**
+  The dashboard card's *Set up* opens a dialog with *Load default
+  catalog* (VAT, categories and reference treatments for the clinic
+  country) or *I will create my own*, instead of only linking to Settings.
+
 ## [2.3.0] - 2026-08-18
 
 ### Added

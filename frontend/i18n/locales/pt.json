@@ -1552,7 +1552,8 @@
     },
     "onboarding": {
       "label": "Catálogo de tratamentos",
-      "description": "Sem tratamentos não há orçamentos nem planos. Carregue o catálogo por defeito ou crie os seus."
+      "description": "Sem tratamentos não há orçamentos nem planos. Carregue o catálogo por defeito ou crie os seus.",
+      "createOwn": "Prefiro criar os meus"
     },
     "manageCategories": "Gerir categorias",
     "newCategory": "Nova categoria",

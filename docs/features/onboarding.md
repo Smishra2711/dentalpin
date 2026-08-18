@@ -51,7 +51,7 @@ Rules (owner → data):
 | 20 | Cabinets | host | no cabinets | `CabinetFormModal` |
 | 30 | Clinic hours | schedules | still on the 24/7 template | `ClinicHoursQuickModal` |
 | 40 | Team | host | no other active member and admin not professional | `UserCreateModal` |
-| 50 | Catalog | catalog | 0 items | — |
+| 50 | Catalog | catalog | 0 items | `CatalogSeedQuickModal` (loads the stock catalog via `POST /catalog/seed`, or hands off to the page) |
 | 60 | Invoice series | billing | 0 series | — |
 | 70 (opt.) | VeriFactu | host | country = ES and module not active | — |
 | 80 (opt.) | Email sending | notifications | SMTP not configured | — |
@@ -73,7 +73,6 @@ Card rows keep 44 px targets; the guide bar truncates the step label and keeps b
 
 - Presets with fiscal logic for countries other than Spain (others get currency / timezone / language only).
 - Per-professional colour or specialty (no such concept in the data model yet).
-- One-click "reseed catalog" when a seed handler failed (handlers are idempotent; a button is trivial to add later).
 - Email invitations (the link is shareable by any channel).
 
 ## Endpoints added

@@ -1552,7 +1552,8 @@
     },
     "onboarding": {
       "label": "Catalogue de soins",
-      "description": "Sans soins, pas de devis ni de plans. Chargez le catalogue par défaut ou créez les vôtres."
+      "description": "Sans soins, pas de devis ni de plans. Chargez le catalogue par défaut ou créez les vôtres.",
+      "createOwn": "Je préfère créer les miens"
     },
     "manageCategories": "Gérer les catégories",
     "newCategory": "Nouvelle catégorie",

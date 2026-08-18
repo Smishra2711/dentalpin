@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat(onboarding): the `catalog-empty` getting-started step resolves inline — `CatalogSeedQuickModal` calls `POST /catalog/seed` from the dashboard card, or hands off to `/settings/catalog`.
+
 - feat: `POST /catalog/seed` (`catalog.admin`) loads the stock VAT types, categories and treatments for the clinic — idempotent repair path for installs created before `clinic.created` seeding existed (≤ v2.2.2) or where that seed failed silently. Surfaced as "Load default catalog" in the empty state of `/settings/catalog`.
 - feat: category management UI (`CatalogCategoriesModal`) — create, rename, reorder, deactivate/reactivate from `/settings/catalog`. The category CRUD endpoints and composable existed with no consumer; the treatment modal requires a category, so a clinic with none could not create treatments.
 - fix: `PUT /catalog/categories/{id}` now finds inactive categories, so a soft-deleted category can be reactivated (`is_active: true`); previously 404.

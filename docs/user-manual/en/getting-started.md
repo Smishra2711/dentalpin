@@ -30,7 +30,7 @@ After logging in, administrators see a **Getting started** card at the top of th
 | Rooms | At least one room so the agenda can book appointments | Inline dialog |
 | Clinic hours | Your real opening hours (a fresh install may still be "open 24/7") | Inline dialog with presets |
 | Your team | Add the professionals who see patients, or flag yourself as professional if you work alone | Inline dialog |
-| Treatment catalog | Treatments to budget, plan and bill | *Settings → Clinical → Catalog* |
+| Treatment catalog | Treatments to budget, plan and bill | Inline dialog: **Load default catalog** (VAT, categories and reference treatments for your country) or *I will create my own* → *Settings → Clinical → Catalog* |
 | Invoice series | Needed to issue the first invoice | *Settings → Billing → Invoice series* |
 | Optional: VeriFactu (Spain), Email sending, First patient | Suggested next steps | Modules / Notifications / Patients |
 
