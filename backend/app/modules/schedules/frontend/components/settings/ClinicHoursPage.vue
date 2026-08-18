@@ -25,7 +25,10 @@ const isSaving = ref(false)
 
 const showOverrideModal = ref(false)
 const editingOverride = ref<ClinicOverride | null>(null)
-const overrideForm = ref<ClinicOverridePayload>({
+// The form keeps `reason` as a string for the input; it is normalised to
+// `null` when building the payload.
+type OverrideForm = Omit<ClinicOverridePayload, 'reason'> & { reason: string }
+const overrideForm = ref<OverrideForm>({
   start_date: new Date().toISOString().slice(0, 10),
   end_date: new Date().toISOString().slice(0, 10),
   kind: 'closed',

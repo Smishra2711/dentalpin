@@ -161,6 +161,15 @@ async def test_reject_reactivate_confirm_creates_new_budget(
     r = await client.get(f"/api/v1/budget/budgets/{old_budget_id}", headers=auth_headers)
     assert r.json()["data"]["status"] == "rejected"
 
+    # Patient-side budget lists show the plan link via the denormalized
+    # snapshot (issue #184).
+    r = await client.get(
+        f"/api/v1/budget/budgets?patient_id={setup['patient_id']}", headers=auth_headers
+    )
+    assert r.status_code == 200, r.text
+    plan_number = plan["plan_number"]
+    assert {b["plan_number_snapshot"] for b in r.json()["data"]} == {plan_number}
+
 
 @pytest.mark.asyncio
 async def test_renegotiate_then_confirm_relinks(

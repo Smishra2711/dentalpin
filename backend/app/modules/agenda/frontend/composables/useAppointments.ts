@@ -179,7 +179,10 @@ export function useAppointments() {
   }
 
   return {
-    appointments: readonly(appointments),
+    // shallowReadonly: consumers cannot swap the list, while elements keep
+    // their `Appointment` type — the deep `readonly()` view forces
+    // DeepReadonly<Appointment> through every child prop and emit.
+    appointments: shallowReadonly(appointments),
     isLoading: readonly(isLoading),
     error: readonly(error),
     fetchAppointments,

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix(#184): type-check clean — `useProfessionalHours` re-exports `Shift`/`WeekdayShifts`, override forms keep `reason` as a string and normalise to `null` on submit, shift edits guard the indexed row.
 - docs(#183): `on_clinic_created` documented as own-session (published after setup commits); the appointment handlers are payload-only logging.
 - feat(onboarding): `ClinicHoursQuickModal` — inline weekly-hours editor with two presets, used as the getting-started mini-modal.
 

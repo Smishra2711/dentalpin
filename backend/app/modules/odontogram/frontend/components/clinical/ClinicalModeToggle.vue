@@ -5,7 +5,7 @@
  * Optional badges surface contextual counts (e.g. "Planes 2") so the
  * user sees workload before clicking in.
  */
-export type ClinicalMode = 'history' | 'diagnosis' | 'plans' | 'appointments'
+import type { ClinicalMode } from '~~/app/types'
 
 interface ModeBadges {
   diagnosis?: string | number

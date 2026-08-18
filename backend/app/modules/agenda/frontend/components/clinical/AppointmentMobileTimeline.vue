@@ -88,11 +88,10 @@ function blockedLabel(e: BlockedEntry): string {
 }
 
 function freeAriaLabel(e: FreeSlotEntry): string {
-  return t(
-    'appointments.freeSlots.tapToBookAria',
-    'Hueco libre de {duration} a las {time}',
-    { duration: formatDuration(e.durationMin), time: formatTime(e.start) }
-  )
+  return t('appointments.freeSlots.tapToBookAria', {
+    duration: formatDuration(e.durationMin),
+    time: formatTime(e.start)
+  })
 }
 
 function entryKey(e: TimelineEntry, i: number): string {
