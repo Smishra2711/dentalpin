@@ -1,4 +1,5 @@
 import type { ApiResponse, PatientAlert } from '~~/app/types'
+import type { UiColor } from '~~/app/config/severity'
 
 export function usePatientAlerts(patientId: Ref<string | undefined>) {
   const api = useApi()
@@ -70,14 +71,14 @@ export function usePatientAlerts(patientId: Ref<string | undefined>) {
   }
 
   // Get color for severity
-  function getSeverityColor(severity: PatientAlert['severity']): string {
-    const colors: Record<PatientAlert['severity'], string> = {
+  function getSeverityColor(severity: PatientAlert['severity']): UiColor {
+    const colors: Record<PatientAlert['severity'], UiColor> = {
       critical: 'error',
       high: 'warning',
       medium: 'info',
       low: 'neutral'
     }
-    return colors[severity] || 'neutral'
+    return colors[severity]
   }
 
   // Watch patientId and fetch when it changes

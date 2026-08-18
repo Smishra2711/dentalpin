@@ -36,14 +36,16 @@ const treatmentsByType = computed(() => {
   > = {}
 
   for (const treatment of perToothTreatments.value) {
-    if (!grouped[treatment.treatment_type]) {
-      grouped[treatment.treatment_type] = { count: 0, teeth: [], treatments: [] }
+    let entry = grouped[treatment.treatment_type]
+    if (!entry) {
+      entry = { count: 0, teeth: [], treatments: [] }
+      grouped[treatment.treatment_type] = entry
     }
-    grouped[treatment.treatment_type].count++
-    if (!grouped[treatment.treatment_type].teeth.includes(treatment.tooth_number)) {
-      grouped[treatment.treatment_type].teeth.push(treatment.tooth_number)
+    entry.count++
+    if (!entry.teeth.includes(treatment.tooth_number)) {
+      entry.teeth.push(treatment.tooth_number)
     }
-    grouped[treatment.treatment_type].treatments.push(treatment)
+    entry.treatments.push(treatment)
   }
 
   return Object.entries(grouped)
