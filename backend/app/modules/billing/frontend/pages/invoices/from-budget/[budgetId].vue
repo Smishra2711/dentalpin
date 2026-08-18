@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BudgetDetail, BudgetItem, InvoiceItemFromBudget, VatType } from '~~/app/types'
+import type { ApiResponse, BudgetDetail, BudgetItem, InvoiceItemFromBudget, Patient, VatType } from '~~/app/types'
 import { errorMessage } from '~~/app/utils/error'
 
 const { t, locale } = useI18n()
@@ -16,6 +16,9 @@ const budgetId = route.params.budgetId as string
 const isLoading = ref(true)
 const isSubmitting = ref(false)
 const budget = ref<BudgetDetail | null>(null)
+// Full patient record: the budget only embeds a brief without billing
+// fields, and drafts take their billing party from the patient.
+const patient = ref<Patient | null>(null)
 const vatTypes = ref<VatType[]>([])
 
 // Selected items with quantities to invoice
@@ -39,6 +42,9 @@ onMounted(async () => {
 
     budget.value = budgetData
     vatTypes.value = vatResponse.data
+    if (budgetData?.patient) {
+      patient.value = (await api.get<ApiResponse<Patient>>(`/api/v1/patients/${budgetData.patient.id}`)).data
+    }
 
     // Pre-select all items that have available quantity
     // All items are invoiceable once budget is accepted (no item-level rejection)
@@ -108,6 +114,12 @@ function deselectAll() {
 }
 
 // Get VAT type info
+// Item display name (same rule as the budget detail page)
+function getItemName(item: BudgetItem): string {
+  if (!item.catalog_item) return '-'
+  return item.catalog_item.names[locale.value] || item.catalog_item.names.es || item.catalog_item.internal_code
+}
+
 function getVatType(vatTypeId?: string): VatType | undefined {
   return vatTypes.value.find(v => v.id === vatTypeId)
 }
@@ -301,7 +313,7 @@ function goBack() {
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2">
                     <span class="font-medium text-default">
-                      {{ item.catalog_item?.name || 'Tratamiento' }}
+                      {{ getItemName(item) }}
                     </span>
                     <UBadge
                       v-if="item.tooth_number"
@@ -378,7 +390,7 @@ function goBack() {
         </UCard>
 
         <!-- Billing data (from patient - read-only) -->
-        <UCard v-if="budget?.patient">
+        <UCard v-if="patient">
           <template #header>
             <div class="flex items-center justify-between">
               <h3 class="font-semibold text-default">
@@ -399,7 +411,7 @@ function goBack() {
                 {{ t('invoice.billingName') }}
               </p>
               <p class="font-medium text-default">
-                {{ budget.patient.billing_name || `${budget.patient.first_name} ${budget.patient.last_name}` }}
+                {{ patient.billing_name || `${patient.first_name} ${patient.last_name}` }}
               </p>
             </div>
             <div>
@@ -407,7 +419,7 @@ function goBack() {
                 {{ t('invoice.taxId') }}
               </p>
               <p class="font-medium text-default">
-                {{ budget.patient.billing_tax_id || '-' }}
+                {{ patient.billing_tax_id || '-' }}
               </p>
             </div>
             <div>
@@ -415,16 +427,16 @@ function goBack() {
                 {{ t('invoice.billingEmail') }}
               </p>
               <p class="font-medium text-default">
-                {{ budget.patient.billing_email || budget.patient.email || '-' }}
+                {{ patient.billing_email || patient.email || '-' }}
               </p>
             </div>
-            <div v-if="budget.patient.billing_address">
+            <div v-if="patient.billing_address">
               <p class="text-caption text-subtle">
                 {{ t('invoice.billingAddress') }}
               </p>
               <p class="font-medium text-default">
-                {{ budget.patient.billing_address.street }},
-                {{ budget.patient.billing_address.postal_code }} {{ budget.patient.billing_address.city }}
+                {{ patient.billing_address.street }},
+                {{ patient.billing_address.postal_code }} {{ patient.billing_address.city }}
               </p>
             </div>
           </div>

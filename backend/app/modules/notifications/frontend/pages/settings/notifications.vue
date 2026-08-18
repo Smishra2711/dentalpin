@@ -91,24 +91,24 @@ function onSettingChange() {
   hasChanges.value = true
 }
 
-// Get setting value with fallback
-function getSettingValue(key: string, field: keyof NotificationTypeSettings): boolean | number {
+// Per-type settings edited on this page (channels are not, yet).
+type ScalarSetting = 'enabled' | 'auto_send' | 'hours_before'
+type ScalarSettings = Required<Pick<NotificationTypeSettings, ScalarSetting>>
+
+// Settings for a notification type, with defaults for anything unset
+function settingsFor(key: string): ScalarSettings {
   const setting = localSettings.value[key]
-  if (!setting) {
-    // Return defaults
-    if (field === 'enabled') return true
-    if (field === 'auto_send') return true
-    if (field === 'hours_before') return 24
+  return {
+    enabled: setting?.enabled ?? true,
+    auto_send: setting?.auto_send ?? true,
+    hours_before: setting?.hours_before ?? 24
   }
-  return setting[field] as boolean | number
 }
 
 // Update local setting
-function updateLocalSetting(key: string, field: keyof NotificationTypeSettings, value: boolean | number) {
-  if (!localSettings.value[key]) {
-    localSettings.value[key] = { auto_send: true, enabled: true }
-  }
-  (localSettings.value[key] as Record<string, boolean | number>)[field] = value
+function updateLocalSetting<K extends ScalarSetting>(key: string, field: K, value: ScalarSettings[K]) {
+  const setting = localSettings.value[key] ?? (localSettings.value[key] = { auto_send: true, enabled: true })
+  setting[field] = value
   onSettingChange()
 }
 
@@ -322,14 +322,14 @@ if (!isAdmin.value) {
                 </td>
                 <td class="py-4 px-4 text-center">
                   <USwitch
-                    :model-value="getSettingValue(type.key, 'enabled') as boolean"
+                    :model-value="settingsFor(type.key).enabled"
                     @update:model-value="(v: boolean) => updateLocalSetting(type.key, 'enabled', v)"
                   />
                 </td>
                 <td class="py-4 px-4 text-center">
                   <USwitch
-                    :model-value="getSettingValue(type.key, 'auto_send') as boolean"
-                    :disabled="!getSettingValue(type.key, 'enabled')"
+                    :model-value="settingsFor(type.key).auto_send"
+                    :disabled="!settingsFor(type.key).enabled"
                     @update:model-value="(v: boolean) => updateLocalSetting(type.key, 'auto_send', v)"
                   />
                 </td>
@@ -339,12 +339,12 @@ if (!isAdmin.value) {
                     class="flex items-center justify-center gap-2"
                   >
                     <UInput
-                      :model-value="getSettingValue(type.key, 'hours_before') as number"
+                      :model-value="settingsFor(type.key).hours_before"
                       type="number"
                       min="1"
                       max="168"
                       class="w-16"
-                      :disabled="!getSettingValue(type.key, 'enabled')"
+                      :disabled="!settingsFor(type.key).enabled"
                       @update:model-value="(v: string | number) => updateLocalSetting(type.key, 'hours_before', Number(v))"
                     />
                     <span class="text-caption text-subtle">{{ t('notifications.hoursBefore') }}</span>
@@ -522,7 +522,7 @@ if (!isAdmin.value) {
     <!-- SMTP Configuration Modal -->
     <UModal
       v-model:open="showSmtpModal"
-      :ui="{ width: 'max-w-2xl' }"
+      :ui="{ content: 'max-w-2xl' }"
     >
       <template #content>
         <UCard>

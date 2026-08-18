@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PERMISSIONS } from '~/config/permissions'
+import { PERMISSIONS } from '~~/app/config/permissions'
 
 const { t } = useI18n()
 const { can } = usePermissions()

@@ -22,6 +22,7 @@ import type {
   PaginatedResponse,
   PatientBillingSummary,
   InvoicePayment,
+  InvoicePaymentDetail,
   InvoicePaymentApply,
   SeriesResetRequest
 } from '~~/app/types'
@@ -351,9 +352,9 @@ export function useInvoices() {
   // Payment Operations
   // ============================================================================
 
-  async function fetchPayments(invoiceId: string): Promise<InvoicePayment[]> {
+  async function fetchPayments(invoiceId: string): Promise<InvoicePaymentDetail[]> {
     try {
-      const response = await api.get<ApiResponse<InvoicePayment[]>>(
+      const response = await api.get<ApiResponse<InvoicePaymentDetail[]>>(
         `/api/v1/billing/invoices/${invoiceId}/payments`
       )
       return response.data

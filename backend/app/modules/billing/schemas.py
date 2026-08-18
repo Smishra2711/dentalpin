@@ -16,6 +16,7 @@ InvoiceStatus = Literal["draft", "issued", "partial", "paid", "cancelled", "void
 # Payment domain literals live in the payments module; billing only
 # imports them where it orchestrates Payment+InvoicePayment creation.
 from app.modules.payments.schemas import PaymentMethod as PaymentMethodLiteral  # noqa: E402
+from app.modules.payments.schemas import PaymentResponse  # noqa: E402
 
 PaymentMethod = PaymentMethodLiteral
 
@@ -299,6 +300,16 @@ class InvoicePaymentResponse(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class InvoicePaymentDetailResponse(InvoicePaymentResponse):
+    """Link row with the underlying Payment embedded.
+
+    Served by ``GET /invoices/{id}/payments`` so invoice-side views can show
+    the payment date/method without a call per row to the payments module.
+    """
+
+    payment: PaymentResponse
 
 
 # ============================================================================

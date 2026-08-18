@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.auth.dependencies import ClinicContext, get_clinic_context, require_permission
 from app.core.schemas import ApiResponse, PaginatedApiResponse
 from app.database import get_db
+from app.modules.payments.schemas import PaymentResponse
 
 from .hooks import BillingHookRegistry
 from .schemas import (
@@ -28,6 +29,7 @@ from .schemas import (
     InvoiceItemUpdate,
     InvoiceListResponse,
     InvoicePaymentApply,
+    InvoicePaymentDetailResponse,
     InvoicePaymentResponse,
     InvoiceResponse,
     InvoiceSendRequest,
@@ -817,14 +819,14 @@ async def create_credit_note(
 
 @router.get(
     "/invoices/{invoice_id}/payments",
-    response_model=ApiResponse[list[InvoicePaymentResponse]],
+    response_model=ApiResponse[list[InvoicePaymentDetailResponse]],
 )
 async def list_invoice_payments(
     invoice_id: UUID,
     ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
     _: Annotated[None, Depends(require_permission("billing.read"))],
     db: Annotated[AsyncSession, Depends(get_db)],
-) -> ApiResponse[list[InvoicePaymentResponse]]:
+) -> ApiResponse[list[InvoicePaymentDetailResponse]]:
     invoice = await InvoiceService.get_invoice(
         db, ctx.clinic_id, invoice_id, include_items=False, include_payments=False
     )
@@ -832,7 +834,15 @@ async def list_invoice_payments(
         raise HTTPException(status_code=404, detail="Invoice not found")
 
     rows = await InvoicePaymentService.list_for_invoice(db, ctx.clinic_id, invoice_id)
-    return ApiResponse(data=[InvoicePaymentResponse.model_validate(r) for r in rows])
+    return ApiResponse(
+        data=[
+            InvoicePaymentDetailResponse(
+                **InvoicePaymentResponse.model_validate(r).model_dump(),
+                payment=PaymentResponse.from_model(r.payment),
+            )
+            for r in rows
+        ]
+    )
 
 
 @router.post(
