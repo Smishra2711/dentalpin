@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- PDF invoice integration: `enhance_pdf_data` now provides a structured
+  GST breakdown section (`compliance_section_html`) with document number,
+  place of supply, supplier/recipient GSTINs, and CGST/SGST/IGST totals.
+  Label overrides replace "VAT"/"Tax" with "GST" for Indian clinics.
+- Tamil locale (`ta`) support in PDF generation — Tamil labels and
+  `Noto Sans Tamil` font in the CSS font-family stack.
+- Uninstall guard: blocks uninstall if any non-draft invoice has GST
+  line-item data, preventing orphaned CGST/SGST/IGST breakdowns.
+- `install()` now backfills GST demo data for existing Indian clinics
+  (country=IN), so installing the module after seeding populates GST
+  data without needing a re-seed.
+- Frontend tests: `useIndiaGstStates` and `gstBadgeLogic` unit tests
+  (50 tests covering state mapping, badge logic, e-invoice labels).
+- Full module documentation: `docs/modules/india_gst.md`.
 - Settings page: one-click **Auto-configure** assigns the default dental SAC
   (`999312`) to every treatment still missing one
   (`POST /catalog-defaults/autoconfigure`). Additive only — an existing

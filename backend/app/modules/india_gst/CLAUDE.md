@@ -99,12 +99,43 @@ None in v1.
   handler (`app/main.py::http_exception_handler`) does `str(exc.detail)`
   — passing a dict silently becomes an ugly Python repr, not JSON.
 
+## Frontend
+
+- **Composables**: `useIndiaGst` (API client), `useIndiaGstStates`
+  (state code/name mapping).
+- **Components**: `IndiaGstBadge`, `IndiaGstInvoicePanel`,
+  `IndiaGstInvoiceFormPanel`, `IndiaGstListFilter`,
+  `IndiaGstUnregisteredBanner`, `SettingsCardsSlot`.
+- **Pages**: `/reports/india-gst`, `/settings/india-gst`.
+- **i18n**: English, Spanish, Tamil (`frontend/i18n/locales/`).
+- **Utils**: `gstBadgeLogic.ts` — pure logic extracted from badge/panel
+  components for unit testing (badge color/label, e-invoice color/label,
+  Indian clinic detection).
+- **Invoice screen**: billing's `invoices/[id]/index.vue` conditionally
+  shows "GST" labels (instead of "Tax"/"VAT") via `isIndianClinic`
+  computed property.
+- **PDF**: `enhance_pdf_data` provides label overrides ("GST" instead of
+  "VAT"/"Tax") and a structured GST breakdown HTML section. Tamil locale
+  (`ta`) supported with `Noto Sans Tamil` font.
+
+## Tests
+
+- **Backend**: `tests/modules/india_gst/` — GST calculator, hook issue,
+  uninstall guard, settings router, tax preview, reports, e-invoice
+  scaffolding.
+- **Frontend**: `frontend/tests/india_gst/` — `useIndiaGstStates`
+  (state mapping), `gstBadgeLogic` (badge/panel pure logic).
+
 ## Related ADRs
 
 - `docs/adr/0001-modular-plugin-architecture.md` — module boundary.
 - `docs/adr/0003-event-bus-over-direct-imports.md` — why this module
   uses the synchronous compliance hook instead, same exception as
   verifactu.
+
+## Documentation
+
+- `docs/modules/india_gst.md` — full installation & operation manual.
 
 ## CHANGELOG
 
