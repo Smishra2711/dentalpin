@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 from .models import Invoice
 
-_LOCALE_BY_LANG = {"es": "es_ES", "en": "en_US"}
+_LOCALE_BY_LANG = {"es": "es_ES", "en": "en_US", "ta": "en_IN"}
 
 
 class InvoicePDFService:
@@ -60,7 +60,9 @@ class InvoicePDFService:
                 keys: ``compliance_qr_png_b64`` (base64 PNG) renders the
                 QR top-right; ``compliance_qr_label`` (default
                 ``"VERI*FACTU"``); ``legal_notices`` (list[str]) appends
-                to the legal-notices block.
+                to the legal-notices block; ``compliance_section_html``
+                (str) renders a dedicated compliance section (e.g. India
+                GST breakdown) after the payment-info block.
 
         Returns:
             PDF content as bytes
@@ -99,8 +101,14 @@ class InvoicePDFService:
     ) -> str:
         """Generate HTML content for the invoice."""
         extra = extra_pdf_data or {}
+        # Label overrides from a country compliance hook (e.g. India GST
+        # renames "VAT"/"Tax" to "GST"). Applied to the localized labels
+        # dict before any label is used in the template.
+        label_overrides = extra.get("label_overrides") or {}
         # Localized labels
         labels = InvoicePDFService._get_labels(locale)
+        # Apply country-specific label overrides (e.g. GST instead of VAT)
+        labels.update(label_overrides)
 
         # Determine if this is a credit note
         is_credit_note = invoice.credit_note_for_id is not None
@@ -208,6 +216,10 @@ class InvoicePDFService:
             </div>
             """
 
+        # Compliance section (e.g. India GST breakdown) — structured HTML
+        # from a country compliance hook's ``enhance_pdf_data``.
+        compliance_section_html = extra.get("compliance_section_html") or ""
+
         # Build HTML
         html = f"""
         <!DOCTYPE html>
@@ -222,7 +234,7 @@ class InvoicePDFService:
                     box-sizing: border-box;
                 }}
                 body {{
-                    font-family: 'Helvetica Neue', Arial, sans-serif;
+                    font-family: 'Helvetica Neue', Arial, 'Noto Sans Tamil', sans-serif;
                     font-size: 11pt;
                     line-height: 1.4;
                     color: #333;
@@ -451,6 +463,54 @@ class InvoicePDFService:
                     margin-bottom: 4px;
                 }}
 
+                .gst-section {{
+                    clear: both;
+                    margin-top: 24px;
+                    padding: 16px;
+                    background: #f0fdf4;
+                    border: 1px solid #bbf7d0;
+                    border-radius: 8px;
+                }}
+                .gst-section .section-title {{
+                    font-size: 11pt;
+                    font-weight: bold;
+                    color: #065f46;
+                    margin-bottom: 12px;
+                    padding-bottom: 6px;
+                    border-bottom: 1px solid #bbf7d0;
+                }}
+                .gst-grid {{
+                    display: grid;
+                    gap: 6px;
+                }}
+                .gst-row {{
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: baseline;
+                    font-size: 10pt;
+                }}
+                .gst-label {{
+                    color: #6b7280;
+                }}
+                .gst-value {{
+                    font-weight: 500;
+                    color: #1f2937;
+                }}
+                .gst-amount {{
+                    font-variant-numeric: tabular-nums;
+                    text-align: right;
+                }}
+                .gst-amount-row {{
+                    padding-left: 16px;
+                }}
+                .gst-hint {{
+                    margin-top: 8px;
+                    padding-top: 8px;
+                    border-top: 1px solid #d1fae5;
+                    font-size: 8pt;
+                    color: #6b7280;
+                }}
+
                 @media print {{
                     body {{ padding: 0; }}
                     .footer {{ position: fixed; }}
@@ -605,6 +665,8 @@ class InvoicePDFService:
         }
             </div>
 
+            {compliance_section_html}
+
             {legal_notices_html}
 
             <div class="footer">
@@ -714,4 +776,47 @@ class InvoicePDFService:
             },
         }
 
-        return labels_es if locale == "es" else labels_en
+        labels_ta = {
+            "invoice": "விலைப்பட்டியல்",
+            "credit_note": "இரத்து விலைப்பட்டியல்",
+            "credit_note_for": "இதை இரத்து செய்கிறது",
+            "draft": "வரைவு",
+            "issue_date": "வெளியிட்ட தேதி",
+            "due_date": "செலுத்த வேண்டிய தேதி",
+            "billing_info": "பில்லிங் தகவல்",
+            "billing_name": "பெயர் / நிறுவனம்",
+            "tax_id": "வரிச் சான்றிதழ்",
+            "address": "முகவரி",
+            "patient": "நோயாளி",
+            "items": "பொருட்கள்",
+            "description": "விளக்கம்",
+            "qty": "அளவு",
+            "unit_price": "அலகு விலை",
+            "discount": "தள்ளை",
+            "vat": "GST",
+            "total": "மொத்தம்",
+            "subtotal": "உள்விலை",
+            "total_discount": "மொத்த தள்ளை",
+            "tax": "GST",
+            "grand_total": "மொத்தம்",
+            "total_paid": "செலுத்தப்பட்டது",
+            "balance_due": "நிலுவைத் தொகை",
+            "notes": "குறிப்புகள்",
+            "payment_terms": "கட்டண காலம்",
+            "days": "நாட்கள்",
+            "generated_by": "உருவாக்கியது",
+            "status": {
+                "draft": "வரைவு",
+                "issued": "வெளியிடப்பட்டது",
+                "partial": "பகுதி பணம்",
+                "paid": "செலுத்தப்பட்டது",
+                "cancelled": "ரத்து செய்யப்பட்டது",
+                "voided": "செல்லாதது",
+            },
+        }
+
+        if locale == "es":
+            return labels_es
+        if locale == "ta":
+            return labels_ta
+        return labels_en
