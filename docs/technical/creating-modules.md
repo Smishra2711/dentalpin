@@ -486,15 +486,17 @@ alembic revision --autogenerate \
 `backend/alembic.ini`'s `version_locations` lists every module's
 `migrations/versions` directory so `alembic history | heads | upgrade`
 find them before `env.py` runs. Because each branch adds a head, the
-backend entrypoint and the round-trip tests use the plural form:
-`alembic upgrade heads`.
+round-trip tests use the plural form `alembic upgrade heads`. The
+container entrypoint runs `python -m app.cli db upgrade` instead, which
+names the core heads plus the branch head of every *installed* module —
+an uninstalled module's branch is never applied at boot (ADR 0020).
 
 #### Why branches matter for removability
 
 In the legacy main-linear layout every module's revisions were
 threaded through a single chain. A module near the middle of the
 chain could not be uninstalled without also downgrading every module
-above it — the `alembic upgrade heads` that runs on the next boot then
+above it — the `alembic upgrade heads` that used to run on the next boot then
 re-applied the target module's migration, and the tables came back.
 The user-facing "module uninstalled" message was cosmetic only.
 

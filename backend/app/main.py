@@ -232,7 +232,7 @@ async def readiness_check(
     Probes a core table so monitoring catches the case where the DB volume
     gets recreated under a running container (schema gone, every business
     endpoint 500s). Recovery from that state belongs in the entrypoint
-    (`alembic upgrade heads`) plus an explicit container restart — not in
+    (`dentalpin db upgrade`) plus an explicit container restart — not in
     the proxy healthcheck, since Docker's `restart: unless-stopped` does
     not auto-restart on healthcheck failure.
     """
