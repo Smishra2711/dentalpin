@@ -314,6 +314,8 @@ installed    ──uninstall──►  to_remove ──restart──►  uninsta
 installed    ◄────toggle────►  disabled          (sin reinicio, sin tocar DB)
 ```
 
+*(Estado 2026-08: `disabled` existe en el enum y el loader lo trata como no activo, pero ningún toggle lo escribe todavía.)*
+
 **Invariantes**:
 - Solo los estados `to_*` son transitorios. Tras cada reinicio, el registry los resuelve.
 - Un módulo en `disabled` tiene migraciones aplicadas y datos intactos, pero su router/handlers no están montados en el proceso actual.
@@ -415,6 +417,7 @@ En el `lifespan` de FastAPI, antes de aceptar tráfico:
 4. **Bootstrap inicial** (solo primera vez, DB vacía): marcar todos los módulos con `auto_install: True` como `to_install`.
 5. **Procesar `to_*` pendientes**: en orden topológico. Si falla uno, continúa con los independientes y marca el fallido con error.
 6. **Montar en runtime**: para cada módulo `installed` y no `disabled`, montar router en `/api/v1/<name>/`, suscribir event handlers, registrar permisos.
+   *(Implementado en #91 / ADR 0020: `register_discovered()` → reconcile → processor → `mount_modules(app, installed)`; además tools, jobs y el hook `on_activate()`.)*
 7. FastAPI ready.
 
 ---

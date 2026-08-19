@@ -106,7 +106,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 | `treatment_plan.treatment_added` | `EventType.TREATMENT_PLAN_TREATMENT_ADDED` | `treatment_plan` | `budget` |
 | `treatment_plan.treatment_completed` | `EventType.TREATMENT_PLAN_TREATMENT_COMPLETED` | `treatment_plan` | `patient_timeline`, `recalls` |
 | `treatment_plan.treatment_removed` | `EventType.TREATMENT_PLAN_TREATMENT_REMOVED` | `treatment_plan` | `budget` |
-| `verifactu.record.rejected` | `EventType.VERIFACTU_RECORD_REJECTED` | `verifactu` | — |
+| `verifactu.record.rejected` | `EventType.VERIFACTU_RECORD_REJECTED` | `verifactu` | `verifactu` |
 
 ## Detail
 
@@ -847,4 +847,5 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Constant:** `EventType.VERIFACTU_RECORD_REJECTED`
 - **Publishers:**
   - `verifactu` — `backend/app/modules/verifactu/services/submission_queue.py:271`
-- **Subscribers:** —
+- **Subscribers:**
+  - `verifactu`

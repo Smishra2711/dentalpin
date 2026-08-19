@@ -122,11 +122,12 @@ class ModuleService:
     async def reconcile_with_db(self) -> None:
         """Ensure ``core_module`` contains one row per discovered module.
 
-        For v1 (Etapa 1): discovered modules that are new in the DB are
-        inserted as ``installed`` (their routers/handlers are already
-        mounted by :func:`load_modules`, so they are effectively live).
-        Discovered modules already in the DB have their ``version`` +
-        ``manifest_snapshot`` refreshed if the version changed.
+        Discovered modules that are new in the DB are inserted as
+        ``installed`` when their manifest says ``auto_install=True`` and as
+        ``uninstalled`` otherwise; the lifespan mounts the ``installed`` set
+        right after this (issue #91). Discovered modules already in the DB
+        have their ``version`` + ``manifest_snapshot`` refreshed if the
+        version changed.
 
         Modules present in DB but missing from disk are left alone here
         — :meth:`doctor` surfaces them as orphans.
@@ -160,19 +161,11 @@ class ModuleService:
             if record is None:
                 # Modules with ``auto_install=False`` must wait for an
                 # explicit Install action from the admin UI before they
-                # become active. They appear in the registry but stay
-                # in ``uninstalled`` state — their lifecycle install()
-                # hook is NOT called, their event handlers do not fire,
-                # and ``base_revision`` is left blank until the user
-                # promotes them.
-                #
-                # Note that the underlying Alembic migration was still
-                # applied as part of the main ``alembic upgrade heads``
-                # at boot (the schema lives on disk, not behind state).
-                # When the user later triggers Install, the processor's
-                # ``_run_migrate`` is a no-op (already at head) and the
-                # rest of the pipeline (seed → lifecycle hook → finalize)
-                # runs normally, eventually setting state=installed.
+                # become active. They stay ``uninstalled``: discovered, but
+                # not mounted — no router, handlers, tools, jobs or grants
+                # — and ``base_revision`` is left blank until the user
+                # promotes them. Install runs the full processor pipeline
+                # (migrate → seed → lifecycle hook → finalize).
                 if manifest.auto_install:
                     initial_state = ModuleState.INSTALLED.value
                     initial_installed_at = now

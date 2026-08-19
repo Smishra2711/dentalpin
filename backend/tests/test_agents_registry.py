@@ -216,7 +216,7 @@ async def test_every_existing_module_returns_a_list_of_tools():
     from app.core.plugins.registry import module_registry
 
     modules = module_registry.list_discovered()
-    assert modules, "no modules loaded — conftest load_modules failed"
+    assert modules, "no modules loaded — conftest register_discovered failed"
     for module in modules:
         tools = module.get_tools()
         assert isinstance(tools, list), f"{module.name}.get_tools() must return list"

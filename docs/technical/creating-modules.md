@@ -31,7 +31,7 @@ A module is a Python package that groups together:
 - Service-layer business logic (optional)
 - Event handlers (optional)
 - RBAC permissions (strongly encouraged)
-- Lifecycle hooks (`install`, `uninstall`, `post_upgrade`)
+- Lifecycle hooks (`install`, `uninstall`, `post_upgrade`) and the per-boot `on_activate`
 - Seed data files (optional, YAML)
 - A Nuxt Layer for the frontend (optional)
 
@@ -245,7 +245,18 @@ class InventoryModule(BaseModule):
 
     async def post_upgrade(self, ctx: ModuleContext, from_version: str) -> None:
         await lifecycle.post_upgrade(ctx, from_version)
+
+    def on_activate(self) -> None:
+        # Per boot, installed only: in-memory cross-module registrations
+        # (compliance hooks, channel adapters). Sync, no DB. See §5.
+        ...
 ```
+
+Never register anything into another module's in-memory registry (a hook
+registry, the channel registry, the event bus) from `__init__` or at
+import time: discovery instantiates and imports every module on disk,
+installed or not. Put it in `on_activate()` — the loader calls it only for
+modules the admin actually installed (issue #91).
 
 ### `models.py`
 
@@ -667,8 +678,10 @@ State machine tracked in `core_module`:
 uninstalled ──install──▶ to_install ──restart──▶ installed
 installed   ──upgrade──▶ to_upgrade ──restart──▶ installed
 installed   ──uninstall─▶ to_remove ──restart──▶ uninstalled
-installed   ◀──toggle──▶ disabled    (no restart, no DB write)
 ```
+
+(`disabled` exists in the enum and is treated as "not active" by the
+loader, but nothing writes it yet — there is no toggle.)
 
 On each restart, the **pending processor** runs every module in
 `to_*` state, in topological order, through these steps:
@@ -680,6 +693,18 @@ On each restart, the **pending processor** runs every module in
 Every step is logged to `core_module_operation_log` with
 `started/completed/failed`. Crashes leave a trail; the next restart
 can detect and retry.
+
+### What is live at runtime
+
+On each boot, **after** the pending processor has run, the loader mounts
+only the modules whose state is `installed`: router, event handlers,
+copilot tools, scheduler jobs, manifest `role_permissions`, `on_activate()`.
+A module in `uninstalled`, a `to_install` that failed, or the reserved
+`disabled` state is still *discovered* (it shows in `dentalpin modules
+list`, it can be installed) but is invisible at runtime — no routes, no
+handlers, no grants. `module_registry.is_active(name)` is the question to
+ask when one module needs to know whether another is really on
+(`is_discovered` only says "on disk"). Issue #91 / ADR 0020.
 
 ### External IDs
 

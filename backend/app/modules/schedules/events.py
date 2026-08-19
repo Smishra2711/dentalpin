@@ -1,8 +1,8 @@
 """Event handlers.
 
 * Agenda appointment lifecycle — purely informational (analytics cache);
-  never block the appointment flow. If schedules is uninstalled the bus
-  simply stops calling these functions.
+  never block the appointment flow. While schedules is uninstalled the
+  loader does not subscribe these functions at all (issue #91).
 * ``clinic.created`` — seed a Mon–Fri weekly template so a fresh clinic
   doesn't start "open 24/7".
 """
