@@ -126,12 +126,35 @@ class IndiaGstModule(BaseModule):
                 )
 
     async def uninstall(self, ctx) -> None:
-        from sqlalchemy import select
+        from sqlalchemy import func, select
 
         from app.core.auth.models import Clinic
         from app.modules.billing.hooks import BillingHookRegistry
+        from app.modules.billing.models import Invoice, InvoiceItem
 
+        from .models import IndiaGstInvoiceItem
         from .seed import cleanup_india_gst_demo
+
+        # Guard: refuse uninstall if any non-draft invoice has GST line-item
+        # data.  Removing the module would orphan the CGST/SGST/IGST
+        # breakdown that was already communicated to the customer.
+        gst_invoice_q = await ctx.db.execute(
+            select(func.count())
+            .select_from(IndiaGstInvoiceItem)
+            .join(
+                InvoiceItem,
+                IndiaGstInvoiceItem.invoice_item_id == InvoiceItem.id,
+            )
+            .join(Invoice, Invoice.id == InvoiceItem.invoice_id)
+            .where(Invoice.status != "draft")
+        )
+        issued_gst_count = gst_invoice_q.scalar() or 0
+        if issued_gst_count > 0:
+            raise RuntimeError(
+                f"Cannot uninstall india_gst: {issued_gst_count} line items on "
+                f"issued invoices still have GST data. "
+                f"Void or credit-note those invoices first."
+            )
 
         # Clean up India GST demo data for every clinic that has it.
         # ModuleContext has no clinic_id (modules are global), so we

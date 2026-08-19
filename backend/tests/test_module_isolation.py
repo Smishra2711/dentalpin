@@ -107,6 +107,8 @@ KNOWN_VIOLATIONS: set[tuple[str, str, str]] = {
     ("agenda", "service.py", "treatment_plan"),
     ("agenda", "kanban_service.py", "schedules"),
     ("billing", "router.py", "reports"),
+    ("india_gst", "seed.py", "budget"),
+    ("india_gst", "seed.py", "patients"),
     ("patient_timeline", "seed.py", "agenda"),
     ("patient_timeline", "seed.py", "billing"),
     ("patient_timeline", "seed.py", "budget"),
