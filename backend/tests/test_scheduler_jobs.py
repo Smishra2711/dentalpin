@@ -17,6 +17,7 @@ from app.modules.budget import BudgetModule
 from app.modules.copilot import CopilotModule
 from app.modules.notifications import NotificationsModule
 from app.modules.treatment_plan import TreatmentPlanModule
+from app.modules.verifactu import VerifactuModule
 
 
 def test_modules_declare_their_jobs() -> None:
@@ -25,6 +26,13 @@ def test_modules_declare_their_jobs() -> None:
         BudgetModule: {"expire_budgets", "send_budget_reminders", "purge_budget_access_logs"},
         TreatmentPlanModule: {"auto_close_expired_plans"},
         CopilotModule: {"copilot_morning_digests"},
+        # Declared, not self-registered from install() — so the jobs exist
+        # on every boot the module is installed, and never otherwise (#91).
+        VerifactuModule: {
+            "verifactu_submissions",
+            "verifactu_stuck_reaper",
+            "verifactu_cert_expiry",
+        },
     }
     for module_cls, ids in expected.items():
         jobs = module_cls().get_scheduled_jobs()

@@ -23,7 +23,7 @@ from app.core.log_context import (
     set_request_context,
     setup_logging,
 )
-from app.core.plugins.loader import load_modules
+from app.core.plugins.loader import mount_modules, register_discovered
 from app.core.plugins.processor import PendingProcessor
 from app.core.plugins.service import ModuleService
 from app.core.scheduler import init_scheduler, shutdown_scheduler
@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     setup_logging()
 
     # Startup
-    load_modules(app)
+    mount_modules(app, register_discovered())
 
     # Sync in-memory registry into core_module (best-effort).
     try:

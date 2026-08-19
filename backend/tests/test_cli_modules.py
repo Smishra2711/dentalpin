@@ -16,24 +16,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.cli.__main__ import build_parser
 from app.cli.modules import _cmd_doctor, _cmd_info, _cmd_list, _cmd_status
-from app.core.plugins.loader import discover_modules
-from app.core.plugins.registry import module_registry
+from app.core.plugins.loader import register_discovered
 from app.core.plugins.service import ModuleService
-
-
-def _seed_registry() -> None:
-    if module_registry.list_discovered():
-        return
-    for module in discover_modules():
-        try:
-            module_registry.register(module)
-        except ValueError:
-            pass
 
 
 @pytest.mark.asyncio
 async def test_cli_list_json(db_session: AsyncSession, capsys) -> None:
-    _seed_registry()
+    register_discovered()
     await ModuleService(db_session).reconcile_with_db()
 
     exit_code = await _cmd_list(
@@ -51,7 +40,7 @@ async def test_cli_list_json(db_session: AsyncSession, capsys) -> None:
 
 @pytest.mark.asyncio
 async def test_cli_list_text_table(db_session: AsyncSession, capsys) -> None:
-    _seed_registry()
+    register_discovered()
     await ModuleService(db_session).reconcile_with_db()
 
     exit_code = await _cmd_list(
@@ -67,7 +56,7 @@ async def test_cli_list_text_table(db_session: AsyncSession, capsys) -> None:
 
 @pytest.mark.asyncio
 async def test_cli_info_unknown_returns_nonzero(db_session: AsyncSession, capsys) -> None:
-    _seed_registry()
+    register_discovered()
     await ModuleService(db_session).reconcile_with_db()
 
     exit_code = await _cmd_info(
@@ -79,7 +68,7 @@ async def test_cli_info_unknown_returns_nonzero(db_session: AsyncSession, capsys
 
 @pytest.mark.asyncio
 async def test_cli_info_known_module(db_session: AsyncSession, capsys) -> None:
-    _seed_registry()
+    register_discovered()
     await ModuleService(db_session).reconcile_with_db()
 
     exit_code = await _cmd_info(
@@ -95,7 +84,7 @@ async def test_cli_info_known_module(db_session: AsyncSession, capsys) -> None:
 
 @pytest.mark.asyncio
 async def test_cli_status_reports_counts(db_session: AsyncSession, capsys) -> None:
-    _seed_registry()
+    register_discovered()
     await ModuleService(db_session).reconcile_with_db()
 
     exit_code = await _cmd_status(
@@ -111,7 +100,7 @@ async def test_cli_status_reports_counts(db_session: AsyncSession, capsys) -> No
 
 @pytest.mark.asyncio
 async def test_cli_doctor_clean(db_session: AsyncSession, capsys) -> None:
-    _seed_registry()
+    register_discovered()
     await ModuleService(db_session).reconcile_with_db()
 
     exit_code = await _cmd_doctor(

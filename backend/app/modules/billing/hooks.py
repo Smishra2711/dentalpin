@@ -276,15 +276,13 @@ class BillingHookRegistry:
     Country modules register their hooks here.
     The billing module queries this registry to find applicable hooks.
 
-    Usage by country module:
+    Usage by country module (re-attached on every boot the module is
+    installed — see ``BaseModule.on_activate``):
 
-        # In verifactu_es/__init__.py
+        # In verifactu/__init__.py
         class VerifactuModule(BaseModule):
-            def on_load(self):
+            def on_activate(self) -> None:
                 BillingHookRegistry.register(VerifactuHook())
-
-            def on_unload(self):
-                BillingHookRegistry.unregister("ES")
     """
 
     _hooks: dict[str, BillingComplianceHook] = {}

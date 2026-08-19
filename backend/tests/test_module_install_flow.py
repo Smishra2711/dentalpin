@@ -7,24 +7,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.plugins.db_models import ModuleRecord
-from app.core.plugins.loader import discover_modules
-from app.core.plugins.registry import module_registry
+from app.core.plugins.loader import register_discovered
 from app.core.plugins.service import ModuleOperationError, ModuleService
 from app.core.plugins.state import ModuleState
 
 
-def _seed_registry() -> None:
-    if module_registry.list_discovered():
-        return
-    for module in discover_modules():
-        try:
-            module_registry.register(module)
-        except ValueError:
-            pass
-
-
 async def _reconcile(db_session: AsyncSession) -> None:
-    _seed_registry()
+    register_discovered()
     await ModuleService(db_session).reconcile_with_db()
 
 

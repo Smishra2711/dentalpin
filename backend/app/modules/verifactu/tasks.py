@@ -1,8 +1,8 @@
 """APScheduler integration for Verifactu background jobs + event handlers.
 
-The scheduler is owned by the host app at :mod:`app.core.scheduler`.
-We register our jobs from :func:`register_jobs`, called from the
-module's startup hook.
+The scheduler is owned by the host app at :mod:`app.core.scheduler`;
+the module hands it the specs below via ``VerifactuModule.get_scheduled_jobs``
+(only while installed — issue #91).
 
 Jobs:
 
@@ -16,7 +16,8 @@ Jobs:
 Event handlers:
 
 * ``verifactu.record.rejected`` → email clinic admins about an AEAT
-  rejection (throttled to 1 alert per clinic per 30 min).
+  rejection (throttled to 1 alert per clinic per 30 min). Subscribed via
+  ``VerifactuModule.get_event_handlers``.
 """
 
 from __future__ import annotations
@@ -25,14 +26,11 @@ import logging
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from apscheduler.triggers.cron import CronTrigger
-from apscheduler.triggers.interval import IntervalTrigger
 from sqlalchemy import select
 
 from app.core.auth.models import Clinic, ClinicMembership, User
 from app.core.email import email_service
-from app.core.events import EventType, event_bus
-from app.core.scheduler import get_scheduler
+from app.core.scheduling import ScheduledJob
 from app.database import async_session_maker
 
 from .models import VerifactuSettings
@@ -43,8 +41,6 @@ logger = logging.getLogger(__name__)
 JOB_ID_SUBMISSIONS = "verifactu_submissions"
 JOB_ID_REAPER = "verifactu_stuck_reaper"
 JOB_ID_CERT_CHECK = "verifactu_cert_expiry"
-
-ALL_JOB_IDS = (JOB_ID_SUBMISSIONS, JOB_ID_REAPER, JOB_ID_CERT_CHECK)
 
 REJECTED_ALERT_THROTTLE = timedelta(minutes=30)
 
@@ -71,56 +67,32 @@ async def daily_cert_check() -> None:
     await check_expiring_certs(async_session_maker)
 
 
-def register_jobs() -> None:
-    """Idempotent registration; safe under uvicorn --reload."""
+def scheduled_jobs() -> list[ScheduledJob]:
+    """Specs for :meth:`VerifactuModule.get_scheduled_jobs`."""
 
-    scheduler = get_scheduler()
-
-    if not scheduler.get_job(JOB_ID_SUBMISSIONS):
-        scheduler.add_job(
-            process_verifactu_submissions,
-            IntervalTrigger(seconds=60),
+    return [
+        ScheduledJob(
             id=JOB_ID_SUBMISSIONS,
+            func=process_verifactu_submissions,
+            trigger="interval",
+            trigger_args={"seconds": 60},
             name="Drain Verifactu submission queue",
-            replace_existing=True,
-        )
-
-    if not scheduler.get_job(JOB_ID_REAPER):
-        scheduler.add_job(
-            reap_stuck_records,
-            IntervalTrigger(minutes=5),
+        ),
+        ScheduledJob(
             id=JOB_ID_REAPER,
+            func=reap_stuck_records,
+            trigger="interval",
+            trigger_args={"minutes": 5},
             name="Reap Verifactu records stuck in 'sending'",
-            replace_existing=True,
-        )
-
-    if not scheduler.get_job(JOB_ID_CERT_CHECK):
-        scheduler.add_job(
-            daily_cert_check,
-            CronTrigger(hour=8, minute=0),
+        ),
+        ScheduledJob(
             id=JOB_ID_CERT_CHECK,
+            func=daily_cert_check,
+            trigger="cron",
+            trigger_args={"hour": 8, "minute": 0},
             name="Check Verifactu certificates expiring soon",
-            replace_existing=True,
-        )
-
-
-def unregister_jobs() -> None:
-    """Remove every Verifactu job from the scheduler.
-
-    Called from :meth:`VerifactuModule.uninstall` so the host scheduler
-    doesn't keep firing into a module that no longer has the imports
-    available.
-    """
-
-    scheduler = get_scheduler()
-    for job_id in ALL_JOB_IDS:
-        if scheduler.get_job(job_id):
-            scheduler.remove_job(job_id)
-
-
-# ---------------------------------------------------------------------------
-# Event handlers
-# ---------------------------------------------------------------------------
+        ),
+    ]
 
 
 async def _admins_for(db, clinic_id: UUID) -> list[User]:
@@ -212,8 +184,8 @@ async def _notify_rejected(payload: dict) -> None:
             await db.commit()
 
 
-def _on_rejected_event(payload: dict) -> None:
-    """Bus adapter — forwards to the async handler."""
+def on_rejected_event(payload: dict) -> None:
+    """Bus adapter for ``verifactu.record.rejected`` — forwards to the async handler."""
     import asyncio
 
     try:
@@ -221,14 +193,3 @@ def _on_rejected_event(payload: dict) -> None:
         loop.create_task(_notify_rejected(payload))
     except RuntimeError:
         asyncio.run(_notify_rejected(payload))
-
-
-def register_event_handlers() -> None:
-    """Idempotent — replaces previous subscription on re-register."""
-
-    event_bus.unsubscribe(EventType.VERIFACTU_RECORD_REJECTED, _on_rejected_event)
-    event_bus.subscribe(EventType.VERIFACTU_RECORD_REJECTED, _on_rejected_event)
-
-
-def unregister_event_handlers() -> None:
-    event_bus.unsubscribe(EventType.VERIFACTU_RECORD_REJECTED, _on_rejected_event)
