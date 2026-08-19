@@ -41,7 +41,7 @@ const complianceSlotCtx = computed(() => ({
 
 const isIndianClinic = computed(() => {
   const c = currentClinic.value
-  return c?.country === 'IN' || c?.settings?.country === 'IN'
+  return c?.settings?.country === 'IN'
 })
 
 const invoiceId = computed(() => route.params.id as string)

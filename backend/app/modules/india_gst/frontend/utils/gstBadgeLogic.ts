@@ -30,7 +30,7 @@ const COLOR_MAP: Record<string, BadgeColor> = {
   ok: 'success',
   warning: 'warning',
   pending: 'neutral',
-  error: 'error',
+  error: 'error'
 }
 
 export function isIndianClinic(ctx: BadgeCtx): boolean {
@@ -54,7 +54,7 @@ export function computeBadge(
       return {
         color: 'warning',
         label: t('indiaGst.badge.needsAttention'),
-        tooltip: t('indiaGst.badge.missingGst'),
+        tooltip: t('indiaGst.badge.missingGst')
       }
     }
     return null
@@ -69,7 +69,7 @@ export function computeBadge(
   return {
     color: COLOR_MAP[severity] ?? 'neutral',
     label,
-    tooltip: data.gst_document_number ?? t('indiaGst.badge.gst'),
+    tooltip: data.gst_document_number ?? t('indiaGst.badge.gst')
   }
 }
 
@@ -90,7 +90,7 @@ export function computeEinvoiceLabel(
     pending: t('indiaGst.einvoice.pending'),
     generated: t('indiaGst.einvoice.generated'),
     rejected: t('indiaGst.einvoice.rejected'),
-    error: t('indiaGst.einvoice.error'),
+    error: t('indiaGst.einvoice.error')
   }
   return state ? (map[state] ?? state) : t('indiaGst.einvoice.notRequired')
 }

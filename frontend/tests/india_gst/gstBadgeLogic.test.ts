@@ -5,7 +5,7 @@ import {
   computeEinvoiceLabel,
   isIndianClinic,
   isNonDraft,
-  type BadgeCtx,
+  type BadgeCtx
 } from '#module-layers/india_gst/frontend/utils/gstBadgeLogic'
 
 const t = (key: string) => key
@@ -14,7 +14,7 @@ function makeCtx(overrides: Partial<BadgeCtx> = {}): BadgeCtx {
   return {
     invoice: { status: 'issued', compliance_data: { IN: { severity: 'ok' } } },
     clinic: { country: 'IN', settings: { country: 'IN' } },
-    ...overrides,
+    ...overrides
   }
 }
 
@@ -66,21 +66,21 @@ describe('computeBadge', () => {
   it('returns null for non-Indian clinic with no GST data', () => {
     const ctx = makeCtx({
       clinic: { country: 'ES', settings: { country: 'ES' } },
-      invoice: { status: 'issued', compliance_data: null },
+      invoice: { status: 'issued', compliance_data: null }
     })
     expect(computeBadge(ctx, t)).toBeNull()
   })
 
   it('returns null for Indian clinic with draft invoice and no GST data', () => {
     const ctx = makeCtx({
-      invoice: { status: 'draft', compliance_data: null },
+      invoice: { status: 'draft', compliance_data: null }
     })
     expect(computeBadge(ctx, t)).toBeNull()
   })
 
   it('returns warning badge for Indian clinic with issued invoice and no GST data', () => {
     const ctx = makeCtx({
-      invoice: { status: 'issued', compliance_data: null },
+      invoice: { status: 'issued', compliance_data: null }
     })
     const badge = computeBadge(ctx, t)
     expect(badge).not.toBeNull()
@@ -91,7 +91,7 @@ describe('computeBadge', () => {
 
   it('returns success badge for ok severity', () => {
     const ctx = makeCtx({
-      invoice: { status: 'issued', compliance_data: { IN: { severity: 'ok' } } },
+      invoice: { status: 'issued', compliance_data: { IN: { severity: 'ok' } } }
     })
     const badge = computeBadge(ctx, t)
     expect(badge).not.toBeNull()
@@ -101,7 +101,7 @@ describe('computeBadge', () => {
 
   it('returns warning badge for warning severity', () => {
     const ctx = makeCtx({
-      invoice: { status: 'issued', compliance_data: { IN: { severity: 'warning' } } },
+      invoice: { status: 'issued', compliance_data: { IN: { severity: 'warning' } } }
     })
     const badge = computeBadge(ctx, t)
     expect(badge!.color).toBe('warning')
@@ -109,7 +109,7 @@ describe('computeBadge', () => {
 
   it('returns error badge for error severity', () => {
     const ctx = makeCtx({
-      invoice: { status: 'issued', compliance_data: { IN: { severity: 'error' } } },
+      invoice: { status: 'issued', compliance_data: { IN: { severity: 'error' } } }
     })
     const badge = computeBadge(ctx, t)
     expect(badge!.color).toBe('error')
@@ -117,7 +117,7 @@ describe('computeBadge', () => {
 
   it('returns neutral badge for pending severity', () => {
     const ctx = makeCtx({
-      invoice: { status: 'issued', compliance_data: { IN: { severity: 'pending' } } },
+      invoice: { status: 'issued', compliance_data: { IN: { severity: 'pending' } } }
     })
     const badge = computeBadge(ctx, t)
     expect(badge!.color).toBe('neutral')
@@ -125,7 +125,7 @@ describe('computeBadge', () => {
 
   it('uses neutral for unknown severity', () => {
     const ctx = makeCtx({
-      invoice: { status: 'issued', compliance_data: { IN: { severity: 'unknown' } } },
+      invoice: { status: 'issued', compliance_data: { IN: { severity: 'unknown' } } }
     })
     const badge = computeBadge(ctx, t)
     expect(badge!.color).toBe('neutral')
@@ -133,7 +133,7 @@ describe('computeBadge', () => {
 
   it('uses IRN generated label when einvoice_state is generated', () => {
     const ctx = makeCtx({
-      invoice: { status: 'issued', compliance_data: { IN: { severity: 'ok', einvoice_state: 'generated' } } },
+      invoice: { status: 'issued', compliance_data: { IN: { severity: 'ok', einvoice_state: 'generated' } } }
     })
     const badge = computeBadge(ctx, t)
     expect(badge!.label).toBe('indiaGst.badge.irnGenerated')
@@ -141,7 +141,7 @@ describe('computeBadge', () => {
 
   it('uses einvoice issue label when einvoice_state is rejected', () => {
     const ctx = makeCtx({
-      invoice: { status: 'issued', compliance_data: { IN: { severity: 'ok', einvoice_state: 'rejected' } } },
+      invoice: { status: 'issued', compliance_data: { IN: { severity: 'ok', einvoice_state: 'rejected' } } }
     })
     const badge = computeBadge(ctx, t)
     expect(badge!.label).toBe('indiaGst.badge.einvoiceIssue')
@@ -149,7 +149,7 @@ describe('computeBadge', () => {
 
   it('uses einvoice issue label when einvoice_state is error', () => {
     const ctx = makeCtx({
-      invoice: { status: 'issued', compliance_data: { IN: { severity: 'ok', einvoice_state: 'error' } } },
+      invoice: { status: 'issued', compliance_data: { IN: { severity: 'ok', einvoice_state: 'error' } } }
     })
     const badge = computeBadge(ctx, t)
     expect(badge!.label).toBe('indiaGst.badge.einvoiceIssue')
@@ -157,7 +157,7 @@ describe('computeBadge', () => {
 
   it('uses gst_document_number as tooltip when present', () => {
     const ctx = makeCtx({
-      invoice: { status: 'issued', compliance_data: { IN: { severity: 'ok', gst_document_number: 'FAC/FY26-27/0001' } } },
+      invoice: { status: 'issued', compliance_data: { IN: { severity: 'ok', gst_document_number: 'FAC/FY26-27/0001' } } }
     })
     const badge = computeBadge(ctx, t)
     expect(badge!.tooltip).toBe('FAC/FY26-27/0001')
@@ -165,7 +165,7 @@ describe('computeBadge', () => {
 
   it('falls back to gst label as tooltip when no document number', () => {
     const ctx = makeCtx({
-      invoice: { status: 'issued', compliance_data: { IN: { severity: 'ok' } } },
+      invoice: { status: 'issued', compliance_data: { IN: { severity: 'ok' } } }
     })
     const badge = computeBadge(ctx, t)
     expect(badge!.tooltip).toBe('indiaGst.badge.gst')
@@ -173,7 +173,7 @@ describe('computeBadge', () => {
 
   it('defaults severity to ok when not specified', () => {
     const ctx = makeCtx({
-      invoice: { status: 'issued', compliance_data: { IN: {} } },
+      invoice: { status: 'issued', compliance_data: { IN: {} } }
     })
     const badge = computeBadge(ctx, t)
     expect(badge!.color).toBe('success')

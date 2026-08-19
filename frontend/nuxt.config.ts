@@ -121,7 +121,19 @@ export default defineNuxtConfig({
     tsConfig: {
       include: localLayers.map(layer => join('..', layer, '**/*')),
       // Layer nuxt.config files belong to the node tsconfig, not the app one.
-      exclude: localLayers.map(layer => join('..', layer, 'nuxt.config.*'))
+      exclude: localLayers.map(layer => join('..', layer, 'nuxt.config.*')),
+      // Module-layer source files live outside /app (at /module_layers/),
+      // so TypeScript's node resolution can't find packages from
+      // /app/node_modules. Nuxt already adds paths for vue, vue-router,
+      // etc., but not for these deps used by module layers.
+      compilerOptions: {
+        paths: {
+          'marked': ['../node_modules/marked'],
+          'isomorphic-dompurify': ['../node_modules/isomorphic-dompurify'],
+          '@nuxt/ui': ['../node_modules/@nuxt/ui'],
+          'vue-draggable-plus': ['../node_modules/vue-draggable-plus']
+        }
+      }
     }
   },
 

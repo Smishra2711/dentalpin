@@ -11,8 +11,8 @@ const moduleLayersPath = existsSync('/module_layers')
 export default defineVitestConfig({
   resolve: {
     alias: {
-      '#module-layers': moduleLayersPath,
-    },
+      '#module-layers': moduleLayersPath
+    }
   },
   test: {
     environment: 'nuxt',
