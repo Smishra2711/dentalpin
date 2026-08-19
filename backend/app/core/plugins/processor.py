@@ -24,6 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.config import settings
 
+from .alembic_paths import alembic_cfg_path
 from .context import ModuleContext
 from .db_models import ModuleRecord
 from .external_id import ExternalIdHelper
@@ -441,7 +442,7 @@ def _alembic_cmd(args: list[str]) -> str | None:
     ``args`` is forwarded verbatim to the ``alembic`` CLI (e.g.
     ``["upgrade", "schedules@head"]`` or ``["downgrade", "base"]``).
     """
-    cfg_path = _alembic_cfg_path()
+    cfg_path = alembic_cfg_path()
     backend_root = cfg_path.parent
 
     try:
@@ -474,16 +475,12 @@ def _alembic_cmd(args: list[str]) -> str | None:
     return None
 
 
-def _alembic_cfg_path() -> Path:
-    return Path(__file__).resolve().parents[3] / "alembic.ini"
-
-
 def _parent_revision(revision: str) -> str:
     """Return the ``down_revision`` of ``revision``, or ``'base'`` if none."""
     from alembic.config import Config
     from alembic.script import ScriptDirectory
 
-    script = ScriptDirectory.from_config(Config(str(_alembic_cfg_path())))
+    script = ScriptDirectory.from_config(Config(str(alembic_cfg_path())))
     rev = script.get_revision(revision)
     down = rev.down_revision
     if down is None:
@@ -510,7 +507,7 @@ def _module_branch_label(revision: str) -> str | None:
     from alembic.config import Config
     from alembic.script import ScriptDirectory
 
-    script = ScriptDirectory.from_config(Config(str(_alembic_cfg_path())))
+    script = ScriptDirectory.from_config(Config(str(alembic_cfg_path())))
     rev = script.get_revision(revision)
     while rev is not None:
         if rev._orig_branch_labels:

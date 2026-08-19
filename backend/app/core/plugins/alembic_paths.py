@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import importlib.util
 import logging
+from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -54,12 +55,13 @@ def _module_versions_dir(module: BaseModule) -> Path | None:
     return versions_dir if versions_dir.is_dir() else None
 
 
-def _alembic_cfg_path() -> Path:
+def alembic_cfg_path() -> Path:
+    """``backend/alembic.ini`` — shared by the processor, the CLI and the validator."""
     return Path(__file__).resolve().parents[3] / "alembic.ini"
 
 
 def _load_script_directory():
-    cfg_path = _alembic_cfg_path()
+    cfg_path = alembic_cfg_path()
     if not cfg_path.is_file():
         return None
     from alembic.config import Config
@@ -155,3 +157,41 @@ def module_branch_is_isolated(module: BaseModule) -> bool:
         if any(p in owned for p in parents):
             return False
     return True
+
+
+def boot_upgrade_targets(
+    modules: list[BaseModule],
+    wanted: Callable[[BaseModule], bool],
+) -> list[str]:
+    """Alembic targets the boot should upgrade to (ADR 0020).
+
+    Core heads (revision files under ``alembic/versions``) always; then the
+    branch head of every module in ``modules`` for which ``wanted`` is
+    true, in the order given (topological, so dependencies first). Modules
+    without a branch of their own live in the core chain and need nothing.
+
+    Upgrading to a revision that is already an ancestor of the current
+    heads is a no-op, so overlapping targets are harmless; what matters is
+    that a branch nobody wants is never named.
+    """
+    script = _load_script_directory()
+    if script is None:
+        return []
+
+    main_linear = (alembic_cfg_path().parent / "alembic" / "versions").resolve()
+    targets: list[str] = []
+    for head in script.get_heads():
+        rev = script.get_revision(head)
+        rev_path = getattr(rev, "path", None)
+        if rev_path and Path(rev_path).resolve().parent == main_linear:
+            targets.append(head)
+
+    for module in modules:
+        head = resolve_module_branch_head(module)
+        if head is None:
+            continue
+        if wanted(module):
+            targets.append(head)
+        else:
+            logger.info("db upgrade: skipping %s (%s) — not installed", module.name, head)
+    return targets
