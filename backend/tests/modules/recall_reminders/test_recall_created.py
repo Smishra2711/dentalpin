@@ -3,7 +3,13 @@
 Covers the module's only real behavior: when a recall is created, the
 handler enqueues a reminder via NotificationGateway, scoped to the
 correct clinic, and does nothing for any other clinic's data.
+
+Transactional (ADR 0019): the handler takes the caller's session and
+runs inside a savepoint rather than opening its own — these tests call
+it directly with db_session and assert on that same session, the way
+a publisher (recalls/service.py) would.
 """
+
 from __future__ import annotations
 
 from uuid import uuid4
@@ -13,9 +19,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth.models import Clinic
-from app.modules.notifications.models import CommunicationMessage, NotificationTemplate
+from app.modules.notifications.models import CommunicationMessage
 from app.modules.patients.models import Patient
-from app.modules.recall_reminders.handlers import _on_recall_created
+from app.modules.recall_reminders.handlers import _humanize_due_month, _on_recall_created
 
 
 @pytest.mark.asyncio
@@ -24,18 +30,6 @@ async def test_recall_created_enqueues_reminder_for_correct_clinic_only(
     test_clinic: Clinic,
     test_patient: Patient,
 ):
-    db_session.add(
-        NotificationTemplate(
-            clinic_id=test_clinic.id,
-            channel="email",
-            template_key="recall_reminder",
-            locale="en",
-            subject="Recall due",
-            body_html="Hi {{ patient_first_name }}, you're due for a recall.",
-        )
-    )
-    await db_session.commit()
-
     other_clinic = Clinic(
         id=uuid4(), name="Other Clinic", tax_id="B99999999", address={}, settings={}
     )
@@ -49,15 +43,14 @@ async def test_recall_created_enqueues_reminder_for_correct_clinic_only(
             "recall_id": str(uuid4()),
             "reason": "6-month checkup",
             "due_month": "2026-09",
-        }
+        },
+        db=db_session,
     )
 
     rows = (
         (
             await db_session.execute(
-                select(CommunicationMessage).where(
-                    CommunicationMessage.clinic_id == test_clinic.id
-                )
+                select(CommunicationMessage).where(CommunicationMessage.clinic_id == test_clinic.id)
             )
         )
         .scalars()
@@ -65,6 +58,12 @@ async def test_recall_created_enqueues_reminder_for_correct_clinic_only(
     )
     assert len(rows) == 1
     assert rows[0].patient_id == test_patient.id
+    assert (
+        rows[0].context_data["patient_name"]
+        == f"{test_patient.first_name} {test_patient.last_name}"
+    )
+    assert rows[0].context_data["clinic_name"] == test_clinic.name
+    assert rows[0].context_data["due_month"] == "September 2026"
 
     other_rows = (
         (
@@ -87,18 +86,6 @@ async def test_recall_created_is_idempotent_on_dedup_key(
     """Same recall_id firing twice (e.g. a redelivered event) must not
     enqueue two reminders — the handler always sets dedup_key from
     recall_id specifically to guard against this."""
-    db_session.add(
-        NotificationTemplate(
-            clinic_id=test_clinic.id,
-            channel="email",
-            template_key="recall_reminder",
-            locale="en",
-            subject="Recall due",
-            body_html="Hi {{ patient_first_name }}.",
-        )
-    )
-    await db_session.commit()
-
     recall_id = str(uuid4())
     payload = {
         "clinic_id": str(test_clinic.id),
@@ -108,18 +95,52 @@ async def test_recall_created_is_idempotent_on_dedup_key(
         "due_month": "2026-09",
     }
 
-    await _on_recall_created(payload)
-    await _on_recall_created(payload)
+    await _on_recall_created(payload, db=db_session)
+    await _on_recall_created(payload, db=db_session)
 
     rows = (
         (
             await db_session.execute(
-                select(CommunicationMessage).where(
-                    CommunicationMessage.clinic_id == test_clinic.id
-                )
+                select(CommunicationMessage).where(CommunicationMessage.clinic_id == test_clinic.id)
             )
         )
         .scalars()
         .all()
     )
     assert len(rows) == 1
+
+
+@pytest.mark.asyncio
+async def test_recall_created_skips_silently_when_patient_missing(
+    db_session: AsyncSession, test_clinic: Clinic
+):
+    """A patient_id that doesn't resolve (deleted between flush and
+    publish, or a bad payload) must not raise inside the publisher's
+    transaction — this handler is best-effort by design."""
+    await _on_recall_created(
+        {
+            "clinic_id": str(test_clinic.id),
+            "patient_id": str(uuid4()),
+            "recall_id": str(uuid4()),
+            "reason": "6-month checkup",
+            "due_month": "2026-09",
+        },
+        db=db_session,
+    )
+
+    rows = (
+        (
+            await db_session.execute(
+                select(CommunicationMessage).where(CommunicationMessage.clinic_id == test_clinic.id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assert rows == []
+
+
+def test_humanize_due_month():
+    assert _humanize_due_month("2026-09") == "September 2026"
+    assert _humanize_due_month(None) is None
+    assert _humanize_due_month("not-a-date") == "not-a-date"

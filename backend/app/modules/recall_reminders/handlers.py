@@ -12,26 +12,63 @@ exactly once per final module instance.
 
 from __future__ import annotations
 
+import logging
+from datetime import datetime
 from uuid import UUID
 
-from app.database import async_session_maker
-from app.modules.notifications.gateway import NotificationGateway
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+logger = logging.getLogger(__name__)
 
 
-async def _on_recall_created(payload: dict) -> None:
+def _humanize_due_month(due_month: str | None) -> str | None:
+    if not due_month:
+        return None
+    try:
+        return datetime.strptime(due_month, "%Y-%m").strftime("%B %Y")
+    except ValueError:
+        return due_month
+
+
+async def _on_recall_created(payload: dict, *, db: AsyncSession) -> None:
+    """Handle recall.created.
+
+    Transactional (ADR 0019): queues the reminder on the publisher's
+    session. Nothing is sent here — the outbox tick owns the network
+    I/O — so a rolled-back request queues nothing, and the rows this
+    reads are the publisher's own (issue #183).
+    """
+    from app.core.auth.models import Clinic
+    from app.modules.notifications.gateway import NotificationGateway
+    from app.modules.patients.models import Patient
+
     clinic_id = UUID(payload["clinic_id"])
     patient_id = UUID(payload["patient_id"])
     recall_id = payload["recall_id"]
 
-    async with async_session_maker() as db:
+    async with db.begin_nested():
+        result = await db.execute(select(Patient).where(Patient.id == patient_id))
+        patient = result.scalar_one_or_none()
+        if not patient:
+            logger.error(f"Patient not found for recall reminder: {patient_id}")
+            return
+
+        result = await db.execute(select(Clinic).where(Clinic.id == clinic_id))
+        clinic = result.scalar_one_or_none()
+
+        context = {
+            "patient_name": f"{patient.first_name} {patient.last_name}",
+            "clinic_name": clinic.name if clinic else "DentalPin",
+            "reason": payload.get("reason"),
+            "due_month": _humanize_due_month(payload.get("due_month")),
+        }
+
         await NotificationGateway.enqueue(
             db=db,
             clinic_id=clinic_id,
             notification_type="recall_reminder",
-            context={
-                "reason": payload.get("reason"),
-                "due_month": payload.get("due_month"),
-            },
+            context=context,
             patient_id=patient_id,
             triggered_by_event="recall.created",
             # Idempotent safety net: if this ever fires more than once for
@@ -39,9 +76,3 @@ async def _on_recall_created(payload: dict) -> None:
             # sending twice.
             dedup_key=f"recall_reminder:{recall_id}",
         )
-        # enqueue() only flushes, by design (see its docstring: "whoever
-        # owns the session decides when to commit"). Without this, the
-        # queued row never actually persists — it gets silently rolled
-        # back when this session closes at the end of the `async with`
-        # block, and no reminder is ever sent.
-        await db.commit()

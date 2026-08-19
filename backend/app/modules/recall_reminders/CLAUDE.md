@@ -18,17 +18,27 @@ WhatsApp, whichever the patient has opted into and the clinic has
 configured), and template rendering happens inside the existing gateway,
 unchanged — this module makes zero delivery decisions itself.
 
-## Setup step required (one-time, no code)
+Transactional (ADR 0019): the handler declares a `db` parameter, so it
+runs inside `recalls`' own publish transaction (`recalls/service.py`
+passes `db=db` to `event_bus.publish`), inside a savepoint. A recall
+that never actually commits enqueues no reminder — no confirmation for
+something that was never booked (issue #183). Nothing is sent inside
+the transaction either; `NotificationGateway.dispatch_outbox` (the
+scheduler tick) owns the network I/O.
 
-`notifications` renders a `notification_type` by looking up a matching
-`NotificationTemplate` row. There's no built-in `"recall_reminder"`
-template, so **you need to create one** via the existing template UI
-(Settings → Notifications → Templates → New). Until you do, recalls will
-enqueue a message that gets silently marked `skipped` (visible in the
-notifications log) — not an error, just nothing sent.
+## Template
 
-Available template variables (from the event payload): `reason`,
-`due_month`.
+Ships `backend/templates/email/{locale}/recall_reminder.html` for
+en/es/fr/pt/ta — no setup step required. The `notification_templates`
+DB table is a per-clinic *override* (create one there only if a clinic
+wants custom wording); the shipped file is the system default,
+resolved automatically by `EmailService._render_template`'s
+file-fallback when no DB row exists.
+
+Available template variables (from the event payload, resolved inside
+the handler): `patient_name`, `clinic_name`, `reason`,
+`due_month` (humanized, e.g. `"September 2026"`, not the raw
+`"2026-09"` from the payload).
 
 ## Dependencies
 
@@ -40,9 +50,12 @@ declared.
 
 ## Lifecycle
 
-- `installable=True`, `auto_install=False` (no point installing before
-  you've decided you want it and created the template), `removable=True`.
-- No migrations — no models.
+- `installable=True`, `auto_install=False`, `removable=True`.
+- No tables of its own, but carries a single no-op Alembic revision
+  (`rr_0001`, own branch, empty upgrade/downgrade) purely so
+  `removable=True` has a self-contained branch to validate against —
+  see `app/core/plugins/manifest_validator.py`'s
+  `module_branch_is_isolated` check.
 - Event subscription re-attaches on every boot (`__init__`), unregisters
   on uninstall. Same pattern as `verifactu`'s and `tasks`' event handlers.
 

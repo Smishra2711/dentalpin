@@ -1,22 +1,21 @@
-"""recall_reminders — connects the upstream `recalls` module to the
-upstream `notifications` gateway.
+"""recall_reminders — connects the `recalls` module to the
+`notifications` gateway.
 
-Phase 6 of the custom roadmap. `recalls` already publishes
-`EventType.RECALL_CREATED` but "never sends" anything (by its own design —
-see its CLAUDE.md). `notifications` already has a full delivery gateway
-but nothing calls it for recalls. This module is pure glue: it has no
-models, no UI, no API surface of its own — it just subscribes to one
-event and calls one existing function.
+`recalls` already publishes `EventType.RECALL_CREATED` but "never
+sends" anything (by its own design — see its CLAUDE.md). `notifications`
+already has a full delivery gateway but nothing calls it for recalls.
+This module is pure glue: it has no models, no UI, no API surface of
+its own — it just subscribes to one event and calls one existing
+function.
 
 Depends on both `recalls` and `notifications` for the imports below (ADR
 0002 / 0003 — legal cross-module reads/calls because both are declared).
 
-REQUIRES a "recall_reminder" notification template to exist (any channel)
-or every recall will enqueue a message that gets silently skipped for lack
-of a template. There is no dedicated Templates UI for this (checked — it
-doesn't exist in the current frontend); create it via a direct API call
-to `POST /api/v1/notifications/templates` (e.g. through the /docs page)
-instead.
+Ships its own system-level email template
+(`backend/templates/email/{locale}/recall_reminder.html`) — no setup
+step required. The `notification_templates` table is a per-clinic
+override, not the source (see NotificationService.get_template's
+clinic-specific-then-system fallback).
 """
 
 from fastapi import APIRouter
@@ -29,7 +28,7 @@ class RecallRemindersModule(BaseModule):
         "name": "recall_reminders",
         "version": "0.1.0",
         "summary": "Connects recalls to the notifications gateway — auto-reminds patients when a recall is created.",
-        "author": "Clinic Custom",
+        "author": "DentalPin Core Team",
         "license": "BSL-1.1",
         "category": "community",
         "depends": ["recalls", "notifications"],
