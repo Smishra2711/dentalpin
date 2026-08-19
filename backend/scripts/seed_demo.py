@@ -93,12 +93,9 @@ async def _module_is_installed(db: AsyncSession, name: str) -> bool:
     Optional-module seeds gate themselves on this so uninstalling a
     module also silently skips its demo data on re-seed.
     """
-    from app.core.plugins.db_models import ModuleRecord
-    from app.core.plugins.state import ModuleState
+    from app.core.plugins.service import ModuleService
 
-    result = await db.execute(select(ModuleRecord).where(ModuleRecord.name == name))
-    record = result.scalar_one_or_none()
-    return record is not None and record.state == ModuleState.INSTALLED.value
+    return name in await ModuleService.installed_names(db)
 
 
 async def _load_catalog_map(db: AsyncSession) -> dict[str, dict]:

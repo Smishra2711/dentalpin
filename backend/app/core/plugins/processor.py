@@ -29,6 +29,7 @@ from .db_models import ModuleRecord
 from .external_id import ExternalIdHelper
 from .operation_log import OperationLog
 from .registry import module_registry
+from .service import ModuleService
 from .state import ModuleState
 from .topology import topological_sort
 from .yaml_loader import load_module_data_files
@@ -99,17 +100,12 @@ class PendingProcessor:
             write_modules_json,
         )
 
-        installed: list[_BaseModule] = []
         async with self._session_factory() as session:
-            result = await session.execute(
-                select(ModuleRecord).where(ModuleRecord.state == ModuleState.INSTALLED.value)
-            )
-            installed_names = {r.name for r in result.scalars()}
+            installed_names = await ModuleService.installed_names(session)
 
-        for module in module_registry.list_discovered():
-            if module.name in installed_names:
-                installed.append(module)
-
+        installed: list[_BaseModule] = [
+            m for m in module_registry.list_discovered() if m.name in installed_names
+        ]
         entries = collect_layers(installed)
         write_modules_json(entries, DEFAULT_FRONTEND_ROOT)
 

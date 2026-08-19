@@ -29,6 +29,7 @@ from app.core.auth.permissions import has_permission
 from app.core.schemas import ApiResponse
 from app.database import get_db
 
+from .registry import module_registry
 from .service import ModuleOperationError, ModuleService
 from .state import ModuleState
 
@@ -77,18 +78,21 @@ async def active_modules(
     db: Annotated[AsyncSession, Depends(get_db)],
     ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
 ) -> ApiResponse[list[dict[str, Any]]]:
-    """Modules in ``installed`` state + nav items visible to the caller.
+    """Modules that are ``installed`` *and* mounted in this process, with
+    the nav items visible to the caller.
 
     This is the frontend's source of truth for the sidebar. Every
     authenticated user may read it; navigation entries are filtered by
     the caller's role-based permissions so the response is already
-    tailored to what the UI should render.
+    tailored to what the UI should render. The registry check keeps the
+    UI honest when a module is ``installed`` in the DB but the loader
+    skipped it (a dependency was force-uninstalled).
     """
     svc = ModuleService(db)
     active: list[dict[str, Any]] = []
 
     for info in await svc.list_modules():
-        if info.state != ModuleState.INSTALLED:
+        if info.state != ModuleState.INSTALLED or not module_registry.is_active(info.name):
             continue
 
         module = svc.discovered()

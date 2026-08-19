@@ -235,6 +235,18 @@ class ModuleService:
         result = await self.db.execute(select(ModuleRecord))
         return {r.name: r for r in result.scalars()}
 
+    @staticmethod
+    async def installed_names(db: AsyncSession) -> set[str]:
+        """Names of the modules whose ``core_module.state`` is ``installed``.
+
+        The boot sequence mounts exactly this set (issue #91); seeds and
+        the frontend-layer sync gate on it too.
+        """
+        result = await db.execute(
+            select(ModuleRecord.name).where(ModuleRecord.state == ModuleState.INSTALLED.value)
+        )
+        return set(result.scalars())
+
     # --- Query ----------------------------------------------------------
 
     async def list_modules(self) -> list[ModuleInfo]:

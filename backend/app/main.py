@@ -41,8 +41,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # (defaults to ``-`` outside a request).
     setup_logging()
 
-    # Startup
-    mount_modules(app, register_discovered())
+    # Startup — discover everything, settle DB state, then mount only what
+    # is installed (issue #91). Order matters: the processor may install or
+    # remove modules in this very boot, and the mount step reads the result.
+    discovered = register_discovered()
 
     # Sync in-memory registry into core_module (best-effort).
     try:
@@ -60,7 +62,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception:
         logger.exception("Pending module processor raised")
 
-    # Initialize scheduler for background jobs
+    # Not best-effort: if the DB is unreachable here, booting with zero
+    # modules would serve a healthy-looking but empty API. Let it raise —
+    # the container restarts and retries, as it already does when the
+    # entrypoint's migrations fail.
+    async with async_session_maker() as session:
+        installed = await ModuleService.installed_names(session)
+    mounted = mount_modules(app, [m for m in discovered if m.name in installed])
+    logger.info(
+        "Mounted %d/%d modules: %s", len(mounted), len(discovered), [m.name for m in mounted]
+    )
+
+    # Initialize scheduler for background jobs (active modules only)
     init_scheduler()
 
     yield
