@@ -12,13 +12,19 @@ Per-module slice of [`docs/events-catalog.md`](../../events-catalog.md)
 
 ## Published
 
-_This module does not publish any events._
+| Event | Where | Payload |
+|-------|-------|---------|
+| `verifactu.record.rejected` | `services/submission_queue.py` | `clinic_id`, `record_id`, `invoice_id`, AEAT error summary — emitted when AEAT rejects a record. |
 
 ## Subscribed
 
-| Event | Handler | Effect |
-|-------|---------|--------|
-| `invoice.paid` | _Handler module path._ | _What it does in response._ |
+| Event | Handler | Mode | Effect |
+|-------|---------|------|--------|
+| `invoice.paid` | `events.on_invoice_paid` | own-session, payload-only (ADR 0019) | Queues the fiscal record for the paid invoice. |
+| `verifactu.record.rejected` | `tasks.on_rejected_event` | own-session (spawns a task) | Emails the clinic admins, throttled to one alert per clinic per 30 min. |
+
+Both are wired through `VerifactuModule.get_event_handlers()`, so they are
+subscribed only while the module is installed (issue #91 / ADR 0020).
 
 ## Adding a new event
 

@@ -58,3 +58,20 @@ class SampleModule(BaseModule):
 
     def get_tools(self) -> list:
         return []
+
+    # --- observability for the activation tests (issue #91) ---------------
+
+    SAMPLE_EVENT = "sample_community.ping"
+
+    def __init__(self) -> None:
+        self.activated = False
+        self.seen_events: list[dict] = []
+
+    def get_event_handlers(self) -> dict:
+        return {self.SAMPLE_EVENT: self._on_ping}
+
+    def _on_ping(self, payload: dict) -> None:
+        self.seen_events.append(payload)
+
+    def on_activate(self) -> None:
+        self.activated = True

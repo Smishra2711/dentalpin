@@ -108,13 +108,24 @@ class BaseModule(ABC):
         """Return periodic jobs this module wants the scheduler to run.
 
         Default is an empty list. The scheduler registers jobs only for
-        *installed/registered* modules, so the scheduler no longer imports
-        module task functions directly. See
+        *active* modules (installed and mounted at boot), so the scheduler
+        no longer imports module task functions directly. See
         :class:`~app.core.scheduling.ScheduledJob`.
         """
         return []
 
     # --- Lifecycle hooks (v1 defaults are no-ops) ------------------------
+
+    def on_activate(self) -> None:
+        """Called once per boot, right after this module was mounted.
+
+        Runs **only when the module is installed** (``core_module.state``),
+        after its router, event handlers and tools are wired. Use it for
+        in-memory, cross-module registrations that must be re-attached on
+        every restart — compliance hooks, channel adapters. Sync, no DB.
+        There is no counterpart: a module that is not installed on the
+        next boot is simply never activated (modules never hot-unload).
+        """
 
     async def install(self, ctx: ModuleContext) -> None:
         """Called on first install after migrations ran.

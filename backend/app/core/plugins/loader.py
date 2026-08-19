@@ -14,9 +14,15 @@ Discovery happens in two stages:
    that an entry point already provided, so entry points win when both
    are present.
 
-The public entry point for the rest of the app is :func:`load_modules`,
-which discovers, resolves dependencies, and mounts everything in one
-call.
+Discovery and mounting are two steps on purpose (issue #91):
+
+* :func:`register_discovered` — discover, topo-sort and register every
+  module in the :data:`module_registry`. Nothing is mounted; the
+  lifecycle machinery (reconcile, pending processor) needs the full list.
+* :func:`mount_modules` — mount a chosen subset: router, event handlers,
+  tools, ``on_activate()``, and mark it active. The lifespan passes the
+  modules whose ``core_module.state`` is ``installed``; tests and scripts
+  that want everything pass the full discovered list explicitly.
 """
 
 from __future__ import annotations
@@ -24,6 +30,7 @@ from __future__ import annotations
 import importlib
 import logging
 import pkgutil
+from collections.abc import Iterable
 from importlib import metadata
 from pathlib import Path
 
@@ -139,40 +146,55 @@ def discover_modules() -> list[BaseModule]:
     return modules
 
 
-def _mount_modules(app: FastAPI, modules: list[BaseModule]) -> None:
-    """Mount routers + subscribe event handlers + register tools."""
+def register_discovered() -> list[BaseModule]:
+    """Discover every module and register it; return them in load order.
+
+    Idempotent: modules already in the registry (tests, CLI re-entry)
+    are kept as-is. Raises on a dependency cycle — fail loud at boot.
+    """
+    for module in discover_modules():
+        if not module_registry.is_discovered(module.name):
+            module_registry.register(module)
+
+    ordered = _resolve_load_order(module_registry.list_discovered())
+    if not ordered:
+        logger.warning("No modules discovered")
+    return ordered
+
+
+def mount_modules(app: FastAPI, modules: Iterable[BaseModule]) -> list[BaseModule]:
+    """Mount ``modules`` (router, event handlers, tools) and mark them active.
+
+    ``modules`` must come in dependency order (``register_discovered``
+    output, possibly filtered). A module whose declared dependency is not
+    active is skipped with an error — that state is only reachable through
+    ``uninstall --force`` and mounting it would fail at first request
+    anyway. Already-active modules are skipped silently. Returns what was
+    mounted this call.
+    """
     from app.core.agents.tools.registry import tool_registry
     from app.core.events import event_bus
 
+    mounted: list[BaseModule] = []
     for module in modules:
-        module_registry.register(module)
+        if module_registry.is_active(module.name):
+            continue
+        missing = [dep for dep in module.dependencies if not module_registry.is_active(dep)]
+        if missing:
+            logger.error("Not mounting %s: dependencies not active: %s", module.name, missing)
+            continue
+
         app.include_router(
             module.get_router(),
             prefix=f"/api/v1/{module.name}",
             tags=[module.name],
         )
-        logger.info("Mounted router for module: %s", module.name)
-
-        handlers = module.get_event_handlers()
-        for event_type, handler in handlers.items():
+        for event_type, handler in module.get_event_handlers().items():
             event_bus.subscribe(event_type, handler)
-            logger.info("Subscribed %s to event: %s", module.name, event_type)
-
         tool_registry.register_from(module)
+        module.on_activate()
+        module_registry.activate(module.name)
+        mounted.append(module)
+        logger.info("Mounted module: %s", module.name)
 
-
-def load_modules(app: FastAPI) -> None:
-    """Discover, resolve dependencies, and load all modules."""
-    modules = discover_modules()
-    if not modules:
-        logger.warning("No modules discovered")
-        return
-
-    try:
-        ordered = _resolve_load_order(modules)
-    except ValueError as exc:
-        logger.error("Failed to resolve module dependencies: %s", exc)
-        raise
-
-    _mount_modules(app, ordered)
-    logger.info("Loaded %d modules: %s", len(ordered), [m.name for m in ordered])
+    return mounted

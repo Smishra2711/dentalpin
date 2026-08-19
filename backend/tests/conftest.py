@@ -15,7 +15,7 @@ from app.config import settings
 
 # Import all models so SQLAlchemy can configure relationships
 from app.core.auth.models import Clinic, ClinicMembership, User  # noqa: F401
-from app.core.plugins.loader import load_modules
+from app.core.plugins.loader import mount_modules, register_discovered
 from app.database import Base, get_db
 from app.database import engine as app_engine
 from app.main import app
@@ -96,8 +96,9 @@ from app.modules.verifactu.models import (  # noqa: F401
     VerifactuVatClassification,
 )
 
-# Load modules manually for tests (normally done in lifespan)
-load_modules(app)
+# Tests run with every discovered module mounted (the lifespan mounts only
+# the installed ones; conftest is the one place that explicitly wants all).
+mount_modules(app, register_discovered())
 
 # Use the DATABASE_URL directly - CI already provides the test database URL
 # For local development, ensure DATABASE_URL points to test database

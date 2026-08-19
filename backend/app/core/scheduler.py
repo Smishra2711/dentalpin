@@ -39,10 +39,10 @@ def _build_trigger(job: ScheduledJob) -> CronTrigger | IntervalTrigger:
 def init_scheduler() -> None:
     """Initialize and start the scheduler.
 
-    Jobs are collected from the *registered* modules via
-    ``BaseModule.get_scheduled_jobs()`` — the scheduler no longer imports
-    module task functions directly, so an uninstalled module contributes
-    no job (ADR 0014 import-coupling fix).
+    Jobs are collected from the *active* modules (installed and mounted at
+    boot, issue #91) via ``BaseModule.get_scheduled_jobs()`` — the
+    scheduler no longer imports module task functions directly, so an
+    uninstalled module contributes no job (ADR 0014 import-coupling fix).
     """
     global scheduler
 
@@ -53,7 +53,7 @@ def init_scheduler() -> None:
 
     scheduler = get_scheduler()
 
-    for module in module_registry.list_modules():
+    for module in module_registry.list_active():
         for job in module.get_scheduled_jobs():
             if scheduler.get_job(job.id):
                 logger.info("Scheduler job '%s' already exists, skipping", job.id)

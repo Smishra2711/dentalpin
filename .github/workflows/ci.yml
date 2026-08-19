@@ -286,7 +286,7 @@ jobs:
           done
 
       - name: Run migrations
-        run: docker compose exec -T backend alembic upgrade heads
+        run: docker compose exec -T backend python -m app.cli db upgrade
 
       - name: Seed demo data
         run: ./scripts/seed-demo.sh --lang es

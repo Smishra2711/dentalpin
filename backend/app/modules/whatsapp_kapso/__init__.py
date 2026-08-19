@@ -1,8 +1,10 @@
 """whatsapp_kapso — WhatsApp delivery for notifications via Kapso.
 
 Community, removable. Registers a ``KapsoAdapter`` into the notifications
-channel registry at import time (the only cross-module dependency, declared in
-``manifest.depends``). ``notifications`` does not depend on this module.
+channel registry from ``on_activate`` — i.e. on every boot the module is
+installed, and never while it is not (issue #91). That is the only
+cross-module dependency, declared in ``manifest.depends``;
+``notifications`` does not depend on this module.
 
 Issue #63. See ADR 0016 (channel adapters) + ADR 0017 (inbound/conversation).
 """
@@ -25,9 +27,6 @@ if TYPE_CHECKING:
 
 # Table names exercised by the round-trip uninstall test.
 KAPSO_TABLES = {"whatsapp_kapso_settings", "whatsapp_kapso_templates"}
-
-# Register the adapter once, at import time. Idempotent in the registry.
-channel_registry.register(KapsoAdapter())
 
 
 class WhatsappKapsoModule(BaseModule):
@@ -56,7 +55,10 @@ class WhatsappKapsoModule(BaseModule):
         # Namespaced → whatsapp_kapso.settings.read / .write
         return ["settings.read", "settings.write"]
 
+    def on_activate(self) -> None:
+        # Idempotent in the registry. Not registered ⇒ the gateway falls
+        # back to the next configured channel (email).
+        channel_registry.register(KapsoAdapter())
+
     async def uninstall(self, ctx: ModuleContext) -> None:
-        # Drop the adapter so a uninstalled module stops serving WhatsApp;
-        # the channel then falls back to email in the gateway.
         channel_registry.unregister("whatsapp_kapso")

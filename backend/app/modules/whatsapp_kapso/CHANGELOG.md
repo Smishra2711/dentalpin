@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix(#91): `KapsoAdapter` is registered in the channel registry from `on_activate()` — on every boot the module is installed — instead of at import time, so an uninstalled module no longer serves WhatsApp (and no longer queries `whatsapp_kapso_settings` once its tables are gone).
 - i18n: add Tamil locale (`ta.json`) with full UI coverage.
 
 - style(lint): first ESLint pass over this module's frontend layer —
