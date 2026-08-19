@@ -159,6 +159,7 @@ def _mount_modules(app: FastAPI, modules: list[BaseModule]) -> None:
             logger.info("Subscribed %s to event: %s", module.name, event_type)
 
         tool_registry.register_from(module)
+        module_registry.activate(module.name)
 
 
 def load_modules(app: FastAPI) -> None:

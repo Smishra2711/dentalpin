@@ -215,7 +215,7 @@ async def test_every_existing_module_returns_a_list_of_tools():
     """Every module's get_tools() must return a list (default is empty)."""
     from app.core.plugins.registry import module_registry
 
-    modules = module_registry.list_modules()
+    modules = module_registry.list_discovered()
     assert modules, "no modules loaded — conftest load_modules failed"
     for module in modules:
         tools = module.get_tools()

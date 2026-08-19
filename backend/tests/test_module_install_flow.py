@@ -14,7 +14,7 @@ from app.core.plugins.state import ModuleState
 
 
 def _seed_registry() -> None:
-    if module_registry.list_modules():
+    if module_registry.list_discovered():
         return
     for module in discover_modules():
         try:

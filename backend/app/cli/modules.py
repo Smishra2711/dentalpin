@@ -108,7 +108,7 @@ def _run(
     async def wrapper(args: argparse.Namespace) -> int:
         # Discovery populates the in-memory registry so CLI can see modules
         # even without a running app lifespan.
-        if not module_registry.list_modules():
+        if not module_registry.list_discovered():
             for module in discover_modules():
                 try:
                     module_registry.register(module)

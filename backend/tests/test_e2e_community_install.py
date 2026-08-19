@@ -24,15 +24,12 @@ from tests.fixtures.sample_module import SampleModule
 @pytest.fixture
 def sample_registered():
     """Register SampleModule for the duration of one test, then unregister."""
-    existing = module_registry.get("sample_community")
-    if existing is None:
-        instance = SampleModule()
-        module_registry.register(instance)
-    # Deregister via private field — registry has no public remove.
+    if module_registry.get("sample_community") is None:
+        module_registry.register(SampleModule())
     try:
         yield module_registry.get("sample_community")
     finally:
-        module_registry._modules.pop("sample_community", None)  # noqa: SLF001
+        module_registry.unregister("sample_community")
 
 
 @pytest.mark.asyncio

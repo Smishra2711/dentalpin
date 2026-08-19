@@ -20,7 +20,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .alembic_paths import resolve_module_branch_head
 from .base import BaseModule
 from .db_models import ModuleOperationLog, ModuleRecord
-from .loader import discover_modules
 from .manifest import Manifest, ManifestError
 from .operation_log import LogEntry, log_entry_from_row
 from .registry import module_registry
@@ -117,8 +116,8 @@ class ModuleService:
     # --- Discovery + reconciliation -------------------------------------
 
     def discovered(self) -> list[BaseModule]:
-        """Return modules currently loaded in the in-memory registry."""
-        return module_registry.list_modules()
+        """Every module found on disk, whatever its install state."""
+        return module_registry.list_discovered()
 
     async def reconcile_with_db(self) -> None:
         """Ensure ``core_module`` contains one row per discovered module.
@@ -593,16 +592,3 @@ class ModuleService:
         except ManifestError as exc:
             logger.error("Manifest error for %s: %s", module.name, exc)
             return None
-
-
-async def rediscover_and_reconcile(db: AsyncSession) -> None:
-    """Entry point used by the app lifespan.
-
-    Assumes :func:`load_modules` already ran and filled the in-memory
-    registry; this just mirrors the current state into ``core_module``.
-    """
-    svc = ModuleService(db)
-    await svc.reconcile_with_db()
-    # Also discover here in case `discover_modules()` was not called yet.
-    if not module_registry.list_modules():
-        discover_modules()

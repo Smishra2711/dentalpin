@@ -106,7 +106,7 @@ class PendingProcessor:
             )
             installed_names = {r.name for r in result.scalars()}
 
-        for module in module_registry.list_modules():
+        for module in module_registry.list_discovered():
             if module.name in installed_names:
                 installed.append(module)
 

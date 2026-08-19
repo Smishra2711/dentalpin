@@ -29,7 +29,7 @@ Routes mounted at `/api/v1/migration_import/`.
 
 **`verifactu` is intentionally NOT in `depends`.** Portuguese/French
 clinics import without it. The fiscal-document mapper detects it at
-runtime through `module_registry.is_loaded("verifactu")` and gates
+runtime through `module_registry.is_active("verifactu")` and gates
 legal-hash preservation behind an operator opt-in checkbox shown in
 the preview step.
 
