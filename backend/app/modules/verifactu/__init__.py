@@ -12,6 +12,7 @@ fiscal records are sent to AEAT (uninstall blocks).
 from fastapi import APIRouter
 
 from app.core.plugins import BaseModule
+from app.core.scheduling import ScheduledJob
 
 from .models import (
     VerifactuCertificate,
@@ -46,22 +47,6 @@ class VerifactuModule(BaseModule):
         },
     }
 
-    def __init__(self) -> None:
-        # Register the BillingComplianceHook on every backend boot — the
-        # one-time ``install`` lifecycle only runs when the user clicks
-        # Install in the admin UI; subsequent restarts wipe the in-memory
-        # registry, so hooks must be re-attached at module load time.
-        # Idempotent: ``BillingHookRegistry`` keys by country_code.
-        from app.modules.billing.hooks import BillingHookRegistry
-
-        from .hook import VerifactuHook
-        from .tasks import register_event_handlers
-
-        BillingHookRegistry.register(VerifactuHook())
-        # Same reasoning for the event bus subscription — re-attach on
-        # boot so the rejected-record email handler survives restarts.
-        register_event_handlers()
-
     def get_models(self) -> list:
         return [
             VerifactuSettings,
@@ -83,24 +68,35 @@ class VerifactuModule(BaseModule):
         ]
 
     def get_event_handlers(self) -> dict:
+        from app.core.events import EventType
+
         from .events import on_invoice_paid
+        from .tasks import on_rejected_event
 
         return {
             "invoice.paid": on_invoice_paid,
+            EventType.VERIFACTU_RECORD_REJECTED: on_rejected_event,
         }
+
+    def get_scheduled_jobs(self) -> list[ScheduledJob]:
+        from .tasks import scheduled_jobs
+
+        return scheduled_jobs()
+
+    def on_activate(self) -> None:
+        # Re-attached on every boot the module is installed (issue #91):
+        # the billing workflow looks the hook up by country at request
+        # time, so it must live in this process, not in the DB.
+        from app.modules.billing.hooks import BillingHookRegistry
+
+        from .hook import VerifactuHook
+
+        BillingHookRegistry.register(VerifactuHook())
 
     async def install(self, ctx) -> None:
         from sqlalchemy import select
 
-        from app.modules.billing.hooks import BillingHookRegistry
         from app.modules.catalog.models import VatType
-
-        from .hook import VerifactuHook
-        from .tasks import register_jobs
-
-        BillingHookRegistry.register(VerifactuHook())
-        register_jobs()
-        ctx.logger.info("verifactu hook registered for country=ES")
 
         # Seed default AEAT classification for every existing
         # zero-rated VAT type. For dental clinics, rate=0 typically
@@ -132,10 +128,7 @@ class VerifactuModule(BaseModule):
     async def uninstall(self, ctx) -> None:
         from sqlalchemy import select
 
-        from app.modules.billing.hooks import BillingHookRegistry
-
         from .models import VerifactuRecord
-        from .tasks import unregister_jobs
 
         result = await ctx.db.execute(
             select(VerifactuRecord.id)
@@ -149,9 +142,6 @@ class VerifactuModule(BaseModule):
                 "libro de facturación 4 años. Exporta el libro antes de "
                 "intentar desinstalar."
             )
-        from .tasks import unregister_event_handlers
-
-        BillingHookRegistry.unregister("ES")
-        unregister_jobs()
-        unregister_event_handlers()
-        ctx.logger.info("verifactu hook unregistered")
+        # Nothing to detach: the hook, jobs and handlers are only wired by
+        # the loader while the module is installed, and the processor runs
+        # before mounting on the next boot.

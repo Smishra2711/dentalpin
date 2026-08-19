@@ -16,8 +16,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.plugins import ModuleOperationError, ModuleService
-from app.core.plugins.loader import discover_modules
-from app.core.plugins.registry import module_registry
+from app.core.plugins.loader import register_discovered
 from app.database import async_session_maker
 
 
@@ -107,14 +106,8 @@ def _run(
 ) -> Callable[[argparse.Namespace], Awaitable[int]]:
     async def wrapper(args: argparse.Namespace) -> int:
         # Discovery populates the in-memory registry so CLI can see modules
-        # even without a running app lifespan.
-        if not module_registry.list_modules():
-            for module in discover_modules():
-                try:
-                    module_registry.register(module)
-                except ValueError:
-                    # Already registered (e.g. tests).
-                    pass
+        # even without a running app lifespan (nothing is mounted).
+        register_discovered()
 
         async with async_session_maker() as session:
             service = ModuleService(session)

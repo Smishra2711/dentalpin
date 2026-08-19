@@ -82,7 +82,7 @@ def _transactional_events() -> set[str]:
 
     return {
         event
-        for module in module_registry.list_modules()
+        for module in module_registry.list_discovered()
         for event, handler in module.get_event_handlers().items()
         if _wants_db(handler)
     }

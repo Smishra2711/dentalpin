@@ -43,7 +43,7 @@ _LEGAL_FIELDS = (
 
 
 def _verifactu_active(ctx: MapperContext) -> bool:
-    return ctx.import_fiscal_compliance and module_registry.is_loaded("verifactu")
+    return ctx.import_fiscal_compliance and module_registry.is_active("verifactu")
 
 
 class FiscalDocumentMapper:
@@ -198,7 +198,7 @@ class FiscalDocumentMapper:
         if not has_legal:
             return
         code = (
-            "verifactu.opt_out" if module_registry.is_loaded("verifactu") else "verifactu.skipped"
+            "verifactu.opt_out" if module_registry.is_active("verifactu") else "verifactu.skipped"
         )
         ctx.db.add(
             ImportWarning(

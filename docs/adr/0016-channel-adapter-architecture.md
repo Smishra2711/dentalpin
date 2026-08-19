@@ -20,7 +20,9 @@ module to any vendor and without breaking module isolation.
 The **channel-adapter contract and registry live inside `notifications`**
 (`backend/app/modules/notifications/channels/`), not in core. A vendor module
 declares `depends=["notifications"]`, imports the public contract, and
-**registers its adapter at import time** via `channel_registry.register(...)`.
+**registers its adapter from `BaseModule.on_activate()`** via
+`channel_registry.register(...)` — originally at import time; amended by ADR
+0020 so an uninstalled vendor module is never registered.
 Delivery goes through a **durable outbox**: `enqueue` persists a `queued`
 `communication_messages` row (committing with the request) and a scheduled
 `dispatch_outbox` job sends it with `FOR UPDATE SKIP LOCKED` + exponential
@@ -45,9 +47,10 @@ in core; core only records which adapter serves which channel per clinic
 
 ### Bad / accepted trade-offs
 
-- Import-time registration is an import side-effect (the codebase otherwise
-  prefers explicit `BaseModule` hooks). Mitigated by dependency-ordered loading
-  (`topological_sort`) + idempotent `register`.
+- ~~Import-time registration is an import side-effect (the codebase otherwise
+  prefers explicit `BaseModule` hooks).~~ **Superseded by ADR 0020**: the
+  adapter is registered from `on_activate()`, which the loader calls only for
+  installed modules, on every boot. `register` stays idempotent.
 - A process crash mid-send can leave a row in `sending` (visible in the logs
   view). Upgrade path: sweep stale `sending` rows back to `failed`.
 - WhatsApp proactive sends are template-only (Meta 24h-window rule) in V1.

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix(#91): the verifactu gate uses `module_registry.is_active("verifactu")` (installed and mounted) instead of `is_loaded` (merely on disk), so an uninstalled verifactu no longer flips imports into compliance mode.
 - fix(#184): type-check clean — semantic badge/toast colours; `scoreBadgeColor()` returns `UiColor`.
 - i18n: add Tamil locale (`ta.json`) with full UI coverage.
 

@@ -204,7 +204,7 @@ class ImportJobService:
             files = ImportJobService._build_files_summary(handle)
             verifactu_detected = _detect_verifactu_data(handle)
 
-        verifactu_installed = module_registry.is_loaded("verifactu")
+        verifactu_installed = module_registry.is_active("verifactu")
 
         from .schemas import ImportJobResponse
 

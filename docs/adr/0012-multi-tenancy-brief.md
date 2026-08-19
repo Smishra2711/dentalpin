@@ -207,7 +207,7 @@ Ambos exportados desde `dentalpin/core/deps.py` o equivalente.
 
 #### 2.3 Setup en `lifespan` de la app
 
-En el `lifespan` de FastAPI (`backend/app/main.py`, ya existe; ahí se llama `load_modules(app)`):
+En el `lifespan` de FastAPI (`backend/app/main.py`, ya existe; ahí se llama `register_discovered()` + `mount_modules(app, installed)`):
 
 ```python
 @asynccontextmanager

@@ -29,7 +29,7 @@ def resolver(monkeypatch: pytest.MonkeyPatch) -> SingleTenantResolver:
     m2 = MagicMock()
     m2.name = "agenda"
     fake_registry = MagicMock()
-    fake_registry.list_modules.return_value = [m1, m2]
+    fake_registry.list_active.return_value = [m1, m2]
     monkeypatch.setattr("app.core.tenancy.single.module_registry", fake_registry)
     return SingleTenantResolver()
 

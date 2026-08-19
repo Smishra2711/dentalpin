@@ -5,7 +5,7 @@ if [ "${RUN_MIGRATIONS:-1}" = "1" ]; then
   # One-time heal for the Fase C schedules-branch rewire (issue #56):
   # DBs bootstrapped while schedules lived on the main linear chain have
   # the schedules tables but no row in alembic_version for the new
-  # branch. Stamp sch_0001 so "alembic upgrade heads" is a no-op instead
+  # branch. Stamp sch_0001 so the boot upgrade is a no-op instead
   # of re-creating tables that already exist.
   PG_URL="$(python -c 'from app.config import settings; print(settings.DATABASE_URL.replace("postgresql+asyncpg://","postgresql://"))')"
   psql "$PG_URL" -v ON_ERROR_STOP=1 <<'SQL' || true
@@ -24,8 +24,10 @@ END
 $$;
 SQL
 
-  echo "[entrypoint] Running alembic upgrade heads..."
-  alembic upgrade heads
+  # Core heads + the branches of installed modules only (ADR 0020): an
+  # uninstalled module's tables must not come back on restart (#91).
+  echo "[entrypoint] Running dentalpin db upgrade..."
+  python -m app.cli db upgrade
 fi
 
 if [ "${SEED_ON_STARTUP:-0}" = "1" ]; then

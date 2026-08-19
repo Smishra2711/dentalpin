@@ -133,3 +133,48 @@ async def test_active_navigation_filtered_for_hygienist(
 async def test_active_requires_auth(client: AsyncClient) -> None:
     response = await client.get("/api/v1/modules/-/active")
     assert response.status_code in (401, 403)
+
+
+@pytest.mark.asyncio
+async def test_active_requires_the_module_to_be_mounted(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """``installed`` in the DB is not enough — the loader must have mounted
+    it this boot (issue #91). Otherwise the sidebar would link to routes
+    that 404."""
+    from sqlalchemy import select
+
+    from app.core.plugins.db_models import ModuleRecord
+    from app.core.plugins.registry import module_registry
+    from app.core.plugins.state import ModuleState
+    from tests.fixtures.sample_module import SampleModule
+
+    token = await _register_and_assign(
+        client, db_session, email="admin-mounted@example.com", role="admin"
+    )
+    module_registry.register(SampleModule())
+    try:
+        await _reconcile(db_session)
+        record = (
+            await db_session.execute(
+                select(ModuleRecord).where(ModuleRecord.name == "sample_community")
+            )
+        ).scalar_one()
+        record.state = ModuleState.INSTALLED.value
+        await db_session.commit()
+
+        headers = {"Authorization": f"Bearer {token}"}
+        names = {
+            m["name"]
+            for m in (await client.get("/api/v1/modules/-/active", headers=headers)).json()["data"]
+        }
+        assert "sample_community" not in names
+
+        module_registry.activate("sample_community")
+        names = {
+            m["name"]
+            for m in (await client.get("/api/v1/modules/-/active", headers=headers)).json()["data"]
+        }
+        assert "sample_community" in names
+    finally:
+        module_registry.unregister("sample_community")

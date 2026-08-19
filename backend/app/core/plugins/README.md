@@ -12,14 +12,14 @@ this README is the tour of *core/plugins itself*.
 | File | Role |
 |------|------|
 | `__init__.py` | Re-exports `BaseModule`, `ModuleContext`. Public surface for module authors. |
-| `base.py` | `BaseModule` ABC. The contract every module implements: `manifest`, `get_models`, `get_router`, `get_event_handlers`, `get_permissions`, `get_tools`, `install`/`uninstall`/`post_upgrade` hooks. |
+| `base.py` | `BaseModule` ABC. The contract every module implements: `manifest`, `get_models`, `get_router`, `get_event_handlers`, `get_permissions`, `get_tools`, `get_scheduled_jobs`, `on_activate` (per-boot, installed only) and the `install`/`uninstall`/`post_upgrade` lifecycle hooks. |
 | `context.py` | `ModuleContext` passed to lifecycle hooks (db session, event bus, logger). |
 | `manifest.py` | `Manifest` dataclass + `ManifestError`. Lenient parser — only `name` and `version` are required. |
 | `manifest_validator.py` | Stricter checks layered on top of `Manifest`: semver format, role names, declared permissions, navigation prefixes, branch isolation when `removable=True`. CI gate. |
 | `state.py` | `ModuleState` enum (`uninstalled`/`to_install`/`installed`/…) and `ModuleCategory`. |
 | `topology.py` | `topological_sort` helper used by loader, service, and processor for module dependency ordering. |
-| `loader.py` | Discovery: entry points (PyPI) + filesystem scan (dev). Mounts routers, subscribes events, registers tools. Single boot-time entry point: `load_modules(app)`. |
-| `registry.py` | `module_registry` singleton — in-memory map of name → `BaseModule`. Invalidates the role-permission cache when modules are added. |
+| `loader.py` | Discovery: entry points (PyPI) + filesystem scan (dev). Two boot-time entry points: `register_discovered()` (discover + topo-sort + register, nothing mounted) and `mount_modules(app, modules)` (router, event handlers, tools, `on_activate()`, mark active). The lifespan mounts only `installed` modules (#91). |
+| `registry.py` | `module_registry` singleton — *discovered* modules (name → `BaseModule`) plus the *active* set (mounted this boot). RBAC merge, scheduler, tenancy and feature gates read the active view; lifecycle code reads discovered. |
 | `db_models.py` | `ModuleRecord`, `ModuleOperationLog`, `ExternalId` SQLAlchemy models. The `core_module_*` tables. |
 | `service.py` | `ModuleService`: state-transition API (`install`/`uninstall`/`upgrade`) and read views (`list_modules`/`status`/`doctor`). Reconciles disk → DB at boot. |
 | `processor.py` | `PendingProcessor`: lifespan executor that runs `to_install`/`to_upgrade`/`to_remove` (migrate → seed → lifecycle hook → finalize, with pg_dump backup before uninstall). |

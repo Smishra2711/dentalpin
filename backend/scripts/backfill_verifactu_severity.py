@@ -33,11 +33,11 @@ from sqlalchemy import select  # noqa: E402
 
 # Force SQLAlchemy to resolve every cross-module relationship by
 # loading all module models the same way the app does at startup.
-from app.core.plugins.loader import load_modules  # noqa: E402
+from app.core.plugins.loader import register_discovered  # noqa: E402
 from app.database import async_session_maker  # noqa: E402
-from app.main import app as _app  # noqa: E402
 
-load_modules(_app)
+for _module in register_discovered():
+    _module.get_models()
 
 from app.modules.billing.models import Invoice  # noqa: E402
 from app.modules.verifactu.models import VerifactuRecord  # noqa: E402

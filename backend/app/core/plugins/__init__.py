@@ -2,7 +2,7 @@
 
 from .base import BaseModule
 from .context import ModuleContext
-from .loader import load_modules
+from .loader import mount_modules, register_discovered
 from .manifest import Manifest, ManifestError
 from .registry import module_registry
 from .service import DoctorReport, ModuleInfo, ModuleOperationError, ModuleService
@@ -19,6 +19,7 @@ __all__ = [
     "ModuleOperationError",
     "ModuleService",
     "ModuleState",
-    "load_modules",
+    "mount_modules",
     "module_registry",
+    "register_discovered",
 ]
