@@ -318,20 +318,36 @@ jobs:
       - name: Generate modules.json with host paths
         # The backend writes `modules.json` with `/module_layers/...`
         # paths that only resolve inside the frontend container. For
-        # the host-run Nuxt dev server we regenerate it with absolute
-        # host paths pointing at `backend/app/modules/<name>/frontend`.
+        # the host-run Nuxt build we regenerate it with absolute host
+        # paths pointing at `backend/app/modules/<name>/frontend`.
         working-directory: frontend
         run: node scripts/modules-json.mjs "$GITHUB_WORKSPACE/backend/app/modules"
 
-      - name: Start Nuxt dev in background
+      - name: Build Nuxt
+        # E2E runs against a real build, not `nuxt dev`. The dev server
+        # compiles each route's module graph on first request, so the
+        # first spec to visit a route races that cost against its own
+        # timeouts — and HMR re-renders detach elements mid-click. A
+        # build is deterministic and matches what actually ships.
         working-directory: frontend
         env:
-          NUXT_PUBLIC_API_BASE_URL: http://localhost:8000
+          API_BASE_URL: http://localhost:8000
           API_BASE_URL_SERVER: http://localhost:8000
-          NITRO_HOST: 0.0.0.0
-          NITRO_PORT: "3000"
+          # Same heap bump Dockerfile.prod needs to bake every layer.
+          NODE_OPTIONS: --max-old-space-size=4096
+        run: npm run build
+
+      - name: Start Nuxt in background
+        working-directory: frontend
+        env:
+          # Nitro reads `NUXT_`-prefixed vars at runtime to override
+          # `runtimeConfig`; the unprefixed ones above only apply at build.
+          NUXT_PUBLIC_API_BASE_URL: http://localhost:8000
+          NUXT_API_BASE_URL_SERVER: http://localhost:8000
+          HOST: 0.0.0.0
+          PORT: "3000"
         run: |
-          nohup npm run dev > /tmp/nuxt.log 2>&1 &
+          nohup node .output/server/index.mjs > /tmp/nuxt.log 2>&1 &
           echo "nuxt started (pid $!)"
 
       - name: Wait for frontend

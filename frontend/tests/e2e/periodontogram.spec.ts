@@ -76,11 +76,21 @@ async function navigateToPerioTab(page: Page, patientId: string): Promise<void> 
   )
   await page.waitForURL(/\/patients\/[0-9a-f-]+/, { timeout: 15_000 })
 
-  // If the query param didn't auto-switch tabs, click through explicitly.
   // Use a scoped role=tab lookup so the activity-feed filter pill at
   // the bottom of the Summary view doesn't match.
-  if (!(await page.getByRole('tab', { name: /Periodonto/i }).first()
-    .isVisible().catch(() => false))) {
+  const perioSubtab = page.getByRole('tab', { name: /Periodonto/i }).first()
+
+  // The sub-tab is contributed by a client-side slot plugin, so it does
+  // not exist in the SSR markup — it only shows up once hydration runs
+  // the plugin. Wait for it rather than testing visibility once, which
+  // would always miss and send us down the fallback path.
+  const appeared = await perioSubtab
+    .waitFor({ state: 'visible', timeout: 10_000 })
+    .then(() => true)
+    .catch(() => false)
+
+  // If the query param didn't auto-switch tabs, click through explicitly.
+  if (!appeared) {
     const clinicalNavTab = page
       .getByRole('tab', { name: /^Clinical$|^Clínica$/i })
       .first()
@@ -95,9 +105,18 @@ async function navigateToPerioTab(page: Page, patientId: string): Promise<void> 
       await diagnosisModeBtn.click()
     }
 
-    const perioSubtab = page.getByRole('tab', { name: /Periodonto/i }).first()
-    await perioSubtab.click({ timeout: 10_000 })
+    await perioSubtab.waitFor({ state: 'visible', timeout: 10_000 })
   }
+
+  // The tab strip re-renders as the slot registry and the lazily loaded
+  // i18n messages settle, which detaches the button mid-click. Retry the
+  // click until the tab actually reports itself active.
+  await expect(async () => {
+    await perioSubtab.click({ timeout: 5_000 })
+    await expect(perioSubtab).toHaveAttribute('data-state', 'active', {
+      timeout: 2_000
+    })
+  }).toPass({ timeout: 20_000 })
 
   await expect(
     page.getByRole('region', { name: /Periodonto/i }).or(
@@ -134,8 +153,10 @@ test.describe('periodontogram — admin', () => {
     await navigateToPerioTab(loggedIn, patientId)
 
     // Inline edit — the Sondaje row renders an `<input type="number">`
-    // per site. Click any cell, type the value, blur to commit. No
-    // modal, no Save button.
+    // per site. Set the value and blur to commit. No modal, no Save
+    // button. `fill()` focuses without dispatching pointer events, so
+    // it can't be swallowed by the sticky header or the animated tab
+    // indicator that sit over the cell once it scrolls into view.
     const region = loggedIn.getByRole('region', { name: /Periodonto/i })
     const sondajeRow = region
       .locator('tr', { hasText: /Sondaje|Probing/i })
@@ -143,7 +164,6 @@ test.describe('periodontogram — admin', () => {
     await expect(sondajeRow).toBeVisible({ timeout: 10_000 })
 
     const firstSiteInput = sondajeRow.locator('input[type="number"]').first()
-    await firstSiteInput.click()
     await firstSiteInput.fill('5')
     await firstSiteInput.blur()
 
