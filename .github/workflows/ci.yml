@@ -344,6 +344,28 @@ jobs:
           done
           curl -sf -o /dev/null -w "final status: %{http_code}\n" http://localhost:3000/login
 
+      - name: Warm up Nuxt routes exercised by E2E
+        # Nuxt dev (no prebuilt bundle) compiles each route's module graph
+        # on first request. The india_gst layer added enough frontend
+        # surface (pages, plugins, i18n) that several specs now race that
+        # first-compile cost against their action/expect timeouts. Pre-hit
+        # the routes here so the timed assertions in the actual run land
+        # on already-compiled chunks.
+        run: |
+          TOKEN=$(curl -sf -X POST http://localhost:8000/api/v1/auth/login \
+            -d "username=admin@demo.clinic&password=demo1234" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            | python3 -c "import json,sys; print(json.load(sys.stdin)['access_token'])")
+          PATIENT_ID=$(curl -sf "http://localhost:8000/api/v1/patients?page=1&page_size=1" \
+            -H "Authorization: Bearer $TOKEN" \
+            | python3 -c "import json,sys; print(json.load(sys.stdin)['data'][0]['id'])")
+          for route in "/appointments" "/settings/people/users" "/settings/modules" \
+            "/patients/$PATIENT_ID?tab=clinical&clinicalMode=diagnosis&diagnosisView=periodontogram"; do
+            curl -s -o /dev/null -w "warmed %{url_effective} -> %{http_code}\n" \
+              --cookie "access_token=$TOKEN" \
+              "http://localhost:3000${route}"
+          done
+
       - name: Run E2E
         working-directory: frontend
         run: npx playwright test --reporter=list

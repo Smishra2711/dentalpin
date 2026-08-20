@@ -18,10 +18,14 @@ test.describe('admin sees module manager', () => {
     ).toBeVisible()
 
     // At least one of the core modules must be listed — they are always
-    // discovered, so this is a deterministic smoke check.
+    // discovered, so this is a deterministic smoke check. Module cards
+    // render after an async admin.refresh() fetch; the default 5s expect
+    // timeout is tight now that the module list (and the app bundle) has
+    // grown, so match the more generous timeout used elsewhere in this
+    // suite for post-fetch assertions.
     await expect(
       loggedIn.getByRole('heading', { level: 3, name: /^patients$/ })
-    ).toBeVisible()
+    ).toBeVisible({ timeout: 15_000 })
   })
 })
 
