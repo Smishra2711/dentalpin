@@ -10,7 +10,8 @@
  * APCI is now a computed flag off systemic-disease reference data, which
  * will surface elsewhere once the reference-data work lands.
  */
-import type { PatientExtended } from '~~/app/types'
+import type { PatientExtended, Patient } from '~~/app/types'
+import { PERMISSIONS } from '~~/app/config/permissions'
 
 interface Ctx {
   patient: PatientExtended
@@ -19,9 +20,18 @@ interface Ctx {
 const props = defineProps<{ ctx: Ctx }>()
 
 const { t } = useI18n()
+const { can } = usePermissions()
+// This card is self-mounted via the patient.summary.cards slot (see
+// slots.client.ts), not hosted by a parent page the way patients_clinical's
+// medical-history form is -- there's no patients/[id].vue computing a
+// :can-edit prop to pass in, so the card checks its own write permission
+// directly. The slot registration's `permission: 'patient_admin.relationships.read'`
+// already gates whether this card mounts at all; this is the finer-grained
+// write gate for the controls inside it.
+const canWrite = computed(() => can(PERMISSIONS.patientAdmin.write))
 const patientId = computed(() => props.ctx.patient.id)
-const { relationships, isLoading, isSaving, fetchAll, addRelationship, removeRelationship } =
-  usePatientAdmin(patientId)
+const { relationships, isLoading, isSaving, fetchAll, addRelationship, removeRelationship }
+  = usePatientAdmin(patientId)
 
 onMounted(fetchAll)
 
@@ -37,7 +47,7 @@ const relationshipTypeOptions = computed(() => [
   { value: 'other', label: t('patientAdmin.relationships.types.other') }
 ])
 
-const newRelatedPatient = ref<{ id: string, full_name?: string } | null>(null)
+const newRelatedPatient = ref<Patient | null>(null)
 const newRelationshipType = ref('other')
 
 async function handleAddRelationship() {
@@ -66,7 +76,10 @@ const extraRelationshipsCount = computed(() =>
     :loading="isLoading"
     :empty="relationships.length === 0 && !isEditing"
   >
-    <template #header-trailing>
+    <template
+      v-if="canWrite"
+      #header-trailing
+    >
       <UButton
         icon="i-lucide-pencil"
         variant="ghost"
@@ -121,6 +134,7 @@ const extraRelationshipsCount = computed(() =>
           <span class="text-subtle">{{ t(`patientAdmin.relationships.types.${r.relationship_type}`) }}:</span>
           <span class="flex-1 truncate text-default">{{ r.related_patient_name }}</span>
           <UButton
+            v-if="canWrite"
             icon="i-lucide-x"
             variant="ghost"
             color="neutral"
@@ -130,7 +144,10 @@ const extraRelationshipsCount = computed(() =>
         </li>
       </ul>
 
-      <div class="flex flex-col gap-1.5">
+      <div
+        v-if="canWrite"
+        class="flex flex-col gap-1.5"
+      >
         <PatientSearch
           v-model="newRelatedPatient"
           :placeholder="t('patientAdmin.relationships.searchPatient')"

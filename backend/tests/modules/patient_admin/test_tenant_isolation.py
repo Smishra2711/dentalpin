@@ -45,6 +45,39 @@ async def test_create_and_list_relationship_happy_path(
 
 
 @pytest.mark.asyncio
+async def test_update_relationship_can_explicitly_clear_notes(
+    db_session: AsyncSession, test_clinic: Clinic, test_patient: Patient
+):
+    """update_relationship must apply every key in the already-filtered
+    exclude_unset dict, including an explicit `None` -- that's how a
+    client clears an optional field via PUT. The old `if value is not
+    None` check silently turned that into a no-op."""
+    other_patient = Patient(clinic_id=test_clinic.id, first_name="Sibling", last_name="Patient")
+    db_session.add(other_patient)
+    await db_session.commit()
+
+    rel = await PatientAdminService.create_relationship(
+        db_session,
+        test_clinic.id,
+        test_patient.id,
+        {
+            "related_patient_id": other_patient.id,
+            "relationship_type": "sibling",
+            "notes": "some existing note",
+        },
+    )
+    await db_session.commit()
+    assert rel.notes == "some existing note"
+
+    # Simulates the router's data.model_dump(exclude_unset=True) when the
+    # client explicitly sends {"notes": null} to clear the field.
+    await PatientAdminService.update_relationship(db_session, rel, {"notes": None})
+    await db_session.commit()
+
+    assert rel.notes is None
+
+
+@pytest.mark.asyncio
 async def test_get_relationship_is_clinic_scoped(
     db_session: AsyncSession, test_clinic: Clinic, test_patient: Patient
 ):

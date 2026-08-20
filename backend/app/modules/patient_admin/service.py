@@ -91,9 +91,13 @@ class PatientAdminService:
     async def update_relationship(
         db: AsyncSession, row: PatientRelationship, data: dict
     ) -> PatientRelationship:
+        # data is already model_dump(exclude_unset=True) from the router,
+        # so every key here was explicitly sent by the client -- including
+        # an explicit `null`, which is how a client clears an optional
+        # field like `notes`. Don't re-filter on `is not None` here: that
+        # would silently turn "clear this field" into a no-op.
         for key, value in data.items():
-            if value is not None:
-                setattr(row, key, value)
+            setattr(row, key, value)
         return row
 
     @staticmethod
