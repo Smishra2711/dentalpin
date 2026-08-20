@@ -460,7 +460,8 @@
       "applied": "{name} ajouté au plan",
       "archPickerTitle": "Quelle arcade pour « {name} » ?",
       "upperArch": "Arcade supérieure",
-      "lowerArch": "Arcade inférieure"
+      "lowerArch": "Arcade inférieure",
+      "searchPlaceholder": "Rechercher un traitement…"
     },
     "selectCondition": "Sélectionner l'état",
     "readOnly": "Lecture seule",
@@ -592,7 +593,8 @@
         "rotate": "Tournée",
         "displace": "Déplacée",
         "splint": "Attelle",
-        "migrated": "Traitement général"
+        "migrated": "Traitement général",
+        "other": "Autre traitement"
       },
       "treatmentAdded": "Traitement ajouté",
       "treatmentPerformed": "Traitement marqué comme réalisé",

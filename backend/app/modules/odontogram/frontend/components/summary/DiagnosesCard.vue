@@ -56,7 +56,9 @@ const href = computed(
 )
 
 function formatClinicalType(key: string): string {
-  return t(`odontogram.treatmentTypes.${key}`, key.replace(/_/g, ' '))
+  // `odontogram.treatments.types` is the real namespace (`treatmentTypes` never
+  // existed in the locales, so every label fell back to humanized raw keys).
+  return t(`odontogram.treatments.types.${key}`, key.replace(/_/g, ' '))
 }
 </script>
 

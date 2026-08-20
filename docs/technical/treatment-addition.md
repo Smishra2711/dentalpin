@@ -352,3 +352,31 @@ Reconfirmado para evitar scope creep:
 - Accesibilidad de teclado general (solo la específica de drag&drop en PR 7).
 
 Cualquier de lo anterior debe entrar por un nuevo ciclo de diseño.
+
+---
+
+## 8. Addendum 2026-08-20 — globales sin mapping de odontograma
+
+La implementación de PR 3/PR 4 divergió de la spec: la barra se alimentaba de
+`GET /api/v1/catalog/odontogram-treatments`, que exigía `TreatmentOdontogramMapping`,
+mientras que los ítems `global_mouth`/`global_arch` del seed no llevan mapping
+(no hay nada que pintar por diente). Resultado: "Boca completa" solo mostraba la
+férula. Contrato corregido:
+
+- **`GET /catalog/odontogram-treatments`** devuelve también los ítems
+  **sin mapping cuyo `treatment_scope` es global**, con
+  `odontogram_treatment_type: null`, `visualization_rules: []`,
+  `visualization_config: {}`, `clinical_category: null`
+  (`catalog/service.py::get_odontogram_treatments`). Los ítems
+  tooth/multi_tooth sin mapping siguen excluidos. `/by-category` omite
+  los ítems con `clinical_category` nula (contrato sin cambios).
+- **`TreatmentService._resolve_clinical_type`** acepta scope: para
+  `global_mouth`/`global_arch` sin mapping y sin tipo explícito devuelve el
+  tipo interno **`"other"`** (mismo patrón que `"migrated"` del importador;
+  no admitido como input explícito de la API).
+- **`TreatmentBar.vue`**: la pestaña "Boca completa" agrupa por categoría
+  clínica del catálogo (subcabeceras localizadas vía `category_names`),
+  boca completa antes que arcada dentro de cada grupo, con buscador cuando
+  hay más de 12 ítems. Icono/color neutros (`other`) para ítems sin mapping.
+- La "búsqueda por nombre en TreatmentBar" de §7 queda implementada
+  (limitada a la pestaña de globales).

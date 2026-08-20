@@ -603,21 +603,21 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.ODONTOGRAM_TREATMENT_ADDED`
 - **Publishers:**
-  - `odontogram` — `backend/app/modules/odontogram/service.py:727`
+  - `odontogram` — `backend/app/modules/odontogram/service.py:732`
 - **Subscribers:** —
 
 ### `odontogram.treatment.deleted`
 
 - **Constant:** `EventType.ODONTOGRAM_TREATMENT_DELETED`
 - **Publishers:**
-  - `odontogram` — `backend/app/modules/odontogram/service.py:888`
+  - `odontogram` — `backend/app/modules/odontogram/service.py:893`
 - **Subscribers:** —
 
 ### `odontogram.treatment.performed`
 
 - **Constant:** `EventType.ODONTOGRAM_TREATMENT_PERFORMED`
 - **Publishers:**
-  - `odontogram` — `backend/app/modules/odontogram/service.py:828`
+  - `odontogram` — `backend/app/modules/odontogram/service.py:833`
 - **Subscribers:**
   - `patient_timeline`
   - `payments`
@@ -628,7 +628,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.ODONTOGRAM_TREATMENT_STATUS_CHANGED`
 - **Publishers:**
-  - `odontogram` — `backend/app/modules/odontogram/service.py:771`
+  - `odontogram` — `backend/app/modules/odontogram/service.py:776`
 - **Subscribers:** —
 
 ### `patient.archived`

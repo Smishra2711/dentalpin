@@ -348,11 +348,12 @@ class OdontogramTreatmentResponse(BaseModel):
     pricing_config: dict | None = None
     surface_prices: dict[str, Decimal] | None = None
 
-    # Odontogram specific
-    odontogram_treatment_type: str
-    visualization_rules: list[dict]
-    visualization_config: dict
-    clinical_category: str
+    # Odontogram specific. None/empty when the item has no odontogram mapping
+    # (global-scope items are returned unmapped so the plan UI can offer them).
+    odontogram_treatment_type: str | None = None
+    visualization_rules: list[dict] = []
+    visualization_config: dict = {}
+    clinical_category: str | None = None
 
     # Category info
     category_key: str
