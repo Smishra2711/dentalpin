@@ -33,7 +33,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/treatment_plan/frontend/pages/treatment-plans/[id].vue
   - backend/app/modules/treatment_plan/router.py
-last_verified_commit: e1d6873
+last_verified_commit: 68b0262
 ---
 
 # Detalle del plan de tratamiento
@@ -77,6 +77,25 @@ ejecutados y se cierra o reactiva.
   plan está en *pendiente* esperando aceptación.
 - **Notas clínicas.** Pueden engancharse al plan desde el módulo
   `clinical_notes` (slot `patient.detail.clinical.notes`).
+
+## Añadir tratamientos desde el odontograma
+
+La barra de tratamientos bajo el odontograma muestra las categorías
+terapéuticas (Restauradora, Cirugía, Endodoncia, Ortodoncia) y la
+pestaña **Boca completa**:
+
+- **Tratamientos por diente** — selecciona el tratamiento y pulsa el
+  diente (o dientes) en el odontograma.
+- **Boca completa** — tratamientos sin diente asociado (primera
+  visita, limpieza dental, radiografía panorámica, blanqueamiento,
+  prótesis…), agrupados por categoría clínica. Al pulsarlos se añaden
+  directamente al plan, sin pasar por el odontograma. Los de
+  **arcada** (férulas, prótesis parciales/completas) piden elegir
+  arcada superior o inferior antes de añadirse.
+- Con más de 12 tratamientos globales aparece un **buscador** para
+  filtrar por nombre.
+- En la lista del plan, los tratamientos de boca completa se muestran
+  sin número de diente; los de arcada indican superior/inferior.
 
 ## Confirmar un plan
 

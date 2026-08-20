@@ -460,7 +460,8 @@
       "applied": "{name} adicionado ao plano",
       "archPickerTitle": "Qual a arcada para \"{name}\"?",
       "upperArch": "Arcada superior",
-      "lowerArch": "Arcada inferior"
+      "lowerArch": "Arcada inferior",
+      "searchPlaceholder": "Pesquisar tratamento…"
     },
     "selectCondition": "Selecionar condição",
     "readOnly": "Apenas visualização",
@@ -592,7 +593,8 @@
         "rotate": "Rodado",
         "displace": "Deslocado",
         "splint": "Ferulização",
-        "migrated": "Tratamento geral"
+        "migrated": "Tratamento geral",
+        "other": "Outro tratamento"
       },
       "treatmentAdded": "Tratamento adicionado",
       "treatmentPerformed": "Tratamento marcado como realizado",

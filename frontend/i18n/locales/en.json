@@ -460,7 +460,8 @@
       "applied": "{name} added to plan",
       "archPickerTitle": "Which arch for \"{name}\"?",
       "upperArch": "Upper arch",
-      "lowerArch": "Lower arch"
+      "lowerArch": "Lower arch",
+      "searchPlaceholder": "Search treatment…"
     },
     "selectCondition": "Select Condition",
     "readOnly": "View only",
@@ -592,7 +593,8 @@
         "rotate": "Rotated",
         "displace": "Displaced",
         "splint": "Splint",
-        "migrated": "General treatment"
+        "migrated": "General treatment",
+        "other": "Other treatment"
       },
       "treatmentAdded": "Treatment added",
       "treatmentPerformed": "Treatment marked as performed",

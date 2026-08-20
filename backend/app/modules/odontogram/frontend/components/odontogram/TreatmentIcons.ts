@@ -482,6 +482,15 @@ export const TREATMENT_ICONS: Record<string, string> = {
     <path d="M20 12H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
     <path d="M20 12L17 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
     <path d="M20 12L17 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  `,
+
+  // Other - neutral fallback for global treatments without an odontogram mapping
+  // (limpieza, primera visita, radiografía...): tooth outline with a sparkle.
+  other: `
+    <path d="M7 3C7 2 9 1 12 1C15 1 17 2 17 3V10C17 12 15 14 12 14C9 14 7 12 7 10V3Z" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <path d="M9.5 14V20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M14.5 14V20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M19.5 15.5L20.3 17.7L22.5 18.5L20.3 19.3L19.5 21.5L18.7 19.3L16.5 18.5L18.7 17.7L19.5 15.5Z" fill="currentColor"/>
   `
 }
 

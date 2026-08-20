@@ -455,6 +455,10 @@ export type ClinicalType
   // legacy type has no mapping (see migration_import/mappers). Not creatable
   // through the API; the original label lives in `Treatment.notes`.
     | 'migrated'
+  // Server-side fallback for global-scope treatments created from catalog
+  // items without an odontogram mapping (limpieza, primera visita…). Not
+  // creatable explicitly through the API; labels come from catalog names.
+    | 'other'
 
 /** @deprecated — kept for gradual migration; prefer ClinicalType. */
 export type TreatmentType = ClinicalType
@@ -806,11 +810,12 @@ export interface OdontogramTreatment {
   pricing_strategy: PricingStrategy
   pricing_config?: Record<string, number> | null
   surface_prices?: Record<string, number> | null
-  // Odontogram specific
-  odontogram_treatment_type: ClinicalType
+  // Odontogram specific. Null/empty for unmapped global-scope items
+  // (no per-tooth visualization; offered only in the plan UI).
+  odontogram_treatment_type: ClinicalType | null
   visualization_rules: VisualizationRuleLayer[]
   visualization_config: Record<string, unknown>
-  clinical_category: string
+  clinical_category: string | null
   // Category info
   category_key: string
   category_names: Record<string, string>

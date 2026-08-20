@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- feat: global treatments from unmapped catalog items are creatable —
+  `TreatmentService._resolve_clinical_type` falls back to the
+  server-internal type `"other"` for `global_mouth`/`global_arch` scopes
+  when the catalog item has no odontogram mapping (mirrors the
+  `"migrated"` precedent; still rejected as explicit API input; tooth
+  scopes still require a mapping or explicit type). `TreatmentBar`'s
+  "Boca completa" tab now groups items by clinical category with
+  localized subheaders, shows prices in tooltips, and adds a name filter
+  when the list exceeds 12 items; neutral `other` icon added.
+- fix: `DiagnosesCard` translates clinical types via the real i18n
+  namespace `odontogram.treatments.types` (it pointed at a
+  `treatmentTypes` namespace that never existed, so every label fell
+  back to the humanized raw key — "filling composite", "other").
+
 - fix(#184): the layer type-checks clean under `nuxt typecheck`. Real bugs behind the errors: treatment colour dots read `TREATMENT_COLORS` (a `{light,dark}` config) as a hex string — they now go through `getTreatmentColor()`; the toast undo action used the v3 `click` key (v4: `onClick`), `UPopover :ui.width` is `content`; `TreatmentBar` emitted a possibly-undefined fallback status; touch drags on the timeline guard an empty `touches` list. Tooth-position lookups are typed by `ToothPosition` (1–8) instead of `|| MAP[1]` fallbacks.
 - fix(#183): `TreatmentService.perform` publishes with `db=` so the payments earned ledger and the plan-item completion run in its transaction (ADR 0019).
 - feat(events): `TreatmentService.perform` accepts `publish_price=False`
