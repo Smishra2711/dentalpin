@@ -27,7 +27,7 @@ Maintained by `backend/scripts/generate_catalogs.py`. CI fails if a manifest cha
 | `patients_clinical` | 0.1.0 | official | patients | auto | no | 4 | 1 | 0 | yes |
 | `payments` | 0.1.0 | official | patients, budget | auto | no | 4 | 3 | 2 | yes |
 | `periodontogram` | 0.1.0 | official | patients, odontogram | manual | yes | 2 | 1 | 2 | yes |
-| `recall_reminders` | 0.1.0 | community | recalls, notifications | manual | yes | 0 | 0 | 1 | yes |
+| `recall_reminders` | 0.1.0 | community | recalls, notifications, patients | manual | yes | 0 | 0 | 1 | yes |
 | `recalls` | 0.1.0 | official | patients, agenda | auto | yes | 3 | 4 | 5 | yes |
 | `reports` | 0.1.0 | official | patients, agenda, catalog, budget, billing, payments | auto | no | 3 | 0 | 0 | yes |
 | `schedules` | 0.1.0 | official | agenda | auto | yes | 8 | 0 | 4 | yes |
@@ -480,7 +480,7 @@ Connects recalls to the notifications gateway — auto-reminds patients when a r
 - **License:** BSL-1.1
 - **Category:** community
 - **Install policy:** installable=True · auto_install=False · removable=True
-- **Depends:** `recalls`, `notifications`
+- **Depends:** `recalls`, `notifications`, `patients`
 - **Frontend layer:** `frontend`
 - **Permissions:** —
 - **Events emitted:** —

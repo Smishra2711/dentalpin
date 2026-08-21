@@ -38,14 +38,15 @@ file-fallback when no DB row exists.
 Available template variables (from the event payload, resolved inside
 the handler): `patient_name`, `clinic_name`, `reason`,
 `due_month` (humanized, e.g. `"September 2026"`, not the raw
-`"2026-09"` from the payload).
+`"2026-09-01"` from the payload).
 
 ## Dependencies
 
-`manifest.depends = ["recalls", "notifications"]` — imports
+`manifest.depends = ["recalls", "notifications", "patients"]` — imports
 `NotificationGateway` directly from `notifications.gateway` (a
-synchronous call, not just a read of another module's table) and listens
-for `recalls`' event. Legal under ADR 0002 / 0003 because both are
+synchronous call, not just a read of another module's table), reads
+`Patient` (clinic-scoped) for the template context, and listens for
+`recalls`' event. Legal under ADR 0002 / 0003 because all three are
 declared.
 
 ## Lifecycle

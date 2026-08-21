@@ -26,7 +26,7 @@ def _humanize_due_month(due_month: str | None) -> str | None:
     if not due_month:
         return None
     try:
-        return datetime.strptime(due_month, "%Y-%m").strftime("%B %Y")
+        return datetime.strptime(due_month, "%Y-%m-%d").strftime("%B %Y")
     except ValueError:
         return due_month
 
@@ -48,7 +48,9 @@ async def _on_recall_created(payload: dict, *, db: AsyncSession) -> None:
     recall_id = payload["recall_id"]
 
     async with db.begin_nested():
-        result = await db.execute(select(Patient).where(Patient.id == patient_id))
+        result = await db.execute(
+            select(Patient).where(Patient.id == patient_id, Patient.clinic_id == clinic_id)
+        )
         patient = result.scalar_one_or_none()
         if not patient:
             logger.error(f"Patient not found for recall reminder: {patient_id}")

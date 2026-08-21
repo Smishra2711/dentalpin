@@ -42,7 +42,7 @@ async def test_recall_created_enqueues_reminder_for_correct_clinic_only(
             "patient_id": str(test_patient.id),
             "recall_id": str(uuid4()),
             "reason": "6-month checkup",
-            "due_month": "2026-09",
+            "due_month": "2026-09-01",
         },
         db=db_session,
     )
@@ -92,7 +92,7 @@ async def test_recall_created_is_idempotent_on_dedup_key(
         "patient_id": str(test_patient.id),
         "recall_id": recall_id,
         "reason": "6-month checkup",
-        "due_month": "2026-09",
+        "due_month": "2026-09-01",
     }
 
     await _on_recall_created(payload, db=db_session)
@@ -123,7 +123,7 @@ async def test_recall_created_skips_silently_when_patient_missing(
             "patient_id": str(uuid4()),
             "recall_id": str(uuid4()),
             "reason": "6-month checkup",
-            "due_month": "2026-09",
+            "due_month": "2026-09-01",
         },
         db=db_session,
     )
@@ -141,6 +141,6 @@ async def test_recall_created_skips_silently_when_patient_missing(
 
 
 def test_humanize_due_month():
-    assert _humanize_due_month("2026-09") == "September 2026"
+    assert _humanize_due_month("2026-09-01") == "September 2026"
     assert _humanize_due_month(None) is None
     assert _humanize_due_month("not-a-date") == "not-a-date"

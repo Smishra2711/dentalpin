@@ -8,8 +8,9 @@ This module is pure glue: it has no models, no UI, no API surface of
 its own — it just subscribes to one event and calls one existing
 function.
 
-Depends on both `recalls` and `notifications` for the imports below (ADR
-0002 / 0003 — legal cross-module reads/calls because both are declared).
+Depends on `recalls`, `notifications` and `patients` (the handler reads
+Patient for the template context) — ADR 0002 / 0003: legal cross-module
+reads/calls because all three are declared.
 
 Ships its own system-level email template
 (`backend/templates/email/{locale}/recall_reminder.html`) — no setup
@@ -31,7 +32,7 @@ class RecallRemindersModule(BaseModule):
         "author": "DentalPin Core Team",
         "license": "BSL-1.1",
         "category": "community",
-        "depends": ["recalls", "notifications"],
+        "depends": ["recalls", "notifications", "patients"],
         "installable": True,
         "auto_install": False,
         "removable": True,
