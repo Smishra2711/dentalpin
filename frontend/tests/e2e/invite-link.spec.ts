@@ -13,13 +13,7 @@ test.describe('invite link', () => {
 
   test('create user without password → link → set password → signed in', async ({ loggedIn, browser }) => {
     await loggedIn.goto('/settings/people/users')
-    // Vue's @click handler only binds after hydration completes — clicking
-    // before that lets the event reach the button DOM but the listener
-    // never runs. Same race documented in agenda-quick-patient-create.spec.ts.
-    await loggedIn.waitForLoadState('networkidle')
-    const newUserBtn = loggedIn.getByRole('button', { name: /nuevo usuario|new user/i })
-    await expect(newUserBtn).toBeEnabled({ timeout: 10_000 })
-    await newUserBtn.click()
+    await loggedIn.getByRole('button', { name: /nuevo usuario|new user/i }).click()
 
     const dialog = loggedIn.getByRole('dialog')
     await dialog.getByRole('textbox', { name: /^nombre$|first name/i }).fill('Invitada')

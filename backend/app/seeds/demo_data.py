@@ -89,14 +89,10 @@ def get_clinic_data() -> dict:
                 "ta": "டெமோ பல் மருத்துவ கிளினிக்",
             }
         ),
-        # The English persona is an Indian clinic too (English is the
-        # working language of Indian healthcare) — Chennai/INR/country=IN,
-        # with English wording, so the plain `seed-demo.sh` default gets
-        # the same GST behaviour as the Tamil persona.
         "tax_id": t(
             {
                 "es": "B12345678",
-                "en": "33-1234567",
+                "en": "12-3456789",
                 "fr": "12-3456789",
                 "ta": "33-1234567",
             }
@@ -110,37 +106,30 @@ def get_clinic_data() -> dict:
                     "ta": "123 மெயின் தெரு",
                 }
             ),
-            "city": t({"es": "Madrid", "en": "Chennai", "fr": "Paris", "ta": "சென்னை"}),
-            "postal_code": t({"es": "28013", "en": "600001", "fr": "75001", "ta": "600001"}),
-            "country": t({"es": "España", "en": "India", "fr": "France", "ta": "இந்தியா"}),
+            "city": t({"es": "Madrid", "en": "New York", "fr": "Paris", "ta": "சென்னை"}),
+            "postal_code": t({"es": "28013", "en": "10001", "fr": "75001", "ta": "600001"}),
+            "country": t({"es": "España", "en": "USA", "fr": "France", "ta": "இந்தியா"}),
         },
         "phone": t(
             {
                 "es": "+34 912 345 678",
-                "en": "+91 98401 23456",
+                "en": "+1 (212) 555-0100",
                 "fr": "+33 1 23 45 67 89",
                 "ta": "+91 98401 23456",
             }
         ),
         "email": "info@demo.clinic",
-        "currency": t({"es": "EUR", "en": "INR", "fr": "EUR", "ta": "INR"}),
+        "currency": t({"es": "EUR", "en": "USD", "fr": "EUR", "ta": "INR"}),
         "timezone": t(
             {
                 "es": "Europe/Madrid",
-                "en": "Asia/Kolkata",
+                "en": "America/New_York",
                 "fr": "Europe/Paris",
                 "ta": "Asia/Kolkata",
             }
         ),
         "settings": {
             "slot_duration_min": 30,
-            # ISO country drives BillingHookRegistry.get_for_clinic — a
-            # country compliance module (india_gst, verifactu) only
-            # activates for a clinic whose settings declare its country.
-            # Seeding it here (instead of only inside each module's demo
-            # seed) means installing the module *after* seeding still
-            # turns the feature on.
-            "country": t({"es": "ES", "en": "IN", "fr": "FR", "ta": "IN"}),
             "working_hours": {
                 "monday": {"morning": ["09:00", "14:00"], "afternoon": ["16:00", "20:00"]},
                 "tuesday": {"morning": ["09:00", "14:00"], "afternoon": ["16:00", "20:00"]},
@@ -2467,7 +2456,7 @@ PATIENT_JOURNEYS = [
                 "ta": "பெனிசிலினுக்கு ஒவ்வாமை உள்ளது. மாற்று மருந்துகளைப் பயன்படுத்தவும்.",
             },
             "items": [
-                {"catalog_code": "PERIO-RAR", "is_global": True, "completed": True},
+                {"catalog_code": "PERIO-SCAL", "is_global": True, "completed": True},
                 {"catalog_code": "REST-COMP", "tooth": 17, "is_global": False, "completed": True},
                 {"catalog_code": "REST-COMP", "tooth": 26, "is_global": False},
             ],
@@ -2883,13 +2872,26 @@ def generate_treatment_plans_data(catalog_items_map: dict[str, dict]) -> dict:
             recorded_at = datetime.now() - timedelta(days=30)
             performed_at = datetime.now() - timedelta(days=10) if is_completed else None
 
+            # Global catalog items (limpieza, primera visita...) must land with
+            # their real scope and the server-internal 'other' clinical_type —
+            # matching what TreatmentService would produce (see odontogram
+            # service._resolve_clinical_type).
+            item_scope = catalog_item.get("treatment_scope") or "tooth"
+            is_global_scope = item_scope in ("global_mouth", "global_arch")
+            treatment_scope = item_scope if is_global_scope else "tooth"
+            treatment_arch = None
+            if item_scope == "global_arch":
+                treatment_arch = "lower" if catalog_code.endswith("-INF") else "upper"
+
             plan_treatments.append(
                 {
                     "id": treatment_id,
                     "clinic_id": CLINIC_ID,
                     "patient_id": patient["id"],
                     "clinical_type": catalog_item.get("odontogram_treatment_type")
-                    or "filling_composite",
+                    or ("other" if is_global_scope else "filling_composite"),
+                    "scope": treatment_scope,
+                    "arch": treatment_arch,
                     "catalog_item_id": catalog_item["id"],
                     "status": plan_treatment_status,
                     "recorded_at": recorded_at,
@@ -2909,7 +2911,7 @@ def generate_treatment_plans_data(catalog_items_map: dict[str, dict]) -> dict:
             # default; hygiene-typical codes (cleanings, scaling) are assigned
             # to the hygienist instead so the demo plans visibly show a mix
             # of professionals — that's the whole point of the per-item field.
-            is_hygiene_code = catalog_code in ("PREV-CLEAN", "PERIO-RAR")
+            is_hygiene_code = catalog_code in ("PREV-CLEAN", "PERIO-SCAL", "PERIO-RAR")
             assigned_professional_id = USER_HYGIENIST_ID if is_hygiene_code else USER_DENTIST_ID
 
             planned_items.append(
