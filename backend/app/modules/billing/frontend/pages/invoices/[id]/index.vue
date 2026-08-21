@@ -39,11 +39,6 @@ const complianceSlotCtx = computed(() => ({
   clinic: currentClinic.value
 }))
 
-const isIndianClinic = computed(() => {
-  const c = currentClinic.value
-  return c?.settings?.country === 'IN'
-})
-
 const invoiceId = computed(() => route.params.id as string)
 const comesFromPatient = computed(() => route.query.from === 'patient' && route.query.patientId)
 const backLabel = computed(() => comesFromPatient.value ? t('actions.back') : t('invoice.title'))
@@ -432,7 +427,7 @@ const totalsLines = computed<TotalLine[]>(() => {
   if (inv.total_tax > 0) {
     lines.push({
       key: 'tax',
-      label: isIndianClinic.value ? t('indiaGst.badge.gst') : t('invoice.tax'),
+      label: t('invoice.tax'),
       value: inv.total_tax
     })
   }
@@ -767,7 +762,7 @@ function goToCreditNoteFor() {
                       {{ formatCurrency(item.line_total) }}
                     </p>
                     <p class="text-xs text-subtle">
-                      {{ isIndianClinic ? t('indiaGst.badge.gst') : t('invoice.vat') }} {{ item.vat_rate }}%
+                      {{ t('invoice.vat') }} {{ item.vat_rate }}%
                     </p>
                   </div>
                 </div>

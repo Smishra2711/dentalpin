@@ -4,6 +4,7 @@ import asyncio
 import hashlib
 from datetime import date
 from decimal import Decimal
+from html import escape
 from io import BytesIO
 from typing import TYPE_CHECKING
 
@@ -60,9 +61,13 @@ class InvoicePDFService:
                 keys: ``compliance_qr_png_b64`` (base64 PNG) renders the
                 QR top-right; ``compliance_qr_label`` (default
                 ``"VERI*FACTU"``); ``legal_notices`` (list[str]) appends
-                to the legal-notices block; ``compliance_section_html``
-                (str) renders a dedicated compliance section (e.g. India
-                GST breakdown) after the payment-info block.
+                to the legal-notices block; ``compliance_section``
+                (dict: ``title``, ``rows`` of ``{label, value, amount?}``,
+                optional ``hint``) renders a dedicated compliance section
+                (e.g. India GST breakdown) after the payment-info block —
+                structured data only, billing escapes and renders it;
+                ``label_overrides`` (dict[str, str]) may override existing
+                flat label strings (e.g. "VAT" → "GST").
 
         Returns:
             PDF content as bytes
@@ -102,13 +107,18 @@ class InvoicePDFService:
         """Generate HTML content for the invoice."""
         extra = extra_pdf_data or {}
         # Label overrides from a country compliance hook (e.g. India GST
-        # renames "VAT"/"Tax" to "GST"). Applied to the localized labels
-        # dict before any label is used in the template.
+        # renames "VAT"/"Tax" to "GST"). Only known flat string labels may
+        # be overridden — a hook can neither add new keys nor clobber the
+        # nested ``status`` dict.
         label_overrides = extra.get("label_overrides") or {}
-        # Localized labels
         labels = InvoicePDFService._get_labels(locale)
-        # Apply country-specific label overrides (e.g. GST instead of VAT)
-        labels.update(label_overrides)
+        labels.update(
+            {
+                k: v
+                for k, v in label_overrides.items()
+                if isinstance(labels.get(k), str) and isinstance(v, str)
+            }
+        )
 
         # Determine if this is a credit note
         is_credit_note = invoice.credit_note_for_id is not None
@@ -209,16 +219,44 @@ class InvoicePDFService:
         legal_notices = extra.get("legal_notices") or []
         legal_notices_html = ""
         if legal_notices:
-            items_li = "".join(f"<li>{notice}</li>" for notice in legal_notices)
+            items_li = "".join(f"<li>{escape(str(notice))}</li>" for notice in legal_notices)
             legal_notices_html = f"""
             <div class="legal-notices">
                 <ul>{items_li}</ul>
             </div>
             """
 
-        # Compliance section (e.g. India GST breakdown) — structured HTML
-        # from a country compliance hook's ``enhance_pdf_data``.
-        compliance_section_html = extra.get("compliance_section_html") or ""
+        # Compliance section (e.g. India GST breakdown) — structured data
+        # from a country compliance hook's ``enhance_pdf_data``:
+        # ``{"title": str, "rows": [{"label", "value", "amount"?}], "hint"?}``.
+        # Billing renders and escapes it here; hooks never hand raw HTML
+        # across the module boundary (row values include user-entered tax
+        # ids and trade names).
+        compliance_section = extra.get("compliance_section") or {}
+        compliance_section_html = ""
+        if compliance_section:
+            comp_rows_html = ""
+            for row in compliance_section.get("rows", []):
+                row_cls = "gst-row gst-amount-row" if row.get("amount") else "gst-row"
+                value_cls = "gst-value gst-amount" if row.get("amount") else "gst-value"
+                comp_rows_html += (
+                    f'<div class="{row_cls}">'
+                    f'<span class="gst-label">{escape(str(row.get("label", "")))}</span>'
+                    f'<span class="{value_cls}">{escape(str(row.get("value", "")))}</span>'
+                    f"</div>"
+                )
+            hint = compliance_section.get("hint")
+            if hint:
+                comp_rows_html += f'<div class="gst-hint">{escape(str(hint))}</div>'
+            section_title = escape(str(compliance_section.get("title", "")))
+            compliance_section_html = f"""
+            <div class="gst-section">
+                <div class="section-title">{section_title}</div>
+                <div class="gst-grid">
+                    {comp_rows_html}
+                </div>
+            </div>
+            """
 
         # Build HTML
         html = f"""
@@ -793,11 +831,14 @@ class InvoicePDFService:
             "qty": "அளவு",
             "unit_price": "அலகு விலை",
             "discount": "தள்ளை",
-            "vat": "GST",
+            # Neutral "tax" wording — the GST terminology for Indian
+            # clinics arrives via the india_gst hook's label_overrides,
+            # never hardcoded in billing.
+            "vat": "வரி",
             "total": "மொத்தம்",
             "subtotal": "உள்விலை",
             "total_discount": "மொத்த தள்ளை",
-            "tax": "GST",
+            "tax": "வரி",
             "grand_total": "மொத்தம்",
             "total_paid": "செலுத்தப்பட்டது",
             "balance_due": "நிலுவைத் தொகை",

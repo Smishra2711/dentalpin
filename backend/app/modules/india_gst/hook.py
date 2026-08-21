@@ -48,26 +48,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def _gst_row(label: str, value: str) -> str:
-    """One label/value row in the GST breakdown grid."""
-    return (
-        f'<div class="gst-row">'
-        f'<span class="gst-label">{label}</span>'
-        f'<span class="gst-value">{value}</span>'
-        f"</div>"
-    )
-
-
-def _gst_amount_row(label: str, amount: str) -> str:
-    """One amount row in the GST breakdown grid (right-aligned)."""
-    return (
-        f'<div class="gst-row gst-amount-row">'
-        f'<span class="gst-label">{label}</span>'
-        f'<span class="gst-value gst-amount">{amount}</span>'
-        f"</div>"
-    )
-
-
 async def _get_settings(db: AsyncSession, clinic_id) -> IndiaGstSettings | None:
     result = await db.execute(
         select(IndiaGstSettings).where(IndiaGstSettings.clinic_id == clinic_id)
@@ -184,9 +164,10 @@ class IndiaGstHook(BillingComplianceHook):
     def enhance_pdf_data(self, pdf_data: dict, invoice) -> dict:
         """Append the GST breakdown section to the PDF.
 
-        Produces a ``compliance_section_html`` key rendered as a
-        dedicated section in the invoice PDF (after totals, before
-        footer) — matching the on-screen GST panel. Also appends a
+        Produces a structured ``compliance_section`` dict (title + rows)
+        that billing renders — and escapes — itself; this hook never
+        hands HTML across the module boundary (the values include
+        user-entered GSTINs and trade names). Also appends a
         ``legal_notices`` entry for the "Tax Invoice — GST" header.
 
         Reads only from the immutable issue-time snapshot in
@@ -270,45 +251,24 @@ class IndiaGstHook(BillingComplianceHook):
             if recipient_gstin:
                 gstin_display += f" / {recipient_gstin}"
 
-        # Build rows
-        rows_html = ""
-
-        # GST document number
+        rows: list[dict[str, Any]] = []
         if gst_doc:
-            rows_html += _gst_row("GST document number", gst_doc)
-
-        # Corrects reference (credit notes)
+            rows.append({"label": "GST document number", "value": gst_doc})
         if original_ref:
-            rows_html += _gst_row("Corrects document", original_ref)
+            rows.append({"label": "Corrects document", "value": original_ref})
+        rows.append({"label": "Place of supply", "value": place_display})
+        rows.append({"label": "GSTIN on invoice", "value": gstin_display})
+        rows.append({"label": "GST calculation", "value": tax_calc_label})
+        rows.append({"label": "CGST", "value": cgst_total, "amount": True})
+        rows.append({"label": "SGST", "value": sgst_total, "amount": True})
+        rows.append({"label": "IGST", "value": igst_total, "amount": True})
+        rows.append({"label": "E-invoice status", "value": einvoice_label})
 
-        # Place of supply
-        rows_html += _gst_row("Place of supply", place_display)
-
-        # GSTIN on invoice
-        rows_html += _gst_row("GSTIN on invoice", gstin_display)
-
-        # Tax calculation header
-        rows_html += _gst_row("GST calculation", tax_calc_label)
-
-        # CGST / SGST / IGST amounts
-        rows_html += _gst_amount_row("CGST", cgst_total)
-        rows_html += _gst_amount_row("SGST", sgst_total)
-        rows_html += _gst_amount_row("IGST", igst_total)
-
-        # E-invoice status
-        rows_html += _gst_row("E-invoice status", einvoice_label)
-        if einvoice_hint:
-            rows_html += f'<div class="gst-hint">{einvoice_hint}</div>'
-
-        section_html = f"""
-        <div class="gst-section">
-            <div class="section-title">GST and e-invoice</div>
-            <div class="gst-grid">
-                {rows_html}
-            </div>
-        </div>
-        """
-        pdf_data["compliance_section_html"] = section_html
+        pdf_data["compliance_section"] = {
+            "title": "GST and e-invoice",
+            "rows": rows,
+            "hint": einvoice_hint or None,
+        }
         return pdf_data
 
     async def _apply(
