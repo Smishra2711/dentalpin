@@ -189,9 +189,25 @@ export interface PatientCreate {
   billing_email?: string
 }
 
-export interface PatientUpdate extends Partial<PatientCreate> {
+/**
+ * PATCH payload. Every field is optional and an explicit `null` clears the
+ * stored value (the backend applies `exclude_unset`), which is why this is
+ * not `Partial<PatientCreate>` — create never sends `null`.
+ */
+export interface PatientUpdate {
+  first_name?: string
+  last_name?: string
+  phone?: string | null
+  email?: string | null
+  date_of_birth?: string | null
+  notes?: string | null
   status?: 'active' | 'archived'
   do_not_contact?: boolean
+  // Billing fields
+  billing_name?: string | null
+  billing_tax_id?: string | null
+  billing_address?: PatientBillingAddress | null
+  billing_email?: string | null
 }
 
 // Appointment treatment brief (from planned treatment item)
@@ -435,6 +451,14 @@ export type ClinicalType
     | 'band'
     | 'attachment'
     | 'retainer'
+  // Catch-all written by the migration importer for treatments whose
+  // legacy type has no mapping (see migration_import/mappers). Not creatable
+  // through the API; the original label lives in `Treatment.notes`.
+    | 'migrated'
+  // Server-side fallback for global-scope treatments created from catalog
+  // items without an odontogram mapping (limpieza, primera visita…). Not
+  // creatable explicitly through the API; labels come from catalog names.
+    | 'other'
 
 /** @deprecated — kept for gradual migration; prefer ClinicalType. */
 export type TreatmentType = ClinicalType
@@ -561,6 +585,13 @@ export interface ToothRecordWithTreatments extends ToothRecord {
   is_rotated: boolean
   displacement_notes?: string
 }
+
+// ============================================================================
+// Clinical tab (patient record) — mode shared by the patients layer's tab and
+// the odontogram layer's <ClinicalModeToggle>.
+// ============================================================================
+
+export type ClinicalMode = 'history' | 'diagnosis' | 'plans' | 'appointments'
 
 // ============================================================================
 // VAT Type Types
@@ -779,11 +810,12 @@ export interface OdontogramTreatment {
   pricing_strategy: PricingStrategy
   pricing_config?: Record<string, number> | null
   surface_prices?: Record<string, number> | null
-  // Odontogram specific
-  odontogram_treatment_type: ClinicalType
+  // Odontogram specific. Null/empty for unmapped global-scope items
+  // (no per-tooth visualization; offered only in the plan UI).
+  odontogram_treatment_type: ClinicalType | null
   visualization_rules: VisualizationRuleLayer[]
   visualization_config: Record<string, unknown>
-  clinical_category: string
+  clinical_category: string | null
   // Category info
   category_key: string
   category_names: Record<string, string>
@@ -992,6 +1024,8 @@ export interface BudgetListItem {
   valid_until?: string
   total: number
   created_at: string
+  /** Plan number when generated from a treatment plan (denormalized snapshot). */
+  plan_number_snapshot?: string | null
   patient?: PatientBrief
   creator?: UserBrief
 }
@@ -1394,6 +1428,19 @@ export interface PaymentsTrends {
 }
 
 // Billing-side link to a Payment (issue #53).
+/**
+ * Patient summary embedded in invoice responses (billing's own
+ * `PatientBrief`): unlike the shared brief it carries the billing party
+ * fields, because drafts take billing data from the patient dynamically.
+ */
+export interface InvoicePatientBrief extends PatientBrief {
+  billing_name?: string | null
+  billing_tax_id?: string | null
+  billing_address?: PatientBillingAddress | null
+  billing_email?: string | null
+  has_complete_billing_info: boolean
+}
+
 export interface InvoicePayment {
   id: string
   invoice_id: string
@@ -1401,6 +1448,11 @@ export interface InvoicePayment {
   amount: number
   created_by: string
   created_at: string
+}
+
+/** Invoice↔payment link row with the payment embedded (GET /invoices/{id}/payments). */
+export interface InvoicePaymentDetail extends InvoicePayment {
+  payment: PaymentRecord
 }
 
 export interface InvoicePaymentApply {
@@ -1517,39 +1569,6 @@ export interface InvoiceItemUpdate {
   display_order?: number
 }
 
-// Payment
-export interface Payment {
-  id: string
-  invoice_id: string
-  amount: number
-  payment_method: PaymentMethod
-  payment_date: string
-  reference?: string
-  notes?: string
-  recorded_by: string
-  created_at: string
-  // Voiding
-  is_voided: boolean
-  voided_at?: string
-  voided_by?: string
-  void_reason?: string
-  // Related
-  recorder?: UserBrief
-  voider?: UserBrief
-}
-
-export interface PaymentCreate {
-  amount: number
-  payment_method: PaymentMethod
-  payment_date?: string
-  reference?: string
-  notes?: string
-}
-
-export interface PaymentVoidRequest {
-  reason: string
-}
-
 // Invoice History
 export interface InvoiceHistoryEntry {
   id: string
@@ -1625,7 +1644,7 @@ export interface Invoice {
   updated_at: string
   deleted_at?: string
   // Related
-  patient?: PatientBrief
+  patient?: InvoicePatientBrief
   creator?: UserBrief
   issuer?: UserBrief
   budget?: BudgetBrief
@@ -1634,7 +1653,7 @@ export interface Invoice {
 
 export interface InvoiceDetail extends Invoice {
   items: InvoiceItem[]
-  payments: Payment[]
+  invoice_payments: InvoicePayment[]
 }
 
 export interface InvoiceListItem {
@@ -1651,7 +1670,7 @@ export interface InvoiceListItem {
   // {"ES": {state, severity, error_message, ...}}). Owned by the
   // active compliance module — billing exposes it raw.
   compliance_data?: Record<string, Record<string, unknown>> | null
-  patient?: PatientBrief
+  patient?: InvoicePatientBrief
   creator?: UserBrief
 }
 
@@ -1923,15 +1942,15 @@ export interface PatientExtended extends Patient {
 }
 
 export interface PatientExtendedUpdate extends PatientUpdate {
-  // Extended demographics
-  gender?: string
-  national_id?: string
-  national_id_type?: string
-  profession?: string
-  workplace?: string
+  // Extended demographics (`null` clears, see PatientUpdate)
+  gender?: string | null
+  national_id?: string | null
+  national_id_type?: string | null
+  profession?: string | null
+  workplace?: string | null
   preferred_language?: string
-  address?: PatientAddress
-  photo_url?: string
+  address?: PatientAddress | null
+  photo_url?: string | null
 
   // Emergency contact
   emergency_contact?: EmergencyContact
@@ -2062,7 +2081,7 @@ export interface AttachmentCreate {
 // Treatment Plan Types
 // ============================================================================
 
-export type TreatmentPlanStatus = 'draft' | 'active' | 'completed' | 'archived' | 'cancelled'
+export type TreatmentPlanStatus = 'draft' | 'pending' | 'active' | 'completed' | 'closed' | 'archived'
 
 export type PlannedItemStatus = 'pending' | 'completed' | 'cancelled'
 
@@ -2076,6 +2095,7 @@ export interface TreatmentBrief {
   catalog_item_id?: string | null
   catalog_item?: TreatmentCatalogItemBrief | null
   price_snapshot?: string | null
+  notes?: string | null
   teeth: Array<{
     tooth_number: number
     role?: 'pillar' | 'pontic' | null
@@ -2323,6 +2343,10 @@ export interface TreatmentPlan {
   item_count: number
   completed_count: number
   total: number
+  // Set while status === 'closed' (see treatment_plan/models.py).
+  closure_reason?: string | null
+  closure_note?: string | null
+  closed_at?: string | null
   patient?: PatientBrief
   budget?: BudgetBrief
 }

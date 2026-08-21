@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { TreatmentPlan, TreatmentPlanStatus } from '~~/app/types'
+import type { UiColor } from '~~/app/config/severity'
 
 const props = defineProps<{
   plan: TreatmentPlan
@@ -24,16 +25,17 @@ const progress = computed(() => {
 })
 
 // Status badge color mapping
-const statusColors: Record<TreatmentPlanStatus, 'success' | 'warning' | 'neutral' | 'info' | 'error'> = {
-  active: 'success',
+const statusColors: Record<TreatmentPlanStatus, UiColor> = {
   draft: 'warning',
+  pending: 'warning',
+  active: 'success',
   completed: 'info',
-  cancelled: 'error',
+  closed: 'error',
   archived: 'neutral'
 }
 
 function getStatusColor(status: TreatmentPlanStatus) {
-  return statusColors[status] || 'neutral'
+  return statusColors[status]
 }
 
 // Format currency — clinic-wide via useCurrency.

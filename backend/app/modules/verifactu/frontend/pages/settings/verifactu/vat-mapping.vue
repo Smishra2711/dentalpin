@@ -5,7 +5,8 @@
 // admin pin its AEAT ``CalificacionOperacion`` / ``OperacionExenta``
 // override. When no override is set, the verifactu hook falls back to
 // the rate-based heuristic.
-import type { VatClassificationItem } from '~/composables/useVerifactu'
+import type { VatClassification, VatClassificationItem } from '../../../composables/useVerifactu'
+import type { UiColor } from '~~/app/config/severity'
 import { PERMISSIONS } from '~~/app/config/permissions'
 import { errorMessage } from '~~/app/utils/error'
 
@@ -20,7 +21,7 @@ const items = ref<VatClassificationItem[]>([])
 const loading = ref(true)
 const saving = ref<string | null>(null)
 
-const CLASSIFICATIONS = [
+const CLASSIFICATIONS: { value: VatClassification, label: string }[] = [
   { value: 'S1', label: 'S1 — Sujeto, no exento (régimen general)' },
   { value: 'S2', label: 'S2 — Sujeto, no exento (inversión sujeto pasivo)' },
   { value: 'E1', label: 'E1 — Exento (art. 20 LIVA — sanitario, financiero…)' },
@@ -31,13 +32,13 @@ const CLASSIFICATIONS = [
   { value: 'E6', label: 'E6 — Exento (otros)' },
   { value: 'N1', label: 'N1 — No sujeta (art. 7, 14, otros — por reglas localización)' },
   { value: 'N2', label: 'N2 — No sujeta (por reglas de localización)' }
-] as const
+]
 
 const AUTO_VALUE = '__auto__'
 
 interface Row {
   data: VatClassificationItem
-  selected: string // override classification or AUTO_VALUE
+  selected: VatClassification | typeof AUTO_VALUE // override classification or AUTO_VALUE
   notes: string
   dirty: boolean
 }
@@ -73,10 +74,10 @@ function effectiveSource(row: Row): 'auto' | 'override' {
   return row.selected === AUTO_VALUE ? 'auto' : 'override'
 }
 
-function classificationColor(code: string): 'green' | 'amber' | 'gray' {
-  if (code.startsWith('S')) return 'green'
-  if (code.startsWith('E')) return 'amber'
-  return 'gray'
+function classificationColor(code: string): UiColor {
+  if (code.startsWith('S')) return 'success'
+  if (code.startsWith('E')) return 'warning'
+  return 'neutral'
 }
 
 async function save(row: Row) {
@@ -99,9 +100,9 @@ async function save(row: Row) {
       row.data = updated
     }
     row.dirty = false
-    toast?.add({ title: t('verifactu.vatMapping.saved'), color: 'green' })
+    toast?.add({ title: t('verifactu.vatMapping.saved'), color: 'success' })
   } catch (e: unknown) {
-    toast?.add({ title: errorMessage(e, t('verifactu.vatMapping.saveFailed')), color: 'red' })
+    toast?.add({ title: errorMessage(e, t('verifactu.vatMapping.saveFailed')), color: 'error' })
   } finally {
     saving.value = null
   }
@@ -130,7 +131,7 @@ onMounted(refresh)
     </header>
 
     <UAlert
-      color="blue"
+      color="info"
       variant="soft"
       icon="i-lucide-info"
       :title="t('verifactu.vatMapping.legalIntroTitle')"

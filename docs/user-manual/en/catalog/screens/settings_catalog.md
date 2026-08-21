@@ -19,6 +19,7 @@ related_endpoints:
   - GET /api/v1/catalog/vat-types/{vat_type_id}
   - POST /api/v1/catalog/categories
   - POST /api/v1/catalog/items
+  - POST /api/v1/catalog/seed
   - POST /api/v1/catalog/vat-types
   - PUT /api/v1/catalog/categories/{category_id}
   - PUT /api/v1/catalog/items/{item_id}
@@ -29,22 +30,34 @@ related_permissions:
   - catalog.admin
 related_paths:
   - backend/app/modules/catalog/frontend/pages/settings/catalog/index.vue
-last_verified_commit: 0000000
+  - backend/app/modules/catalog/frontend/components/catalog/CatalogCategoriesModal.vue
+last_verified_commit: 6b3eb82
 ---
 
 # /settings/catalog
 
-> _Scaffolded stub — replace with proper documentation when this module is next touched._
-
-_Screen `/settings/catalog` of the `catalog` module._
+Treatment catalog: codes, prices, VAT, duration and grouping by category.
+It is the price source for budgets, plans and invoices.
 
 ## Permissions
 
-- `catalog.read`
-- `catalog.write`
-- `catalog.admin`
+- `catalog.read` — browse the catalog (every role).
+- `catalog.write` — create, edit and deactivate treatments.
+- `catalog.admin` — manage categories and load the default catalog.
 
 ## What this screen does
 
-_Documentation pending._
-
+- **Search and filter** treatments by text or category; the grouped view
+  collapses/expands per category.
+- **New treatment** — the modal requires code, name and **category**;
+  without categories nothing can be saved.
+- **Categories** (header button, `catalog.admin` only) — create, rename,
+  reorder and deactivate/reactivate categories. System (seeded) categories
+  are locked: shown with a padlock, and the server rejects edits/deletes.
+- **Load default catalog** — shown in the empty state (no treatments, no
+  filters) to `catalog.admin`. Adds VAT types for the clinic country, the
+  categories and the reference treatments (prices at 0 when the currency is
+  not EUR). Idempotent: only missing rows are created. This is the repair
+  path for installs created before automatic seeding existed or where it
+  failed; the dashboard "Getting started" card links here when it detects an
+  empty catalog.

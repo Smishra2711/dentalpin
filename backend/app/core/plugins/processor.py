@@ -24,11 +24,13 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.config import settings
 
+from .alembic_paths import alembic_cfg_path
 from .context import ModuleContext
 from .db_models import ModuleRecord
 from .external_id import ExternalIdHelper
 from .operation_log import OperationLog
 from .registry import module_registry
+from .service import ModuleService
 from .state import ModuleState
 from .topology import topological_sort
 from .yaml_loader import load_module_data_files
@@ -99,17 +101,12 @@ class PendingProcessor:
             write_modules_json,
         )
 
-        installed: list[_BaseModule] = []
         async with self._session_factory() as session:
-            result = await session.execute(
-                select(ModuleRecord).where(ModuleRecord.state == ModuleState.INSTALLED.value)
-            )
-            installed_names = {r.name for r in result.scalars()}
+            installed_names = await ModuleService.installed_names(session)
 
-        for module in module_registry.list_modules():
-            if module.name in installed_names:
-                installed.append(module)
-
+        installed: list[_BaseModule] = [
+            m for m in module_registry.list_discovered() if m.name in installed_names
+        ]
         entries = collect_layers(installed)
         write_modules_json(entries, DEFAULT_FRONTEND_ROOT)
 
@@ -445,7 +442,7 @@ def _alembic_cmd(args: list[str]) -> str | None:
     ``args`` is forwarded verbatim to the ``alembic`` CLI (e.g.
     ``["upgrade", "schedules@head"]`` or ``["downgrade", "base"]``).
     """
-    cfg_path = _alembic_cfg_path()
+    cfg_path = alembic_cfg_path()
     backend_root = cfg_path.parent
 
     try:
@@ -478,16 +475,12 @@ def _alembic_cmd(args: list[str]) -> str | None:
     return None
 
 
-def _alembic_cfg_path() -> Path:
-    return Path(__file__).resolve().parents[3] / "alembic.ini"
-
-
 def _parent_revision(revision: str) -> str:
     """Return the ``down_revision`` of ``revision``, or ``'base'`` if none."""
     from alembic.config import Config
     from alembic.script import ScriptDirectory
 
-    script = ScriptDirectory.from_config(Config(str(_alembic_cfg_path())))
+    script = ScriptDirectory.from_config(Config(str(alembic_cfg_path())))
     rev = script.get_revision(revision)
     down = rev.down_revision
     if down is None:
@@ -514,7 +507,7 @@ def _module_branch_label(revision: str) -> str | None:
     from alembic.config import Config
     from alembic.script import ScriptDirectory
 
-    script = ScriptDirectory.from_config(Config(str(_alembic_cfg_path())))
+    script = ScriptDirectory.from_config(Config(str(alembic_cfg_path())))
     rev = script.get_revision(revision)
     while rev is not None:
         if rev._orig_branch_labels:

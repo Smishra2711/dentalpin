@@ -39,7 +39,7 @@ and hydrates the current clinic with the extracted data. Issue #78.
   `(clinic_id, source_system, canonical_uuid, entity_type)`.
   Re-running a job is a no-op.
 - **`verifactu` opt-in at runtime**: the fiscal-document mapper
-  detects the module at runtime via `module_registry.is_loaded(...)`.
+  detects the module at runtime via `module_registry.is_active(...)`.
   Legal hashes (Hash / HashControl / ATCUD / QR) are preserved only
   when (a) verifactu is loaded AND (b) the operator ticked
   *"Importar datos legales Verifactu"* in the preview.

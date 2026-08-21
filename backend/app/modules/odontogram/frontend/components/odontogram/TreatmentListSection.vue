@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Treatment } from '~~/app/types'
-import { getToothNameKey, getToothPositionKeys, TREATMENT_COLORS } from '~~/app/config/odontogramConstants'
+import { getToothNameKey, getToothPositionKeys, getTreatmentColor } from '~~/app/config/odontogramConstants'
 import { getTreatmentDisplayName, viewForTooth } from '~~/app/utils/treatmentView'
 
 const props = defineProps<{
@@ -41,10 +41,6 @@ function formatDate(dateStr: string): string {
   const month = (date.getMonth() + 1).toString().padStart(2, '0')
   const year = date.getFullYear()
   return `${day}/${month}/${year}`
-}
-
-function getTreatmentColor(treatmentType: string): string {
-  return TREATMENT_COLORS[treatmentType] || '#9CA3AF'
 }
 
 function getStatusBadgeColor(status: string): 'success' | 'warning' | 'neutral' {

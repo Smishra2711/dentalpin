@@ -106,7 +106,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 | `treatment_plan.treatment_added` | `EventType.TREATMENT_PLAN_TREATMENT_ADDED` | `treatment_plan` | `budget` |
 | `treatment_plan.treatment_completed` | `EventType.TREATMENT_PLAN_TREATMENT_COMPLETED` | `treatment_plan` | `patient_timeline`, `recalls` |
 | `treatment_plan.treatment_removed` | `EventType.TREATMENT_PLAN_TREATMENT_REMOVED` | `treatment_plan` | `budget` |
-| `verifactu.record.rejected` | `EventType.VERIFACTU_RECORD_REJECTED` | `verifactu` | — |
+| `verifactu.record.rejected` | `EventType.VERIFACTU_RECORD_REJECTED` | `verifactu` | `verifactu` |
 
 ## Detail
 
@@ -460,7 +460,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.INVOICE_SENT`
 - **Publishers:**
-  - `billing` — `backend/app/modules/billing/router.py:697`
+  - `billing` — `backend/app/modules/billing/router.py:699`
 - **Subscribers:**
   - `notifications`
 
@@ -603,21 +603,21 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.ODONTOGRAM_TREATMENT_ADDED`
 - **Publishers:**
-  - `odontogram` — `backend/app/modules/odontogram/service.py:727`
+  - `odontogram` — `backend/app/modules/odontogram/service.py:732`
 - **Subscribers:** —
 
 ### `odontogram.treatment.deleted`
 
 - **Constant:** `EventType.ODONTOGRAM_TREATMENT_DELETED`
 - **Publishers:**
-  - `odontogram` — `backend/app/modules/odontogram/service.py:888`
+  - `odontogram` — `backend/app/modules/odontogram/service.py:893`
 - **Subscribers:** —
 
 ### `odontogram.treatment.performed`
 
 - **Constant:** `EventType.ODONTOGRAM_TREATMENT_PERFORMED`
 - **Publishers:**
-  - `odontogram` — `backend/app/modules/odontogram/service.py:828`
+  - `odontogram` — `backend/app/modules/odontogram/service.py:833`
 - **Subscribers:**
   - `patient_timeline`
   - `payments`
@@ -628,7 +628,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.ODONTOGRAM_TREATMENT_STATUS_CHANGED`
 - **Publishers:**
-  - `odontogram` — `backend/app/modules/odontogram/service.py:771`
+  - `odontogram` — `backend/app/modules/odontogram/service.py:776`
 - **Subscribers:** —
 
 ### `patient.archived`
@@ -848,4 +848,5 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Constant:** `EventType.VERIFACTU_RECORD_REJECTED`
 - **Publishers:**
   - `verifactu` — `backend/app/modules/verifactu/services/submission_queue.py:271`
-- **Subscribers:** —
+- **Subscribers:**
+  - `verifactu`

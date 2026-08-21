@@ -264,14 +264,18 @@ export const useVerifactu = () => {
   }
 }
 
+/** AEAT VAT classification codes (mirrors the backend `pattern`). */
+export const VAT_CLASSIFICATION_CODES = ['S1', 'S2', 'E1', 'E2', 'E3', 'E4', 'E5', 'E6', 'N1', 'N2'] as const
+export type VatClassification = (typeof VAT_CLASSIFICATION_CODES)[number]
+
 export interface VatClassificationItem {
   vat_type_id: string
   label: string
   rate: string
   is_default: boolean
-  inferred_classification: string
+  inferred_classification: VatClassification
   inferred_exemption_cause: string | null
-  override_classification: string | null
+  override_classification: VatClassification | null
   override_exemption_cause: string | null
   override_notes: string | null
 }

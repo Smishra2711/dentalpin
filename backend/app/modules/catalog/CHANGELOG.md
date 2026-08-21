@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- fix: `GET /catalog/odontogram-treatments` also returns **unmapped
+  global-scope items** (`global_mouth`/`global_arch`) with
+  `odontogram_treatment_type`/`clinical_category` as `null` — hygiene and
+  diagnostic treatments (limpieza, primera visita, radiografía…) were
+  invisible to the TreatmentBar because none of them carries a
+  `TreatmentOdontogramMapping`. Unmapped tooth/multi_tooth items stay
+  excluded; `/by-category` skips the null category (contract unchanged).
+  `OdontogramTreatmentResponse` mapping fields are now nullable/defaulted.
+
+- fix(#184): type-check clean — VAT-type toasts use semantic colours; `useCatalog` passes typed payloads to `useApi` without `Record` casts; `CatalogItemModal` builds a typed payload (create narrows the required fields instead of casting), option lists are typed to the form's unions, `UTextarea :rows` is a number; VAT badge colours are `UiColor`.
+- feat(onboarding): the `catalog-empty` getting-started step resolves inline — `CatalogSeedQuickModal` calls `POST /catalog/seed` from the dashboard card, or hands off to `/settings/catalog`.
+
+- feat: `POST /catalog/seed` (`catalog.admin`) loads the stock VAT types, categories and treatments for the clinic — idempotent repair path for installs created before `clinic.created` seeding existed (≤ v2.2.2) or where that seed failed silently. Surfaced as "Load default catalog" in the empty state of `/settings/catalog`.
+- feat: category management UI (`CatalogCategoriesModal`) — create, rename, reorder, deactivate/reactivate from `/settings/catalog`. The category CRUD endpoints and composable existed with no consumer; the treatment modal requires a category, so a clinic with none could not create treatments.
+- fix: `PUT /catalog/categories/{id}` now finds inactive categories, so a soft-deleted category can be reactivated (`is_active: true`); previously 404.
+- fix: `seed_catalog` summary reports `vat_types` *created* (was the preset size), consistent with `categories`/`items`.
+- refactor: `seed_clinic_defaults(db, clinic_id)` derives `vat_preset`/`with_prices` from the clinic row; `on_clinic_created` and the seed endpoint share it.
 - docs(#183): `on_clinic_created` documented as own-session — `clinic.created` is published after setup commits, and seeding must not stretch the signup transaction.
 - feat(onboarding): getting-started rule `catalog-empty` (frontend plugin) — flags a clinic with no catalog items on the dashboard card.
 

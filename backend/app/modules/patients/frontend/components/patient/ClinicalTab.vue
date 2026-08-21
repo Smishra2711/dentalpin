@@ -9,8 +9,7 @@
  * - appointments: View and manage patient appointments
  */
 
-import type { ClinicalMode } from '../clinical/ClinicalModeToggle.vue'
-import type { TreatmentPlan } from '~~/app/types'
+import type { ClinicalMode, TreatmentPlan } from '~~/app/types'
 import { PERMISSIONS } from '~~/app/config/permissions'
 
 const props = defineProps<{
@@ -57,10 +56,9 @@ watch(currentMode, (mode) => {
 
 // Initialize from URL on mount
 onMounted(() => {
-  const queryMode = route.query.clinicalMode as ClinicalMode
-  if (queryMode && ['history', 'diagnosis', 'plans', 'appointments'].includes(queryMode)) {
-    currentMode.value = queryMode
-  }
+  const modes: readonly ClinicalMode[] = ['history', 'diagnosis', 'plans', 'appointments']
+  const queryMode = modes.find(m => m === route.query.clinicalMode)
+  if (queryMode) currentMode.value = queryMode
 
   // Check for planId in URL
   const planId = route.query.planId as string

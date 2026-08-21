@@ -85,14 +85,15 @@ function siteValue(tooth: PerioTooth, code: SiteCode): PerioSite | null {
 // keyboard friendliness (a value clears via the same button).
 // ---------------------------------------------------------------------------
 
-const MOBILITY_CYCLE: Array<number | null> = [null, 0, 1, 2, 3]
-const PROGNOSIS_CYCLE: Array<Prognosis | null> = [null, 'good', 'fair', 'poor', 'hopeless']
-const FURCA_CYCLE: Array<Furcation | null> = [null, '0', 'I', 'II', 'III']
+// Cycles are non-empty tuples so `cycle[0]` is provably defined; the first
+// entry (null) is what a click on an unknown value falls back to.
+const MOBILITY_CYCLE: readonly [null, ...Array<number | null>] = [null, 0, 1, 2, 3]
+const PROGNOSIS_CYCLE: readonly [null, ...Array<Prognosis | null>] = [null, 'good', 'fair', 'poor', 'hopeless']
+const FURCA_CYCLE: readonly [null, ...Array<Furcation | null>] = [null, '0', 'I', 'II', 'III']
 
-function nextInCycle<T>(cycle: T[], current: T): T {
+function nextInCycle<T>(cycle: readonly [T, ...T[]], current: T): T {
   const idx = cycle.findIndex(v => v === current)
-  if (idx === -1) return cycle[1] ?? cycle[0]
-  return cycle[(idx + 1) % cycle.length]
+  return cycle[(idx + 1) % cycle.length] ?? cycle[0]
 }
 
 function prognosisGlyph(v: Prognosis | null | undefined): string {

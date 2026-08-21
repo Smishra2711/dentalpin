@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix(#184): `PERMISSIONS` imported from `~~/app/config/permissions` (the `~/` form only worked through the layer-aliasing fallback).
 - i18n: add Tamil locale (`ta.json`) with full UI coverage.
 
 - style(lint): first ESLint pass over this module's frontend layer —

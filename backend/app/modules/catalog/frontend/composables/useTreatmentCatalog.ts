@@ -65,10 +65,14 @@ export function useTreatmentCatalog() {
    */
   const treatmentsByCategory = computed(() => {
     if (useCatalog.value) {
-      // Group catalog treatments by clinical_category
+      // Group catalog treatments by clinical_category.
+      // Unmapped global items have none — they only surface via globalItems.
       const grouped: Record<string, OdontogramTreatment[]> = {}
       for (const treatment of treatments.value) {
         const category = treatment.clinical_category
+        if (category == null) {
+          continue
+        }
         if (!grouped[category]) {
           grouped[category] = []
         }
@@ -177,7 +181,9 @@ export function useTreatmentCatalog() {
     const normalized = treatmentType
 
     if (useCatalog.value) {
-      return treatments.value.find(t => t.odontogram_treatment_type === normalized)
+      return treatments.value.find(
+        t => t.odontogram_treatment_type != null && t.odontogram_treatment_type === normalized
+      )
     }
 
     // Fallback to creating from constants
@@ -215,7 +221,7 @@ export function useTreatmentCatalog() {
   function getEffectiveTreatmentType(catalogItemId: string | undefined, fallbackType: string): string {
     if (catalogItemId && useCatalog.value) {
       const treatment = treatments.value.find(t => t.id === catalogItemId)
-      if (treatment) {
+      if (treatment?.odontogram_treatment_type != null) {
         return treatment.odontogram_treatment_type
       }
     }
@@ -282,9 +288,9 @@ export function useTreatmentCatalog() {
   function getCategoryLabel(categoryKey: string, overrideLocale?: string): string {
     const loc = overrideLocale || locale.value
     if (useCatalog.value) {
-      const treatments = treatmentsByCategory.value[categoryKey]
-      if (treatments && treatments.length > 0) {
-        return treatments[0].category_names[loc] || treatments[0].category_names.es || treatments[0].category_names.en || categoryKey
+      const first = treatmentsByCategory.value[categoryKey]?.[0]
+      if (first) {
+        return first.category_names[loc] || first.category_names.es || first.category_names.en || categoryKey
       }
     }
 

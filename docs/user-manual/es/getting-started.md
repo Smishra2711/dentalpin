@@ -30,7 +30,7 @@ Tras entrar, los administradores ven al principio del panel de inicio la tarjeta
 | Gabinetes | Al menos un gabinete para poder crear citas | Diálogo en la propia tarjeta |
 | Horario de la clínica | Tus horas reales de apertura (una instalación nueva puede seguir "abierta 24 h") | Diálogo con horarios predefinidos |
 | Tu equipo | Añade a los profesionales que atienden citas, o márcate como profesional si trabajas solo | Diálogo en la propia tarjeta |
-| Catálogo de tratamientos | Tratamientos para presupuestar, planificar y facturar | *Configuración → Clínica → Catálogo* |
+| Catálogo de tratamientos | Tratamientos para presupuestar, planificar y facturar | Diálogo en la propia tarjeta: **Cargar catálogo por defecto** (IVA, categorías y tratamientos de referencia según el país) o *Prefiero crear los míos* → *Configuración → Clínica → Catálogo* |
 | Serie de facturas | Necesaria para emitir la primera factura | *Configuración → Facturación → Series* |
 | Opcional: VeriFactu (España), Envío de emails, Primer paciente | Siguientes pasos recomendados | Módulos / Notificaciones / Pacientes |
 

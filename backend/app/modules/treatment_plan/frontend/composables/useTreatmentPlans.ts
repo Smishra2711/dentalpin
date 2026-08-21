@@ -80,7 +80,7 @@ export function useTreatmentPlans() {
       console.error('Error fetching treatment plans:', error)
       toast.add({
         title: t('errors.loadFailed'),
-        color: 'red'
+        color: 'error'
       })
     } finally {
       loading.value = false
@@ -105,7 +105,7 @@ export function useTreatmentPlans() {
       console.error('Error fetching treatment plan:', error)
       toast.add({
         title: t('errors.loadFailed'),
-        color: 'red'
+        color: 'error'
       })
       return null
     } finally {
@@ -123,14 +123,14 @@ export function useTreatmentPlans() {
       )
       toast.add({
         title: t('treatmentPlans.created'),
-        color: 'green'
+        color: 'success'
       })
       return response.data
     } catch (error) {
       console.error('Error creating treatment plan:', error)
       toast.add({
         title: t('errors.createFailed'),
-        color: 'red'
+        color: 'error'
       })
       return null
     } finally {
@@ -151,14 +151,14 @@ export function useTreatmentPlans() {
       }
       toast.add({
         title: t('treatmentPlans.updated'),
-        color: 'green'
+        color: 'success'
       })
       return response.data
     } catch (error) {
       console.error('Error updating treatment plan:', error)
       toast.add({
         title: t('errors.updateFailed'),
-        color: 'red'
+        color: 'error'
       })
       return null
     } finally {
@@ -179,14 +179,14 @@ export function useTreatmentPlans() {
       }
       toast.add({
         title: t('treatmentPlans.statusUpdated'),
-        color: 'green'
+        color: 'success'
       })
       return response.data
     } catch (error) {
       console.error('Error updating plan status:', error)
       toast.add({
         title: t('errors.updateFailed'),
-        color: 'red'
+        color: 'error'
       })
       return null
     } finally {
@@ -205,14 +205,14 @@ export function useTreatmentPlans() {
       }
       toast.add({
         title: t('treatmentPlans.deleted'),
-        color: 'green'
+        color: 'success'
       })
       return true
     } catch (error) {
       console.error('Error deleting treatment plan:', error)
       toast.add({
         title: t('errors.deleteFailed'),
-        color: 'red'
+        color: 'error'
       })
       return false
     } finally {
@@ -236,7 +236,7 @@ export function useTreatmentPlans() {
       console.error('Error adding treatment item:', error)
       toast.add({
         title: t('errors.createFailed'),
-        color: 'red'
+        color: 'error'
       })
       return null
     } finally {
@@ -267,7 +267,7 @@ export function useTreatmentPlans() {
       console.error('Error updating treatment item:', error)
       toast.add({
         title: t('errors.updateFailed'),
-        color: 'red'
+        color: 'error'
       })
       return null
     } finally {
@@ -304,7 +304,7 @@ export function useTreatmentPlans() {
       console.error('Error removing treatment item:', error)
       toast.add({
         title: t('errors.deleteFailed'),
-        color: 'red'
+        color: 'error'
       })
       return false
     } finally {
@@ -343,7 +343,7 @@ export function useTreatmentPlans() {
       }
       toast.add({
         title: t('errors.updateFailed'),
-        color: 'red'
+        color: 'error'
       })
       return null
     }
@@ -369,14 +369,14 @@ export function useTreatmentPlans() {
       }
       toast.add({
         title: t('treatmentPlans.itemCompleted'),
-        color: 'green'
+        color: 'success'
       })
       return response.data
     } catch (error) {
       console.error('Error completing treatment item:', error)
       toast.add({
         title: t('errors.updateFailed'),
-        color: 'red'
+        color: 'error'
       })
       return null
     } finally {
@@ -402,11 +402,11 @@ export function useTreatmentPlans() {
           currentPlan.value.items[idx] = response.data
         }
       }
-      toast.add({ title: t('clinical.plans.sessions.markedDone'), color: 'green' })
+      toast.add({ title: t('clinical.plans.sessions.markedDone'), color: 'success' })
       return response.data
     } catch (error) {
       console.error('Error completing session:', error)
-      toast.add({ title: t('errors.updateFailed'), color: 'red' })
+      toast.add({ title: t('errors.updateFailed'), color: 'error' })
       return null
     } finally {
       loading.value = false
@@ -431,11 +431,11 @@ export function useTreatmentPlans() {
           currentPlan.value.items[idx] = response.data
         }
       }
-      toast.add({ title: t('clinical.plans.sessions.cancelled'), color: 'orange' })
+      toast.add({ title: t('clinical.plans.sessions.cancelled'), color: 'warning' })
       return response.data
     } catch (error) {
       console.error('Error cancelling session:', error)
-      toast.add({ title: t('errors.updateFailed'), color: 'red' })
+      toast.add({ title: t('errors.updateFailed'), color: 'error' })
       return null
     } finally {
       loading.value = false
@@ -455,14 +455,14 @@ export function useTreatmentPlans() {
       }
       toast.add({
         title: t('treatmentPlans.budgetLinked'),
-        color: 'green'
+        color: 'success'
       })
       return response.data
     } catch (error) {
       console.error('Error linking budget:', error)
       toast.add({
         title: t('errors.updateFailed'),
-        color: 'red'
+        color: 'error'
       })
       return null
     } finally {
@@ -479,14 +479,14 @@ export function useTreatmentPlans() {
       )
       toast.add({
         title: t('treatmentPlans.budgetSynced'),
-        color: 'green'
+        color: 'success'
       })
       return true
     } catch (error) {
       console.error('Error syncing budget:', error)
       toast.add({
         title: t('errors.updateFailed'),
-        color: 'red'
+        color: 'error'
       })
       return false
     } finally {
@@ -506,14 +506,14 @@ export function useTreatmentPlans() {
       }
       toast.add({
         title: t('treatmentPlans.budgetGenerated'),
-        color: 'green'
+        color: 'success'
       })
       return response.data
     } catch (error) {
       console.error('Error generating budget:', error)
       toast.add({
         title: t('errors.createFailed'),
-        color: 'red'
+        color: 'error'
       })
       return null
     } finally {
@@ -538,11 +538,11 @@ export function useTreatmentPlans() {
       const response = await api.post<ApiResponse<TreatmentPlan>>(
         `/api/v1/treatment_plan/treatment-plans/${planId}/confirm`
       )
-      toast.add({ title: t('treatmentPlans.confirmed'), color: 'green' })
+      toast.add({ title: t('treatmentPlans.confirmed'), color: 'success' })
       return response.data
     } catch (error) {
       console.error('Error confirming plan:', error)
-      toast.add({ title: t('errors.updateFailed'), color: 'red' })
+      toast.add({ title: t('errors.updateFailed'), color: 'error' })
       return null
     } finally {
       loading.value = false
@@ -555,11 +555,11 @@ export function useTreatmentPlans() {
       const response = await api.post<ApiResponse<TreatmentPlan>>(
         `/api/v1/treatment_plan/treatment-plans/${planId}/reopen`
       )
-      toast.add({ title: t('treatmentPlans.reopened'), color: 'green' })
+      toast.add({ title: t('treatmentPlans.reopened'), color: 'success' })
       return response.data
     } catch (error) {
       console.error('Error reopening plan:', error)
-      toast.add({ title: t('errors.updateFailed'), color: 'red' })
+      toast.add({ title: t('errors.updateFailed'), color: 'error' })
       return null
     } finally {
       loading.value = false
@@ -576,11 +576,11 @@ export function useTreatmentPlans() {
         `/api/v1/treatment_plan/treatment-plans/${planId}/close`,
         payload
       )
-      toast.add({ title: t('treatmentPlans.closed'), color: 'green' })
+      toast.add({ title: t('treatmentPlans.closed'), color: 'success' })
       return response.data
     } catch (error) {
       console.error('Error closing plan:', error)
-      toast.add({ title: t('errors.updateFailed'), color: 'red' })
+      toast.add({ title: t('errors.updateFailed'), color: 'error' })
       return null
     } finally {
       loading.value = false
@@ -593,11 +593,11 @@ export function useTreatmentPlans() {
       const response = await api.post<ApiResponse<TreatmentPlan>>(
         `/api/v1/treatment_plan/treatment-plans/${planId}/reactivate`
       )
-      toast.add({ title: t('treatmentPlans.reactivated'), color: 'green' })
+      toast.add({ title: t('treatmentPlans.reactivated'), color: 'success' })
       return response.data
     } catch (error) {
       console.error('Error reactivating plan:', error)
-      toast.add({ title: t('errors.updateFailed'), color: 'red' })
+      toast.add({ title: t('errors.updateFailed'), color: 'error' })
       return null
     } finally {
       loading.value = false
@@ -613,11 +613,11 @@ export function useTreatmentPlans() {
         `/api/v1/treatment_plan/treatment-plans/${planId}/contact-log`,
         payload
       )
-      toast.add({ title: t('treatmentPlans.contactLogged'), color: 'green' })
+      toast.add({ title: t('treatmentPlans.contactLogged'), color: 'success' })
       return true
     } catch (error) {
       console.error('Error logging contact:', error)
-      toast.add({ title: t('errors.updateFailed'), color: 'red' })
+      toast.add({ title: t('errors.updateFailed'), color: 'error' })
       return false
     }
   }

@@ -6,6 +6,7 @@ import argparse
 import asyncio
 import sys
 
+from . import db as db_cli
 from . import modules as modules_cli
 
 
@@ -17,6 +18,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     modules_cli.register(sub)
+    db_cli.register(sub)
     return parser
 
 

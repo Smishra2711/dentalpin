@@ -100,9 +100,10 @@ docker-compose up
 docker-compose exec backend python -m pytest -v
 cd backend && ruff check . && ruff format --check .
 cd frontend && npm run lint
+cd frontend && npm run typecheck:layers && git checkout modules.json   # vue-tsc over host + all module layers (stop the frontend container first)
 
 # Reset DB + reseed demo data (use after tests wipe tables)
-./scripts/reset-db.sh        # drop, alembic upgrade heads
+./scripts/reset-db.sh        # drop, dentalpin db upgrade (core + installed modules)
 ./scripts/seed-demo.sh       # demo clinic, users, sample data
 
 # Demo login
@@ -280,7 +281,8 @@ class MyModel(Base):
 Migrations live in `backend/app/modules/<name>/migrations/versions/` on a per-module branch. See `docs/technical/creating-modules.md` §3 (`migrations/`) for the branching rules and the `--branch-label` invocation.
 
 ```bash
-docker-compose exec backend alembic upgrade heads     # plural — multiple branches
+docker-compose exec backend python -m app.cli db upgrade   # core + installed modules (ADR 0020)
+docker-compose exec backend alembic upgrade heads          # every branch, dev only
 ```
 
 ---
@@ -372,7 +374,7 @@ DEMO_MODE=false           # public demo: blocks user edits/removal + module life
 
 ## Troubleshooting
 
-- **"relation does not exist"** / tables wiped after tests: `./scripts/reset-db.sh` then `./scripts/seed-demo.sh`. Manual fallback: `DELETE FROM alembic_version;` then `alembic upgrade heads`.
+- **"relation does not exist"** / tables wiped after tests: `./scripts/reset-db.sh` then `./scripts/seed-demo.sh`. Manual fallback: `DELETE FROM alembic_version;` then `python -m app.cli db upgrade`.
 - **Frontend changes not showing**: `docker-compose up -d --build frontend`.
 - **Permission denied but should have access**: check `clinic_memberships` row, exact permission string, `/me` payload, then re-login.
 

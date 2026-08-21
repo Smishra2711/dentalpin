@@ -5,6 +5,7 @@ from uuid import uuid4
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth.models import Clinic, ClinicMembership
@@ -208,6 +209,72 @@ async def test_add_treatment_item_to_plan(
     data = r.json()["data"]
     assert data["treatment_id"] == treatment_id
     assert data["status"] == "pending"
+
+
+@pytest.mark.asyncio
+async def test_add_global_treatment_from_unmapped_item_to_plan(
+    client: AsyncClient, auth_headers: dict, setup: dict, db_session: AsyncSession
+) -> None:
+    """Round trip for non-tooth treatments (limpieza, primera visita...):
+    unmapped global_mouth catalog item → Treatment ('other' fallback) → plan item."""
+    cleaning = TreatmentCatalogItem(
+        clinic_id=setup["clinic_id"],
+        category_id=(
+            await db_session.execute(
+                select(TreatmentCategory.id).where(
+                    TreatmentCategory.clinic_id == setup["clinic_id"]
+                )
+            )
+        ).scalar_one(),
+        internal_code="PLAN-CLEAN",
+        names={"es": "Limpieza dental"},
+        default_price=Decimal("60.00"),
+        pricing_strategy="flat",
+        treatment_scope="global_mouth",
+        vat_type_id=(
+            await db_session.execute(
+                select(VatType.id).where(VatType.clinic_id == setup["clinic_id"])
+            )
+        ).scalar_one(),
+    )
+    db_session.add(cleaning)
+    await db_session.commit()
+
+    r = await client.post(
+        f"/api/v1/odontogram/patients/{setup['patient_id']}/treatments",
+        headers=auth_headers,
+        json={
+            "catalog_item_id": str(cleaning.id),
+            "scope": "global_mouth",
+            "status": "planned",
+        },
+    )
+    assert r.status_code == 201, r.text
+    treatment = r.json()["data"]
+    assert treatment["clinical_type"] == "other"
+
+    plan_resp = await client.post(
+        "/api/v1/treatment_plan/treatment-plans",
+        headers=auth_headers,
+        json={"patient_id": setup["patient_id"], "title": "Higiene"},
+    )
+    plan_id = plan_resp.json()["data"]["id"]
+
+    add = await client.post(
+        f"/api/v1/treatment_plan/treatment-plans/{plan_id}/items",
+        headers=auth_headers,
+        json={"treatment_id": treatment["id"]},
+    )
+    assert add.status_code == 201, add.text
+
+    listing = await client.get(
+        f"/api/v1/treatment_plan/treatment-plans/{plan_id}",
+        headers=auth_headers,
+    )
+    assert listing.status_code == 200
+    items = listing.json()["data"]["items"]
+    assert len(items) == 1
+    assert items[0]["treatment_id"] == treatment["id"]
 
 
 @pytest.mark.asyncio
@@ -527,7 +594,11 @@ async def test_cancel_plan_removes_planned_treatments(
         f"/api/v1/treatment_plan/treatment-plans/{plan_id}",
         headers=auth_headers,
     )
-    treatment_id = plan_resp.json()["data"]["items"][0]["treatment"]["id"]
+    treatment_brief = plan_resp.json()["data"]["items"][0]["treatment"]
+    treatment_id = treatment_brief["id"]
+    # The nested brief carries the treatment notes (migrated treatments keep
+    # their legacy label there — issue #184).
+    assert "notes" in treatment_brief
 
     # draft → pending (auto-creates draft budget)
     r = await client.post(
@@ -549,9 +620,16 @@ async def test_cancel_plan_removes_planned_treatments(
     r = await client.post(
         f"/api/v1/treatment_plan/treatment-plans/{plan_id}/close",
         headers=auth_headers,
-        json={"closure_reason": "cancelled_by_clinic"},
+        json={"closure_reason": "cancelled_by_clinic", "closure_note": "moved abroad"},
     )
     assert r.status_code == 200, r.text
+    # Closure metadata is part of the response so the reactivate dialog can
+    # show the previous reason (issue #184).
+    closed = r.json()["data"]
+    assert closed["status"] == "closed"
+    assert closed["closure_reason"] == "cancelled_by_clinic"
+    assert closed["closure_note"] == "moved abroad"
+    assert closed["closed_at"] is not None
 
     assert await _treatment_is_deleted(client, auth_headers, setup["patient_id"], treatment_id)
 

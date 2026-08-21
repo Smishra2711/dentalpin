@@ -21,6 +21,7 @@ Maintained by `backend/scripts/generate_catalogs.py`. CI fails if a manifest cha
 | `migration_import` | 0.1.0 | official | patients, patients_clinical, clinical_notes, agenda, schedules, recalls, catalog, budget, odontogram, treatment_plan, billing, payments, media | manual | yes | 4 | 5 | 0 | yes |
 | `notifications` | 0.1.0 | official | patients, agenda, budget, billing, catalog | auto | no | 8 | 7 | 6 | yes |
 | `odontogram` | 0.3.0 | official | patients, catalog | auto | no | 4 | 7 | 0 | yes |
+| `patient_relationships` | 0.2.0 | community | patients | manual | yes | 2 | 0 | 0 | yes |
 | `patient_timeline` | 0.1.0 | official | patients | auto | no | 1 | 0 | 35 | yes |
 | `patients` | 0.1.0 | official | — | auto | no | 2 | 3 | 0 | yes |
 | `patients_clinical` | 0.1.0 | official | patients | auto | no | 4 | 1 | 0 | yes |
@@ -31,7 +32,7 @@ Maintained by `backend/scripts/generate_catalogs.py`. CI fails if a manifest cha
 | `reports` | 0.1.0 | official | patients, agenda, catalog, budget, billing, payments | auto | no | 3 | 0 | 0 | yes |
 | `schedules` | 0.1.0 | official | agenda | auto | yes | 8 | 0 | 4 | yes |
 | `treatment_plan` | 0.1.0 | official | patients, agenda, odontogram, catalog, budget, media | auto | no | 5 | 13 | 7 | yes |
-| `verifactu` | 0.1.0 | official | billing, catalog | manual | yes | 5 | 1 | 1 | yes |
+| `verifactu` | 0.1.0 | official | billing, catalog | manual | yes | 5 | 1 | 2 | yes |
 | `whatsapp_kapso` | 0.1.0 | community | notifications, patients | manual | yes | 2 | 0 | 0 | yes |
 
 ## Modules
@@ -319,6 +320,23 @@ Dental charting, tooth state, clinical treatments.
 - **Events consumed:** —
 - **Module CLAUDE.md:** [`backend/app/modules/odontogram/CLAUDE.md`](../backend/app/modules/odontogram/CLAUDE.md)
 
+### `patient_relationships` — v0.2.0
+
+Patient family relationships (Lien de Parentée).
+
+- **Author:** DentalPin Core Team
+- **License:** BSL-1.1
+- **Category:** community
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `patients`
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `patient_relationships.read`
+  - `patient_relationships.write`
+- **Events emitted:** —
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/patient_relationships/CLAUDE.md`](../backend/app/modules/patient_relationships/CLAUDE.md)
+
 ### `patient_timeline` — v0.1.0
 
 Patient timeline — unified activity log.
@@ -601,6 +619,7 @@ Cumplimiento Veri*Factu (AEAT) para clínicas en España.
   - `verifactu.record.rejected`
 - **Events consumed:**
   - `invoice.paid`
+  - `verifactu.record.rejected`
 - **Module CLAUDE.md:** [`backend/app/modules/verifactu/CLAUDE.md`](../backend/app/modules/verifactu/CLAUDE.md)
 
 ### `whatsapp_kapso` — v0.1.0

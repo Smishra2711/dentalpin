@@ -8,7 +8,7 @@ the four valid `treatment_scope` values.
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth.models import Clinic
@@ -105,3 +105,29 @@ async def test_seed_items_have_valid_scope(db_session: AsyncSession, seeded_clin
         assert item.treatment_scope in VALID_SCOPES, (
             f"{item.internal_code} has invalid scope {item.treatment_scope}"
         )
+
+
+@pytest.mark.asyncio
+async def test_seed_endpoint_is_idempotent_repair_path(
+    client, auth_headers: dict, test_clinic: Clinic, db_session: AsyncSession
+) -> None:
+    """``POST /catalog/seed`` fills an empty clinic and is a no-op afterwards."""
+    from app.modules.catalog.models import TreatmentCategory
+
+    r = await client.post("/api/v1/catalog/seed", headers=auth_headers)
+    assert r.status_code == 200, r.text
+    first = r.json()["data"]
+    assert first["categories"] > 0 and first["items"] > 100 and first["vat_types"] >= 1
+    assert first["vat_types"] == 1  # test_clinic has no country → generic preset (exempt only)
+
+    cats = await db_session.scalar(
+        select(func.count())
+        .select_from(TreatmentCategory)
+        .where(TreatmentCategory.clinic_id == test_clinic.id)
+    )
+    assert cats == first["categories"]
+
+    r = await client.post("/api/v1/catalog/seed", headers=auth_headers)
+    assert r.status_code == 200
+    second = r.json()["data"]
+    assert second == {"categories": 0, "items": 0, "vat_types": 0}

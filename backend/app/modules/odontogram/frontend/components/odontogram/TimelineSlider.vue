@@ -35,9 +35,8 @@ const isDragging = ref(false)
 
 /** Whether last date in array is today (merges with"Now" position) */
 const lastDateIsToday = computed(() => {
-  if (props.dates.length === 0) return false
-  const lastDate = props.dates[props.dates.length - 1].date
-  const today = new Date().toISOString().split('T')[0]
+  const lastDate = props.dates.at(-1)?.date
+  const today = new Date().toISOString().slice(0, 10)
   return lastDate === today
 })
 
@@ -67,8 +66,8 @@ const thumbPosition = computed(() => {
 
 /** Label to display in the thumb badge */
 const thumbLabel = computed(() => {
-  if (currentIndex.value === null) return t('common.now')
-  return formatDate(props.dates[currentIndex.value].date)
+  const current = currentIndex.value === null ? undefined : props.dates[currentIndex.value]
+  return current ? formatDate(current.date) : t('common.now')
 })
 
 // ============================================================================
@@ -104,7 +103,8 @@ function getMarkerState(index: number): 'selected' | 'now' | 'past' | 'future' {
 /** Get label for a marker */
 function getMarkerLabel(index: number): string {
   const isLastAndToday = lastDateIsToday.value && index === props.dates.length - 1
-  return isLastAndToday ? t('common.now') : formatDate(props.dates[index].date)
+  const entry = props.dates[index]
+  return isLastAndToday || !entry ? t('common.now') : formatDate(entry.date)
 }
 
 // ============================================================================
@@ -127,7 +127,8 @@ function selectIndex(index: number | null) {
     return
   }
 
-  emit('update:currentDate', props.dates[index].date)
+  const entry = props.dates[index]
+  if (entry) emit('update:currentDate', entry.date)
 }
 
 /** Navigate to previous date */
@@ -203,7 +204,8 @@ function handleDragStart() {
 function handleDragMove(event: MouseEvent | TouchEvent) {
   if (!isDragging.value || !sliderRef.value) return
 
-  const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX
+  const clientX = 'touches' in event ? event.touches[0]?.clientX : event.clientX
+  if (clientX === undefined) return // touchmove can fire with an empty touch list
   const rect = sliderRef.value.getBoundingClientRect()
   const percent = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
   const targetIndex = Math.round((percent / 100) * (totalPositions.value - 1))

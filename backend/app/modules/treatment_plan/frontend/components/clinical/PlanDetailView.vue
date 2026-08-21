@@ -17,7 +17,7 @@ import ReopenPlanModal from './modals/ReopenPlanModal.vue'
 import ClosePlanModal from './modals/ClosePlanModal.vue'
 import ReactivatePlanModal from './modals/ReactivatePlanModal.vue'
 import ContactLogModal from './modals/ContactLogModal.vue'
-import { itemEffectivePrice } from '~/composables/useTreatmentPlans'
+import { itemEffectivePrice } from '../../composables/useTreatmentPlans'
 
 const props = withDefaults(defineProps<{
   plan: TreatmentPlanDetail

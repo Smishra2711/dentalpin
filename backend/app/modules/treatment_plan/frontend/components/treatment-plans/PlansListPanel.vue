@@ -23,13 +23,13 @@ const selectedStatuses = ref<TreatmentPlanStatus[]>([])
 const currentPage = ref(1)
 const pageSize = 20
 
-const statusOptions = computed(() => [
-  { label: t('treatmentPlans.status.draft'), value: 'draft' as TreatmentPlanStatus },
-  { label: t('treatmentPlans.status.pending'), value: 'pending' as TreatmentPlanStatus },
-  { label: t('treatmentPlans.status.active'), value: 'active' as TreatmentPlanStatus },
-  { label: t('treatmentPlans.status.completed'), value: 'completed' as TreatmentPlanStatus },
-  { label: t('treatmentPlans.status.closed'), value: 'closed' as TreatmentPlanStatus },
-  { label: t('treatmentPlans.status.archived'), value: 'archived' as TreatmentPlanStatus }
+const statusOptions = computed<{ label: string, value: TreatmentPlanStatus }[]>(() => [
+  { label: t('treatmentPlans.status.draft'), value: 'draft' },
+  { label: t('treatmentPlans.status.pending'), value: 'pending' },
+  { label: t('treatmentPlans.status.active'), value: 'active' },
+  { label: t('treatmentPlans.status.completed'), value: 'completed' },
+  { label: t('treatmentPlans.status.closed'), value: 'closed' },
+  { label: t('treatmentPlans.status.archived'), value: 'archived' }
 ])
 
 async function loadPlans() {

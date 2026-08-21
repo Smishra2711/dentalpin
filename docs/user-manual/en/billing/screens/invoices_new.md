@@ -13,7 +13,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/billing/frontend/pages/invoices/new.vue
   - backend/app/modules/billing/router.py
-last_verified_commit: b1b82f5
+last_verified_commit: e1d6873
 ---
 
 # New invoice
@@ -29,9 +29,11 @@ entry errors.
 
 ## At a glance
 
-- **Receiver.** Defaults to the patient. *Different payer* lets you
-  point to a third party (company, insurer, family member) with
-  their own fiscal data.
+- **Receiver.** The patient. Billing data (name, tax ID, address,
+  email) is not typed here: drafts read it live from the patient
+  record and it is snapshotted when the invoice is issued. A badge
+  tells you whether the patient's billing data is complete, with a
+  link to fix it on the patient card.
 - **Free lines.** Add catalog items with quantity, discount, VAT.
   You can also add manual lines (no catalog item) when needed for
   special charges.
@@ -45,9 +47,8 @@ entry errors.
 
 > Requires `billing.write`.
 
-1. Pick the patient. If the invoice is for a different payer,
-   click *Different payer* and fill in tax ID, name, and fiscal
-   address.
+1. Pick the patient. If the badge says billing data is missing,
+   complete it on the patient card first (link under the selector).
 2. Add lines: catalog item, quantity, discount, VAT.
 3. Review totals (subtotal, discount, VAT, total).
 4. **Save**. The invoice is born in `draft`. To issue, open the

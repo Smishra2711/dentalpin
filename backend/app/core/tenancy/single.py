@@ -25,7 +25,7 @@ class SingleTenantResolver:
     """Resolver that always returns the same tenant.
 
     The tenant is built once from ``settings.DATABASE_URL`` and the set of
-    modules currently loaded in the ``ModuleRegistry``. Subsequent
+    modules active (installed and mounted) in the ``ModuleRegistry``. Subsequent
     ``resolve()`` / ``resolve_by_slug()`` calls return the cached instance.
     """
 
@@ -34,7 +34,7 @@ class SingleTenantResolver:
             slug=DEFAULT_TENANT_SLUG,
             db_url=settings.DATABASE_URL,
             storage_prefix="",
-            modules_enabled=frozenset(module.name for module in module_registry.list_modules()),
+            modules_enabled=frozenset(module.name for module in module_registry.list_active()),
         )
 
     async def resolve(self, request: Request) -> TenantContext:

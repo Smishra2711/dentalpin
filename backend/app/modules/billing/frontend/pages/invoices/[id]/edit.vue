@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { DeepReadonly } from 'vue'
 import type { InvoiceItem, Patient } from '~~/app/types'
 import { errorMessage } from '~~/app/utils/error'
 
@@ -21,8 +22,11 @@ const invoiceId = computed(() => route.params.id as string)
 
 // State
 const isSaving = ref(false)
+// Patient picked in this session (full record). While unset, the invoice's
+// embedded patient brief is what the screen shows and bills against.
 const selectedPatient = ref<Patient | null>(null)
 const isChangingPatient = ref(false)
+const displayedPatient = computed(() => selectedPatient.value ?? currentInvoice.value?.patient ?? null)
 
 // Form data (no billing fields - billing comes from patient)
 const form = ref({
@@ -37,14 +41,14 @@ const deletedItemIds = ref<Set<string>>(new Set())
 
 // Item modal state
 const isItemModalOpen = ref(false)
-const editingItem = ref<InvoiceItem | undefined>(undefined)
+const editingItem = ref<DeepReadonly<InvoiceItem> | undefined>(undefined)
 
 function openAddItemModal() {
   editingItem.value = undefined
   isItemModalOpen.value = true
 }
 
-function openEditItemModal(item: InvoiceItem) {
+function openEditItemModal(item: DeepReadonly<InvoiceItem>) {
   editingItem.value = item
   isItemModalOpen.value = true
 }
@@ -55,9 +59,8 @@ const canChangePatient = computed(() => {
 })
 
 // Get effective billing data (from patient for drafts)
-// Use selectedPatient if changed, otherwise use invoice patient
 const effectiveBillingData = computed(() => {
-  const patient = selectedPatient.value || currentInvoice.value?.patient
+  const patient = displayedPatient.value
   if (!patient) return null
 
   return {
@@ -105,11 +108,6 @@ onMounted(async () => {
     internal_notes: invoice.internal_notes || '',
     public_notes: invoice.public_notes || ''
   }
-
-  // Set selectedPatient for PatientSearch component
-  if (invoice.patient) {
-    selectedPatient.value = invoice.patient as Patient
-  }
 })
 
 // Get current items (excluding deleted)
@@ -124,7 +122,7 @@ function markItemForDeletion(itemId: string) {
 }
 
 // Get item display name (from catalog if available)
-function getItemName(item: InvoiceItem): string {
+function getItemName(item: DeepReadonly<InvoiceItem>): string {
   if (item.catalog_item) {
     return item.catalog_item.names[locale.value] || item.catalog_item.names.es || item.catalog_item.internal_code
   }
@@ -170,11 +168,14 @@ async function handleSave() {
 
   try {
     // 1. Update invoice details (no billing fields - comes from patient)
+    // Only send patient_id when the user picked a different patient.
+    const newPatientId = selectedPatient.value?.id
     const patientChanged = canChangePatient.value
-      && selectedPatient.value?.id !== currentInvoice.value?.patient?.id
+      && newPatientId !== undefined
+      && newPatientId !== currentInvoice.value?.patient?.id
 
     await updateInvoice(invoiceId.value, {
-      patient_id: patientChanged ? selectedPatient.value?.id : undefined,
+      patient_id: patientChanged ? newPatientId : undefined,
       payment_term_days: form.value.payment_term_days,
       due_date: form.value.due_date || undefined,
       internal_notes: form.value.internal_notes || undefined,
@@ -259,15 +260,15 @@ function goBack() {
             <div v-if="canChangePatient">
               <!-- Show current patient with change button -->
               <div
-                v-if="selectedPatient && !isChangingPatient"
+                v-if="displayedPatient && !isChangingPatient"
                 class="flex items-center justify-between"
               >
                 <div>
                   <p class="font-medium text-default">
-                    {{ selectedPatient.last_name }}, {{ selectedPatient.first_name }}
+                    {{ displayedPatient.last_name }}, {{ displayedPatient.first_name }}
                   </p>
                   <p class="text-caption text-subtle">
-                    {{ selectedPatient.email || '-' }}
+                    {{ displayedPatient.email || '-' }}
                   </p>
                 </div>
                 <UButton
@@ -290,7 +291,7 @@ function goBack() {
                   />
                 </UFormField>
                 <UButton
-                  v-if="isChangingPatient && selectedPatient"
+                  v-if="isChangingPatient && displayedPatient"
                   variant="ghost"
                   color="neutral"
                   size="sm"

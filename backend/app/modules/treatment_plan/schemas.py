@@ -66,6 +66,7 @@ class TreatmentBrief(BaseModel):
     catalog_item_id: UUID | None = None
     catalog_item: CatalogItemBrief | None = None
     price_snapshot: Decimal | None = None
+    notes: str | None = None
     teeth: list[TreatmentToothBrief] = Field(default_factory=list)
 
 
@@ -182,6 +183,11 @@ class TreatmentPlanResponse(BaseModel):
     item_count: int = 0
     completed_count: int = 0
     total: float = 0.0
+    # Closure metadata — set while ``status == "closed"``; the reactivate
+    # dialog shows the previous reason.
+    closure_reason: str | None = None
+    closure_note: str | None = None
+    closed_at: datetime | None = None
     patient: PatientBrief | None = None
     budget: BudgetBrief | None = None
 

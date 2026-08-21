@@ -3,7 +3,8 @@
 ``clinic.created`` → seed VAT types (by country preset), categories and the
 default treatment catalog so a fresh clinic can budget/bill on day one.
 Idempotent: ``seed_catalog`` skips existing VAT rates / category keys /
-internal codes.
+internal codes. Failures are logged, not raised — the ``catalog-empty``
+getting-started rule surfaces them and ``POST /catalog/seed`` repairs them.
 """
 
 from __future__ import annotations
@@ -14,7 +15,7 @@ from uuid import UUID
 
 from app.database import async_session_maker
 
-from .seed import seed_catalog
+from .seed import seed_clinic_defaults
 
 logger = logging.getLogger(__name__)
 
@@ -32,15 +33,9 @@ async def on_clinic_created(data: dict[str, Any]) -> None:
     except (ValueError, TypeError):
         return
 
-    vat_preset = data.get("vat_preset") or "generic"
-    # Reference prices are Spanish EUR figures — meaningless in other currencies.
-    with_prices = (data.get("currency") or "EUR") == "EUR"
-
     async with async_session_maker() as db:
         try:
-            summary = await seed_catalog(
-                db, clinic_id, vat_preset=vat_preset, with_prices=with_prices
-            )
+            summary = await seed_clinic_defaults(db, clinic_id)
             await db.commit()
             logger.info("catalog.on_clinic_created seeded %s for %s", summary, clinic_id)
         except Exception as exc:  # pragma: no cover - defensive

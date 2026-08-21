@@ -75,8 +75,9 @@ def get_role_permissions(role: str) -> list[str]:
 
     1. The core grants in :data:`ROLE_PERMISSIONS` (admin wildcard,
        core-perm assignments).
-    2. ``manifest.role_permissions`` from every module currently in the
-       in-memory registry. Entries are prefixed with ``{module_name}.``
+    2. ``manifest.role_permissions`` from every *active* module (installed
+       and mounted at boot — an uninstalled module grants nothing, issue
+       #91). Entries are prefixed with ``{module_name}.``
        — so a manifest declaring ``{"dentist": ["clinic_hours.read"]}``
        contributes ``"<module>.clinic_hours.read"`` to the dentist role.
     """
@@ -92,7 +93,7 @@ def get_role_permissions(role: str) -> list[str]:
     from app.core.plugins.manifest import ManifestError
     from app.core.plugins.registry import module_registry
 
-    for module in module_registry.list_modules():
+    for module in module_registry.list_active():
         try:
             manifest = module.get_manifest()
         except ManifestError:

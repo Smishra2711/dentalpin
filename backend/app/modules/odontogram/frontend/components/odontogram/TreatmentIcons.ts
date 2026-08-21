@@ -12,6 +12,15 @@ import {
 // Re-export from central config
 export { SURFACE_TREATMENTS, TREATMENT_CATEGORIES }
 
+// Filling (legacy) - tooth with filled surface. Also the fallback icon for
+// unknown treatment types (see getTreatmentIcon).
+const FILLING_ICON = `
+    <path d="M7 3C7 1.5 9.5 0 12 0C14.5 0 17 1.5 17 3V12C17 14 15.5 16 12 16C8.5 16 7 14 7 12V3Z" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <rect x="9" y="5" width="6" height="5" rx="1" fill="currentColor"/>
+    <path d="M10 18V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M14 18V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+  `
+
 export const TREATMENT_ICONS: Record<string, string> = {
   // ============================================================================
   // DIAGNÓSTICO
@@ -161,13 +170,7 @@ export const TREATMENT_ICONS: Record<string, string> = {
     <path d="M14 18V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
   `,
 
-  // Filling (legacy) - tooth with filled surface
-  filling: `
-    <path d="M7 3C7 1.5 9.5 0 12 0C14.5 0 17 1.5 17 3V12C17 14 15.5 16 12 16C8.5 16 7 14 7 12V3Z" fill="none" stroke="currentColor" stroke-width="1.5"/>
-    <rect x="9" y="5" width="6" height="5" rx="1" fill="currentColor"/>
-    <path d="M10 18V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-    <path d="M14 18V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-  `,
+  filling: FILLING_ICON,
 
   // Sealant - tooth with protective layer
   sealant: `
@@ -479,6 +482,15 @@ export const TREATMENT_ICONS: Record<string, string> = {
     <path d="M20 12H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
     <path d="M20 12L17 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
     <path d="M20 12L17 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  `,
+
+  // Other - neutral fallback for global treatments without an odontogram mapping
+  // (limpieza, primera visita, radiografía...): tooth outline with a sparkle.
+  other: `
+    <path d="M7 3C7 2 9 1 12 1C15 1 17 2 17 3V10C17 12 15 14 12 14C9 14 7 12 7 10V3Z" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <path d="M9.5 14V20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M14.5 14V20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M19.5 15.5L20.3 17.7L22.5 18.5L20.3 19.3L19.5 21.5L18.7 19.3L16.5 18.5L18.7 17.7L19.5 15.5Z" fill="currentColor"/>
   `
 }
 
@@ -508,7 +520,7 @@ export function resolveTreatmentIconKey(
 
 // Get icon SVG for a treatment type
 export function getTreatmentIcon(treatmentType: string): string {
-  return TREATMENT_ICONS[treatmentType] || TREATMENT_ICONS.filling
+  return TREATMENT_ICONS[treatmentType] || FILLING_ICON
 }
 
 // Check if treatment requires surface selection (re-export with same name for compatibility)

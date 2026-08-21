@@ -78,7 +78,7 @@ doesn't fail the whole job.
 `fiscal_document` mapper:
 
 1. Always creates the commercial invoice (number, totals, dates).
-2. Detects verifactu via `module_registry.is_loaded("verifactu")`.
+2. Detects verifactu via `module_registry.is_active("verifactu")` (installed and mounted).
 3. Preserves the legal hashes (`legal_hash`, `hash_control`, `atcud`,
    `qr_code`) only when both verifactu is loaded **and**
    `ImportJob.import_fiscal_compliance` is true.

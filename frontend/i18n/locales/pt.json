@@ -460,7 +460,8 @@
       "applied": "{name} adicionado ao plano",
       "archPickerTitle": "Qual a arcada para \"{name}\"?",
       "upperArch": "Arcada superior",
-      "lowerArch": "Arcada inferior"
+      "lowerArch": "Arcada inferior",
+      "searchPlaceholder": "Pesquisar tratamento…"
     },
     "selectCondition": "Selecionar condição",
     "readOnly": "Apenas visualização",
@@ -592,7 +593,8 @@
         "rotate": "Rodado",
         "displace": "Deslocado",
         "splint": "Ferulização",
-        "migrated": "Tratamento geral"
+        "migrated": "Tratamento geral",
+        "other": "Outro tratamento"
       },
       "treatmentAdded": "Tratamento adicionado",
       "treatmentPerformed": "Tratamento marcado como realizado",
@@ -1552,8 +1554,23 @@
     },
     "onboarding": {
       "label": "Catálogo de tratamentos",
-      "description": "Sem tratamentos não há orçamentos nem planos. Carregue o catálogo por defeito ou crie os seus."
-    }
+      "description": "Sem tratamentos não há orçamentos nem planos. Carregue o catálogo por defeito ou crie os seus.",
+      "createOwn": "Prefiro criar os meus"
+    },
+    "manageCategories": "Gerir categorias",
+    "newCategory": "Nova categoria",
+    "categoryName": "Nome",
+    "categoryNamePlaceholder": "p. ex. Ortodontia",
+    "categoryOrder": "Ordem",
+    "noCategories": "Não há categorias. Crie uma ou carregue o catálogo predefinido.",
+    "inactiveCategories": "Categorias inativas",
+    "reactivate": "Reativar",
+    "deleteCategoryConfirm": "A categoria será desativada; os seus tratamentos mantêm-se. Continuar?",
+    "systemCategoryNote": "As categorias do sistema não podem ser editadas nem eliminadas.",
+    "loadDefaults": "Carregar catálogo predefinido",
+    "loadDefaultsHint": "Tipos de IVA, categorias e tratamentos de referência segundo o país da clínica. Só se adicionam os que faltam.",
+    "defaultsLoaded": "Catálogo carregado: {categories} categorias, {items} tratamentos, {vat_types} tipos de IVA",
+    "defaultsFailed": "Não foi possível carregar o catálogo predefinido"
   },
   "placeholders": {
     "selectRole": "Selecionar perfil..."

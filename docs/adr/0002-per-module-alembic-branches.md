@@ -26,7 +26,7 @@ Every later migration in that module is on the same branch (its
 
 Operational implications:
 
-- `alembic upgrade heads` (plural) is the canonical command.
+- `alembic upgrade heads` (plural) is the canonical command to apply *every* branch; the container boot runs `dentalpin db upgrade`, which names only core + installed branches (ADR 0020).
 - `alembic upgrade head` is wrong here and may pick an arbitrary branch.
 - Cross-module FKs are still allowed but only against modules listed in
   `manifest.depends` (so we know the dep was up before us).

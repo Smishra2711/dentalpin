@@ -40,14 +40,13 @@ GRANT ALL ON SCHEMA public TO dental;
 GRANT ALL ON SCHEMA public TO public;
 SQL
 
-# `heads` (plural) is required: DentalPin uses one Alembic branch per
-# module, so `alembic upgrade head` errors out with "Multiple head
-# revisions are present" and — combined with `set -e` — aborts the
-# script before Step 3 can restart the backend, leaving the running
-# container pointing at a dropped schema until someone restarts it
-# by hand.
-log "Step 2/4: alembic upgrade heads"
-docker exec "$BACK" alembic upgrade heads
+# Same command the container entrypoint runs: core heads plus the
+# branches of installed modules (ADR 0020). Never `alembic upgrade head`
+# (singular): one branch per module means multiple heads, and with
+# `set -e` that would abort the script before Step 3 restarts the
+# backend, leaving the running container on a dropped schema.
+log "Step 2/4: dentalpin db upgrade"
+docker exec "$BACK" python -m app.cli db upgrade
 
 log "Step 3/4: restart backend (reconcile module registry)"
 docker restart "$BACK" >/dev/null

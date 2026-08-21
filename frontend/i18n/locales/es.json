@@ -488,7 +488,8 @@
       "applied": "{name} añadido al plan",
       "archPickerTitle": "¿En qué arcada aplicar «{name}»?",
       "upperArch": "Arcada superior",
-      "lowerArch": "Arcada inferior"
+      "lowerArch": "Arcada inferior",
+      "searchPlaceholder": "Buscar tratamiento…"
     },
     "selectCondition": "Seleccionar Condición",
     "readOnly": "Solo lectura",
@@ -613,7 +614,8 @@
         "rotate": "Rotado",
         "displace": "Desplazado",
         "splint": "Férula",
-        "migrated": "Tratamiento general"
+        "migrated": "Tratamiento general",
+        "other": "Otro tratamiento"
       },
       "treatmentAdded": "Tratamiento añadido",
       "treatmentPerformed": "Tratamiento marcado como realizado",
@@ -1574,8 +1576,23 @@
     },
     "onboarding": {
       "label": "Catálogo de tratamientos",
-      "description": "Sin tratamientos no se pueden crear presupuestos ni planes. Carga el catálogo por defecto o crea los tuyos."
-    }
+      "description": "Sin tratamientos no se pueden crear presupuestos ni planes. Carga el catálogo por defecto o crea los tuyos.",
+      "createOwn": "Prefiero crear los míos"
+    },
+    "manageCategories": "Gestionar categorías",
+    "newCategory": "Nueva categoría",
+    "categoryName": "Nombre",
+    "categoryNamePlaceholder": "p. ej. Ortodoncia",
+    "categoryOrder": "Orden",
+    "noCategories": "No hay categorías. Crea una o carga el catálogo por defecto.",
+    "inactiveCategories": "Categorías inactivas",
+    "reactivate": "Reactivar",
+    "deleteCategoryConfirm": "La categoría se desactivará; sus tratamientos se mantienen. ¿Continuar?",
+    "systemCategoryNote": "Las categorías del sistema no se pueden editar ni eliminar.",
+    "loadDefaults": "Cargar catálogo por defecto",
+    "loadDefaultsHint": "Tipos de IVA, categorías y tratamientos de referencia según el país de la clínica. Se añaden solo los que faltan.",
+    "defaultsLoaded": "Catálogo cargado: {categories} categorías, {items} tratamientos, {vat_types} tipos de IVA",
+    "defaultsFailed": "No se pudo cargar el catálogo por defecto"
   },
   "placeholders": {
     "selectRole": "Seleccionar rol..."

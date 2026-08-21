@@ -14,7 +14,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/patients/router.py
   - backend/app/modules/patients/frontend/pages/patients/[id].vue
-last_verified_commit: 4752264
+last_verified_commit: e1d6873
 ---
 
 # Ficha del paciente
@@ -97,6 +97,13 @@ tarjeta de **Pendiente de cobrar** al principio.
 - En el menú de cada cobro del historial: **Ver detalle**, **Asignar
   a presupuesto…** (mueve un anticipo a cuenta al presupuesto elegido
   y, si tiene facturas emitidas, las imputa) y **Reembolsar**.
+
+## Pestaña Presupuestos
+
+**Administración → Presupuestos** lista los presupuestos del paciente. Los
+generados desde un plan de tratamiento llevan la etiqueta "Vinculado a
+plan `<número de plan>`" junto a la fecha, para distinguirlos de los
+presupuestos sueltos.
 
 ## "No contactar"
 

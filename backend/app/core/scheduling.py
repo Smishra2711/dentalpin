@@ -2,7 +2,8 @@
 
 A module declares its periodic jobs by returning :class:`ScheduledJob`
 specs from ``BaseModule.get_scheduled_jobs()``. The scheduler
-(:mod:`app.core.scheduler`) iterates the *registered* modules and wires
+(:mod:`app.core.scheduler`) iterates the *active* modules (installed and
+mounted at boot) and wires
 each spec into APScheduler — so an uninstalled module contributes no job
 and the scheduler no longer imports module task functions directly
 (removes the import-coupling tech debt recorded in ADR 0014).

@@ -1,7 +1,8 @@
 /**
  * Getting-started rule: the clinic needs at least one catalog item to
  * budget / plan / bill. Seeded by ``clinic.created`` on setup; this rule
- * catches installs where the seed failed or was emptied.
+ * catches installs where the seed failed or was emptied, and resolves it
+ * inline (mini-modal → ``POST /catalog/seed``) or hands off to the page.
  */
 import { registerGettingStartedRule } from '~~/app/composables/useSettingsRegistry'
 
@@ -17,6 +18,7 @@ export default defineNuxtPlugin(() => {
     descriptionKey: 'catalog.onboarding.description',
     icon: 'i-lucide-list-checks',
     to: '/settings/catalog',
+    modal: () => import('../components/catalog/CatalogSeedQuickModal.vue'),
     order: 50,
     severity: 'warning',
     load: async (api) => {

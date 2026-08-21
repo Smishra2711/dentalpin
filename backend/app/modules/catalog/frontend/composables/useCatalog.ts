@@ -88,7 +88,7 @@ export function useCatalog() {
     try {
       const response = await api.post<ApiResponse<TreatmentCatalogCategory>>(
         '/api/v1/catalog/categories',
-        data as Record<string, unknown>
+        data
       )
 
       toast.add({
@@ -127,7 +127,7 @@ export function useCatalog() {
     try {
       const response = await api.put<ApiResponse<TreatmentCatalogCategory>>(
         `/api/v1/catalog/categories/${categoryId}`,
-        data as Record<string, unknown>
+        data
       )
 
       toast.add({
@@ -255,7 +255,7 @@ export function useCatalog() {
     try {
       const response = await api.post<ApiResponse<TreatmentCatalogItem>>(
         '/api/v1/catalog/items',
-        data as Record<string, unknown>
+        data
       )
 
       toast.add({
@@ -300,7 +300,7 @@ export function useCatalog() {
     try {
       const response = await api.put<ApiResponse<TreatmentCatalogItem>>(
         `/api/v1/catalog/items/${itemId}`,
-        data as Record<string, unknown>
+        data
       )
 
       toast.add({
@@ -385,6 +385,34 @@ export function useCatalog() {
     }
   }
 
+  /**
+   * Load the stock catalog (VAT types, categories, treatments) for the clinic.
+   * Idempotent on the server — repair path for installs that missed the
+   * ``clinic.created`` seed. Refreshes categories + items on success.
+   */
+  async function seedDefaults(): Promise<boolean> {
+    try {
+      const response = await api.post<ApiResponse<{ categories: number, items: number, vat_types: number }>>(
+        '/api/v1/catalog/seed',
+        {}
+      )
+      toast.add({
+        title: t('common.success'),
+        description: t('catalog.defaultsLoaded', response.data),
+        color: 'success'
+      })
+      await Promise.all([fetchCategories(), fetchItems()])
+      return true
+    } catch (e: unknown) {
+      toast.add({
+        title: t('common.error'),
+        description: apiErrorDetail(e) || t('catalog.defaultsFailed'),
+        color: 'error'
+      })
+      return false
+    }
+  }
+
   // ============================================================================
   // Computed
   // ============================================================================
@@ -448,6 +476,7 @@ export function useCatalog() {
     updateItem,
     deleteItem,
     searchItems,
+    seedDefaults,
 
     // Computed
     totalPages,

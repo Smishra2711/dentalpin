@@ -11,6 +11,7 @@
     "lint": "eslint . module_layers",
     "lint:fix": "eslint . module_layers --fix",
     "typecheck": "nuxt typecheck",
+    "typecheck:layers": "node scripts/modules-json.mjs ./module_layers && nuxt typecheck",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",

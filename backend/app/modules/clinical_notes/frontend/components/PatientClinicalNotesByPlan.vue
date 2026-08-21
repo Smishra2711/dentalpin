@@ -10,6 +10,7 @@
  */
 
 import type { PlanNotesGroup } from '~~/app/types'
+import type { UiColor } from '~~/app/config/severity'
 
 const props = defineProps<{
   ctx: { patientId: string }
@@ -41,10 +42,10 @@ function formatDate(iso: string): string {
   }
 }
 
-function sourceBadgeColor(source: 'plan' | 'treatment' | 'visit'): string {
+function sourceBadgeColor(source: 'plan' | 'treatment' | 'visit'): UiColor {
   if (source === 'visit') return 'primary'
   if (source === 'treatment') return 'success'
-  return 'secondary'
+  return 'neutral'
 }
 
 const hasAny = computed(() =>

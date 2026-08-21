@@ -424,6 +424,9 @@ class BudgetListResponse(BaseModel):
     valid_until: date | None
     total: Decimal
     created_at: datetime
+    # Denormalized plan number when the budget was generated from a
+    # treatment plan (ADR 0003) — lets patient-side lists show the link.
+    plan_number_snapshot: str | None = None
 
     # Related (brief)
     patient: PatientBrief | None = None

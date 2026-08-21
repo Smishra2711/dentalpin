@@ -23,6 +23,7 @@ from .schemas import (
     VatTypeResponse,
     VatTypeUpdate,
 )
+from .seed import seed_clinic_defaults
 from .service import (
     CatalogService,
     CategoryService,
@@ -99,8 +100,10 @@ async def update_category(
     _: Annotated[None, Depends(require_permission("catalog.admin"))],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> ApiResponse[CategoryResponse]:
-    """Update a treatment category."""
-    category = await CategoryService.get_category(db, ctx.clinic_id, category_id)
+    """Update a treatment category (including reactivating an inactive one)."""
+    category = await CategoryService.get_category(
+        db, ctx.clinic_id, category_id, include_inactive=True
+    )
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
 
@@ -484,3 +487,24 @@ async def get_odontogram_treatments_by_category(
     """
     grouped = await OdontogramCatalogService.get_treatments_by_category(db, ctx.clinic_id)
     return ApiResponse(data=grouped)
+
+
+# ============================================================================
+# Default catalog seed
+# ============================================================================
+
+
+@router.post("/seed", response_model=ApiResponse[dict[str, int]])
+async def seed_default_catalog(
+    ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
+    _: Annotated[None, Depends(require_permission("catalog.admin"))],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> ApiResponse[dict[str, int]]:
+    """Load the stock VAT types, categories and treatments for this clinic.
+
+    Idempotent — existing rows are kept, only missing ones are added. Repair
+    path for installs created before ``clinic.created`` seeding existed, or
+    where that seed failed. Returns how many rows were created.
+    """
+    summary = await seed_clinic_defaults(db, ctx.clinic_id)
+    return ApiResponse(data=summary)

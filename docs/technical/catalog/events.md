@@ -16,7 +16,7 @@ _This module does not publish any events._
 
 | Event | Handler | Effect |
 |-------|---------|--------|
-| `clinic.created` | `events.py:on_clinic_created` | Seed VAT types by country preset (`es` → exento/10/21, `generic` → exento only), categories and the default treatment catalog. Non-EUR clinics get every price at 0. Idempotent (skips existing rates / category keys / internal codes). |
+| `clinic.created` | `events.py:on_clinic_created` | Seed VAT types by country preset (`es` → exento/10/21, `generic` → exento only), categories and the default treatment catalog. Non-EUR clinics get every price at 0. Idempotent (skips existing rates / category keys / internal codes). Delegates to `seed.seed_clinic_defaults`, shared with `POST /catalog/seed` (manual repair path; failures here are logged, not raised). |
 
 ## Adding a new event
 

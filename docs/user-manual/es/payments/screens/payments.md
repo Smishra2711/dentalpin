@@ -29,7 +29,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/payments/frontend/pages/payments/index.vue
   - backend/app/modules/payments/router.py
-last_verified_commit: 4752264
+last_verified_commit: 1c2db69
 ---
 
 # Listado de cobros
