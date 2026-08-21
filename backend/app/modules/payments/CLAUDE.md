@@ -125,8 +125,8 @@ the public endpoints.
   Schemas validate at the boundary so 4xx never reach the workflow.
 - **Cross-clinic budgets** are rejected by the workflow. UI must filter
   budget pickers to current clinic — `AllocationTargetSelect` lists the
-  patient's accepted/completed budgets from `/api/v1/budgets` (issue
-  #178: never ask reception for a UUID).
+  patient's accepted/completed budgets from `/api/v1/budget/budgets`
+  (issue #178: never ask reception for a UUID).
 - **`on_account` is unlinked by design.** An anticipo touches neither
   invoices nor budgets until reassigned; the create modal says so
   under "Destino" and the ledger offers "Asignar a presupuesto…". Money

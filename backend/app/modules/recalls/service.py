@@ -295,7 +295,7 @@ class RecallService:
         )
         db.add(recall)
         await db.flush()
-        await event_bus.publish(EventType.RECALL_CREATED, _build_event_payload(recall))
+        await event_bus.publish(EventType.RECALL_CREATED, _build_event_payload(recall), db=db)
         return recall, True
 
     @staticmethod

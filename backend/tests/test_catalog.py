@@ -571,33 +571,124 @@ async def test_list_items_with_category_filter(
 
 
 @pytest.mark.asyncio
+async def _seed_odontogram_test_items(db_session: AsyncSession, setup: dict) -> None:
+    """Seed one mapped tooth item, one UNMAPPED global item and one UNMAPPED
+    tooth item — mirrors production seeds where hygiene/diagnostic items carry
+    no odontogram mapping."""
+    from decimal import Decimal
+
+    from app.modules.catalog.models import (
+        TreatmentCatalogItem,
+        TreatmentCategory,
+        TreatmentOdontogramMapping,
+    )
+
+    clinic_id = setup["clinic_id"]
+    cat = TreatmentCategory(
+        clinic_id=clinic_id,
+        key="preventivo",
+        names={"es": "Preventivo"},
+        is_system=True,
+    )
+    db_session.add(cat)
+    await db_session.flush()
+
+    mapped_tooth = TreatmentCatalogItem(
+        clinic_id=clinic_id,
+        category_id=cat.id,
+        internal_code="TST-CROWN",
+        names={"es": "Corona"},
+        default_price=Decimal("500.00"),
+        pricing_strategy="flat",
+        treatment_scope="tooth",
+        vat_type_id=setup["vat_exempt_id"],
+    )
+    unmapped_global = TreatmentCatalogItem(
+        clinic_id=clinic_id,
+        category_id=cat.id,
+        internal_code="TST-CLEAN",
+        names={"es": "Limpieza dental"},
+        default_price=Decimal("60.00"),
+        pricing_strategy="flat",
+        treatment_scope="global_mouth",
+        vat_type_id=setup["vat_exempt_id"],
+    )
+    unmapped_tooth = TreatmentCatalogItem(
+        clinic_id=clinic_id,
+        category_id=cat.id,
+        internal_code="TST-NOMAP",
+        names={"es": "Sin mapping"},
+        default_price=Decimal("50.00"),
+        pricing_strategy="flat",
+        treatment_scope="tooth",
+        vat_type_id=setup["vat_exempt_id"],
+    )
+    db_session.add_all([mapped_tooth, unmapped_global, unmapped_tooth])
+    await db_session.flush()
+    db_session.add(
+        TreatmentOdontogramMapping(
+            clinic_id=clinic_id,
+            catalog_item_id=mapped_tooth.id,
+            odontogram_treatment_type="crown",
+            clinical_category="restauradora",
+            visualization_rules=[],
+            visualization_config={},
+        )
+    )
+    await db_session.commit()
+
+
+@pytest.mark.asyncio
 async def test_get_odontogram_treatments(
-    client: AsyncClient, auth_headers: dict, catalog_clinic_setup: dict
+    client: AsyncClient,
+    auth_headers: dict,
+    catalog_clinic_setup: dict,
+    db_session: AsyncSession,
 ):
-    """Test getting treatments with odontogram mappings."""
+    """Mapped items keep their mapping; unmapped global items are returned with
+    null mapping fields; unmapped tooth items are excluded."""
+    await _seed_odontogram_test_items(db_session, catalog_clinic_setup)
+
     response = await client.get(
         "/api/v1/catalog/odontogram-treatments",
         headers=auth_headers,
     )
     assert response.status_code == 200
-    data = response.json()
-    assert "data" in data
-    assert isinstance(data["data"], list)
+    items = {t["internal_code"]: t for t in response.json()["data"]}
+
+    assert "TST-NOMAP" not in items  # unmapped tooth item excluded
+
+    mapped = items["TST-CROWN"]
+    assert mapped["odontogram_treatment_type"] == "crown"
+    assert mapped["clinical_category"] == "restauradora"
+
+    unmapped = items["TST-CLEAN"]
+    assert unmapped["treatment_scope"] == "global_mouth"
+    assert unmapped["odontogram_treatment_type"] is None
+    assert unmapped["clinical_category"] is None
+    assert unmapped["visualization_rules"] == []
+    assert unmapped["category_key"] == "preventivo"
 
 
 @pytest.mark.asyncio
 async def test_get_odontogram_treatments_by_category(
-    client: AsyncClient, auth_headers: dict, catalog_clinic_setup: dict
+    client: AsyncClient,
+    auth_headers: dict,
+    catalog_clinic_setup: dict,
+    db_session: AsyncSession,
 ):
-    """Test getting odontogram treatments grouped by category."""
+    """By-category grouping skips unmapped items — no null key appears."""
+    await _seed_odontogram_test_items(db_session, catalog_clinic_setup)
+
     response = await client.get(
         "/api/v1/catalog/odontogram-treatments/by-category",
         headers=auth_headers,
     )
     assert response.status_code == 200
-    data = response.json()
-    assert "data" in data
-    assert isinstance(data["data"], dict)
+    grouped = response.json()["data"]
+    assert isinstance(grouped, dict)
+    assert "restauradora" in grouped
+    assert None not in grouped and "null" not in grouped and "None" not in grouped
 
 
 @pytest.mark.asyncio

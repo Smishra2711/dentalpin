@@ -199,12 +199,19 @@ function globalItemToBarItem(
   c: OdontogramTreatment,
   subGroup: 'mouth' | 'arch'
 ): TreatmentBarItem {
-  const oType = c.odontogram_treatment_type
-  const label = c.names[locale.value] || c.names.es || c.names.en || oType
+  // Unmapped global items (limpieza, primera visita...) have no odontogram
+  // type — fall back to the neutral 'other' icon/color; labels come from
+  // the catalog names, which real catalog items always carry.
+  const oType = c.odontogram_treatment_type ?? 'other'
+  const label = c.names[locale.value] || c.names.es || c.names.en || c.internal_code
+  const price = c.default_price != null ? Number(c.default_price) : Number.NaN
+  const tooltip = Number.isFinite(price)
+    ? `${label}  •  ${Number.isInteger(price) ? String(price) : price.toFixed(2)}`
+    : label
   return {
     key: c.id,
     label,
-    tooltip: label,
+    tooltip,
     odontogramType: oType,
     iconKey: resolveTreatmentIconKey(oType, c.internal_code),
     catalogItemId: c.id,
@@ -215,20 +222,15 @@ function globalItemToBarItem(
 }
 
 const currentTreatments = computed<TreatmentBarItem[]>(() => {
-  if (activeCategory.value === GLOBALS_CATEGORY) {
-    // Globals flow — render boca-completa first, then arcada.
-    const mouth = treatmentCatalog.globalMouthItems.value.map(c => globalItemToBarItem(c, 'mouth'))
-    const arch = treatmentCatalog.globalArchItems.value.map(c => globalItemToBarItem(c, 'arch'))
-    return [...mouth, ...arch]
-  }
-
   const catalogTreatments = treatmentCatalog.getTreatmentsForCategory(activeCategory.value)
 
   if (catalogTreatments.length > 0) {
     return catalogTreatments
-      .filter(c => !isMultiToothOnlyType(c.odontogram_treatment_type))
+      // Category-grouped items always carry a mapping (unmapped globals are
+      // excluded from treatmentsByCategory); the null-check narrows the type.
+      .filter(c => c.odontogram_treatment_type != null && !isMultiToothOnlyType(c.odontogram_treatment_type))
       .map((c) => {
-        const oType = c.odontogram_treatment_type
+        const oType = c.odontogram_treatment_type ?? 'other'
         const isAtomic = ATOMIC_MULTI_TOOTH_TYPES.has(oType)
         // Fallback items from useTreatmentCatalog use the treatment type as id;
         // only real catalog items (UUID ids) should flow into catalog_item_id.
@@ -275,6 +277,86 @@ const currentTreatments = computed<TreatmentBarItem[]>(() => {
         hasSurfacePricing: false
       }
     })
+})
+
+// ============================================================================
+// Globals tab: grouped rendering ("Boca completa")
+// ============================================================================
+
+interface TreatmentBarGroup {
+  key: string
+  /** Localized subheader — null for the single anonymous group of regular tabs. */
+  label: string | null
+  items: TreatmentBarItem[]
+}
+
+// Fixed clinical ordering for the globals tab; unknown categories go last.
+const GLOBAL_GROUP_ORDER = [
+  'diagnostico', 'preventivo', 'periodoncia', 'restauradora',
+  'ortodoncia', 'estetica', 'protesis'
+]
+
+const globalsFilter = ref('')
+
+const globalItemCount = computed(() =>
+  treatmentCatalog.globalMouthItems.value.length + treatmentCatalog.globalArchItems.value.length
+)
+
+// Only worth showing a filter box once the list is long.
+const showGlobalsFilter = computed(() =>
+  activeCategory.value === GLOBALS_CATEGORY && globalItemCount.value > 12
+)
+
+function matchesGlobalsFilter(c: OdontogramTreatment): boolean {
+  const query = globalsFilter.value.trim().toLowerCase()
+  if (!query) return true
+  const name = c.names[locale.value] || c.names.es || c.names.en || ''
+  return name.toLowerCase().includes(query) || c.internal_code.toLowerCase().includes(query)
+}
+
+/** What the grid renders: one anonymous group for regular tabs; on the globals
+ *  tab, items grouped by catalog category (mouth items before arch items). */
+const treatmentGroups = computed<TreatmentBarGroup[]>(() => {
+  if (activeCategory.value !== GLOBALS_CATEGORY) {
+    return [{ key: activeCategory.value, label: null, items: currentTreatments.value }]
+  }
+
+  const groups = new Map<string, { label: string, mouth: TreatmentBarItem[], arch: TreatmentBarItem[] }>()
+  const add = (c: OdontogramTreatment, subGroup: 'mouth' | 'arch') => {
+    const key = c.category_key || 'otros'
+    let group = groups.get(key)
+    if (!group) {
+      group = {
+        label: c.category_names[locale.value] || c.category_names.es || c.category_names.en || key,
+        mouth: [],
+        arch: []
+      }
+      groups.set(key, group)
+    }
+    group[subGroup].push(globalItemToBarItem(c, subGroup))
+  }
+  treatmentCatalog.globalMouthItems.value.filter(matchesGlobalsFilter).forEach(c => add(c, 'mouth'))
+  treatmentCatalog.globalArchItems.value.filter(matchesGlobalsFilter).forEach(c => add(c, 'arch'))
+
+  const orderOf = (key: string) => {
+    const idx = GLOBAL_GROUP_ORDER.indexOf(key)
+    return idx === -1 ? GLOBAL_GROUP_ORDER.length : idx
+  }
+  return [...groups.entries()]
+    .sort(([a], [b]) => orderOf(a) - orderOf(b) || a.localeCompare(b))
+    .map(([key, g]) => ({ key, label: g.label, items: [...g.mouth, ...g.arch] }))
+})
+
+const globalsFilterHasNoResults = computed(() =>
+  activeCategory.value === GLOBALS_CATEGORY
+  && globalsFilter.value.trim() !== ''
+  && treatmentGroups.value.length === 0
+)
+
+// Leaving the globals tab resets the filter — stale queries would silently
+// empty the tab on return.
+watch(activeCategory, () => {
+  globalsFilter.value = ''
 })
 
 // ============================================================================
@@ -700,7 +782,7 @@ function handleCreatePlan() {
       >
         <div class="arch-picker-label">
           {{ t('odontogram.globals.archPickerTitle', {
-            name: archPickerItem.names[locale] || archPickerItem.names.es || archPickerItem.odontogram_treatment_type
+            name: archPickerItem.names[locale] || archPickerItem.names.es || archPickerItem.internal_code
           }) }}
         </div>
         <div class="arch-picker-buttons">
@@ -744,82 +826,119 @@ function handleCreatePlan() {
       </div>
     </Transition>
 
-    <!-- Bottom row: Treatment Icons Grid (one button per catalog item). -->
-    <div class="treatment-grid">
-      <div
-        v-for="item in currentTreatments"
-        :key="item.key"
-        class="treatment-cell"
-      >
-        <button
-          type="button"
-          class="treatment-btn"
-          :class="{
-            'selected': isSelected(item),
-            'is-surface': isSurfaceTreatment(item.odontogramType),
-            'atomic-multi-btn': item.isAtomicMulti,
-            'has-mode-selector': isSelected(item) && supportsBothModes(item.odontogramType),
-            'has-surface-pricing': item.hasSurfacePricing
-          }"
-          :title="item.tooltip"
-          @click="selectTreatment(item)"
-        >
-          <div
-            class="treatment-icon"
-            :style="{ color: getTreatmentColor(item.odontogramType) }"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              width="24"
-              height="24"
-              v-html="TREATMENT_ICONS[item.iconKey] || TREATMENT_ICONS[item.odontogramType]"
-            />
-          </div>
-          <span class="treatment-label">{{ item.label }}</span>
-          <UIcon
-            v-if="item.isAtomicMulti"
-            :name="item.atomicMultiIcon!"
-            class="multi-tooth-badge"
-          />
-          <UIcon
-            v-else-if="supportsBothModes(item.odontogramType)"
-            name="i-lucide-layers"
-            class="multi-tooth-badge multi-tooth-badge-hint"
-          />
-        </button>
+    <!-- Globals filter: only for the long "Boca completa" list. -->
+    <div
+      v-if="showGlobalsFilter"
+      class="globals-filter"
+    >
+      <UInput
+        v-model="globalsFilter"
+        icon="i-lucide-search"
+        size="sm"
+        :placeholder="t('odontogram.globals.searchPlaceholder')"
+        class="globals-filter-input"
+      />
+    </div>
 
-        <!-- Inline mode selector: anchored directly under selected crown/veneer.
+    <!-- Bottom row: Treatment Icons Grid (one button per catalog item).
+         Regular tabs render a single anonymous group; the globals tab renders
+         one grid per clinical category with a localized subheader. -->
+    <div class="treatment-groups">
+      <section
+        v-for="group in treatmentGroups"
+        :key="group.key"
+        class="treatment-group"
+      >
+        <h4
+          v-if="group.label"
+          class="treatment-group-label"
+        >
+          {{ group.label }}
+        </h4>
+        <div class="treatment-grid">
+          <div
+            v-for="item in group.items"
+            :key="item.key"
+            class="treatment-cell"
+          >
+            <button
+              type="button"
+              class="treatment-btn"
+              :class="{
+                'selected': isSelected(item),
+                'is-surface': isSurfaceTreatment(item.odontogramType),
+                'atomic-multi-btn': item.isAtomicMulti,
+                'has-mode-selector': isSelected(item) && supportsBothModes(item.odontogramType),
+                'has-surface-pricing': item.hasSurfacePricing
+              }"
+              :title="item.tooltip"
+              @click="selectTreatment(item)"
+            >
+              <div
+                class="treatment-icon"
+                :style="{ color: getTreatmentColor(item.odontogramType) }"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="24"
+                  height="24"
+                  v-html="TREATMENT_ICONS[item.iconKey] || TREATMENT_ICONS[item.odontogramType]"
+                />
+              </div>
+              <span class="treatment-label">{{ item.label }}</span>
+              <UIcon
+                v-if="item.isAtomicMulti"
+                :name="item.atomicMultiIcon!"
+                class="multi-tooth-badge"
+              />
+              <UIcon
+                v-else-if="supportsBothModes(item.odontogramType)"
+                name="i-lucide-layers"
+                class="multi-tooth-badge multi-tooth-badge-hint"
+              />
+            </button>
+
+            <!-- Inline mode selector: anchored directly under selected crown/veneer.
              Replaces the disconnected mode-toggle that previously sat in the
              top instructions row. -->
-        <div
-          v-if="isSelected(item) && supportsBothModes(item.odontogramType)"
-          class="mode-selector-inline"
-        >
-          <button
-            type="button"
-            class="mode-chip"
-            :class="{ active: !selectedMultiMode }"
-            @click.stop="setMultiMode(false)"
-          >
-            <UIcon
-              name="i-lucide-circle-dot"
-              class="w-3 h-3"
-            />
-            <span>{{ t('odontogram.oneTooth') }}</span>
-          </button>
-          <button
-            type="button"
-            class="mode-chip"
-            :class="{ active: selectedMultiMode }"
-            @click.stop="setMultiMode(true)"
-          >
-            <UIcon
-              name="i-lucide-link"
-              class="w-3 h-3"
-            />
-            <span>{{ t('odontogram.multipleTeeth') }}</span>
-          </button>
+            <div
+              v-if="isSelected(item) && supportsBothModes(item.odontogramType)"
+              class="mode-selector-inline"
+            >
+              <button
+                type="button"
+                class="mode-chip"
+                :class="{ active: !selectedMultiMode }"
+                @click.stop="setMultiMode(false)"
+              >
+                <UIcon
+                  name="i-lucide-circle-dot"
+                  class="w-3 h-3"
+                />
+                <span>{{ t('odontogram.oneTooth') }}</span>
+              </button>
+              <button
+                type="button"
+                class="mode-chip"
+                :class="{ active: selectedMultiMode }"
+                @click.stop="setMultiMode(true)"
+              >
+                <UIcon
+                  name="i-lucide-link"
+                  class="w-3 h-3"
+                />
+                <span>{{ t('odontogram.multipleTeeth') }}</span>
+              </button>
+            </div>
+          </div>
         </div>
+      </section>
+
+      <div
+        v-if="globalsFilterHasNoResults"
+        class="globals-no-results"
+      >
+        {{ t('common.noResults') }}
       </div>
     </div>
   </div>
@@ -1381,6 +1500,38 @@ function handleCreatePlan() {
 
 :root.dark .arch-btn-cancel:hover:not(:disabled) {
   background: #27272A;
+}
+
+/* Grouped grids (globals tab) */
+.treatment-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.treatment-group-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+}
+
+.globals-filter {
+  display: flex;
+}
+
+.globals-filter-input {
+  width: 100%;
+  max-width: 320px;
+}
+
+.globals-no-results {
+  padding: 12px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-align: center;
 }
 
 /* Responsive */
