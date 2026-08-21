@@ -395,14 +395,18 @@ function handleClose() {
                 >
                   {{ t('common.inactive') }}
                 </UBadge>
-                <UBadge
+                <UTooltip
                   v-if="item?.is_system"
-                  variant="subtle"
-                  color="info"
-                  size="xs"
+                  :text="t('catalog.systemItemHint')"
                 >
-                  {{ t('catalog.system') }}
-                </UBadge>
+                  <UBadge
+                    variant="subtle"
+                    color="info"
+                    size="xs"
+                  >
+                    {{ t('catalog.system') }}
+                  </UBadge>
+                </UTooltip>
               </div>
             </div>
             <UButton
@@ -502,10 +506,7 @@ function handleClose() {
                     {{ t('catalog.activeHint') }}
                   </p>
                 </div>
-                <USwitch
-                  v-model="formData.is_active"
-                  :disabled="isSystem"
-                />
+                <USwitch v-model="formData.is_active" />
               </div>
             </div>
 

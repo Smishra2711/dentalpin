@@ -1530,6 +1530,7 @@
     "itemUpdateFailed": "Erro ao atualizar o tratamento",
     "itemDeleteFailed": "Erro ao eliminar o tratamento",
     "cannotModifySystemItem": "Não é possível modificar um tratamento de sistema",
+    "systemItemHint": "Tratamento de sistema: código, categoria, estratégia de preço e âmbito estão bloqueados; preço, custo, IVA, nomes, duração, sessões e estado podem ser editados.",
     "cannotDeleteSystemItem": "Não é possível eliminar um tratamento de sistema",
     "odontogramMapping": "Visualização no odontograma",
     "odontogramMappingDescription": "Associe este tratamento a um tipo de visualização no odontograma para que apareça na ficha do paciente.",

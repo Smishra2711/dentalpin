@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- fix(#237): `PUT /catalog/items/{id}` no longer rejects every edit on
+  system items. Price, cost, VAT, names, duration, sessions and `is_active`
+  are editable; only structural fields (`SYSTEM_ITEM_LOCKED_FIELDS`) return
+  403 when changed. Modal: `is_active` switch enabled, tooltip on the
+  *System* badge, 403 toast shows the server detail.
 - fix: `GET /catalog/odontogram-treatments` also returns **unmapped
   global-scope items** (`global_mouth`/`global_arch`) with
   `odontogram_treatment_type`/`clinical_category` as `null` — hygiene and

@@ -1530,6 +1530,7 @@
     "itemUpdateFailed": "Erreur lors de la mise à jour du traitement",
     "itemDeleteFailed": "Erreur lors de la suppression du traitement",
     "cannotModifySystemItem": "Impossible de modifier un traitement système",
+    "systemItemHint": "Traitement système : code, catégorie, stratégie de prix et portée sont verrouillés ; prix, coût, TVA, noms, durée, séances et statut restent modifiables.",
     "cannotDeleteSystemItem": "Impossible de supprimer un traitement système",
     "odontogramMapping": "Visualisation odontogramme",
     "odontogramMappingDescription": "Associez ce traitement à un type de visualisation odontogramme pour qu'il apparaisse dans le dossier patient.",
