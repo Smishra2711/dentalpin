@@ -11,6 +11,26 @@ frontend as a Nuxt layer under its own Python package.
 
 ## [Unreleased]
 
+## [2.3.1] - 2026-08-20
+
+### Fixed
+
+- **Non-tooth treatments are addable to treatment plans** (#215). Global
+  catalog items (limpieza dental, primera visita, radiografía
+  panorámica, blanqueamientos, prótesis…) never reached the plan's
+  treatment bar: `/catalog/odontogram-treatments` dropped every item
+  without an odontogram mapping, and the odontogram service refused to
+  create a `Treatment` from unmapped items. The endpoint now returns
+  unmapped global-scope items (nullable mapping fields), the service
+  falls back to the internal `clinical_type="other"` for global scopes,
+  and the "Boca completa" tab groups the ~40 global treatments by
+  clinical category with a search filter and an arch picker for
+  per-arch items. Demo seeds now write these plan treatments with their
+  real scope/arch instead of fake tooth-scoped rows.
+- **Patient summary "Diagnoses" card translates clinical types** — it
+  pointed at an i18n namespace that never existed, so every label
+  rendered as the humanized raw key ("filling composite").
+
 ### Added
 
 - **Onboarding: "Treatment catalog" step loads the default catalog inline.**

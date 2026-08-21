@@ -35,7 +35,7 @@ async function load() {
     const params = new URLSearchParams({ patient_id: props.patientId, page_size: '100' })
     params.append('status', 'accepted')
     params.append('status', 'completed')
-    const res = await api.get<PaginatedResponse<BudgetListItem>>(`/api/v1/budgets?${params}`)
+    const res = await api.get<PaginatedResponse<BudgetListItem>>(`/api/v1/budget/budgets?${params}`)
     budgets.value = res.data
   } catch {
     budgets.value = []

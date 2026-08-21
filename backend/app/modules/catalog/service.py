@@ -711,30 +711,37 @@ class OdontogramCatalogService:
 
         items = result.unique().scalars().all()
 
-        # Filter items with odontogram mapping and transform
+        # Keep mapped items (paintable on the chart) plus unmapped global-scope
+        # items (no per-tooth visualization needed — offered in the plan UI).
+        # Unmapped tooth/multi_tooth items stay excluded: they can be neither
+        # visualized nor applied.
         treatments = []
         for item in items:
-            if item.odontogram_mapping:
-                treatments.append(
-                    {
-                        "id": str(item.id),
-                        "internal_code": item.internal_code,
-                        "names": item.names,
-                        "default_price": float(item.default_price) if item.default_price else None,
-                        "treatment_scope": item.treatment_scope,
-                        "requires_surfaces": item.requires_surfaces,
-                        "is_diagnostic": item.is_diagnostic,
-                        "pricing_strategy": item.pricing_strategy or "flat",
-                        "pricing_config": item.pricing_config,
-                        "surface_prices": item.surface_prices,
-                        "odontogram_treatment_type": item.odontogram_mapping.odontogram_treatment_type,
-                        "visualization_rules": item.odontogram_mapping.visualization_rules,
-                        "visualization_config": item.odontogram_mapping.visualization_config,
-                        "clinical_category": item.odontogram_mapping.clinical_category,
-                        "category_key": item.category.key if item.category else None,
-                        "category_names": item.category.names if item.category else {},
-                    }
-                )
+            mapping = item.odontogram_mapping
+            if not mapping and item.treatment_scope not in ("global_mouth", "global_arch"):
+                continue
+            treatments.append(
+                {
+                    "id": str(item.id),
+                    "internal_code": item.internal_code,
+                    "names": item.names,
+                    "default_price": float(item.default_price) if item.default_price else None,
+                    "treatment_scope": item.treatment_scope,
+                    "requires_surfaces": item.requires_surfaces,
+                    "is_diagnostic": item.is_diagnostic,
+                    "pricing_strategy": item.pricing_strategy or "flat",
+                    "pricing_config": item.pricing_config,
+                    "surface_prices": item.surface_prices,
+                    "odontogram_treatment_type": (
+                        mapping.odontogram_treatment_type if mapping else None
+                    ),
+                    "visualization_rules": mapping.visualization_rules if mapping else [],
+                    "visualization_config": mapping.visualization_config if mapping else {},
+                    "clinical_category": mapping.clinical_category if mapping else None,
+                    "category_key": item.category.key if item.category else None,
+                    "category_names": item.category.names if item.category else {},
+                }
+            )
 
         return treatments
 
@@ -746,10 +753,13 @@ class OdontogramCatalogService:
         """Get odontogram treatments grouped by clinical category."""
         treatments = await OdontogramCatalogService.get_odontogram_treatments(db, clinic_id)
 
-        # Group by clinical category
+        # Group by clinical category (unmapped global items have none — skip them
+        # so this endpoint's contract is unchanged)
         grouped: dict[str, list[dict]] = {}
         for treatment in treatments:
             category = treatment["clinical_category"]
+            if category is None:
+                continue
             if category not in grouped:
                 grouped[category] = []
             grouped[category].append(treatment)

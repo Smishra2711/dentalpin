@@ -135,6 +135,15 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
     async with test_session_maker() as session:
         yield session
 
+    # Dispose the global app engine's pool before drop_all: own-session
+    # event handlers (patient_timeline & co.) leave connections on
+    # app.database.engine, and if those outlive the drop their locks
+    # block it — the full-suite deadlock in #188. _dispose_app_engine
+    # (autouse, above) is set up first and so torn down *last* — after
+    # this drop_all — so relying on it alone isn't enough; dispose
+    # explicitly here, first.
+    await app_engine.dispose()
+
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
