@@ -672,15 +672,16 @@ export interface TreatmentCatalogCategoryUpdate {
 export interface OdontogramMapping {
   id: string
   odontogram_treatment_type: string
-  visualization_rules: string[]
+  visualization_rules: VisualizationRuleLayer[]
   visualization_config: Record<string, unknown>
   clinical_category: string
 }
 
+/** Rules/config are server-owned (layered JSONB, seeded); omit to preserve them. */
 export interface OdontogramMappingCreate {
   odontogram_treatment_type: string
-  visualization_rules: string[]
-  visualization_config: Record<string, unknown>
+  visualization_rules?: VisualizationRuleLayer[]
+  visualization_config?: Record<string, unknown>
   clinical_category: string
 }
 

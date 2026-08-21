@@ -1530,6 +1530,7 @@
     "itemUpdateFailed": "Error updating treatment",
     "itemDeleteFailed": "Error deleting treatment",
     "cannotModifySystemItem": "Cannot modify a system treatment",
+    "systemItemHint": "System treatment: code, category, pricing strategy and scope are locked; price, cost, VAT, names, duration, sessions and status can be edited.",
     "cannotDeleteSystemItem": "Cannot delete a system treatment",
     "odontogramMapping": "Odontogram Visualization",
     "odontogramMappingDescription": "Associate this treatment with an odontogram visualization type so it appears in the patient chart.",

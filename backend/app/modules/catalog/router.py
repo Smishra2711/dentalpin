@@ -384,6 +384,20 @@ async def create_item(
     return ApiResponse(data=CatalogItemResponse.model_validate(item))
 
 
+# Structural fields owned by the seeder. Commercial/clinical values
+# (price, cost, VAT, names, duration, sessions, is_active) stay editable (#237).
+SYSTEM_ITEM_LOCKED_FIELDS = frozenset(
+    {
+        "internal_code",
+        "category_id",
+        "pricing_strategy",
+        "treatment_scope",
+        "is_diagnostic",
+        "requires_surfaces",
+    }
+)
+
+
 @router.put("/items/{item_id}", response_model=ApiResponse[CatalogItemResponse])
 async def update_item(
     item_id: UUID,
@@ -397,11 +411,21 @@ async def update_item(
     if not item:
         raise HTTPException(status_code=404, detail="Catalog item not found")
 
+    update_data = data.model_dump(exclude_unset=True)
     if item.is_system:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Cannot modify system catalog item",
-        )
+        # The modal resubmits the whole form, locked fields included with their
+        # current value: only reject when a locked field actually changes.
+        changed = {
+            k
+            for k in SYSTEM_ITEM_LOCKED_FIELDS & update_data.keys()
+            if update_data[k] != getattr(item, k)
+        }
+        if changed:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Cannot modify system catalog item fields: {sorted(changed)}",
+            )
+        update_data.pop("odontogram_mapping", None)  # seeded mapping is preserved
 
     # Verify category if changing
     if data.category_id and data.category_id != item.category_id:
@@ -422,9 +446,7 @@ async def update_item(
             )
 
     try:
-        updated = await CatalogService.update_item(
-            db, ctx.clinic_id, item, data.model_dump(exclude_unset=True)
-        )
+        updated = await CatalogService.update_item(db, ctx.clinic_id, item, update_data)
     except SessionTemplateError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)

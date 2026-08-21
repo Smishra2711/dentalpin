@@ -11,8 +11,8 @@ Returned by `CatalogModule.get_permissions()`
 | Permission | Allows | Required by |
 |------------|--------|-------------|
 | `catalog.read` | Browse categories, VAT types, treatments and odontogram mappings. Every role has it. | `GET /api/v1/catalog/categories`, `GET /api/v1/catalog/categories/{id}`, `GET /api/v1/catalog/vat-types`, `GET /api/v1/catalog/vat-types/default`, `GET /api/v1/catalog/vat-types/{id}`, `GET /api/v1/catalog/items`, `GET /api/v1/catalog/items/popular`, `GET /api/v1/catalog/items/search`, `GET /api/v1/catalog/items/{id}`, `GET /api/v1/catalog/odontogram-treatments`, `GET /api/v1/catalog/odontogram-treatments/by-category` |
-| `catalog.write` | Create, edit and (soft-)delete treatments. | `POST /api/v1/catalog/items`, `PUT /api/v1/catalog/items/{id}`, `DELETE /api/v1/catalog/items/{id}` |
-| `catalog.admin` | Manage categories and VAT types; load the stock catalog. System rows (`is_system`) reject edits/deletes with 403. | `POST /api/v1/catalog/categories`, `PUT /api/v1/catalog/categories/{id}`, `DELETE /api/v1/catalog/categories/{id}`, `POST /api/v1/catalog/vat-types`, `PUT /api/v1/catalog/vat-types/{id}`, `DELETE /api/v1/catalog/vat-types/{id}`, `POST /api/v1/catalog/seed` |
+| `catalog.write` | Create, edit and (soft-)delete treatments. On system items (`is_system`) only commercial/clinical values are editable (price, cost, VAT, names, duration, sessions, `is_active`); changing `internal_code`, `category_id`, `pricing_strategy`, `treatment_scope`, `is_diagnostic` or `requires_surfaces` returns 403, as does `DELETE`. | `POST /api/v1/catalog/items`, `PUT /api/v1/catalog/items/{id}`, `DELETE /api/v1/catalog/items/{id}` |
+| `catalog.admin` | Manage categories and VAT types; load the stock catalog. System categories and VAT types (`is_system`) reject edits/deletes with 403 (VAT types: only `is_default` may change). | `POST /api/v1/catalog/categories`, `PUT /api/v1/catalog/categories/{id}`, `DELETE /api/v1/catalog/categories/{id}`, `POST /api/v1/catalog/vat-types`, `PUT /api/v1/catalog/vat-types/{id}`, `DELETE /api/v1/catalog/vat-types/{id}`, `POST /api/v1/catalog/seed` |
 
 ## Role assignment
 

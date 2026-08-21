@@ -55,6 +55,10 @@ categorías. Es la fuente de precios de presupuestos, planes y facturas.
   renombrar, ordenar y desactivar/reactivar categorías. Las categorías del
   sistema (semilla) están bloqueadas: se muestran con candado y el servidor
   rechaza editarlas o borrarlas.
+- **Tratamientos del sistema** (insignia *Sistema*) — se pueden editar
+  precio, coste, IVA, nombres, duración, sesiones y activar/desactivar. Código,
+  categoría, estrategia de precio y ámbito quedan bloqueados y no se pueden
+  borrar.
 - **Cargar catálogo por defecto** — aparece en el estado vacío (sin
   tratamientos, sin filtros) para `catalog.admin`. Añade tipos de IVA según el
   país de la clínica, las categorías y los tratamientos de referencia (precios

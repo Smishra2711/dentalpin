@@ -314,11 +314,11 @@ export function useCatalog() {
 
       return response.data
     } catch (e: unknown) {
-      const fetchError = e as { statusCode?: number }
+      const fetchError = e as { statusCode?: number, data?: { message?: string } }
       if (fetchError.statusCode === 403) {
         toast.add({
           title: t('common.error'),
-          description: t('catalog.cannotModifySystemItem'),
+          description: fetchError.data?.message || t('catalog.cannotModifySystemItem'),
           color: 'error'
         })
       } else {

@@ -1248,3 +1248,100 @@ async def test_update_item_sessions_omitted_preserves_template(
     )
     assert update.status_code == 200
     assert len(update.json()["data"]["sessions"]) == 2
+
+
+@pytest.mark.asyncio
+async def test_update_system_item_allows_price_but_locks_structure(
+    client: AsyncClient,
+    auth_headers: dict,
+    db_session: AsyncSession,
+    catalog_clinic_setup: dict,
+):
+    """#237: system items accept commercial edits; structural fields stay locked."""
+    from app.modules.catalog.models import TreatmentCatalogItem
+
+    category_id = await _create_catalog_category(client, auth_headers, "system_lock")
+    item = TreatmentCatalogItem(
+        clinic_id=catalog_clinic_setup["clinic_id"],
+        category_id=category_id,
+        internal_code="SYS-001",
+        names={"es": "Limpieza"},
+        default_price=0,
+        is_system=True,
+    )
+    db_session.add(item)
+    await db_session.flush()
+    url = f"/api/v1/catalog/items/{item.id}"
+
+    # Modal-style payload: locked fields resent with their current value
+    ok = await client.put(
+        url,
+        json={
+            "internal_code": "SYS-001",
+            "default_price": 123.45,
+            "cost_price": 40,
+            "is_active": False,
+        },
+        headers=auth_headers,
+    )
+    assert ok.status_code == 200, ok.text
+    data = ok.json()["data"]
+    assert data["default_price"] == "123.45"
+    assert data["is_active"] is False
+    assert data["is_system"] is True
+
+    locked = await client.put(url, json={"internal_code": "SYS-002"}, headers=auth_headers)
+    assert locked.status_code == 403
+    assert "internal_code" in locked.json()["message"]
+
+    still_locked = await client.delete(url, headers=auth_headers)
+    assert still_locked.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_update_system_item_preserves_seeded_odontogram_mapping(
+    client: AsyncClient,
+    auth_headers: dict,
+    db_session: AsyncSession,
+    catalog_clinic_setup: dict,
+):
+    """The modal resends odontogram_mapping without rules; seeded rules survive."""
+    from app.modules.catalog.models import TreatmentCatalogItem, TreatmentOdontogramMapping
+
+    clinic_id = catalog_clinic_setup["clinic_id"]
+    category_id = await _create_catalog_category(client, auth_headers, "system_map")
+    item = TreatmentCatalogItem(
+        clinic_id=clinic_id,
+        category_id=category_id,
+        internal_code="SYS-MAP",
+        names={"es": "Corona"},
+        default_price=100,
+        is_system=True,
+    )
+    db_session.add(item)
+    await db_session.flush()
+    rules = [{"layer": "cenital_pattern", "pattern": "diagonal_stripes", "color": "#000"}]
+    db_session.add(
+        TreatmentOdontogramMapping(
+            clinic_id=clinic_id,
+            catalog_item_id=item.id,
+            odontogram_treatment_type="crown",
+            visualization_rules=rules,
+            clinical_category="restauradora",
+        )
+    )
+    await db_session.flush()
+
+    resp = await client.put(
+        f"/api/v1/catalog/items/{item.id}",
+        json={
+            "default_price": 150,
+            "odontogram_mapping": {
+                "odontogram_treatment_type": "crown",
+                "clinical_category": "restauradora",
+            },
+        },
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["data"]["odontogram_mapping"]["visualization_rules"] == rules
