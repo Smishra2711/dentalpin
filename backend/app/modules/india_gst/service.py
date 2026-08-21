@@ -6,7 +6,7 @@ Business logic only, no FastAPI imports (mirrors billing/verifactu).
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 from uuid import UUID
 
@@ -22,10 +22,12 @@ INDIA_FY_START_MONTH = 4  # India's financial year runs April (4) to March.
 def _quantize(value) -> Decimal:
     """Always route through ``str()`` before ``Decimal()`` — guards
     against float contamination, mirroring verifactu's ``_format_amount``.
+    ``ROUND_HALF_UP`` (away from zero on ties), the rounding GST
+    reporting expects — not Python's default banker's rounding.
     """
-    if isinstance(value, Decimal):
-        return value.quantize(Decimal("0.01"))
-    return Decimal(str(value or 0)).quantize(Decimal("0.01"))
+    if not isinstance(value, Decimal):
+        value = Decimal(str(value or 0))
+    return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 @dataclass
@@ -70,10 +72,12 @@ def compute_gst_breakdown(
 
     Sign-agnostic: works unmodified for negative (credit-note) amounts,
     since it only ever adds/subtracts the line's own ``line_tax`` — it
-    never assumes a positive amount. The CGST/SGST split uses a
-    remainder-absorption trick (``sgst = tax_amount - cgst``, not two
-    independent halvings) so the pair always reconciles exactly to
-    ``line_tax``, including on odd cents.
+    never assumes a positive amount. CGST and SGST are levied at the
+    same rate on the same value, so the two halves MUST be equal —
+    GSTR-1 reconciliation rejects asymmetric heads. Each half is the
+    line tax / 2 rounded HALF_UP per head; on an odd-paise line the two
+    heads together may differ from ``line_tax`` by ±0.01, which is the
+    expected consequence of head-wise rounding (never an unequal split).
     """
     is_intra = bool(clinic_state) and bool(place_of_supply) and clinic_state == place_of_supply
 
@@ -90,7 +94,7 @@ def compute_gst_breakdown(
         if is_intra:
             half_rate = rate / 2
             cgst_amount = _quantize(tax_amount / 2)
-            sgst_amount = tax_amount - cgst_amount
+            sgst_amount = cgst_amount
             lines.append(
                 GstLineBreakdown(
                     invoice_item_id=item.invoice_item_id,

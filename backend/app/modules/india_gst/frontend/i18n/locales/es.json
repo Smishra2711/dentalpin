@@ -50,7 +50,7 @@
       "selectPlaceOfSupplyHint": "Selecciona un lugar de suministro para calcular el GST",
       "sacCodes": "Códigos SAC",
       "sacCode": "Código SAC",
-      "sacOverrideHint": "Los códigos SAC vienen del catálogo de tratamientos. Cámbialos solo si tu asesor fiscal lo indica — el cambio queda registrado.",
+      "sacOverrideHint": "Los códigos SAC vienen del catálogo de tratamientos. Cámbialos solo si tu asesor fiscal lo indica.",
       "save": "Guardar datos GST",
       "saved": "Datos GST guardados",
       "saveError": "No se pudieron guardar los datos GST"

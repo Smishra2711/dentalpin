@@ -4,11 +4,18 @@
 // in the host's generic SettingsLayout/SettingsSection).
 
 import type { IndiaGstMissingSacItem, IndiaGstSettings } from '../../../composables/useIndiaGst'
+import { PERMISSIONS } from '~~/app/config/permissions'
 
 definePageMeta({ layout: 'default' })
 
 const { t, locale } = useI18n()
 const toast = useToast()
+const { can } = usePermissions()
+
+// Read-only view for roles with settings.read; every mutating control
+// needs settings.configure (verifactu's canManage pattern).
+const canManage = computed(() => can(PERMISSIONS.indiaGst.settingsConfigure))
+const canManageCatalog = computed(() => can(PERMISSIONS.indiaGst.catalogManage))
 const { options: stateOptions } = useIndiaGstStates()
 const {
   getSettings,
@@ -210,6 +217,7 @@ async function saveSac(catalogItemId: string) {
                 {{ t('indiaGst.settings.missingSacCount', { count: missingSac.length }) }}
               </p>
               <UButton
+                v-if="canManageCatalog"
                 size="xs"
                 variant="soft"
                 icon="i-lucide-wand-2"
@@ -233,8 +241,10 @@ async function saveSac(catalogItemId: string) {
                 size="xs"
                 class="w-28"
                 placeholder="999312"
+                :disabled="!canManageCatalog"
               />
               <UButton
+                v-if="canManageCatalog"
                 size="xs"
                 variant="soft"
                 @click="saveSac(item.catalog_item_id)"
@@ -310,6 +320,7 @@ async function saveSac(catalogItemId: string) {
       </UCard>
 
       <UButton
+        v-if="canManage"
         block
         color="primary"
         :loading="isSaving"

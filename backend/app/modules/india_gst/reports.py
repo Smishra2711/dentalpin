@@ -17,7 +17,7 @@ from datetime import date
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -41,15 +41,7 @@ CSV_HEADERS = [
 ]
 
 
-def _parse_date(value: str | None) -> date | None:
-    if not value:
-        return None
-    return date.fromisoformat(value)
-
-
-async def _fetch_invoices(
-    db: AsyncSession, clinic_id: UUID, *, date_from: str | None, date_to: str | None
-) -> list:
+def _invoice_conditions(clinic_id: UUID, date_from: date | None, date_to: date | None) -> list:
     from app.modules.billing.models import Invoice
 
     conditions = [
@@ -57,19 +49,47 @@ async def _fetch_invoices(
         Invoice.deleted_at.is_(None),
         Invoice.status.in_(REPORTABLE_STATUSES),
     ]
-    from_d, to_d = _parse_date(date_from), _parse_date(date_to)
-    if from_d:
-        conditions.append(Invoice.issue_date >= from_d)
-    if to_d:
-        conditions.append(Invoice.issue_date <= to_d)
+    if date_from:
+        conditions.append(Invoice.issue_date >= date_from)
+    if date_to:
+        conditions.append(Invoice.issue_date <= date_to)
+    return conditions
 
-    result = await db.execute(
+
+async def _fetch_invoices(
+    db: AsyncSession,
+    clinic_id: UUID,
+    *,
+    date_from: date | None,
+    date_to: date | None,
+    page: int | None = None,
+    page_size: int | None = None,
+) -> list:
+    from app.modules.billing.models import Invoice
+
+    query = (
         select(Invoice)
-        .where(*conditions)
+        .where(*_invoice_conditions(clinic_id, date_from, date_to))
         .options(selectinload(Invoice.items))
         .order_by(Invoice.issue_date)
     )
+    if page is not None and page_size is not None:
+        query = query.offset((page - 1) * page_size).limit(page_size)
+    result = await db.execute(query)
     return list(result.scalars().unique().all())
+
+
+async def _count_invoices(
+    db: AsyncSession, clinic_id: UUID, *, date_from: date | None, date_to: date | None
+) -> int:
+    from app.modules.billing.models import Invoice
+
+    result = await db.execute(
+        select(func.count())
+        .select_from(Invoice)
+        .where(*_invoice_conditions(clinic_id, date_from, date_to))
+    )
+    return result.scalar() or 0
 
 
 async def _gst_rows_for_items(
@@ -87,9 +107,17 @@ async def _gst_rows_for_items(
 
 
 async def _transaction_rows(
-    db: AsyncSession, clinic_id: UUID, *, date_from: str | None, date_to: str | None
+    db: AsyncSession,
+    clinic_id: UUID,
+    *,
+    date_from: date | None,
+    date_to: date | None,
+    page: int | None = None,
+    page_size: int | None = None,
 ) -> list[GstReportTransactionRow]:
-    invoices = await _fetch_invoices(db, clinic_id, date_from=date_from, date_to=date_to)
+    invoices = await _fetch_invoices(
+        db, clinic_id, date_from=date_from, date_to=date_to, page=page, page_size=page_size
+    )
     all_item_ids = [item.id for inv in invoices for item in inv.items]
     gst_by_item = await _gst_rows_for_items(db, clinic_id, all_item_ids)
 
@@ -124,7 +152,7 @@ async def _transaction_rows(
 
 
 async def build_summary(
-    db: AsyncSession, clinic_id: UUID, *, date_from: str | None, date_to: str | None
+    db: AsyncSession, clinic_id: UUID, *, date_from: date | None, date_to: date | None
 ) -> GstReportSummaryResponse:
     rows = await _transaction_rows(db, clinic_id, date_from=date_from, date_to=date_to)
 
@@ -168,35 +196,50 @@ async def list_transactions(
     db: AsyncSession,
     clinic_id: UUID,
     *,
-    date_from: str | None,
-    date_to: str | None,
+    date_from: date | None,
+    date_to: date | None,
     page: int,
     page_size: int,
-) -> list[GstReportTransactionRow]:
-    rows = await _transaction_rows(db, clinic_id, date_from=date_from, date_to=date_to)
-    start = (page - 1) * page_size
-    return rows[start : start + page_size]
+) -> tuple[list[GstReportTransactionRow], int]:
+    """One row per invoice, paginated in SQL. Returns ``(rows, total)``."""
+    total = await _count_invoices(db, clinic_id, date_from=date_from, date_to=date_to)
+    rows = await _transaction_rows(
+        db, clinic_id, date_from=date_from, date_to=date_to, page=page, page_size=page_size
+    )
+    return rows, total
+
+
+def _csv_cell(value: str) -> str:
+    """Neutralize spreadsheet formula injection: Excel/Sheets execute
+    cells starting with = + - @ (or tab/CR). Values here include
+    user-entered GSTINs and document prefixes, so prefix a ``'``.
+    """
+    if value and value[0] in ("=", "+", "-", "@", "\t", "\r"):
+        return f"'{value}"
+    return value
 
 
 async def build_export_csv(
-    db: AsyncSession, clinic_id: UUID, *, date_from: str | None, date_to: str | None
+    db: AsyncSession, clinic_id: UUID, *, date_from: date | None, date_to: date | None
 ) -> bytes:
     rows = await _transaction_rows(db, clinic_id, date_from=date_from, date_to=date_to)
     buf = io.StringIO()
     writer = csv.writer(buf)
     writer.writerow(CSV_HEADERS)
     for r in rows:
+        # _csv_cell only on free-text columns — numeric columns start
+        # with a legitimate "-" for credit notes.
         writer.writerow(
             [
                 r.issue_date or "",
-                r.gst_document_number or "",
-                r.recipient_gstin or "",
-                r.place_of_supply or "",
+                _csv_cell(r.gst_document_number or ""),
+                _csv_cell(r.recipient_gstin or ""),
+                _csv_cell(r.place_of_supply or ""),
                 f"{r.taxable_value:.2f}",
                 f"{r.cgst:.2f}",
                 f"{r.sgst:.2f}",
                 f"{r.igst:.2f}",
-                r.status,
+                _csv_cell(r.status),
                 "yes" if r.is_credit_note else "no",
             ]
         )

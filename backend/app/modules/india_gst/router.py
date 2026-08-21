@@ -6,6 +6,7 @@ Mounted at ``/api/v1/india_gst/`` by the module loader.
 from __future__ import annotations
 
 import dataclasses
+from datetime import date
 from typing import Annotated
 from uuid import UUID
 
@@ -15,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.auth.dependencies import ClinicContext, get_clinic_context, require_permission
-from app.core.schemas import ApiResponse
+from app.core.schemas import ApiResponse, PaginatedApiResponse
 from app.database import get_db
 
 from .constants import DEFAULT_DENTAL_SAC_CODE, is_valid_gstin, state_name
@@ -236,8 +237,10 @@ async def update_invoice_gst_fields(
     if invoice is None:
         raise HTTPException(status_code=404, detail="Invoice not found")
     if invoice.status != "draft":
+        # 409 conflict per repo convention — the request is authorized,
+        # the invoice's state just no longer allows it.
         raise HTTPException(
-            status_code=403, detail="GST fields can only be edited on draft invoices."
+            status_code=409, detail="GST fields can only be edited on draft invoices."
         )
 
     if body.place_of_supply is not None:
@@ -342,8 +345,8 @@ async def report_summary(
     ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
     _: Annotated[None, Depends(require_permission("india_gst.reports.read"))],
     db: Annotated[AsyncSession, Depends(get_db)],
-    date_from: str | None = Query(default=None),
-    date_to: str | None = Query(default=None),
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
 ) -> ApiResponse[GstReportSummaryResponse]:
     from .reports import build_summary
 
@@ -351,22 +354,22 @@ async def report_summary(
     return ApiResponse(data=summary)
 
 
-@router.get("/reports/transactions", response_model=ApiResponse[list[GstReportTransactionRow]])
+@router.get("/reports/transactions", response_model=PaginatedApiResponse[GstReportTransactionRow])
 async def report_transactions(
     ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
     _: Annotated[None, Depends(require_permission("india_gst.reports.read"))],
     db: Annotated[AsyncSession, Depends(get_db)],
-    date_from: str | None = Query(default=None),
-    date_to: str | None = Query(default=None),
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
-) -> ApiResponse[list[GstReportTransactionRow]]:
+) -> PaginatedApiResponse[GstReportTransactionRow]:
     from .reports import list_transactions
 
-    rows = await list_transactions(
+    rows, total = await list_transactions(
         db, ctx.clinic_id, date_from=date_from, date_to=date_to, page=page, page_size=page_size
     )
-    return ApiResponse(data=rows)
+    return PaginatedApiResponse(data=rows, total=total, page=page, page_size=page_size)
 
 
 @router.get("/reports/export")
@@ -374,8 +377,8 @@ async def report_export(
     ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
     _: Annotated[None, Depends(require_permission("india_gst.reports.read"))],
     db: Annotated[AsyncSession, Depends(get_db)],
-    date_from: str | None = Query(default=None),
-    date_to: str | None = Query(default=None),
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
 ):
     from fastapi.responses import StreamingResponse
 

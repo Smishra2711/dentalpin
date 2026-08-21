@@ -29,7 +29,7 @@ class IndiaGstModule(BaseModule):
         "name": "india_gst",
         "version": "0.1.0",
         "summary": "CGST/SGST/IGST GST billing compliance for Indian clinics.",
-        "author": "DentalPin Core Team",
+        "author": "tresundios",
         "license": "BSL-1.1",
         "category": "official",
         "depends": ["billing", "catalog"],

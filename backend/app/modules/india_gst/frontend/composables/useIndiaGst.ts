@@ -1,3 +1,5 @@
+import type { ApiResponse } from '~~/app/types'
+
 interface GstLineBreakdown {
   invoice_item_id: string | null
   sac_code: string | null
@@ -44,8 +46,6 @@ export interface IndiaGstMissingSacItem {
   name: string | null
   internal_code: string | null
 }
-
-interface ApiResponse<T> { data: T }
 
 export function useIndiaGst() {
   const api = useApi()

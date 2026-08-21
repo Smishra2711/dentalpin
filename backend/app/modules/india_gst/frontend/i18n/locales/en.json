@@ -50,7 +50,7 @@
       "selectPlaceOfSupplyHint": "Select a place of supply to calculate GST",
       "sacCodes": "SAC codes",
       "sacCode": "SAC code",
-      "sacOverrideHint": "SAC codes come from your treatment catalog. Change one only if your accountant advises it — the change is recorded.",
+      "sacOverrideHint": "SAC codes come from your treatment catalog. Change one only if your accountant advises it.",
       "save": "Save GST details",
       "saved": "GST details saved",
       "saveError": "Could not save GST details"

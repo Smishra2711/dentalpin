@@ -40,6 +40,7 @@ if TYPE_CHECKING:
     from app.modules.billing.models import Invoice, InvoiceItem
     from app.modules.catalog.models import TreatmentCatalogItem
 
+
 class IndiaGstSettings(Base, TimestampMixin):
     """Per-clinic India GST supplier profile. Exactly one row per clinic."""
 
@@ -162,9 +163,7 @@ class IndiaGstDocumentSequence(Base, TimestampMixin):
     last_number: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     __table_args__ = (
-        UniqueConstraint(
-            "clinic_id", "prefix", "fy_label", name="uq_india_gst_document_sequences"
-        ),
+        UniqueConstraint("clinic_id", "prefix", "fy_label", name="uq_india_gst_document_sequences"),
     )
 
 
