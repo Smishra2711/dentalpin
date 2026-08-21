@@ -26,8 +26,10 @@ class CreateContactArgs(BaseModel):
 
 
 def _contact_summary(contact) -> dict:
+    # Native values on purpose — ``jsonify`` at the registry chokepoint
+    # coerces UUID/datetime; see docs/technical/copilot-agentic-architecture.md §3.
     return {
-        "id": str(contact.id),
+        "id": contact.id,
         "name": contact.name,
         "contact_type": contact.contact_type,
         "phone": contact.phone,

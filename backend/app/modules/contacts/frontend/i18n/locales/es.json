@@ -3,6 +3,8 @@
     "title": "Contactos",
     "add": "Añadir contacto",
     "edit": "Editar contacto",
+    "delete": "Eliminar contacto",
+    "deleteConfirm": "¿Desactivar \"{name}\"? Desaparecerá del directorio pero seguirá vinculado a los registros históricos.",
     "name": "Nombre",
     "type": "Tipo",
     "phone": "Teléfono",
@@ -11,6 +13,7 @@
     "notes": "Notas",
     "search": "Buscar contactos",
     "filterByType": "Filtrar por tipo",
+    "allTypes": "Todos los tipos",
     "types": {
       "lab": "Laboratorio",
       "supplier": "Proveedor",

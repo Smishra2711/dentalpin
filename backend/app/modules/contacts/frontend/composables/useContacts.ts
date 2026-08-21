@@ -54,8 +54,8 @@ export function useContacts() {
     return await api.patch<ApiOk<Contact>>(`/api/v1/contacts/${id}`, payload)
   }
 
-  async function remove(id: string): Promise<ApiOk<null>> {
-    return await api.del<ApiOk<null>>(`/api/v1/contacts/${id}`)
+  async function remove(id: string): Promise<void> {
+    await api.del<null>(`/api/v1/contacts/${id}`)
   }
 
   return { list, create, update, remove }

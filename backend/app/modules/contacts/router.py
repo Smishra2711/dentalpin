@@ -3,7 +3,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth.dependencies import ClinicContext, get_clinic_context, require_permission
@@ -49,7 +49,7 @@ async def get_contact(
     return ApiResponse(data=ContactResponse.model_validate(contact))
 
 
-@router.post("/", response_model=ApiResponse[ContactResponse])
+@router.post("/", response_model=ApiResponse[ContactResponse], status_code=status.HTTP_201_CREATED)
 async def create_contact(
     ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
     _: Annotated[None, Depends(require_permission("contacts.write"))],
@@ -72,12 +72,11 @@ async def update_contact(
     return ApiResponse(data=ContactResponse.model_validate(contact))
 
 
-@router.delete("/{contact_id}", response_model=ApiResponse[None])
+@router.delete("/{contact_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_contact(
     ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
     _: Annotated[None, Depends(require_permission("contacts.write"))],
     db: Annotated[AsyncSession, Depends(get_db)],
     contact_id: UUID,
-) -> ApiResponse[None]:
+) -> None:
     await ContactService.delete_contact(db, ctx.clinic_id, contact_id)
-    return ApiResponse(data=None)

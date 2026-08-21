@@ -1,15 +1,12 @@
 <script setup lang="ts">
 import { PERMISSIONS } from '~~/app/config/permissions'
 import { useContacts, type Contact, type ContactType } from '../../composables/useContacts'
-import { useSuppliers } from '../../../../suppliers/frontend/composables/useSuppliers'
-import SupplierPerformanceModal from '../../../../supplier_ratings/frontend/components/SupplierPerformanceModal.vue'
 
 definePageMeta({ middleware: ['auth'] })
 
 const { t } = useI18n()
 const { can } = usePermissions()
 const contactsApi = useContacts()
-const suppliersApi = useSuppliers()
 
 if (!can(PERMISSIONS.contacts.read)) {
   await navigateTo('/')
@@ -18,20 +15,29 @@ if (!can(PERMISSIONS.contacts.read)) {
 const canWrite = computed(() => can(PERMISSIONS.contacts.write))
 
 const TYPES: ContactType[] = ['lab', 'supplier', 'delegate', 'other']
-const typeOptions = computed(() =>
+const ALL_TYPES = 'all' as const
+const typeOptions = computed(() => [
+  { value: ALL_TYPES, label: t('contacts.allTypes') },
+  ...TYPES.map(ty => ({ value: ty, label: t(`contacts.types.${ty}`) }))
+])
+const formTypeOptions = computed(() =>
   TYPES.map(ty => ({ value: ty, label: t(`contacts.types.${ty}`) }))
 )
 
 const items = ref<Contact[]>([])
-const performanceContact = ref<Contact | null>(null)
 const loading = ref(false)
-const filterType = ref<ContactType | undefined>(undefined)
+const filterType = ref<ContactType | typeof ALL_TYPES>(ALL_TYPES)
 const search = ref('')
 
 async function load() {
   loading.value = true
   try {
-    const res = await contactsApi.list({ contact_type: filterType.value, search: search.value, page: 1, page_size: 100 })
+    const res = await contactsApi.list({
+      contact_type: filterType.value === ALL_TYPES ? undefined : filterType.value,
+      search: search.value,
+      page: 1,
+      page_size: 100
+    })
     items.value = res.data
   } finally {
     loading.value = false
@@ -54,34 +60,13 @@ const form = ref({
   notes: ''
 })
 
-// Supplier-only procurement fields (Phase 13 §5 — folded into this
-// same modal instead of a separate suppliers page/nav entry).
-interface SupplierFormFields {
-  website: string
-  payment_terms: string
-  lead_time_days: number | null
-  is_preferred: boolean
-}
-const supplierForm = ref<SupplierFormFields>({
-  website: '',
-  payment_terms: '',
-  lead_time_days: null,
-  is_preferred: false
-})
-const isSupplier = computed(() => form.value.contact_type === 'supplier')
-
-function resetSupplierForm() {
-  supplierForm.value = { website: '', payment_terms: '', lead_time_days: null, is_preferred: false }
-}
-
 function openCreate() {
   editingId.value = null
   form.value = { name: '', contact_type: 'lab', phone: '', email: '', address: '', notes: '' }
-  resetSupplierForm()
   showModal.value = true
 }
 
-async function openEdit(contact: Contact) {
+function openEdit(contact: Contact) {
   editingId.value = contact.id
   form.value = {
     name: contact.name,
@@ -91,22 +76,6 @@ async function openEdit(contact: Contact) {
     address: contact.address ?? '',
     notes: contact.notes ?? ''
   }
-  resetSupplierForm()
-
-  if (contact.contact_type === 'supplier') {
-    try {
-      const res = await suppliersApi.getSupplier(contact.id)
-      supplierForm.value = {
-        website: res.data.website ?? '',
-        payment_terms: res.data.payment_terms ?? '',
-        lead_time_days: res.data.lead_time_days ?? null,
-        is_preferred: res.data.is_preferred
-      }
-    } catch {
-      // No profile row yet for this supplier — keep the reset defaults.
-    }
-  }
-
   showModal.value = true
 }
 
@@ -122,21 +91,10 @@ async function submit() {
       notes: form.value.notes || null
     }
 
-    let contactId = editingId.value
-    if (contactId) {
-      await contactsApi.update(contactId, payload)
+    if (editingId.value) {
+      await contactsApi.update(editingId.value, payload)
     } else {
-      const created = await contactsApi.create(payload)
-      contactId = created.data.id
-    }
-
-    if (form.value.contact_type === 'supplier' && contactId) {
-      await suppliersApi.upsertProfile(contactId, {
-        website: supplierForm.value.website || null,
-        payment_terms: supplierForm.value.payment_terms || null,
-        lead_time_days: supplierForm.value.lead_time_days ?? null,
-        is_preferred: supplierForm.value.is_preferred
-      })
+      await contactsApi.create(payload)
     }
 
     showModal.value = false
@@ -146,9 +104,27 @@ async function submit() {
   }
 }
 
-async function remove(id: string) {
-  await contactsApi.remove(id)
-  await load()
+// --- Delete confirmation ---
+const showDeleteConfirm = ref(false)
+const contactToDelete = ref<Contact | null>(null)
+const deleting = ref(false)
+
+function confirmDelete(contact: Contact) {
+  contactToDelete.value = contact
+  showDeleteConfirm.value = true
+}
+
+async function handleDelete() {
+  if (!contactToDelete.value) return
+  deleting.value = true
+  try {
+    await contactsApi.remove(contactToDelete.value.id)
+    showDeleteConfirm.value = false
+    contactToDelete.value = null
+    await load()
+  } finally {
+    deleting.value = false
+  }
 }
 
 const columns = [
@@ -209,39 +185,26 @@ const columns = [
         </span>
       </template>
       <template #actions-cell="{ row }">
-        <div class="flex gap-1">
+        <div
+          v-if="canWrite"
+          class="flex gap-1"
+        >
           <UButton
-            v-if="row.original.contact_type === 'supplier'"
-            icon="i-lucide-bar-chart-3"
+            icon="i-lucide-pencil"
             variant="ghost"
             size="xs"
-            @click="performanceContact = row.original"
+            @click="openEdit(row.original)"
           />
-          <template v-if="canWrite">
-            <UButton
-              icon="i-lucide-pencil"
-              variant="ghost"
-              size="xs"
-              @click="openEdit(row.original)"
-            />
-            <UButton
-              icon="i-lucide-trash-2"
-              variant="ghost"
-              color="error"
-              size="xs"
-              @click="remove(row.original.id)"
-            />
-          </template>
+          <UButton
+            icon="i-lucide-trash-2"
+            variant="ghost"
+            color="error"
+            size="xs"
+            @click="confirmDelete(row.original)"
+          />
         </div>
       </template>
     </UTable>
-
-    <SupplierPerformanceModal
-      v-if="performanceContact"
-      :contact-id="performanceContact.id"
-      :supplier-name="performanceContact.name"
-      @close="performanceContact = null"
-    />
 
     <UModal v-model:open="showModal">
       <template #content>
@@ -255,7 +218,7 @@ const columns = [
           />
           <USelect
             v-model="form.contact_type"
-            :items="typeOptions"
+            :items="formTypeOptions"
           />
           <UInput
             v-model="form.phone"
@@ -275,32 +238,6 @@ const columns = [
             :placeholder="t('contacts.notes')"
           />
 
-          <template v-if="isSupplier">
-            <div class="pt-2 border-t border-default space-y-2">
-              <div class="text-caption font-medium text-subtle">
-                {{ t('contacts.supplier.sectionTitle') }}
-              </div>
-              <UInput
-                v-model="supplierForm.website"
-                :placeholder="t('contacts.supplier.website')"
-              />
-              <UInput
-                v-model="supplierForm.payment_terms"
-                :placeholder="t('contacts.supplier.paymentTerms')"
-              />
-              <UInput
-                v-model.number="supplierForm.lead_time_days"
-                type="number"
-                step="1"
-                :placeholder="t('contacts.supplier.leadTimeDays')"
-              />
-              <UCheckbox
-                v-model="supplierForm.is_preferred"
-                :label="t('contacts.supplier.preferred')"
-              />
-            </div>
-          </template>
-
           <div class="flex justify-end gap-2">
             <UButton
               variant="ghost"
@@ -310,9 +247,38 @@ const columns = [
             </UButton>
             <UButton
               :loading="saving"
+              :disabled="!form.name.trim()"
               @click="submit"
             >
               {{ t('actions.save') }}
+            </UButton>
+          </div>
+        </div>
+      </template>
+    </UModal>
+
+    <UModal v-model:open="showDeleteConfirm">
+      <template #content>
+        <div class="p-4 space-y-4">
+          <h2 class="text-h3 text-default">
+            {{ t('contacts.delete') }}
+          </h2>
+          <p class="text-caption text-subtle">
+            {{ t('contacts.deleteConfirm', { name: contactToDelete?.name ?? '' }) }}
+          </p>
+          <div class="flex justify-end gap-2">
+            <UButton
+              variant="ghost"
+              @click="showDeleteConfirm = false"
+            >
+              {{ t('actions.cancel') }}
+            </UButton>
+            <UButton
+              color="error"
+              :loading="deleting"
+              @click="handleDelete"
+            >
+              {{ t('common.delete') }}
             </UButton>
           </div>
         </div>

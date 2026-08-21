@@ -25,7 +25,7 @@ class ContactsModule(BaseModule):
         "category": "community",
         "depends": [],
         "installable": True,
-        "auto_install": True,
+        "auto_install": False,
         "removable": True,
         "role_permissions": {
             "admin": ["*"],

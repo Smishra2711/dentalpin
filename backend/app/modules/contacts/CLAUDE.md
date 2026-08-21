@@ -1,9 +1,8 @@
 # Contacts module
 
-Directory of external labs, suppliers, and other providers. Custom clinic
-module — standalone, no dependency on any other module. Foundation for
-the lab-work-order module (`lab_orders`): an order links to a contact
-created here.
+Directory of external labs, suppliers, and other providers. Standalone,
+no dependency on any other module. Foundation for a future lab-work-order
+module (`lab_orders`): an order links to a contact created here.
 
 ## Public API
 
@@ -11,9 +10,9 @@ Routes mounted at `/api/v1/contacts/`.
 
 - `GET    /contacts`          — list, filterable by type/name search; `contacts.read`
 - `GET    /contacts/{id}`     — single contact; `contacts.read`
-- `POST   /contacts`          — create; `contacts.write`
+- `POST   /contacts`          — create (201); `contacts.write`
 - `PATCH  /contacts/{id}`     — edit; `contacts.write`
-- `DELETE /contacts/{id}`     — soft-delete (sets `is_active=false`); `contacts.write`
+- `DELETE /contacts/{id}`     — soft-delete (sets `is_active=false`, returns 204); `contacts.write`
 
 Deletion is soft (not a real database delete) so that once lab_orders
 history exists, an old order can still show which lab it went to, even
@@ -43,7 +42,8 @@ None.
 
 ## Lifecycle
 
-- `installable=True`, `auto_install=True`, `removable=True`.
+- `installable=True`, `auto_install=False` (optional modules are
+  activated manually from the admin UI), `removable=True`.
 - Migrations on the `contacts` Alembic branch, chained directly off the
   core `0001` migration (no cross-module foreign keys).
 

@@ -3,6 +3,8 @@
     "title": "Contacts",
     "add": "Add contact",
     "edit": "Edit contact",
+    "delete": "Delete contact",
+    "deleteConfirm": "Deactivate \"{name}\"? It will disappear from the directory but stays linked to any historical records.",
     "name": "Name",
     "type": "Type",
     "phone": "Phone",
@@ -11,6 +13,7 @@
     "notes": "Notes",
     "search": "Search contacts",
     "filterByType": "Filter by type",
+    "allTypes": "All types",
     "types": {
       "lab": "Lab",
       "supplier": "Supplier",
