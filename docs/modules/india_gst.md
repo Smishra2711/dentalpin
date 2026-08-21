@@ -83,10 +83,8 @@ the `verifactu` (Spain/AEAT) module's architecture.
   `india_gst_einvoice_submissions`) plus reads from `clinics`,
   `invoices`, and `invoice_items`.
 
-**Cross-module imports (tracked tech debt):**
-- `india_gst/seed.py` imports `budget` and `patients` for demo data
-  seeding (same pattern as `patient_timeline/seed.py`). These are
-  listed in `KNOWN_VIOLATIONS` in `tests/test_module_isolation.py`.
+**Cross-module imports:** none outside `manifest.depends`
+(`billing`, `catalog`). The module has no `KNOWN_VIOLATIONS` entries.
 
 ---
 
@@ -106,7 +104,7 @@ docker compose exec backend alembic upgrade heads
 
 This applies the migration on the `india_gst` Alembic branch:
 - `igst_0001_initial` — settings, catalog items, invoice items,
-  e-invoice submissions.
+  FY document sequences, e-invoice submissions.
 
 ### 3.3 Install from the admin UI
 
@@ -116,10 +114,10 @@ This applies the migration on the `india_gst` Alembic branch:
 4. The installer:
    - Confirms migrations are at head.
    - Registers `IndiaGstHook` for country `IN`.
-   - Backfills GST demo data for any existing Indian clinic
-     (`country=IN` in settings) — seeds SAC defaults and GST invoice
-     data without needing a re-seed.
    - Promotes the record to `state=installed`.
+   Install never touches clinic data — configuration happens in the
+   settings page (the auto-configure action creates SAC defaults and
+   the `GST 18%` VAT type idempotently).
 5. The india_gst settings page appears at `/settings/india-gst`.
 
 In dev, Nuxt watches `frontend/modules.json` and restarts itself when
@@ -164,7 +162,6 @@ must complete these steps:
      (scaffolding only in v1).
    - **Show GSTIN on invoice** / **Show SAC on invoice** — display
      preferences for the PDF.
-   - **Rounding rule** — `nearest_rupee` or `none`.
 3. Click **Save**.
 
 ### Step 3 — Configure SAC code defaults
@@ -242,9 +239,11 @@ already-computed `line_tax` (from billing's standard VAT calculation)
 and splits it:
 
 - **Intra-state** (`clinic_state == place_of_supply`):
-  - CGST = `line_tax / 2` (quantized to 2 decimals)
-  - SGST = `line_tax - CGST` (remainder absorption — not a second
-    independent halving, so the pair always reconciles exactly)
+  - CGST = SGST = `line_tax / 2`, each rounded HALF_UP per head —
+    the two heads are levied at the same rate on the same value and
+    must be equal (GSTR-1 reconciliation rejects asymmetric heads).
+    On odd-paise lines the pair may differ from `line_tax` by ±0.01
+    (expected head-wise rounding).
   - CGST rate = SGST rate = `vat_rate / 2`
 - **Inter-state** (`clinic_state != place_of_supply`):
   - IGST = `line_tax` (full amount)
@@ -263,11 +262,20 @@ blocks invoice issuance with a validation error.
 
 ### Financial year document numbering
 
-`compute_fy_document_number` formats `{prefix}/FY{yy}-{yy+1}/{seq}`,
-where India's financial year runs April through March:
+GST document numbers are `{prefix}/FY{yy}-{yy+1}/{seq}`, where India's
+financial year runs April through March:
 
 - An invoice dated March 2026 → `FY25-26`
 - An invoice dated April 2026 → `FY26-27`
+
+The serial comes from the module's own `india_gst_document_sequences`
+counter — one row per `(clinic, prefix, FY)`, incremented under
+`SELECT … FOR UPDATE`, unique-constrained, restarting at 1 each April.
+It deliberately does **not** reuse billing's `sequential_number`, which
+resets on the calendar year and would repeat numbers within one FY
+between January and March (GST Rule 46(b) requires the serial to be
+unique within the FY). Idempotent re-issue keeps the number already in
+the snapshot.
 
 ### Registration types
 
@@ -293,8 +301,11 @@ with:
   - CGST / SGST / IGST totals
 - **E-invoice status** badge (when applicable)
 
-The PDF template in `billing/pdf.py` renders `compliance_section_html`
-after the payment-info block and before legal notices.
+The hook hands billing a structured `compliance_section` dict
+(`title`, `rows` of `{label, value, amount?}`, optional `hint`);
+`billing/pdf.py` renders **and escapes** it after the payment-info
+block and before legal notices — hooks never pass HTML across the
+module boundary.
 
 ### Tamil language support
 
@@ -306,19 +317,15 @@ in `pdf.py::_get_labels` and the CSS font-family includes
 
 ## 8. E-invoice scaffolding
 
-E-invoice integration is **scaffolding only in v1**:
+E-invoice in v1 only tracks **applicability** per invoice:
 
-- Full data model (`IndiaGstEinvoiceSubmission`) with all UI states.
-- No live GSP/IRP provider is wired in (`services/einvoice_provider.py`).
+- `IndiaGstEinvoiceSubmission` holds one row per invoice with
+  `state` (`not_required` below the turnover threshold,
+  `not_configured` above it) and `provider_error_message`.
 - The retry endpoint always returns `409` — never a fabricated success.
-- State only reaches `not_required` / `not_configured` through the real
-  hook-driven path. Other states (`pending`, `generated`, `rejected`,
-  `error`) exist so the UI/schema are complete once a provider adapter
-  ships, exercised only by seeded test rows.
-
-To integrate a real provider, implement the provider adapter in
-`services/einvoice_provider.py` and wire the submission queue in
-`services/submission_queue.py`.
+- There is no provider adapter, submission queue, or IRN storage —
+  those arrive together with a real GSP/IRP integration, which will
+  add its own columns and provider config then.
 
 ---
 
@@ -334,12 +341,8 @@ To integrate a real provider, implement the provider adapter in
 | `registration_type` | str(20) | `regular` / `composition` / `unregistered` / `exempt` |
 | `clinic_state` | str(2) | 2-digit state code (CBIC) |
 | `turnover_threshold` | Numeric(14,2) | E-invoice applicability threshold |
-| `einvoice_provider_config` | JSONB | Provider config (scaffolding) |
 | `show_gstin_on_invoice` | bool | Display preference |
 | `show_sac_on_invoice` | bool | Display preference |
-| `rounding_rule` | str(20) | `nearest_rupee` or `none` |
-| `logo_image` | LargeBinary | Clinic logo for GST invoices |
-| `logo_mime_type` | str(50) | Logo MIME type |
 
 ### `india_gst_catalog_items` — SAC defaults per treatment
 
@@ -348,7 +351,6 @@ To integrate a real provider, implement the provider adapter in
 | `clinic_id` | UUID | Owner |
 | `catalog_item_id` | UUID, unique | FK to `treatment_catalog_items` |
 | `sac_code` | str(10) | Services Accounting Code |
-| `default_gst_rate_override` | Numeric(5,2) | Optional rate override |
 | `notes` | Text | Free text notes |
 
 ### `india_gst_invoice_items` — CGST/SGST/IGST split per invoice line
@@ -362,8 +364,15 @@ To integrate a real provider, implement the provider adapter in
 | `cgst_rate` / `cgst_amount` | Numeric | CGST split |
 | `sgst_rate` / `sgst_amount` | Numeric | SGST split |
 | `igst_rate` / `igst_amount` | Numeric | IGST split |
-| `sac_overridden` | bool | Whether SAC was manually set |
-| `override_note` | Text | Reason for override |
+
+### `india_gst_document_sequences` — FY serial counter
+
+| Column | Type | Purpose |
+|--------|------|---------|
+| `clinic_id` | UUID | Owner |
+| `prefix` | str(20) | Series prefix (e.g. `GST`, `CN`) |
+| `fy_label` | str(8) | e.g. `FY26-27`; unique with clinic+prefix |
+| `last_number` | int | Last allocated serial |
 
 ### `india_gst_einvoice_submissions` — e-invoice state per invoice
 
@@ -371,13 +380,8 @@ To integrate a real provider, implement the provider adapter in
 |--------|------|---------|
 | `clinic_id` | UUID | Owner |
 | `invoice_id` | UUID, unique | FK to `invoices` |
-| `state` | str(20) | `not_required` / `not_configured` / `pending` / `generated` / `rejected` / `error` |
-| `irn` | str(100) | Invoice Reference Number (when generated) |
-| `ack_number` | str(50) | AEAT acknowledgment |
-| `ack_date` | timestamptz | Acknowledgment timestamp |
-| `signed_qr_payload` | Text | Signed QR code data |
+| `state` | str(20) | `not_required` / `not_configured` (v1 never advances further) |
 | `provider_error_message` | Text | Error details |
-| `submission_attempt` | int | Retry counter |
 
 ---
 
@@ -417,13 +421,19 @@ reports.read
 
 Default role grants:
 - `admin` → `*` (all)
-- `dentist` → `reports.read`
-- `hygienist`, `assistant` → none
-- `receptionist` → `reports.read`
+- `dentist` → `reports.read`, `settings.read`
+- `hygienist`, `assistant` → `settings.read`
+- `receptionist` → `reports.read`, `settings.read`
+
+`settings.read` goes to every clinical role because the invoice
+form/detail panels call tax-preview and e-invoice status mid-invoicing.
 
 Editing GST fields on a *draft* invoice reuses billing's own
-`billing.write` permission (billing-owned data), matching verifactu's
-precedent of not gating invoice fields behind its own permission.
+`billing.write` permission: the operation IS invoice editing, so
+whoever billing lets edit invoices can set place of supply / SAC —
+gating it behind an india_gst permission would drift out of sync with
+billing's role grants (cross-module gating precedent: agenda →
+clinical_notes).
 
 ---
 

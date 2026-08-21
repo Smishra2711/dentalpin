@@ -13,7 +13,7 @@ related_permissions:
   - india_gst.catalog.manage
 related_paths:
   - backend/app/modules/india_gst/frontend/pages/settings/india-gst/index.vue
-last_verified_commit: 0000000
+last_verified_commit: d158c2f
 ---
 
 # /settings/india-gst
