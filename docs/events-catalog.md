@@ -89,7 +89,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 | `periodontogram.snapshot.closed` | `EventType.PERIODONTOGRAM_SNAPSHOT_CLOSED` | `periodontogram` | — |
 | `recall.cancelled` | `EventType.RECALL_CANCELLED` | `recalls` | — |
 | `recall.completed` | `EventType.RECALL_COMPLETED` | `recalls` | — |
-| `recall.created` | `EventType.RECALL_CREATED` | `recalls` | — |
+| `recall.created` | `EventType.RECALL_CREATED` | `recalls` | `recall_reminders` |
 | `recall.due` | `EventType.RECALL_DUE` | — | — |
 | `recall.snoozed` | `EventType.RECALL_SNOOZED` | `recalls` | — |
 | `tenant.resolved` | `EventType.TENANT_RESOLVED` | — | — |
@@ -719,7 +719,8 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Constant:** `EventType.RECALL_CREATED`
 - **Publishers:**
   - `recalls` — `backend/app/modules/recalls/service.py:298`
-- **Subscribers:** —
+- **Subscribers:**
+  - `recall_reminders`
 
 ### `recall.due`
 
