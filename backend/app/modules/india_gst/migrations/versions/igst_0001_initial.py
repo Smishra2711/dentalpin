@@ -136,6 +136,27 @@ def upgrade() -> None:
     )
 
     op.create_table(
+        "india_gst_document_sequences",
+        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("clinic_id", sa.UUID(), nullable=False),
+        sa.Column("prefix", sa.String(length=20), nullable=False),
+        sa.Column("fy_label", sa.String(length=8), nullable=False),
+        sa.Column("last_number", sa.Integer(), nullable=False, server_default=sa.text("0")),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+        sa.ForeignKeyConstraint(["clinic_id"], ["clinics.id"], ondelete="RESTRICT"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint(
+            "clinic_id", "prefix", "fy_label", name="uq_india_gst_document_sequences"
+        ),
+    )
+    op.create_index(
+        op.f("ix_india_gst_document_sequences_clinic_id"),
+        "india_gst_document_sequences",
+        ["clinic_id"],
+    )
+
+    op.create_table(
         "india_gst_einvoice_submissions",
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("clinic_id", sa.UUID(), nullable=False),
@@ -177,6 +198,12 @@ def downgrade() -> None:
         table_name="india_gst_einvoice_submissions",
     )
     op.drop_table("india_gst_einvoice_submissions")
+
+    op.drop_index(
+        op.f("ix_india_gst_document_sequences_clinic_id"),
+        table_name="india_gst_document_sequences",
+    )
+    op.drop_table("india_gst_document_sequences")
 
     op.drop_index(
         op.f("ix_india_gst_invoice_items_invoice_item_id"),

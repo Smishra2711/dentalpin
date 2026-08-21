@@ -128,18 +128,74 @@ def compute_gst_breakdown(
     )
 
 
-def compute_fy_document_number(prefix: str, sequential_number: int, issue_date) -> str:
-    """Format ``{prefix}/FY{yy}-{yy+1}/{seq}`` — India's financial year
-    runs April through March, so a March invoice and the following
-    April's invoice fall in different FYs even though they're one
-    month apart.
+def fy_label(issue_date) -> str:
+    """``FY{yy}-{yy+1}`` — India's financial year runs April through
+    March, so a March invoice and the following April's invoice fall in
+    different FYs even though they're one month apart.
     """
     year = issue_date.year
     if issue_date.month >= INDIA_FY_START_MONTH:
         fy_start, fy_end = year, year + 1
     else:
         fy_start, fy_end = year - 1, year
-    return f"{prefix}/FY{fy_start % 100:02d}-{fy_end % 100:02d}/{sequential_number:04d}"
+    return f"FY{fy_start % 100:02d}-{fy_end % 100:02d}"
+
+
+def compute_fy_document_number(prefix: str, sequential_number: int, issue_date) -> str:
+    """Format ``{prefix}/FY{yy}-{yy+1}/{seq}``."""
+    return f"{prefix}/{fy_label(issue_date)}/{sequential_number:04d}"
+
+
+async def allocate_fy_document_number(
+    db: AsyncSession, clinic_id: UUID, prefix: str, issue_date
+) -> str:
+    """Allocate the next GST document number for ``(clinic, prefix, FY)``.
+
+    GST Rule 46(b) requires a consecutive serial unique within the
+    financial year. Billing's ``sequential_number`` resets on the
+    *calendar* year, so reusing it repeats numbers inside one FY between
+    January and March — this module keeps its own FY-scoped counter.
+
+    Concurrency-safe: ``INSERT … ON CONFLICT DO NOTHING`` creates the
+    counter row on first use, then ``SELECT … FOR UPDATE`` serializes the
+    increment (same locking pattern as billing's
+    ``InvoiceService.generate_invoice_number``).
+    """
+    from datetime import UTC, datetime
+    from uuid import uuid4
+
+    from sqlalchemy.dialects.postgresql import insert as pg_insert
+
+    from .models import IndiaGstDocumentSequence
+
+    label = fy_label(issue_date)
+    now = datetime.now(UTC)
+    await db.execute(
+        pg_insert(IndiaGstDocumentSequence)
+        .values(
+            id=uuid4(),
+            clinic_id=clinic_id,
+            prefix=prefix,
+            fy_label=label,
+            last_number=0,
+            created_at=now,
+            updated_at=now,
+        )
+        .on_conflict_do_nothing(constraint="uq_india_gst_document_sequences")
+    )
+    seq_q = await db.execute(
+        select(IndiaGstDocumentSequence)
+        .where(
+            IndiaGstDocumentSequence.clinic_id == clinic_id,
+            IndiaGstDocumentSequence.prefix == prefix,
+            IndiaGstDocumentSequence.fy_label == label,
+        )
+        .with_for_update()
+    )
+    seq = seq_q.scalar_one()
+    seq.last_number += 1
+    await db.flush()
+    return compute_fy_document_number(prefix, seq.last_number, issue_date)
 
 
 async def get_or_create_settings(db: AsyncSession, clinic_id: UUID) -> IndiaGstSettings:

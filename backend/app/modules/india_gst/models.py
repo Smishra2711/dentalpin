@@ -163,6 +163,35 @@ class IndiaGstInvoiceItem(Base, TimestampMixin):
     __table_args__ = (Index("ix_india_gst_invoice_items_clinic", "clinic_id"),)
 
 
+class IndiaGstDocumentSequence(Base, TimestampMixin):
+    """Per-(clinic, prefix, financial-year) GST serial counter.
+
+    GST Rule 46(b) requires a consecutive serial number unique within the
+    financial year (April–March). Billing's ``InvoiceSeries`` counter
+    resets on the *calendar* year, so between January and March its
+    numbers repeat inside one FY — this table is the FY-scoped source of
+    truth instead. Rows are incremented under ``SELECT … FOR UPDATE``
+    (see :func:`service.allocate_fy_document_number`), and the unique
+    constraint makes duplicate GST document numbers impossible.
+    """
+
+    __tablename__ = "india_gst_document_sequences"
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    clinic_id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("clinics.id", ondelete="RESTRICT"), index=True
+    )
+    prefix: Mapped[str] = mapped_column(String(20), nullable=False)
+    fy_label: Mapped[str] = mapped_column(String(8), nullable=False)  # e.g. "FY26-27"
+    last_number: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "clinic_id", "prefix", "fy_label", name="uq_india_gst_document_sequences"
+        ),
+    )
+
+
 class IndiaGstEinvoiceSubmission(Base, TimestampMixin):
     """E-invoice scaffolding state for one invoice. One row per invoice.
 

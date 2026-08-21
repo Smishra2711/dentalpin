@@ -15,6 +15,7 @@ from app.core.plugins import BaseModule
 
 from .models import (
     IndiaGstCatalogItem,
+    IndiaGstDocumentSequence,
     IndiaGstEinvoiceSubmission,
     IndiaGstInvoiceItem,
     IndiaGstSettings,
@@ -77,6 +78,7 @@ class IndiaGstModule(BaseModule):
             IndiaGstSettings,
             IndiaGstCatalogItem,
             IndiaGstInvoiceItem,
+            IndiaGstDocumentSequence,
             IndiaGstEinvoiceSubmission,
         ]
 

@@ -39,7 +39,7 @@ from app.modules.billing.hooks import BillingComplianceHook
 
 from .constants import is_valid_gstin, state_name
 from .models import IndiaGstEinvoiceSubmission, IndiaGstInvoiceItem, IndiaGstSettings
-from .service import GstLineInput, compute_fy_document_number, compute_gst_breakdown
+from .service import GstLineInput, allocate_fy_document_number, compute_gst_breakdown
 from .services.severity import severity_for
 
 if TYPE_CHECKING:
@@ -402,9 +402,17 @@ class IndiaGstHook(BillingComplianceHook):
             row = series_prefix.first()
             if row and row[0]:
                 prefix = row[0]
-        gst_document_number = compute_fy_document_number(
-            prefix, invoice.sequential_number or 0, invoice.issue_date
-        )
+        # Idempotent re-issue: a snapshot that already carries a GST
+        # document number keeps it — only a first issue allocates one
+        # from the FY-scoped counter (never billing's sequential_number,
+        # which resets on the calendar year and would repeat within a
+        # financial year between January and March).
+        existing_cd = (invoice.compliance_data or {}).get("IN") or {}
+        gst_document_number = existing_cd.get("gst_document_number")
+        if not gst_document_number:
+            gst_document_number = await allocate_fy_document_number(
+                db, invoice.clinic_id, prefix, invoice.issue_date
+            )
 
         snapshot: dict[str, Any] = {
             "supplier": {
