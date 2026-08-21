@@ -9,8 +9,8 @@ by "0001" itself, always available). patients.id is NOT core, though
 -- patients lives on its own migration chain (pat_0001 -> pat_0002 ->
 pat_0003) with no branch_labels of its own, so it is easy to assume
 it's "part of core" the way clinics is. It isn't: depends_on is needed
-here for the same reason documents/doc_0001 needed it for the same FK
-(see that module's migration for the fuller explanation).
+so a fresh install orders patients' chain before this FK — same pattern
+as recalls/rec_0001 (depends_on for its patients/agenda FKs).
 
 Lives on its own Alembic branch (``patient_admin``) per ADR 0002.
 

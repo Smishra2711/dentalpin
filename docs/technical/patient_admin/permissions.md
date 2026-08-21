@@ -9,8 +9,8 @@ Namespaced by the registry from the module's `get_permissions()`.
 
 | Permission | Gates | Endpoints |
 |------------|-------|-----------|
-| `patient_admin.relationships.read` | View a patient's relationships | `GET /api/v1/patients/{patient_id}/relationships` |
-| `patient_admin.relationships.write` | Create, update, delete a relationship | `POST /relationships`, `PUT /relationships/{id}`, `DELETE /relationships/{id}` |
+| `patient_admin.relationships.read` | View a patient's relationships | `GET /api/v1/patient_admin/patients/{patient_id}/relationships` |
+| `patient_admin.relationships.write` | Create, update, delete a relationship | `POST /api/v1/patient_admin/patients/{patient_id}/relationships`, `PUT …/relationships/{id}`, `DELETE …/relationships/{id}` |
 
 Default role mapping:
 

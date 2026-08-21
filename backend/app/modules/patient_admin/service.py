@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.modules.patients.models import Patient
 
 from .models import PatientRelationship
-from .schemas import INVERSE_RELATIONSHIP_TYPE, RELATIONSHIP_TYPES
+from .schemas import INVERSE_RELATIONSHIP_TYPE
 
 
 class PatientAdminService:
@@ -39,13 +39,10 @@ class PatientAdminService:
         db: AsyncSession, clinic_id: UUID, patient_id: UUID, data: dict
     ) -> PatientRelationship:
         related_patient_id = data["related_patient_id"]
+        # relationship_type validity is enforced by the schema's Literal
+        # (422 on bad input), matching how the rest of the repo validates.
         relationship_type = data["relationship_type"]
 
-        if relationship_type not in RELATIONSHIP_TYPES:
-            raise HTTPException(
-                status_code=http_status.HTTP_400_BAD_REQUEST,
-                detail=f"relationship_type must be one of {sorted(RELATIONSHIP_TYPES)}",
-            )
         if related_patient_id == patient_id:
             raise HTTPException(
                 status_code=http_status.HTTP_400_BAD_REQUEST,
@@ -55,12 +52,13 @@ class PatientAdminService:
 
         # A pair can only be linked once, in either direction.
         existing_stmt = select(PatientRelationship.id).where(
+            PatientRelationship.clinic_id == clinic_id,
             or_(
                 (PatientRelationship.patient_id == patient_id)
                 & (PatientRelationship.related_patient_id == related_patient_id),
                 (PatientRelationship.patient_id == related_patient_id)
                 & (PatientRelationship.related_patient_id == patient_id),
-            )
+            ),
         )
         if (await db.execute(existing_stmt)).scalar_one_or_none() is not None:
             raise HTTPException(
@@ -126,7 +124,13 @@ class PatientAdminService:
             (r.related_patient_id if r.patient_id == patient_id else r.patient_id) for r in rows
         }
         others = (
-            (await db.execute(select(Patient).where(Patient.id.in_(other_ids)))).scalars().all()
+            (
+                await db.execute(
+                    select(Patient).where(Patient.id.in_(other_ids), Patient.clinic_id == clinic_id)
+                )
+            )
+            .scalars()
+            .all()
         )
         names = {p.id: p.full_name for p in others}
 

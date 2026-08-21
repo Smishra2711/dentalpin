@@ -1,11 +1,12 @@
 """Pydantic schemas for the patient_admin module."""
 
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
-RELATIONSHIP_TYPES = {"parent", "child", "spouse", "sibling", "guardian", "ward", "other"}
+RelationshipType = Literal["parent", "child", "spouse", "sibling", "guardian", "ward", "other"]
 
 # Inverse label shown on the *related* patient's page. Symmetric types map
 # to themselves; parent/child and guardian/ward are true inverses.
@@ -22,7 +23,7 @@ INVERSE_RELATIONSHIP_TYPE = {
 
 class PatientRelationshipCreate(BaseModel):
     related_patient_id: UUID
-    relationship_type: str
+    relationship_type: RelationshipType
     notes: str | None = None
 
 

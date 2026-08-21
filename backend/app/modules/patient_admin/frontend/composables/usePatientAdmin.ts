@@ -1,4 +1,4 @@
-interface ApiResponse<T> { data: T }
+import type { ApiResponse } from '~~/app/types'
 
 export interface PatientRelationship {
   id: string
@@ -53,10 +53,11 @@ export function usePatientAdmin(patientId: Ref<string | undefined>) {
         color: 'success'
       })
       return true
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const err = e as { data?: { detail?: string } }
       toast.add({
         title: t('common.error'),
-        description: e?.data?.detail || t('patientAdmin.relationships.addError'),
+        description: err?.data?.detail || t('patientAdmin.relationships.addError'),
         color: 'error'
       })
       console.error('Failed to add relationship:', e)

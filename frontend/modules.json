@@ -16,8 +16,7 @@
     "/module_layers/recalls/frontend",
     "/module_layers/notifications/frontend",
     "/module_layers/patient_timeline/frontend",
-    "/module_layers/reports/frontend",
-    "/module_layers/patient_admin/frontend"
+    "/module_layers/reports/frontend"
   ],
   "modules": [
     {
@@ -87,10 +86,6 @@
     {
       "name": "reports",
       "path": "/module_layers/reports/frontend"
-    },
-    {
-      "name": "patient_admin",
-      "path": "/module_layers/patient_admin/frontend"
     }
   ],
   "version": 1

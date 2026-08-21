@@ -39,7 +39,9 @@ have.
 
 ## Lifecycle
 
-- `installable=True`, `auto_install=True`, `removable=True`.
+- `installable=True`, `auto_install=False` (repo policy for optional
+  modules: the admin activates it from the module admin UI),
+  `removable=True`.
 - Own Alembic branch (`patient_admin`), rooted independently on core
   `"0001"` per ADR 0002 — `padm_0001` (initial schema) then `padm_0002`
   (drops the exemption-status table).

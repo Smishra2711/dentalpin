@@ -27,7 +27,9 @@ class PatientAdminModule(BaseModule):
         "category": "community",
         "depends": ["patients"],
         "installable": True,
-        "auto_install": True,
+        # Optional module: ships inactive, the admin activates it from the
+        # module admin UI (repo policy for new non-core modules).
+        "auto_install": False,
         "removable": True,
         "role_permissions": {
             "admin": ["*"],

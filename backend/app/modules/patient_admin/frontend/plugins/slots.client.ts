@@ -6,8 +6,9 @@ import { registerSlot } from '~~/app/composables/useModuleSlots'
  *
  * Contributes its own card into `patient.summary.cards` — the same
  * extension point `patients_clinical`'s MedicalHistoryCard uses — without
- * either module importing the other. order: 60 places it just after
- * MedicalHistoryCard (order: 50).
+ * either module importing the other. order: 55 places it just after
+ * MedicalHistoryCard (order: 50) and before patients' QuickActionsCard
+ * (order: 60, meant to render last — don't tie with it).
  */
 export default defineNuxtPlugin(() => {
   registerSlot('patient.summary.cards', {
@@ -15,7 +16,7 @@ export default defineNuxtPlugin(() => {
     component: defineAsyncComponent(
       () => import('../components/summary/PatientAdminCard.vue')
     ),
-    order: 60,
+    order: 55,
     permission: 'patient_admin.relationships.read'
   })
 })

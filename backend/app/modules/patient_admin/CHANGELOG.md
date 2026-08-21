@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+- `auto_install` flipped to `False`: optional modules ship inactive and
+  the admin activates them from the module admin UI (repo policy).
+- Added `clinic_id` to the two remaining unscoped queries: the
+  duplicate-pair check in `create_relationship` and the related-patient
+  name lookup in `list_relationships_for_patient`. Both were safe in
+  practice (inputs already validated against the clinic upstream) but
+  violated the "every query filters by clinic_id" rule.
+- `relationship_type` is now a `Literal` on the create schema (422 on
+  bad input, like the rest of the repo) instead of a manual 400 check
+  in the service.
+- Added the round-trip uninstall test required for `removable=True`
+  modules (`test_uninstall_roundtrip.py`, `alembic_roundtrip` marker).
+- Frontend: slot order 60 → 55 (60 tied with patients' QuickActionsCard,
+  which is meant to render last); `catch (e: any)` → `unknown` +
+  structural narrowing (repo lint rule); `ApiResponse` imported from
+  `~~/app/types` instead of a local re-declaration; added `pt` and `ta`
+  locales (all five UI locales, per the i18n checklist).
+- Docs: endpoint paths in `docs/technical/patient_admin/permissions.md`
+  now include the real `/api/v1/patient_admin` prefix the plugin loader
+  mounts the router under.
 - `get_relationship` now filters by `clinic_id` in addition to
   `relationship_id`, matching every other lookup in this module. Not
   previously exploitable (the router's own `patient_id` match check
@@ -14,7 +34,7 @@
   lives on the unlabeled/core chain, not inside `patient_admin`'s own
   branch, so this dependency needed to be explicit.
 - Added `CLAUDE.md` and this file.
-- Added a tenant-isolation test for `list_relationships`.
+- Added a tenant-isolation test for `get_relationship`.
 
 ## 0.2.0 (prior)
 
