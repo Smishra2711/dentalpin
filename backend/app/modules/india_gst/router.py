@@ -266,7 +266,8 @@ async def update_invoice_gst_fields(
 
             row_q = await db.execute(
                 select(IndiaGstInvoiceItem).where(
-                    IndiaGstInvoiceItem.invoice_item_id == invoice_item.id
+                    IndiaGstInvoiceItem.clinic_id == ctx.clinic_id,
+                    IndiaGstInvoiceItem.invoice_item_id == invoice_item.id,
                 )
             )
             row = row_q.scalar_one_or_none()
@@ -282,7 +283,8 @@ async def update_invoice_gst_fields(
 
                 default_q = await db.execute(
                     select(IndiaGstCatalogItem.sac_code).where(
-                        IndiaGstCatalogItem.catalog_item_id == invoice_item.catalog_item_id
+                        IndiaGstCatalogItem.clinic_id == ctx.clinic_id,
+                        IndiaGstCatalogItem.catalog_item_id == invoice_item.catalog_item_id,
                     )
                 )
                 default_sac = default_q.scalar_one_or_none()

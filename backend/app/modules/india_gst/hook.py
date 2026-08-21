@@ -86,7 +86,8 @@ async def _load_items_with_sac(
 
     existing_rows = await db.execute(
         select(IndiaGstInvoiceItem).where(
-            IndiaGstInvoiceItem.invoice_item_id.in_([i.id for i in invoice.items])
+            IndiaGstInvoiceItem.clinic_id == invoice.clinic_id,
+            IndiaGstInvoiceItem.invoice_item_id.in_([i.id for i in invoice.items]),
         )
     )
     existing_by_item = {row.invoice_item_id: row for row in existing_rows.scalars()}
@@ -95,7 +96,10 @@ async def _load_items_with_sac(
     defaults_by_catalog: dict = {}
     if catalog_ids:
         defaults_q = await db.execute(
-            select(IndiaGstCatalogItem).where(IndiaGstCatalogItem.catalog_item_id.in_(catalog_ids))
+            select(IndiaGstCatalogItem).where(
+                IndiaGstCatalogItem.clinic_id == invoice.clinic_id,
+                IndiaGstCatalogItem.catalog_item_id.in_(catalog_ids),
+            )
         )
         defaults_by_catalog = {row.catalog_item_id: row for row in defaults_q.scalars()}
 
@@ -136,6 +140,16 @@ class IndiaGstHook(BillingComplianceHook):
         settings = await _get_settings(db, invoice.clinic_id)
         if settings is None or settings.registration_type != "regular":
             return True, None
+
+        # Without the clinic's own state the intra/inter comparison in
+        # compute_gst_breakdown silently classifies EVERY invoice as
+        # inter-state IGST — block issue instead of mis-taxing.
+        if not settings.clinic_state:
+            return (
+                False,
+                "Set your clinic's state in India GST settings — without it "
+                "CGST/SGST vs IGST cannot be determined.",
+            )
 
         # Credit notes inherit place of supply from the original invoice
         # (see _apply) — they never carry their own compliance_data
@@ -327,7 +341,8 @@ class IndiaGstHook(BillingComplianceHook):
         # never duplicates rows.
         existing_rows = await db.execute(
             select(IndiaGstInvoiceItem).where(
-                IndiaGstInvoiceItem.invoice_item_id.in_([i.id for i in invoice.items])
+                IndiaGstInvoiceItem.clinic_id == invoice.clinic_id,
+                IndiaGstInvoiceItem.invoice_item_id.in_([i.id for i in invoice.items]),
             )
         )
         existing_by_item = {row.invoice_item_id: row for row in existing_rows.scalars()}
@@ -353,7 +368,8 @@ class IndiaGstHook(BillingComplianceHook):
         # not_configured in v1 — no live provider is wired in.
         einvoice_q = await db.execute(
             select(IndiaGstEinvoiceSubmission).where(
-                IndiaGstEinvoiceSubmission.invoice_id == invoice.id
+                IndiaGstEinvoiceSubmission.clinic_id == invoice.clinic_id,
+                IndiaGstEinvoiceSubmission.invoice_id == invoice.id,
             )
         )
         einvoice = einvoice_q.scalar_one_or_none()
@@ -378,7 +394,10 @@ class IndiaGstHook(BillingComplianceHook):
             from app.modules.billing.models import InvoiceSeries
 
             series_prefix = await db.execute(
-                select(InvoiceSeries.prefix).where(InvoiceSeries.id == invoice.series_id)
+                select(InvoiceSeries.prefix).where(
+                    InvoiceSeries.clinic_id == invoice.clinic_id,
+                    InvoiceSeries.id == invoice.series_id,
+                )
             )
             row = series_prefix.first()
             if row and row[0]:

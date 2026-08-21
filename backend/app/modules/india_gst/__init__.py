@@ -36,10 +36,14 @@ class IndiaGstModule(BaseModule):
         "removable": True,
         "role_permissions": {
             "admin": ["*"],
-            "dentist": ["reports.read"],
-            "hygienist": [],
-            "assistant": [],
-            "receptionist": ["reports.read"],
+            # settings.read gates the read-only endpoints the invoice
+            # form/detail panels call (tax-preview, e-invoice status) —
+            # every role that can touch invoices needs it or the panel
+            # 403s mid-invoicing.
+            "dentist": ["reports.read", "settings.read"],
+            "hygienist": ["settings.read"],
+            "assistant": ["settings.read"],
+            "receptionist": ["reports.read", "settings.read"],
         },
         "frontend": {
             "layer_path": "frontend",

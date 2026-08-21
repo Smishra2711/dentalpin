@@ -80,7 +80,7 @@ def upgrade() -> None:
             ["catalog_item_id"], ["treatment_catalog_items.id"], ondelete="CASCADE"
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("catalog_item_id", name="uq_india_gst_catalog_items_item"),
+        sa.UniqueConstraint("clinic_id", "catalog_item_id", name="uq_india_gst_catalog_items_item"),
     )
     op.create_index(
         op.f("ix_india_gst_catalog_items_clinic_id"), "india_gst_catalog_items", ["clinic_id"]

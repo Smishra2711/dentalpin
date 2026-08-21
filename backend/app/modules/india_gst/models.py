@@ -31,6 +31,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -105,7 +106,6 @@ class IndiaGstCatalogItem(Base, TimestampMixin):
     catalog_item_id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("treatment_catalog_items.id", ondelete="CASCADE"),
-        unique=True,
         index=True,
     )
 
@@ -115,7 +115,10 @@ class IndiaGstCatalogItem(Base, TimestampMixin):
 
     catalog_item: Mapped["TreatmentCatalogItem"] = relationship()
 
-    __table_args__ = (Index("ix_india_gst_catalog_items_clinic", "clinic_id"),)
+    __table_args__ = (
+        Index("ix_india_gst_catalog_items_clinic", "clinic_id"),
+        UniqueConstraint("clinic_id", "catalog_item_id", name="uq_india_gst_catalog_items_item"),
+    )
 
 
 class IndiaGstInvoiceItem(Base, TimestampMixin):

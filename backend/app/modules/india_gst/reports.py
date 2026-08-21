@@ -72,11 +72,16 @@ async def _fetch_invoices(
     return list(result.scalars().unique().all())
 
 
-async def _gst_rows_for_items(db: AsyncSession, invoice_item_ids: list[UUID]) -> dict:
+async def _gst_rows_for_items(
+    db: AsyncSession, clinic_id: UUID, invoice_item_ids: list[UUID]
+) -> dict:
     if not invoice_item_ids:
         return {}
     result = await db.execute(
-        select(IndiaGstInvoiceItem).where(IndiaGstInvoiceItem.invoice_item_id.in_(invoice_item_ids))
+        select(IndiaGstInvoiceItem).where(
+            IndiaGstInvoiceItem.clinic_id == clinic_id,
+            IndiaGstInvoiceItem.invoice_item_id.in_(invoice_item_ids),
+        )
     )
     return {row.invoice_item_id: row for row in result.scalars()}
 
@@ -86,7 +91,7 @@ async def _transaction_rows(
 ) -> list[GstReportTransactionRow]:
     invoices = await _fetch_invoices(db, clinic_id, date_from=date_from, date_to=date_to)
     all_item_ids = [item.id for inv in invoices for item in inv.items]
-    gst_by_item = await _gst_rows_for_items(db, all_item_ids)
+    gst_by_item = await _gst_rows_for_items(db, clinic_id, all_item_ids)
 
     rows: list[GstReportTransactionRow] = []
     for inv in invoices:
