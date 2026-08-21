@@ -145,8 +145,8 @@ export const PERMISSIONS = {
     read: 'accounting_export.export.read',
     run: 'accounting_export.export.run'
   },
-  patientAdmin: {
-    read: 'patient_admin.relationships.read',
-    write: 'patient_admin.relationships.write'
+  patientRelationships: {
+    read: 'patient_relationships.read',
+    write: 'patient_relationships.write'
   }
 } as const
