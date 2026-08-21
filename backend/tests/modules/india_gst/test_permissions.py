@@ -33,9 +33,7 @@ async def role_headers(db_session: AsyncSession, india_gst_clinic: Clinic):
         db_session.add(user)
         await db_session.flush()
         db_session.add(
-            ClinicMembership(
-                id=uuid4(), user_id=user.id, clinic_id=india_gst_clinic.id, role=role
-            )
+            ClinicMembership(id=uuid4(), user_id=user.id, clinic_id=india_gst_clinic.id, role=role)
         )
         await db_session.commit()
         token = create_access_token(user.id, token_version=user.token_version)
@@ -61,9 +59,7 @@ async def test_receptionist_reads_settings_and_reports_but_cannot_configure(
         )
     ).status_code == 200
 
-    r = await client.put(
-        "/api/v1/india_gst/settings", json={"trade_name": "Nope"}, headers=headers
-    )
+    r = await client.put("/api/v1/india_gst/settings", json={"trade_name": "Nope"}, headers=headers)
     assert r.status_code == 403
     r = await client.post("/api/v1/india_gst/catalog-defaults/autoconfigure", headers=headers)
     assert r.status_code == 403

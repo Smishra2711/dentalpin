@@ -26,9 +26,7 @@ FOREIGN_GSTIN = "29ZZZZZ9999Z9Z9"
 
 async def _foreign_clinic_with_gst_data(db: AsyncSession, user_id) -> Clinic:
     """A second clinic with settings, a SAC default and an issued GST invoice."""
-    other = Clinic(
-        id=uuid4(), name="Foreign Clinic", tax_id="B99999999", address={}, settings={}
-    )
+    other = Clinic(id=uuid4(), name="Foreign Clinic", tax_id="B99999999", address={}, settings={})
     db.add(other)
     await db.flush()
 
@@ -105,9 +103,7 @@ async def test_settings_are_own_clinic_only(
     db_session: AsyncSession,
     india_gst_settings: IndiaGstSettings,
 ):
-    await _foreign_clinic_with_gst_data(
-        db_session, await _user_id(client, auth_headers)
-    )
+    await _foreign_clinic_with_gst_data(db_session, await _user_id(client, auth_headers))
     r = await client.get("/api/v1/india_gst/settings", headers=auth_headers)
     assert r.status_code == 200
     assert r.json()["data"]["gstin"] == india_gst_settings.gstin
@@ -120,9 +116,7 @@ async def test_catalog_defaults_exclude_foreign_clinic(
     db_session: AsyncSession,
     india_gst_settings: IndiaGstSettings,
 ):
-    await _foreign_clinic_with_gst_data(
-        db_session, await _user_id(client, auth_headers)
-    )
+    await _foreign_clinic_with_gst_data(db_session, await _user_id(client, auth_headers))
     r = await client.get("/api/v1/india_gst/catalog-defaults", headers=auth_headers)
     assert r.status_code == 200
     data = r.json()["data"]
@@ -136,9 +130,7 @@ async def test_reports_and_export_exclude_foreign_clinic(
     db_session: AsyncSession,
     india_gst_settings: IndiaGstSettings,
 ):
-    await _foreign_clinic_with_gst_data(
-        db_session, await _user_id(client, auth_headers)
-    )
+    await _foreign_clinic_with_gst_data(db_session, await _user_id(client, auth_headers))
     r = await client.get("/api/v1/india_gst/reports/summary", headers=auth_headers)
     assert r.status_code == 200
     assert r.json()["data"]["invoice_count"] == 0
@@ -158,9 +150,7 @@ async def test_draft_update_on_foreign_invoice_is_404(
     db_session: AsyncSession,
     india_gst_settings: IndiaGstSettings,
 ):
-    other = await _foreign_clinic_with_gst_data(
-        db_session, await _user_id(client, auth_headers)
-    )
+    other = await _foreign_clinic_with_gst_data(db_session, await _user_id(client, auth_headers))
     from sqlalchemy import select
 
     inv_q = await db_session.execute(select(Invoice.id).where(Invoice.clinic_id == other.id))
