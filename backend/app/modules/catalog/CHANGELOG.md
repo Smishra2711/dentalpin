@@ -7,6 +7,10 @@
   are editable; only structural fields (`SYSTEM_ITEM_LOCKED_FIELDS`) return
   403 when changed. Modal: `is_active` switch enabled, tooltip on the
   *System* badge, 403 toast shows the server detail.
+- fix: the treatment modal sent `odontogram_mapping.visualization_rules`
+  as the legacy string list, so saving any mapped treatment (create or
+  edit) failed with 422. It now sends only type + clinical category; the
+  layered rules stay server-owned.
 - fix: `GET /catalog/odontogram-treatments` also returns **unmapped
   global-scope items** (`global_mouth`/`global_arch`) with
   `odontogram_treatment_type`/`clinical_category` as `null` — hygiene and

@@ -1296,3 +1296,52 @@ async def test_update_system_item_allows_price_but_locks_structure(
 
     still_locked = await client.delete(url, headers=auth_headers)
     assert still_locked.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_update_system_item_preserves_seeded_odontogram_mapping(
+    client: AsyncClient,
+    auth_headers: dict,
+    db_session: AsyncSession,
+    catalog_clinic_setup: dict,
+):
+    """The modal resends odontogram_mapping without rules; seeded rules survive."""
+    from app.modules.catalog.models import TreatmentCatalogItem, TreatmentOdontogramMapping
+
+    clinic_id = catalog_clinic_setup["clinic_id"]
+    category_id = await _create_catalog_category(client, auth_headers, "system_map")
+    item = TreatmentCatalogItem(
+        clinic_id=clinic_id,
+        category_id=category_id,
+        internal_code="SYS-MAP",
+        names={"es": "Corona"},
+        default_price=100,
+        is_system=True,
+    )
+    db_session.add(item)
+    await db_session.flush()
+    rules = [{"layer": "cenital_pattern", "pattern": "diagonal_stripes", "color": "#000"}]
+    db_session.add(
+        TreatmentOdontogramMapping(
+            clinic_id=clinic_id,
+            catalog_item_id=item.id,
+            odontogram_treatment_type="crown",
+            visualization_rules=rules,
+            clinical_category="restauradora",
+        )
+    )
+    await db_session.flush()
+
+    resp = await client.put(
+        f"/api/v1/catalog/items/{item.id}",
+        json={
+            "default_price": 150,
+            "odontogram_mapping": {
+                "odontogram_treatment_type": "crown",
+                "clinical_category": "restauradora",
+            },
+        },
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["data"]["odontogram_mapping"]["visualization_rules"] == rules

@@ -10,7 +10,6 @@ import type {
 import {
   ALL_TREATMENT_TYPES,
   TREATMENT_CATEGORIES,
-  VISUALIZATION_RULES,
   isSurfaceTreatment
 } from '~~/app/config/odontogramConstants'
 
@@ -278,16 +277,6 @@ watch(odontogramType, (newType) => {
   }
 })
 
-function getVisualizationRules(treatmentType: string): string[] {
-  const rules: string[] = []
-  for (const [rule, treatments] of Object.entries(VISUALIZATION_RULES)) {
-    if (treatments.includes(treatmentType)) {
-      rules.push(rule)
-    }
-  }
-  return rules
-}
-
 const isValid = computed(() => {
   if (!formData.value.internal_code || !itemName.value || !formData.value.category_id) {
     return false
@@ -322,10 +311,10 @@ function handleSubmit() {
     sessions: sessionsEnabled.value ? sessionsToPayload() : []
   }
   if (odontogramType.value && clinicalCategory.value) {
+    // visualization_rules are layered dicts owned by the seed/backend; the
+    // legacy string list this form used to send was rejected with 422.
     payload.odontogram_mapping = {
       odontogram_treatment_type: odontogramType.value,
-      visualization_rules: getVisualizationRules(odontogramType.value),
-      visualization_config: {},
       clinical_category: clinicalCategory.value
     }
   }
