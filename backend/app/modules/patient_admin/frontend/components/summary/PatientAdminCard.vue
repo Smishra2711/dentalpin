@@ -10,7 +10,7 @@
  * APCI is now a computed flag off systemic-disease reference data, which
  * will surface elsewhere once the reference-data work lands.
  */
-import type { PatientExtended, Patient } from '~~/app/types'
+import type { PatientExtended, Patient, PaginatedResponse } from '~~/app/types'
 import { PERMISSIONS } from '~~/app/config/permissions'
 
 interface Ctx {
@@ -47,8 +47,48 @@ const relationshipTypeOptions = computed(() => [
   { value: 'other', label: t('patientAdmin.relationships.types.other') }
 ])
 
-const newRelatedPatient = ref<Patient | null>(null)
+// Patient picker: UInputMenu with server-side search. The dropdown is
+// teleported to <body> (Reka UI portal), so it isn't clipped by
+// SummaryCard's overflow-hidden the way PatientSearch's inline
+// absolute-positioned dropdown was.
+interface PatientOption {
+  label: string
+  id: string
+}
+
+const api = useApi()
+const newRelatedPatient = ref<PatientOption | undefined>(undefined)
 const newRelationshipType = ref('other')
+const searchTerm = ref('')
+const searchResults = ref<PatientOption[]>([])
+const isSearching = ref(false)
+let searchTimeout: ReturnType<typeof setTimeout> | null = null
+
+watch(searchTerm, (val) => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+  if (val.length < 2) {
+    searchResults.value = []
+    return
+  }
+  searchTimeout = setTimeout(() => searchPatients(val), 300)
+})
+
+async function searchPatients(query: string) {
+  isSearching.value = true
+  try {
+    const params = new URLSearchParams({ search: query, page: '1', page_size: '10' })
+    const res = await api.get<PaginatedResponse<Patient>>(
+      `/api/v1/patients?${params.toString()}`
+    )
+    searchResults.value = res.data
+      .filter(p => p.id !== patientId.value)
+      .map(p => ({ label: `${p.last_name}, ${p.first_name}`, id: p.id }))
+  } catch {
+    searchResults.value = []
+  } finally {
+    isSearching.value = false
+  }
+}
 
 async function handleAddRelationship() {
   if (!newRelatedPatient.value) return
@@ -57,8 +97,10 @@ async function handleAddRelationship() {
     relationship_type: newRelationshipType.value
   })
   if (ok) {
-    newRelatedPatient.value = null
+    newRelatedPatient.value = undefined
     newRelationshipType.value = 'other'
+    searchTerm.value = ''
+    searchResults.value = []
   }
 }
 
@@ -108,7 +150,12 @@ const extraRelationshipsCount = computed(() =>
           class="w-3.5 h-3.5 shrink-0 text-subtle"
         />
         <span class="text-subtle">{{ t(`patientAdmin.relationships.types.${r.relationship_type}`) }}:</span>
-        <span class="text-default truncate">{{ r.related_patient_name }}</span>
+        <NuxtLink
+          :to="`/patients/${r.related_patient_id}`"
+          class="text-default truncate hover:text-primary-accent hover:underline"
+        >
+          {{ r.related_patient_name }}
+        </NuxtLink>
       </li>
       <li
         v-if="extraRelationshipsCount > 0"
@@ -132,7 +179,12 @@ const extraRelationshipsCount = computed(() =>
           class="flex items-center gap-1.5 text-caption"
         >
           <span class="text-subtle">{{ t(`patientAdmin.relationships.types.${r.relationship_type}`) }}:</span>
-          <span class="flex-1 truncate text-default">{{ r.related_patient_name }}</span>
+          <NuxtLink
+            :to="`/patients/${r.related_patient_id}`"
+            class="flex-1 truncate text-default hover:text-primary-accent hover:underline"
+          >
+            {{ r.related_patient_name }}
+          </NuxtLink>
           <UButton
             v-if="canWrite"
             icon="i-lucide-x"
@@ -148,8 +200,14 @@ const extraRelationshipsCount = computed(() =>
         v-if="canWrite"
         class="flex flex-col gap-1.5"
       >
-        <PatientSearch
+        <UInputMenu
           v-model="newRelatedPatient"
+          v-model:search-term="searchTerm"
+          :items="searchResults"
+          :loading="isSearching"
+          ignore-filter
+          icon="i-lucide-search"
+          size="sm"
           :placeholder="t('patientAdmin.relationships.searchPatient')"
         />
         <div class="flex gap-1.5">
