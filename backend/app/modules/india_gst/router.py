@@ -147,6 +147,7 @@ async def autoconfigure_catalog_defaults(
     GET/PUT, but keeping it above documents the intent.
     """
     created = await IndiaGstCatalogService.autoconfigure_missing_sac(db, ctx.clinic_id)
+    await IndiaGstCatalogService.ensure_gst_vat_type(db, ctx.clinic_id)
     await db.commit()
     return ApiResponse(
         data=IndiaGstCatalogAutoconfigureResponse(

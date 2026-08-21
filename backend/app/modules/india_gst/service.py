@@ -234,6 +234,33 @@ class IndiaGstCatalogService:
         return missing
 
     @staticmethod
+    async def ensure_gst_vat_type(db: AsyncSession, clinic_id: UUID) -> None:
+        """Get-or-create the clinic's ``GST 18%`` VAT type.
+
+        Dental clinics coming from the default demo/catalog only have a
+        0% VAT type, so without this the user would have to hand-create
+        the GST slab in the catalog module before any invoice line could
+        carry tax. Idempotent: matched by the English display name.
+        """
+        from app.modules.catalog.models import VatType
+
+        existing = await db.execute(
+            select(VatType.id).where(
+                VatType.clinic_id == clinic_id,
+                VatType.names.op("->>")("en") == "GST 18%",
+            )
+        )
+        if existing.first() is None:
+            db.add(
+                VatType(
+                    clinic_id=clinic_id,
+                    names={"en": "GST 18%", "es": "GST 18%", "fr": "GST 18%", "ta": "GST 18%"},
+                    rate=18.0,
+                )
+            )
+            await db.flush()
+
+    @staticmethod
     async def autoconfigure_missing_sac(
         db: AsyncSession, clinic_id: UUID, *, sac_code: str = DEFAULT_DENTAL_SAC_CODE
     ) -> int:
