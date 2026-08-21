@@ -49,7 +49,13 @@ test.describe('payments — new payment patient search', () => {
     const amountInput = loggedIn.locator('input[type="number"]').first()
     await amountInput.fill('50')
     await loggedIn.getByRole('button', { name: /Cash/i }).click()
+    // Wait for the POST to complete before asserting persistence — the
+    // API check below races the in-flight request otherwise (main went
+    // red on the #208 merge because of exactly that).
+    const postDone = loggedIn.waitForResponse(r =>
+      r.url().includes('/api/v1/payments') && r.request().method() === 'POST')
     await loggedIn.getByRole('button', { name: /€?50|record/i }).last().click()
+    expect((await postDone).ok(), 'POST /payments should succeed').toBeTruthy()
 
     // No generic error, modal closes.
     await expect(loggedIn.getByText(/Could not record the payment/i)).toHaveCount(0)
