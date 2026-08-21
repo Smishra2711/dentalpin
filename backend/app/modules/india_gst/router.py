@@ -51,12 +51,7 @@ router = APIRouter()
 
 def _settings_response(settings: IndiaGstSettings) -> IndiaGstSettingsResponse:
     payload = IndiaGstSettingsResponse.model_validate(settings, from_attributes=True)
-    return payload.model_copy(
-        update={
-            "clinic_state_name": state_name(settings.clinic_state),
-            "has_logo": settings.logo_image is not None,
-        }
-    )
+    return payload.model_copy(update={"clinic_state_name": state_name(settings.clinic_state)})
 
 
 # ----------------------------------------------------------------------------
@@ -101,8 +96,6 @@ async def update_settings(
         settings.show_gstin_on_invoice = body.show_gstin_on_invoice
     if body.show_sac_on_invoice is not None:
         settings.show_sac_on_invoice = body.show_sac_on_invoice
-    if body.rounding_rule is not None:
-        settings.rounding_rule = body.rounding_rule
 
     await db.commit()
     await db.refresh(settings)
@@ -183,7 +176,6 @@ async def update_catalog_default(
         ctx.clinic_id,
         catalog_item_id,
         sac_code=body.sac_code,
-        default_gst_rate_override=body.default_gst_rate_override,
         notes=body.notes,
     )
     await db.commit()
@@ -277,25 +269,7 @@ async def update_invoice_gst_fields(
                 )
                 db.add(row)
 
-            default_sac = None
-            if invoice_item.catalog_item_id:
-                from .models import IndiaGstCatalogItem
-
-                default_q = await db.execute(
-                    select(IndiaGstCatalogItem.sac_code).where(
-                        IndiaGstCatalogItem.clinic_id == ctx.clinic_id,
-                        IndiaGstCatalogItem.catalog_item_id == invoice_item.catalog_item_id,
-                    )
-                )
-                default_sac = default_q.scalar_one_or_none()
-
             row.sac_code = item_update.sac_code
-            row.sac_overridden = bool(item_update.sac_code and item_update.sac_code != default_sac)
-            if row.sac_overridden:
-                row.override_note = (
-                    f"SAC manually changed from catalog default"
-                    f"{f' ({default_sac})' if default_sac else ''}."
-                )
 
     await db.commit()
     return ApiResponse(data=None)
@@ -353,13 +327,9 @@ async def retry_einvoice(
     if row is None:
         raise HTTPException(status_code=404, detail="No e-invoice record for this invoice")
 
-    from .services.einvoice_provider import get_registered_provider
-
-    if get_registered_provider() is None:
-        raise HTTPException(status_code=409, detail=IndiaGstEinvoiceRetryError().message)
-    # Unreachable in v1 (no provider is ever registered) — kept so the
-    # code is honest about what happens once a real adapter ships.
-    raise HTTPException(status_code=501, detail="E-invoice provider submission not implemented")
+    # No e-invoice provider exists in v1 — always 409, never a
+    # fabricated success. A real GSP/IRP adapter replaces this line.
+    raise HTTPException(status_code=409, detail=IndiaGstEinvoiceRetryError().message)
 
 
 # ----------------------------------------------------------------------------

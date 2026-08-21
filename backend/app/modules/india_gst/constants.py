@@ -67,8 +67,6 @@ DEFAULT_DENTAL_SAC_CODE = "999312"
 
 REGISTRATION_TYPES = ("regular", "composition", "unregistered", "exempt")
 
-EINVOICE_STATES = ("not_required", "not_configured", "pending", "generated", "rejected", "error")
-
 
 def is_valid_gstin(value: str | None) -> bool:
     if not value:
@@ -80,10 +78,3 @@ def state_name(code: str | None) -> str | None:
     if not code:
         return None
     return INDIA_STATES.get(code)
-
-
-def state_code_from_gstin(gstin: str | None) -> str | None:
-    if not gstin or len(gstin) < 2:
-        return None
-    prefix = gstin.strip().upper()[:2]
-    return prefix if prefix in INDIA_STATES else None

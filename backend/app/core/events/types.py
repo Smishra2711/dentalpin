@@ -217,13 +217,6 @@ class EventType:
     # Verifactu compliance events
     VERIFACTU_RECORD_REJECTED = "verifactu.record.rejected"
 
-    # India GST events (india_gst module). v1 fires none — GST
-    # compliance data is written synchronously via
-    # BillingComplianceHook, not the event bus (see india_gst/events.py).
-    # Reserved for a future e-invoice-provider integration, e.g.:
-    #   INDIA_GST_EINVOICE_SUBMITTED = "india_gst.einvoice.submitted"
-    #   INDIA_GST_EINVOICE_REJECTED = "india_gst.einvoice.rejected"
-
     # Migration import events (migration_import module — DPMF importer, issue #78)
     # Job lifecycle:
     MIGRATION_JOB_STARTED = "migration.job.started"

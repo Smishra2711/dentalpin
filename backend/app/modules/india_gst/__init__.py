@@ -5,8 +5,9 @@ exactly like ``verifactu`` (Spain/AEAT); never imports billing internals
 directly. Country-gated: inactive (and invisible) for clinics whose
 ``clinic.settings['country'] != 'IN'``.
 
-Manual install only (``auto_install=False``). E-invoice integration is
-scaffolding only in v1 — see ``services/einvoice_provider.py``.
+Manual install only (``auto_install=False``). E-invoice in v1 only
+tracks applicability per invoice (``not_required``/``not_configured``);
+there is no GSP/IRP provider integration — retry always answers 409.
 """
 
 from fastapi import APIRouter

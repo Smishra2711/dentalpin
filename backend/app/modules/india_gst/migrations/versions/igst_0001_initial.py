@@ -8,7 +8,6 @@ Create Date: 2026-08-19
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 
 from alembic import op
 
@@ -37,22 +36,11 @@ def upgrade() -> None:
         sa.Column("clinic_state", sa.String(length=2), nullable=True),
         sa.Column("turnover_threshold", sa.Numeric(precision=14, scale=2), nullable=True),
         sa.Column(
-            "einvoice_provider_config",
-            postgresql.JSONB(astext_type=sa.Text()),
-            nullable=False,
-            server_default=sa.text("'{\"provider\": null}'::jsonb"),
-        ),
-        sa.Column(
             "show_gstin_on_invoice", sa.Boolean(), nullable=False, server_default=sa.text("true")
         ),
         sa.Column(
             "show_sac_on_invoice", sa.Boolean(), nullable=False, server_default=sa.text("true")
         ),
-        sa.Column(
-            "rounding_rule", sa.String(length=20), nullable=False, server_default="nearest_rupee"
-        ),
-        sa.Column("logo_image", sa.LargeBinary(), nullable=True),
-        sa.Column("logo_mime_type", sa.String(length=50), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(["clinic_id"], ["clinics.id"], ondelete="CASCADE"),
@@ -71,7 +59,6 @@ def upgrade() -> None:
         sa.Column("clinic_id", sa.UUID(), nullable=False),
         sa.Column("catalog_item_id", sa.UUID(), nullable=False),
         sa.Column("sac_code", sa.String(length=10), nullable=False),
-        sa.Column("default_gst_rate_override", sa.Numeric(precision=5, scale=2), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
@@ -116,8 +103,6 @@ def upgrade() -> None:
         sa.Column(
             "igst_amount", sa.Numeric(precision=12, scale=2), nullable=False, server_default="0"
         ),
-        sa.Column("sac_overridden", sa.Boolean(), nullable=False, server_default=sa.text("false")),
-        sa.Column("override_note", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(["clinic_id"], ["clinics.id"], ondelete="RESTRICT"),
@@ -162,12 +147,7 @@ def upgrade() -> None:
         sa.Column("clinic_id", sa.UUID(), nullable=False),
         sa.Column("invoice_id", sa.UUID(), nullable=False),
         sa.Column("state", sa.String(length=20), nullable=False, server_default="not_required"),
-        sa.Column("irn", sa.String(length=100), nullable=True),
-        sa.Column("ack_number", sa.String(length=50), nullable=True),
-        sa.Column("ack_date", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("signed_qr_payload", sa.Text(), nullable=True),
         sa.Column("provider_error_message", sa.Text(), nullable=True),
-        sa.Column("submission_attempt", sa.Integer(), nullable=False, server_default=sa.text("0")),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(["clinic_id"], ["clinics.id"], ondelete="RESTRICT"),

@@ -40,7 +40,6 @@ from app.modules.billing.hooks import BillingComplianceHook
 from .constants import is_valid_gstin, state_name
 from .models import IndiaGstEinvoiceSubmission, IndiaGstInvoiceItem, IndiaGstSettings
 from .service import GstLineInput, allocate_fy_document_number, compute_gst_breakdown
-from .services.severity import severity_for
 
 if TYPE_CHECKING:
     from app.modules.billing.models import Invoice
@@ -390,7 +389,10 @@ class IndiaGstHook(BillingComplianceHook):
             "igst_total": str(breakdown.igst_total),
             "gst_document_number": gst_document_number,
             "einvoice_state": einvoice_state,
-            "severity": severity_for(einvoice_state, has_sac_warning=has_sac_warning),
+            # Billing's generic compliance_severity filter vocabulary
+            # (ok|warning|pending|error). v1 never submits anywhere, so
+            # the only non-ok signal is a line missing its SAC code.
+            "severity": "warning" if has_sac_warning else "ok",
             # Snapshotted (not read live) so a later settings change never
             # alters how an already-issued invoice's PDF renders — same
             # invariant as everything else in this dict.

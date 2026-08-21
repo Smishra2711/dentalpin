@@ -13,10 +13,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .constants import (
-    DEFAULT_DENTAL_SAC_CODE,
-    EINVOICE_STATES,  # noqa: F401  (re-exported for schemas/router)
-)
+from .constants import DEFAULT_DENTAL_SAC_CODE
 from .models import IndiaGstCatalogItem, IndiaGstSettings
 
 INDIA_FY_START_MONTH = 4  # India's financial year runs April (4) to March.
@@ -232,7 +229,6 @@ class IndiaGstCatalogService:
         catalog_item_id: UUID,
         *,
         sac_code: str,
-        default_gst_rate_override: Decimal | None = None,
         notes: str | None = None,
     ) -> IndiaGstCatalogItem:
         existing = await IndiaGstCatalogService.get_default(db, clinic_id, catalog_item_id)
@@ -240,7 +236,6 @@ class IndiaGstCatalogService:
             existing = IndiaGstCatalogItem(clinic_id=clinic_id, catalog_item_id=catalog_item_id)
             db.add(existing)
         existing.sac_code = sac_code
-        existing.default_gst_rate_override = default_gst_rate_override
         existing.notes = notes
         await db.flush()
         return existing

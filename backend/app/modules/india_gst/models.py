@@ -16,24 +16,21 @@ tables — see ``hook.py`` and the module ``CLAUDE.md`` for the extension
 strategy via ``Invoice.compliance_data['IN']``.
 """
 
-from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
 from sqlalchemy import (
     Boolean,
-    DateTime,
     ForeignKey,
     Index,
     Integer,
-    LargeBinary,
     Numeric,
     String,
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base, TimestampMixin
@@ -42,13 +39,6 @@ if TYPE_CHECKING:
     from app.core.auth.models import Clinic
     from app.modules.billing.models import Invoice, InvoiceItem
     from app.modules.catalog.models import TreatmentCatalogItem
-
-# Registration types / e-invoice states / tax types are documented in
-# ``constants.py`` and validated at the Pydantic layer (``schemas.py``)
-# — mirrors verifactu's ``RECORD_STATES``/``TIPO_FACTURA`` convention of
-# not enforcing them as DB CHECK constraints.
-TAX_TYPES = ("intra", "inter")
-
 
 class IndiaGstSettings(Base, TimestampMixin):
     """Per-clinic India GST supplier profile. Exactly one row per clinic."""
@@ -68,22 +58,12 @@ class IndiaGstSettings(Base, TimestampMixin):
     # State/UT code (see constants.INDIA_STATES), not a display string.
     clinic_state: Mapped[str | None] = mapped_column(String(2), default=None)
 
-    # E-invoice (scaffolding only — see services/einvoice_provider.py).
+    # Above this yearly-turnover threshold e-invoicing applies; the hook
+    # then marks issued invoices "not_configured" (no provider in v1).
     turnover_threshold: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), default=None)
-    einvoice_provider_config: Mapped[dict] = mapped_column(
-        JSONB, default=lambda: {"provider": None}
-    )
 
     show_gstin_on_invoice: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     show_sac_on_invoice: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    rounding_rule: Mapped[str] = mapped_column(String(20), default="nearest_rupee", nullable=False)
-
-    # Clinic logo for printed GST invoices — stored directly (mirrors
-    # verifactu's certificate storage: a clinic-scoped binary column,
-    # not `media.AttachmentService`, which is patient-scoped and does
-    # not fit a clinic-level asset).
-    logo_image: Mapped[bytes | None] = mapped_column(LargeBinary, default=None)
-    logo_mime_type: Mapped[str | None] = mapped_column(String(50), default=None)
 
     clinic: Mapped["Clinic"] = relationship()
 
@@ -110,7 +90,6 @@ class IndiaGstCatalogItem(Base, TimestampMixin):
     )
 
     sac_code: Mapped[str] = mapped_column(String(10), nullable=False)
-    default_gst_rate_override: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), default=None)
     notes: Mapped[str | None] = mapped_column(Text, default=None)
 
     catalog_item: Mapped["TreatmentCatalogItem"] = relationship()
@@ -155,9 +134,6 @@ class IndiaGstInvoiceItem(Base, TimestampMixin):
     igst_rate: Mapped[Decimal] = mapped_column(Numeric(5, 2), default=Decimal("0"))
     igst_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0"))
 
-    sac_overridden: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    override_note: Mapped[str | None] = mapped_column(Text, default=None)
-
     invoice_item: Mapped["InvoiceItem"] = relationship()
 
     __table_args__ = (Index("ix_india_gst_invoice_items_clinic", "clinic_id"),)
@@ -193,13 +169,13 @@ class IndiaGstDocumentSequence(Base, TimestampMixin):
 
 
 class IndiaGstEinvoiceSubmission(Base, TimestampMixin):
-    """E-invoice scaffolding state for one invoice. One row per invoice.
+    """E-invoice applicability state for one invoice. One row per invoice.
 
-    v1 has no live GSP/IRP provider wired in — see
-    ``services/einvoice_provider.py``. State only ever reaches
-    ``not_required``/``not_configured`` through the real (hook-driven)
-    path in v1; the other states exist so the UI/schema are complete
-    once a provider adapter ships, exercised only by seeded test rows.
+    v1 has no live GSP/IRP provider wired in. The hook writes
+    ``not_required`` (below the turnover threshold) or
+    ``not_configured`` (above it, no provider); the retry endpoint
+    always answers 409. IRN/acknowledgement columns arrive with a real
+    provider adapter, not before.
     """
 
     __tablename__ = "india_gst_einvoice_submissions"
@@ -213,12 +189,7 @@ class IndiaGstEinvoiceSubmission(Base, TimestampMixin):
     )
 
     state: Mapped[str] = mapped_column(String(20), default="not_required", nullable=False)
-    irn: Mapped[str | None] = mapped_column(String(100), default=None)
-    ack_number: Mapped[str | None] = mapped_column(String(50), default=None)
-    ack_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
-    signed_qr_payload: Mapped[str | None] = mapped_column(Text, default=None)
     provider_error_message: Mapped[str | None] = mapped_column(Text, default=None)
-    submission_attempt: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     clinic: Mapped["Clinic"] = relationship()
     invoice: Mapped["Invoice"] = relationship()

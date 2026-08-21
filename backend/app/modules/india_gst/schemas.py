@@ -2,17 +2,15 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .constants import EINVOICE_STATES, INDIA_STATES, REGISTRATION_TYPES
+from .constants import INDIA_STATES, REGISTRATION_TYPES
 
 _REGISTRATION_PATTERN = "^(" + "|".join(REGISTRATION_TYPES) + ")$"
 _STATE_PATTERN = "^(" + "|".join(INDIA_STATES.keys()) + ")$"
-_EINVOICE_STATE_PATTERN = "^(" + "|".join(EINVOICE_STATES) + ")$"
 
 
 class IndiaGstSettingsResponse(BaseModel):
@@ -26,11 +24,8 @@ class IndiaGstSettingsResponse(BaseModel):
     clinic_state: str | None
     clinic_state_name: str | None = None
     turnover_threshold: Decimal | None
-    einvoice_provider_config: dict
     show_gstin_on_invoice: bool
     show_sac_on_invoice: bool
-    rounding_rule: str
-    has_logo: bool = False
 
 
 class IndiaGstSettingsUpdate(BaseModel):
@@ -41,7 +36,6 @@ class IndiaGstSettingsUpdate(BaseModel):
     turnover_threshold: Decimal | None = None
     show_gstin_on_invoice: bool | None = None
     show_sac_on_invoice: bool | None = None
-    rounding_rule: str | None = Field(default=None, pattern=r"^(nearest_rupee|none)$")
 
 
 class IndiaGstCatalogItemResponse(BaseModel):
@@ -49,13 +43,11 @@ class IndiaGstCatalogItemResponse(BaseModel):
 
     catalog_item_id: UUID
     sac_code: str
-    default_gst_rate_override: Decimal | None
     notes: str | None
 
 
 class IndiaGstCatalogItemUpdate(BaseModel):
     sac_code: str = Field(min_length=4, max_length=10)
-    default_gst_rate_override: Decimal | None = None
     notes: str | None = Field(default=None, max_length=500)
 
 
@@ -120,31 +112,11 @@ class IndiaGstInvoiceDraftUpdate(BaseModel):
     items: list[IndiaGstInvoiceDraftItemUpdate] = Field(default_factory=list)
 
 
-class IndiaGstInvoiceComplianceResponse(BaseModel):
-    """The ``compliance_data['IN']`` snapshot, shaped for the frontend panel."""
-
-    place_of_supply: str | None = None
-    place_of_supply_name: str | None = None
-    tax_type: str | None = None
-    cgst_total: Decimal | None = None
-    sgst_total: Decimal | None = None
-    igst_total: Decimal | None = None
-    gst_document_number: str | None = None
-    original_reference: str | None = None
-    einvoice_state: str | None = None
-    severity: str | None = None
-    supplier: dict | None = None
-    recipient: dict | None = None
-
-
 class IndiaGstEinvoiceResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     invoice_id: UUID
     state: str
-    irn: str | None
-    ack_number: str | None
-    ack_date: datetime | None
     provider_error_message: str | None
 
 
