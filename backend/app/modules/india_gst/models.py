@@ -106,10 +106,11 @@ class IndiaGstInvoiceItem(Base, TimestampMixin):
 
     Written once by :func:`hook.compute_gst_breakdown` at issue time
     (upserted — idempotent on re-run). Splits ``InvoiceItem.line_tax``
-    after the fact; never recomputes tax independently, so
-    ``cgst_amount + sgst_amount`` (or ``igst_amount``) always
-    reconciles exactly to ``line_tax`` by construction — including for
-    already-negative credit-note amounts, which are not re-negated.
+    after the fact; never recomputes tax independently. CGST and SGST
+    are always EQUAL (each = line tax / 2, rounded HALF_UP per head);
+    on odd-paise lines the pair may differ from ``line_tax`` by ±0.01 —
+    head-wise rounding, expected under GST. Sign-agnostic: credit-note
+    amounts arrive already negative and are not re-negated.
     """
 
     __tablename__ = "india_gst_invoice_items"

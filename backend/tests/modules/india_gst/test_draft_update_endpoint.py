@@ -60,4 +60,4 @@ async def test_put_rejects_issued_invoice(
         json={"place_of_supply": "27"},
         headers=auth_headers,
     )
-    assert r.status_code == 403
+    assert r.status_code == 409
