@@ -160,3 +160,92 @@ async def test_no_discount_round_trips_untouched(
     line = invoice["items"][0]
     assert line["discount_type"] is None
     assert Decimal(invoice["total"]) == Decimal("100.00")
+
+
+async def _invoiced_qty(client: AsyncClient, auth_headers: dict, budget_id: str) -> int:
+    r = await client.get(f"/api/v1/budget/budgets/{budget_id}", headers=auth_headers)
+    assert r.status_code == 200, r.text
+    return r.json()["data"]["items"][0]["invoiced_quantity"]
+
+
+@pytest.mark.asyncio
+async def test_void_delete_and_item_edits_release_quote_lines(
+    client: AsyncClient, auth_headers: dict, budget_clinic_setup: dict
+) -> None:
+    """invoiced_quantity follows the live invoice lines (issue #175)."""
+    budget_id, item_id = await _accepted_budget(
+        client, auth_headers, budget_clinic_setup, quantity=3
+    )
+    h = auth_headers
+    b = "/api/v1/billing/invoices"
+
+    # Void a draft → line comes back.
+    inv = await _invoice_from_budget(client, h, budget_id, item_id, quantity=2)
+    assert await _invoiced_qty(client, h, budget_id) == 2
+    r = await client.post(f"{b}/{inv['id']}/void", headers=h)
+    assert r.status_code == 200, r.text
+    assert await _invoiced_qty(client, h, budget_id) == 0
+
+    # Delete a draft → line comes back.
+    inv = await _invoice_from_budget(client, h, budget_id, item_id, quantity=2)
+    r = await client.delete(f"{b}/{inv['id']}", headers=h)
+    assert r.status_code == 204, r.text
+    assert await _invoiced_qty(client, h, budget_id) == 0
+
+    # Editing / deleting a draft line keeps the counter in sync.
+    inv = await _invoice_from_budget(client, h, budget_id, item_id, quantity=3)
+    line_id = inv["items"][0]["id"]
+    r = await client.put(f"{b}/{inv['id']}/items/{line_id}", json={"quantity": 1}, headers=h)
+    assert r.status_code == 200, r.text
+    assert await _invoiced_qty(client, h, budget_id) == 1
+    r = await client.delete(f"{b}/{inv['id']}/items/{line_id}", headers=h)
+    assert r.status_code == 204, r.text
+    assert await _invoiced_qty(client, h, budget_id) == 0
+
+    # The full quantity is available again.
+    await _invoice_from_budget(client, h, budget_id, item_id, quantity=3)
+    assert await _invoiced_qty(client, h, budget_id) == 3
+    r = await client.post(
+        f"{b}/from-budget/{budget_id}", json={"items": [{"budget_item_id": item_id}]}, headers=h
+    )
+    assert r.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_credit_note_releases_quote_lines(
+    client: AsyncClient, auth_headers: dict, budget_clinic_setup: dict
+) -> None:
+    budget_id, item_id = await _accepted_budget(
+        client, auth_headers, budget_clinic_setup, quantity=2
+    )
+    h = auth_headers
+    b = "/api/v1/billing/invoices"
+
+    r = await client.put(
+        f"/api/v1/patients/{budget_clinic_setup['patient_id']}",
+        json={"billing_tax_id": "12345678Z"},
+        headers=h,
+    )
+    assert r.status_code == 200, r.text
+    for prefix, series_type in (("FAC", "invoice"), ("RECT", "credit_note")):
+        r = await client.post(
+            "/api/v1/billing/series",
+            json={"prefix": prefix, "series_type": series_type, "is_default": True},
+            headers=h,
+        )
+        assert r.status_code == 201, r.text
+
+    inv = await _invoice_from_budget(client, h, budget_id, item_id)
+    r = await client.post(f"{b}/{inv['id']}/issue", json={}, headers=h)
+    assert r.status_code == 200, r.text
+    assert await _invoiced_qty(client, h, budget_id) == 2
+
+    r = await client.post(f"{b}/{inv['id']}/credit-note", json={"reason": "error"}, headers=h)
+    assert r.status_code == 201, r.text
+    cn_id = r.json()["data"]["id"]
+    assert await _invoiced_qty(client, h, budget_id) == 0
+
+    # Dropping the draft credit note consumes the lines again.
+    r = await client.delete(f"{b}/{cn_id}", headers=h)
+    assert r.status_code == 204, r.text
+    assert await _invoiced_qty(client, h, budget_id) == 2

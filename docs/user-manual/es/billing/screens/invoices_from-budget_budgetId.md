@@ -15,7 +15,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/billing/frontend/pages/invoices/from-budget/[budgetId].vue
   - backend/app/modules/billing/router.py
-last_verified_commit: 0f30803
+last_verified_commit: 3212255
 ---
 
 # Factura desde presupuesto
@@ -87,4 +87,5 @@ y qué cantidades incluir.
   ítem.
 - **Falta una línea del presupuesto.** Está marcada como ya
   facturada al 100% (`invoiced_quantity == quantity`). Para revertir,
-  anula la factura previa y vuelve a entrar aquí.
+  anula o borra el borrador (o emite una rectificativa si ya está
+  emitida) y vuelve a entrar aquí: las líneas se liberan al instante.

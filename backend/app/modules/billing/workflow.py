@@ -397,7 +397,7 @@ class InvoiceWorkflowService:
         invoice.deleted_at = datetime.now(UTC)
 
         # Add history
-        from .service import InvoiceHistoryService
+        from .service import InvoiceHistoryService, resync_invoiced_quantities_for_invoice
 
         await InvoiceHistoryService.add_entry(
             db,
@@ -410,6 +410,7 @@ class InvoiceWorkflowService:
         )
 
         await db.flush()
+        await resync_invoiced_quantities_for_invoice(db, invoice)
 
         return invoice
 
@@ -523,7 +524,7 @@ class InvoiceWorkflowService:
                 f"Cannot create credit note for invoice with status '{original_invoice.status}'"
             )
 
-        from .service import InvoiceService
+        from .service import InvoiceService, resync_invoiced_quantities_for_invoice
 
         # Create credit note in draft status WITHOUT assigning number
         # Number will be assigned when the credit note is issued via issue_invoice()
@@ -633,5 +634,6 @@ class InvoiceWorkflowService:
         )
 
         await db.flush()
+        await resync_invoiced_quantities_for_invoice(db, credit_note)
 
         return credit_note
