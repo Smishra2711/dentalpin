@@ -296,7 +296,7 @@ class BudgetWorkflowService:
                 exc,
             )
 
-        plan_id = await BudgetWorkflowService._lookup_plan_id(db, budget.id)
+        plan_id = await BudgetWorkflowService._lookup_plan_id(db, budget)
         # Per-line snapshot so subscribers (treatment_plan) can reprice
         # what the patient actually agreed to pay without reading budget
         # rows: net_amount is ex-tax, after line discount + prorated
@@ -392,7 +392,7 @@ class BudgetWorkflowService:
 
         await db.flush()
 
-        plan_id = await BudgetWorkflowService._lookup_plan_id(db, budget.id)
+        plan_id = await BudgetWorkflowService._lookup_plan_id(db, budget)
         await event_bus.publish(
             EventType.BUDGET_REJECTED,
             {
@@ -447,7 +447,7 @@ class BudgetWorkflowService:
         await db.flush()
 
         if publish_event:
-            plan_id = await BudgetWorkflowService._lookup_plan_id(db, budget.id)
+            plan_id = await BudgetWorkflowService._lookup_plan_id(db, budget)
             await event_bus.publish(
                 EventType.BUDGET_CANCELLED,
                 {
@@ -515,7 +515,7 @@ class BudgetWorkflowService:
 
         # Publish events for subscribers (treatment_plan, patient_timeline).
         for budget in expired_budgets:
-            plan_id = await BudgetWorkflowService._lookup_plan_id(db, budget.id)
+            plan_id = await BudgetWorkflowService._lookup_plan_id(db, budget)
             days_overdue = (today - budget.valid_until).days if budget.valid_until else None
             await event_bus.publish(
                 EventType.BUDGET_EXPIRED,
@@ -538,32 +538,16 @@ class BudgetWorkflowService:
     # ---------------------------------------------------------------------
 
     @staticmethod
-    async def _lookup_plan(db: AsyncSession, budget_id: UUID):
-        """Reverse-lookup the plan (id, status) that references a budget.
+    async def _lookup_plan(db: AsyncSession, budget: Budget):
+        """Plan (id, plan_number, title, status) referencing ``budget``, or None."""
+        from .service import lookup_linked_plan
 
-        Implemented with raw SQL to avoid importing the
-        ``treatment_plan`` ORM model from this module (ADR 0003).
-        Deliberately does NOT walk the ``parent_budget_id`` chain: a
-        stale old version must keep resolving to no plan once the link
-        has moved on, or e.g. rejecting V1 could close a plan living
-        on V2.
-        """
-        row = (
-            await db.execute(
-                text(
-                    "SELECT id, status FROM treatment_plans "
-                    "WHERE budget_id = :bid AND deleted_at IS NULL "
-                    "LIMIT 1"
-                ),
-                {"bid": budget_id},
-            )
-        ).first()
-        return row
+        return await lookup_linked_plan(db, budget.clinic_id, budget.id)
 
     @staticmethod
-    async def _lookup_plan_id(db: AsyncSession, budget_id: UUID) -> UUID | None:
+    async def _lookup_plan_id(db: AsyncSession, budget: Budget) -> UUID | None:
         """Reverse-lookup the id of the plan that references a budget."""
-        row = await BudgetWorkflowService._lookup_plan(db, budget_id)
+        row = await BudgetWorkflowService._lookup_plan(db, budget)
         return row.id if row else None
 
     @staticmethod
@@ -597,7 +581,7 @@ class BudgetWorkflowService:
         )
         await db.flush()
 
-        plan_id = await BudgetWorkflowService._lookup_plan_id(db, budget.id)
+        plan_id = await BudgetWorkflowService._lookup_plan_id(db, budget)
         await event_bus.publish(
             EventType.BUDGET_RENEGOTIATED,
             {
@@ -626,7 +610,7 @@ class BudgetWorkflowService:
             return budget
         budget.viewed_at = datetime.now(UTC)
         await db.flush()
-        plan_id = await BudgetWorkflowService._lookup_plan_id(db, budget.id)
+        plan_id = await BudgetWorkflowService._lookup_plan_id(db, budget)
         await event_bus.publish(
             EventType.BUDGET_VIEWED,
             {
@@ -653,7 +637,7 @@ class BudgetWorkflowService:
         """
         budget.last_reminder_sent_at = datetime.now(UTC)
         await db.flush()
-        plan_id = await BudgetWorkflowService._lookup_plan_id(db, budget.id)
+        plan_id = await BudgetWorkflowService._lookup_plan_id(db, budget)
         await event_bus.publish(
             EventType.BUDGET_REMINDER_SENT,
             {
@@ -856,7 +840,7 @@ class BudgetWorkflowService:
 
         # Refresh the plan-status snapshot from the live plan (the one
         # copied from a terminal budget is stale by definition).
-        plan_ref = await BudgetWorkflowService._lookup_plan(db, budget.id)
+        plan_ref = await BudgetWorkflowService._lookup_plan(db, budget)
 
         new_budget = Budget(
             clinic_id=budget.clinic_id,

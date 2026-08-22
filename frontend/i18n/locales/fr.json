@@ -1826,6 +1826,10 @@
         "noteLabel": "Note (facultatif)",
         "submit": "Enregistrer"
       }
+    },
+    "newBudgetHint": {
+      "text": "Ce patient a le plan {plan} sans devis. Générez le devis depuis le plan pour qu'ils restent liés.",
+      "cta": "Ouvrir le plan"
     }
   },
   "pipeline": {
@@ -1962,7 +1966,8 @@
       "toothNumberPlaceholder": "Ex. : 11, 21, 36...",
       "surfaces": "Surfaces",
       "notes": "Notes",
-      "notesPlaceholder": "Notes sur ce traitement..."
+      "notesPlaceholder": "Notes sur ce traitement...",
+      "managedByPlan": "Les lignes de ce devis sont gérées depuis le plan de traitement {plan}."
     },
     "signature": {
       "title": "Signature numérique",

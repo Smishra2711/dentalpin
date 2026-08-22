@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat(#177): `NewBudgetPlanHint` registered into `budget.new.form` — the new-quote form warns when the patient has a draft/pending plan without a quote and links to it.
+- fix(#177): `link_budget` validates terminal quotes, a plan that already has a live quote, and a quote already linked to another plan (400 instead of a unique-violation 500).
 - fix(UX): non-tooth treatments (limpieza dental, primera visita,
   radiografía panorámica…) can now be added to a plan from the detail
   view — the "Boca completa" tab of the treatment bar receives the full

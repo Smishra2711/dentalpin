@@ -165,6 +165,9 @@ class PlanLockedError(ValueError):
     """Raised when a mutation is attempted on a plan locked by an active budget."""
 
 
+TERMINAL_BUDGET_STATUSES = frozenset({"cancelled", "rejected", "expired"})
+
+
 def _is_plan_locked(plan: TreatmentPlan) -> bool:
     """A plan is locked once its budget has been sent to the patient.
 
@@ -1240,6 +1243,24 @@ class TreatmentPlanService:
 
         if budget.patient_id != plan.patient_id:
             raise ValueError("Budget belongs to different patient")
+
+        if budget.status in TERMINAL_BUDGET_STATUSES:
+            raise ValueError("Cannot link a cancelled, rejected or expired budget")
+
+        if plan.budget_id and plan.budget_id != budget_id:
+            current = await db.get(Budget, plan.budget_id)
+            if current is not None and current.status not in TERMINAL_BUDGET_STATUSES:
+                raise ValueError("Plan already has a live budget")
+
+        # ``treatment_plans.budget_id`` is unique — fail clean instead of a 500.
+        other = await db.scalar(
+            select(TreatmentPlan.id).where(
+                TreatmentPlan.budget_id == budget_id,
+                TreatmentPlan.id != plan_id,
+            )
+        )
+        if other is not None:
+            raise ValueError("Budget is already linked to another plan")
 
         plan.budget_id = budget_id
 

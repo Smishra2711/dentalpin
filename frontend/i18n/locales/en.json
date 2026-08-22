@@ -1826,6 +1826,10 @@
         "noteLabel": "Note (optional)",
         "submit": "Log"
       }
+    },
+    "newBudgetHint": {
+      "text": "This patient has plan {plan} without a quote. Generate the quote from the plan so they stay linked.",
+      "cta": "Open plan"
     }
   },
   "pipeline": {
@@ -1962,7 +1966,8 @@
       "toothNumberPlaceholder": "E.g.: 11, 21, 36...",
       "surfaces": "Surfaces",
       "notes": "Notes",
-      "notesPlaceholder": "Notes about this treatment..."
+      "notesPlaceholder": "Notes about this treatment...",
+      "managedByPlan": "The lines of this quote are managed from treatment plan {plan}."
     },
     "signature": {
       "title": "Digital signature",

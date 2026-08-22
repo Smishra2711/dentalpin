@@ -4,7 +4,7 @@ from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -12,6 +12,35 @@ from app.core.list_query import parse_sort
 from app.modules.catalog.models import TreatmentCatalogItem, VatType
 
 from .models import Budget, BudgetHistory, BudgetItem
+from .schemas import TreatmentPlanBrief
+
+
+class PlanOwnsLinesError(ValueError):
+    """The quote is linked to a treatment plan; its lines are managed there (issue #176)."""
+
+
+async def lookup_linked_plan(
+    db: AsyncSession, clinic_id: UUID, budget_id: UUID
+) -> TreatmentPlanBrief | None:
+    """Reverse-lookup the treatment plan that references a budget.
+
+    Raw SQL on purpose: ``treatment_plans`` belongs to the treatment_plan
+    module, which is not in budget's ``depends`` (ADR 0003). Deliberately
+    does NOT walk the ``parent_budget_id`` chain — a stale old version must
+    resolve to no plan once the link moved on.
+    """
+    row = (
+        await db.execute(
+            text(
+                "SELECT id, plan_number, title, status FROM treatment_plans "
+                "WHERE budget_id = :bid AND clinic_id = :cid AND deleted_at IS NULL "
+                "LIMIT 1"
+            ),
+            {"bid": budget_id, "cid": clinic_id},
+        )
+    ).first()
+    return TreatmentPlanBrief.model_validate(row) if row else None
+
 
 # Public sort field → SQL column. ``payment_status`` is intentionally
 # absent — that sort would require joining payments which violates
@@ -623,6 +652,18 @@ class BudgetService:
         await db.flush()
 
     @staticmethod
+    async def _ensure_lines_not_owned_by_plan(db: AsyncSession, budget: Budget) -> None:
+        """Staff can't add/remove lines on a plan-linked quote — the plan is the
+        source of truth and mirrors its items here (issue #176). The mirror
+        itself goes through ``BudgetItemService`` directly, so it is unaffected.
+        """
+        plan = await lookup_linked_plan(db, budget.clinic_id, budget.id)
+        if plan is not None:
+            raise PlanOwnsLinesError(
+                f"Lines of a quote linked to plan {plan.plan_number} are managed from the plan"
+            )
+
+    @staticmethod
     async def add_item(
         db: AsyncSession,
         budget: Budget,
@@ -632,6 +673,7 @@ class BudgetService:
         """Add an item to a budget."""
         if budget.status != "draft":
             raise ValueError("Items can only be added to draft budgets")
+        await BudgetService._ensure_lines_not_owned_by_plan(db, budget)
 
         item = await BudgetItemService.create_item(db, budget.clinic_id, budget.id, item_data)
 
@@ -664,6 +706,7 @@ class BudgetService:
         """Remove an item from a budget."""
         if budget.status != "draft":
             raise ValueError("Items can only be removed from draft budgets")
+        await BudgetService._ensure_lines_not_owned_by_plan(db, budget)
 
         item_id = item.id
         await BudgetItemService.delete_item(db, item)

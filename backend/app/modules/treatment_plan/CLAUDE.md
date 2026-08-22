@@ -42,6 +42,7 @@ Routes mounted at `/api/v1/treatment-plans/`.
 - `POST  /treatment-plans/{id}/reactivate`  — `plans.reactivate`; closed → draft
 - `POST  /treatment-plans/{id}/contact-log` — record reception touchpoint
 - `GET   /treatment-plans/pipeline`         — bandeja (5 tabs)
+- `POST  /treatment-plans/{id}/link-budget` — attach an existing quote; refuses terminal quotes, a plan that already has a live quote, and a quote linked to another plan (400). No UI caller — the product path is confirm → generated quote (issue #177).
 
 > **Notes endpoints moved.** Since issue #60 the `clinical_notes` module
 > owns every clinical-note CRUD path (`/api/v1/clinical_notes/*`). The
@@ -94,6 +95,13 @@ Clinical-note created events (`clinical_notes.{administrative,diagnosis,treatmen
 | `budget.superseded`             | `on_budget_superseded`      | repoint `budget_id` to the resent version (only while still pointing at the old one) |
 | `odontogram.treatment.performed` | `on_treatment_performed`   | mark planned item completed when its tooth treatment is performed |
 
+## Frontend slots consumed
+
+| Slot (host) | Component | Purpose |
+|---|---|---|
+| `patient.summary.cards` (patients) | `summary/PlanCard.vue` | active-plan smart card |
+| `budget.new.form` (budget) | `budget/NewBudgetPlanHint.vue` | "this patient has plan X without a quote — generate it from the plan" (issue #177) |
+
 ## Lifecycle
 
 - `removable=False`. Plans tie patients ↔ budgets ↔ tooth treatments;
@@ -128,6 +136,12 @@ Clinical-note created events (`clinical_notes.{administrative,diagnosis,treatmen
   back into this module. `reopen()` itself cancels the linked budget with
   `publish_event=False` for the symmetric reason. (Both used to be about
   lock avoidance; sharing the publisher's session removed that half.)
+- **The plan owns the lines of its linked quote (issue #176).** The
+  budget module answers 409 to manual add/remove on a plan-linked quote;
+  the only way a line reaches that quote is through this module's
+  `treatment_added` / `treatment_removed` events. Don't add a reverse
+  (quote → plan) mirror — a `PlannedTreatmentItem` needs an odontogram
+  `Treatment`, and the double write was judged not worth it.
 - **Plan ↔ budget item sync goes through events**, not direct calls.
   Adding a treatment to a plan publishes
   `treatment_plan.treatment_added` with a denormalized snapshot

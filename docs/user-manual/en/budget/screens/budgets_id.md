@@ -37,7 +37,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/budget/frontend/pages/budgets/[id].vue
   - backend/app/modules/budget/router.py
-last_verified_commit: 4752264
+last_verified_commit: 7a1637d
 ---
 
 # Budget detail
@@ -71,6 +71,11 @@ signed, invoiced, or renegotiated.
 ## Edit lines
 
 > Requires `budget.write` and `draft` status.
+
+> **Quote linked to a treatment plan:** lines cannot be added or
+> removed here (the API answers `409`). Treatments are added and
+> removed **from the plan**, which mirrors them onto the quote. You can
+> still edit a line's price, discount or VAT.
 
 1. Click **Edit** on a line or **Add item** below the table.
 2. Change catalog item, tooth, surfaces, quantity, discount, or

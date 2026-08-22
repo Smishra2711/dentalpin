@@ -648,6 +648,10 @@ client-side.
 | `appointment.detail.actions` | `{ appointment }` |
 | `dashboard.widgets` | `{}` |
 | `settings.sections` | `{}` |
+| `budget.new.form` | `{ patient }` |
+| `budget.detail.sidebar` | `{ budget }` |
+| `budget.list.filter` | `{ ... }` (see `budgets/index.vue`) |
+| `budget.list.row.payments` | `{ budget }` |
 
 Consume:
 
