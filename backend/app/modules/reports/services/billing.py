@@ -5,13 +5,13 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import desc, func, select
+from sqlalchemy import and_, desc, func, not_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from app.core.auth.models import User
 from app.modules.billing.models import Invoice, InvoiceItem, InvoicePayment, InvoiceSeries
-from app.modules.budget.models import Budget
+from app.modules.budget.models import Budget, BudgetItem
 from app.modules.catalog.models import VatType
 
 
@@ -74,15 +74,33 @@ class BillingReportService:
         Returns:
             - total_budgeted: Sum of all budgets
             - total_discount: Sum of line + global discounts on those budgets
-            - work_in_progress: Sum of accepted budgets
-            - work_completed: Sum of completed budgets
+            - work_in_progress: Sum of accepted budgets not yet fully invoiced
+            - work_completed: Sum of accepted budgets fully invoiced
             - total_invoiced: Sum of issued invoices
             - total_paid: Sum of payments
             - balance_pending: total_invoiced - total_paid
         """
         from sqlalchemy import case
 
-        # Budget aggregation
+        # Budget aggregation. The ``completed`` budget status was removed in
+        # 2026-04 (budget/CLAUDE.md): financial closure on the budget axis is
+        # "fully invoiced" — every line's derived ``invoiced_quantity`` cache
+        # has reached its ``quantity``. ``work_in_progress`` is the
+        # complement, so the two tiles partition the accepted total (#242).
+        items_state = (
+            select(
+                BudgetItem.budget_id.label("budget_id"),
+                func.bool_and(BudgetItem.invoiced_quantity >= BudgetItem.quantity).label(
+                    "fully_invoiced"
+                ),
+            )
+            .where(BudgetItem.clinic_id == clinic_id)
+            .group_by(BudgetItem.budget_id)
+            .subquery()
+        )
+        # Budgets with no items have no row in ``items_state`` → not completed.
+        fully_invoiced = func.coalesce(items_state.c.fully_invoiced, False)
+
         budget_result = await db.execute(
             select(
                 func.coalesce(func.sum(Budget.total), Decimal("0")).label("total_budgeted"),
@@ -90,14 +108,30 @@ class BillingReportService:
                     "total_discount"
                 ),
                 func.coalesce(
-                    func.sum(case((Budget.status == "accepted", Budget.total), else_=0)),
+                    func.sum(
+                        case(
+                            (
+                                and_(Budget.status == "accepted", not_(fully_invoiced)),
+                                Budget.total,
+                            ),
+                            else_=0,
+                        )
+                    ),
                     Decimal("0"),
                 ).label("work_in_progress"),
                 func.coalesce(
-                    func.sum(case((Budget.status == "completed", Budget.total), else_=0)),
+                    func.sum(
+                        case(
+                            (and_(Budget.status == "accepted", fully_invoiced), Budget.total),
+                            else_=0,
+                        )
+                    ),
                     Decimal("0"),
                 ).label("work_completed"),
-            ).where(
+            )
+            .select_from(Budget)
+            .outerjoin(items_state, items_state.c.budget_id == Budget.id)
+            .where(
                 Budget.clinic_id == clinic_id,
                 Budget.patient_id == patient_id,
                 Budget.deleted_at.is_(None),

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(#242): patient billing KPI "Trabajo completado" is no longer permanently 0. The `completed` budget status was removed in 2026-04, so `get_patient_summary` now derives `work_completed` from **fully invoiced** accepted quotes (every line's `invoiced_quantity` ≥ `quantity`), and `work_in_progress` becomes the complement (accepted, not yet fully invoiced) so the two KPIs partition the accepted total.
+
 - feat(#181): `get_patient_summary` returns `total_discount` (Σ line + global discounts on the patient's budgets).
 - fix(#184): type-check clean — sibling composable imports are relative (the `~/` form resolved to the host for vue-tsc and made half the page implicitly `any`), ISO dates via `.slice(0, 10)`, budget status badge colour is `UiColor`.
 - style(lint): first ESLint pass over this module's frontend layer —
