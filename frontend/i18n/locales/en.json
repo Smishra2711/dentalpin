@@ -2647,8 +2647,7 @@
       "itemsRequired": "At least one item is required",
       "itemRequired": "Description and price are required",
       "selectCatalogItem": "Please select a treatment from the catalog",
-      "cannotEdit": "Only draft invoices can be edited",
-      "billingIncomplete": "The invoice cannot be issued because billing data is incomplete. Please fill in the patient's billing information to continue."
+      "cannotEdit": "Only draft invoices can be edited"
     },
     "newItemsPending": "New items pending save"
   },

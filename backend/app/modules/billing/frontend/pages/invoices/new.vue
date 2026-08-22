@@ -237,7 +237,7 @@ function goBack() {
           >
             {{ t('invoice.billingDataIncompleteHint') }}
             <NuxtLink
-              :to="`/patients/${selectedPatient.id}`"
+              :to="patientBillingEditPath(selectedPatient.id, route.fullPath)"
               class="underline"
             >
               {{ t('invoice.editPatientBilling') }}

@@ -2503,8 +2503,7 @@
       "itemsRequired": "Debe añadir al menos una línea",
       "itemRequired": "Descripción y precio son obligatorios",
       "selectCatalogItem": "Debe seleccionar un tratamiento del catálogo",
-      "cannotEdit": "Solo se pueden editar facturas en borrador",
-      "billingIncomplete": "La factura no puede emitirse porque los datos de facturación están incompletos. Rellena los datos del paciente para continuar."
+      "cannotEdit": "Solo se pueden editar facturas en borrador"
     },
     "newItemsPending": "Nuevas líneas pendientes de guardar",
     "filters": {

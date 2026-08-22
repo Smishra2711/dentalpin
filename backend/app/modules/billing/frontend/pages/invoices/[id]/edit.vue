@@ -339,7 +339,7 @@ function goBack() {
                     color="neutral"
                     size="xs"
                     icon="i-lucide-external-link"
-                    :to="`/patients/${currentInvoice.patient.id}?tab=billing&returnTo=${encodeURIComponent(route.fullPath)}`"
+                    :to="patientBillingEditPath(currentInvoice.patient.id, route.fullPath)"
                   >
                     {{ t('invoice.editInPatient') }}
                   </UButton>

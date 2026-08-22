@@ -30,7 +30,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/billing/frontend/pages/invoices/[id]/index.vue
   - backend/app/modules/billing/router.py
-last_verified_commit: 4752264
+last_verified_commit: 0f30803
 ---
 
 # Invoice detail
@@ -67,7 +67,10 @@ or issue a credit note.
 > Requires `billing.write`.
 
 1. Verify that the legal data and line items are correct. Once
-   issued, the document cannot be edited.
+   issued, the document cannot be edited. If the patient has no tax
+   id (nor DNI/NIE), the draft shows *Missing data* and the primary
+   button becomes **Complete data**: it opens the patient's billing
+   modal and returns to the invoice on save.
 2. Click **Issue**. The active series assigns the fiscal number,
    `invoice.issued` is published, and the document is frozen.
 3. If `verifactu` is installed, the hook will queue the AEAT

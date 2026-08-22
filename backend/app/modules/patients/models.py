@@ -73,6 +73,24 @@ class Patient(Base, TimestampMixin):
         return f"{self.first_name} {self.last_name}"
 
     @property
+    def effective_billing_name(self) -> str:
+        """Name printed on invoices: explicit billing name or the patient's own."""
+        return self.billing_name or self.full_name
+
+    @property
+    def effective_billing_tax_id(self) -> str | None:
+        """Tax id printed on invoices: explicit billing tax id, else DNI/NIE.
+
+        A passport is an identity document but not a tax id, so it never
+        doubles as NIF.
+        """
+        if self.billing_tax_id:
+            return self.billing_tax_id
+        if self.national_id and self.national_id_type != "passport":
+            return self.national_id
+        return None
+
+    @property
     def has_complete_billing_info(self) -> bool:
         """Check if patient has minimum billing info for invoicing."""
-        return bool(self.billing_name and self.billing_tax_id)
+        return bool(self.effective_billing_tax_id)

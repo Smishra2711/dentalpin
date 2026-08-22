@@ -47,6 +47,11 @@ export interface InvoiceListParams {
   compliance_severity?: string[]
 }
 
+/** Deep-link to the patient's billing-data modal, returning to `returnTo` after save. */
+export function patientBillingEditPath(patientId: string, returnTo: string): string {
+  return `/patients/${patientId}?tab=info&edit=billing&returnTo=${encodeURIComponent(returnTo)}`
+}
+
 export function useInvoices() {
   const api = useApi()
   const config = useRuntimeConfig()

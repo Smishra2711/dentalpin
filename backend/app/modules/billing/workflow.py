@@ -125,10 +125,8 @@ class InvoiceWorkflowService:
                 raise InvoiceWorkflowError("Patient not found")
 
             # Snapshot billing data from patient
-            invoice.billing_name = (
-                patient.billing_name or f"{patient.first_name} {patient.last_name}"
-            )
-            invoice.billing_tax_id = patient.billing_tax_id
+            invoice.billing_name = patient.effective_billing_name
+            invoice.billing_tax_id = patient.effective_billing_tax_id
             invoice.billing_address = patient.billing_address
             invoice.billing_email = patient.billing_email or patient.email
 
