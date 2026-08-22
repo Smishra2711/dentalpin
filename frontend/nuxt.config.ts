@@ -155,7 +155,6 @@ export default defineNuxtConfig({
     detectBrowserLanguage: {
       useCookie: true,
       cookieKey: 'dentalpin_locale',
-      redirectOn: 'root',
       fallbackLocale: 'en'
     }
   },

@@ -17,8 +17,7 @@ definePageMeta({ layout: 'public' })
 
 const route = useRoute()
 const i18n = useI18n()
-const { t, locale } = i18n
-const setLocale = (i18n as unknown as { setLocale?: (l: string) => Promise<void> }).setLocale
+const { t, locale, loadLocaleMessages } = i18n
 
 const token = computed(() => route.params.token as string)
 
@@ -68,17 +67,17 @@ async function onReauthVerify(payload: { method: string, value: string }) {
   }
 }
 
+// Switch the locale in memory only. `setLocale` would also persist the
+// `dentalpin_locale` cookie (#235), overwriting the visitor's own language
+// with the clinic's one on every public budget link they open.
 async function applyClinicLanguage() {
   const lang = meta.value?.clinic_language
   if (!lang || lang === locale.value) return
-  if (typeof setLocale === 'function') {
-    try {
-      await setLocale(lang)
-    } catch {
-      // ignore: keep current locale
-    }
-  } else {
+  try {
+    await loadLocaleMessages(lang as never)
     locale.value = lang as never
+  } catch {
+    // ignore: keep current locale
   }
 }
 
