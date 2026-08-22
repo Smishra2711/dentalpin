@@ -35,7 +35,7 @@ related_paths:
   - backend/app/modules/budget/frontend/pages/budgets/new.vue
   - backend/app/modules/budget/router.py
   - backend/app/modules/treatment_plan/frontend/components/budget/NewBudgetPlanHint.vue
-last_verified_commit: b1b82f5
+last_verified_commit: 7a1637d
 ---
 
 # New quote
