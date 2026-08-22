@@ -788,6 +788,12 @@ function getItemName(item: DeepReadonly<BudgetItem>): string {
                       >
                         -{{ formatMoney(item.line_discount) }}
                       </span>
+                      <span
+                        v-if="item.global_discount_share > 0"
+                        class="text-success-accent"
+                      >
+                        -{{ formatMoney(item.global_discount_share) }} ({{ t('budget.globalDiscount') }})
+                      </span>
                     </div>
                     <p
                       v-if="item.notes"
@@ -798,7 +804,10 @@ function getItemName(item: DeepReadonly<BudgetItem>): string {
                   </div>
                   <div class="text-right shrink-0">
                     <p class="font-semibold tabular-nums">
-                      {{ formatMoney(item.line_total) }}
+                      <s
+                        v-if="item.net_line_total < item.line_total"
+                        class="text-caption text-subtle font-normal mr-1"
+                      >{{ formatMoney(item.line_total) }}</s>{{ formatMoney(item.net_line_total) }}
                     </p>
                   </div>
                   <UButton

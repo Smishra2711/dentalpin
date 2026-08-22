@@ -30,7 +30,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/billing/frontend/pages/invoices/[id]/index.vue
   - backend/app/modules/billing/router.py
-last_verified_commit: 0f30803
+last_verified_commit: a13bd29
 ---
 
 # Invoice detail
@@ -43,6 +43,7 @@ or issue a credit note.
 
 ## At a glance
 
+- **Linked quote and plan.** An invoice created from a quote links back to it and, when that quote came from a treatment plan, to the plan as well.
 - **Legal data** — receiver (patient or third-party payer), tax ID,
   fiscal address, series + number (on `issued`). If the payer is
   not the patient, a *Different payer* chip is shown.

@@ -703,6 +703,21 @@ function goToCreditNoteFor() {
                   </UButton>
                 </dd>
               </div>
+              <div v-if="currentInvoice.treatment_plan">
+                <dt class="text-caption text-subtle">
+                  {{ t('invoice.linkedPlan') }}
+                </dt>
+                <dd>
+                  <UButton
+                    variant="link"
+                    size="sm"
+                    class="p-0"
+                    :to="`/treatment-plans/${currentInvoice.treatment_plan.id}`"
+                  >
+                    {{ currentInvoice.treatment_plan.plan_number }}
+                  </UButton>
+                </dd>
+              </div>
               <div v-if="currentInvoice.credit_note_for">
                 <dt class="text-caption text-subtle">
                   {{ t('invoice.creditNoteFor') }}

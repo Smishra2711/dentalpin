@@ -450,7 +450,8 @@
     "invoices": "Factures",
     "createInvoice": "Créer une facture",
     "noInvoices": "Ce patient n'a aucune facture",
-    "pending": "En attente"
+    "pending": "En attente",
+    "totalDiscount": "de remises"
   },
   "odontogram": {
     "title": "Odontogramme",
@@ -2654,7 +2655,8 @@
       "selectCatalogItem": "Veuillez sélectionner un traitement dans le catalogue",
       "cannotEdit": "Seules les factures en brouillon peuvent être modifiées"
     },
-    "newItemsPending": "Nouvelles lignes en attente d'enregistrement"
+    "newItemsPending": "Nouvelles lignes en attente d'enregistrement",
+    "linkedPlan": "Plan de traitement"
   },
   "reports": {
     "title": "Rapports",

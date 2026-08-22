@@ -335,8 +335,8 @@ function goBack() {
 
                   <div class="mt-1 flex flex-wrap items-center gap-4 text-caption text-subtle">
                     <span>{{ formatCurrency(item.unit_price) }} x {{ item.quantity }}</span>
-                    <span v-if="lineDiscountFor(item, item.quantity) > 0">
-                      {{ t('invoice.discount') }}: -{{ formatCurrency(lineDiscountFor(item, item.quantity)) }}
+                    <span v-if="lineDiscountFor(item, selectedItems.get(item.id) ?? item.quantity) > 0">
+                      {{ t('invoice.discount') }}: -{{ formatCurrency(lineDiscountFor(item, selectedItems.get(item.id) ?? item.quantity)) }}
                     </span>
                     <span>{{ getVatType(item.vat_type_id)?.names[locale] || 'IVA' }} {{ item.vat_rate }}%</span>
                   </div>
@@ -389,7 +389,7 @@ function goBack() {
                     v-else
                     class="text-subtle"
                   >
-                    {{ formatCurrency(item.line_total) }}
+                    {{ formatCurrency(item.net_line_total) }}
                   </span>
                 </div>
               </div>

@@ -15,7 +15,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/billing/frontend/pages/invoices/from-budget/[budgetId].vue
   - backend/app/modules/billing/router.py
-last_verified_commit: 3212255
+last_verified_commit: a13bd29
 ---
 
 # Factura desde presupuesto
@@ -42,8 +42,10 @@ y qué cantidades incluir.
   **y** el descuento global del presupuesto (repartido entre las
   líneas, sin IVA) se escriben en cada línea de la factura — la
   factura suma lo que el paciente firmó. En facturación parcial el
-  descuento se prorratea por la cantidad facturada. La vista previa
-  muestra las mismas cifras que tendrá la factura.
+  descuento se prorratea por la cantidad facturada; la etiqueta de
+  descuento de cada fila sigue la cantidad que estás facturando. Las
+  filas no seleccionadas muestran el precio neto del presupuesto. La
+  vista previa muestra las mismas cifras que tendrá la factura.
 - **Receptor.** Por defecto el paciente. Puedes definir un pagador
   distinto (compañía, mutua, familiar) antes de emitir.
 - **Datos de facturación.** La tarjeta muestra nombre, NIF y email

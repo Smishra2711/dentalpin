@@ -77,3 +77,11 @@ def net_line_amount(item: _LineTotals, global_share: Decimal) -> Decimal:
     return (
         Decimal(str(item.line_subtotal)) - Decimal(str(item.line_discount)) - global_share
     ).quantize(CENT)
+
+
+def net_line_total(item: _LineTotals, global_share: Decimal) -> Decimal:
+    """VAT-inclusive amount the patient actually pays for a line (line + global
+    discount applied, VAT on the discounted base). ``Σ net_line_total`` is the
+    budget total — every price surface shows this figure (issue #181)."""
+    base = net_line_amount(item, global_share)
+    return (base * (1 + Decimal(str(item.vat_rate)) / 100)).quantize(CENT)

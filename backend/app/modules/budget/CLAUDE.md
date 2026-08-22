@@ -131,12 +131,16 @@ contract.
   and publish. (Pre-#183 this was also a deadlock guard — the handler ran
   on its own session; it shares the publisher's now.)
 - **`pricing.allocate_global_discount` is the only proration formula.**
-  The global discount is applied to the VAT-inclusive items total in
-  `_recalculate_totals`; every per-line consumer (the `budget.accepted`
-  payload, `BudgetDetailResponse.items[].global_discount_share`,
-  `billing.create_from_budget`) goes through that helper. Don't
-  re-derive it — the invoice wizard and the plan sessions must land on
-  the same cents.
+  `_recalculate_totals` itself goes through it (issue #181): the global
+  discount is prorated per line ex-tax and VAT is charged on the
+  discounted base, so `total_discount`/`total_tax` on the quote equal
+  the invoice's. Every per-line consumer (the `budget.accepted`
+  payload, `BudgetDetailResponse.items[].{global_discount_share,
+  net_line_total}`, `billing.create_from_budget`, the PDF) uses the same
+  helper. Don't re-derive it — the invoice wizard and the plan sessions
+  must land on the same cents. `net_line_total` (VAT-inclusive, after
+  both discounts) is the figure every price surface shows; `line_total`
+  is the pre-global gross, shown struck through.
 - **Budget versioning** keeps every prior version — never overwrite.
 - **Public-link sessions are per-token** (cookie path scoped to
   `/api/v1/public/budgets/{token}`) so a stolen cookie from one

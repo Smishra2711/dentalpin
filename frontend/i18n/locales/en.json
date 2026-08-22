@@ -450,7 +450,8 @@
     "invoices": "Invoices",
     "createInvoice": "Create invoice",
     "noInvoices": "This patient has no invoices",
-    "pending": "Pending"
+    "pending": "Pending",
+    "totalDiscount": "in discounts"
   },
   "odontogram": {
     "title": "Dental Chart",
@@ -2654,7 +2655,8 @@
       "selectCatalogItem": "Please select a treatment from the catalog",
       "cannotEdit": "Only draft invoices can be edited"
     },
-    "newItemsPending": "New items pending save"
+    "newItemsPending": "New items pending save",
+    "linkedPlan": "Treatment plan"
   },
   "reports": {
     "title": "Reports",

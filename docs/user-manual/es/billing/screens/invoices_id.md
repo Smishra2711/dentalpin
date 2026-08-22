@@ -36,7 +36,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/billing/frontend/pages/invoices/[id]/index.vue
   - backend/app/modules/billing/router.py
-last_verified_commit: 0f30803
+last_verified_commit: a13bd29
 ---
 
 # Detalle de factura
@@ -49,6 +49,7 @@ se emite un abono.
 
 ## De un vistazo
 
+- **Presupuesto y plan vinculados.** Una factura creada desde un presupuesto enlaza a él y, si ese presupuesto nació de un plan de tratamiento, también al plan.
 - **Datos legales** — receptor (paciente o tercero pagador), NIF,
   dirección fiscal y serie + número (en `issued`). Si el pagador no
   es el paciente se ve un chip *Pagador distinto*.

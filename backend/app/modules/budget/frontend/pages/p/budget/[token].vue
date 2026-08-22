@@ -476,7 +476,11 @@ const greeting = computed(() => {
                   {{ item.quantity }} × {{ formatMoney(item.unit_price, meta?.clinic_currency) }}
                 </p>
                 <p class="treatments-total">
-                  {{ formatMoney(item.line_total, meta?.clinic_currency) }}
+                  <s
+                    v-if="Number(item.net_line_total) < Number(item.line_total)"
+                    class="treatments-gross"
+                  >{{ formatMoney(item.line_total, meta?.clinic_currency) }}</s>
+                  {{ formatMoney(item.net_line_total, meta?.clinic_currency) }}
                 </p>
               </div>
             </li>
@@ -934,6 +938,13 @@ const greeting = computed(() => {
   font-size: 12px;
   color: var(--ui-text-muted);
   margin: 0;
+}
+
+.treatments-gross {
+  font-weight: 400;
+  font-size: 0.85em;
+  opacity: 0.6;
+  margin-right: 0.35rem;
 }
 
 .treatments-total {

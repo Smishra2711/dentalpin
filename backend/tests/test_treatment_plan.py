@@ -1784,3 +1784,25 @@ async def test_link_budget_validations(
         json={"budget_id": standalone},
     )
     assert r.status_code == 400, r.text
+
+
+@pytest.mark.asyncio
+async def test_invoice_from_plan_quote_exposes_the_plan(
+    client: AsyncClient, auth_headers: dict, db_session: AsyncSession, setup: dict
+) -> None:
+    """The invoice detail resolves the plan behind its quote (issue #181) —
+    no FK, read-time lookup through the budget module."""
+    plan_id, _ = await _create_plan_with_items(client, auth_headers, setup, [16])
+    budget_id = await _activate_plan(client, auth_headers, db_session, plan_id)
+    items = (await client.get(f"/api/v1/budget/budgets/{budget_id}", headers=auth_headers)).json()[
+        "data"
+    ]["items"]
+    r = await client.post(
+        f"/api/v1/billing/invoices/from-budget/{budget_id}",
+        headers=auth_headers,
+        json={"items": [{"budget_item_id": items[0]["id"]}]},
+    )
+    assert r.status_code == 201, r.text
+    r = await client.get(f"/api/v1/billing/invoices/{r.json()['data']['id']}", headers=auth_headers)
+    assert r.status_code == 200, r.text
+    assert r.json()["data"]["treatment_plan"]["id"] == plan_id

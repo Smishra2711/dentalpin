@@ -37,7 +37,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/budget/frontend/pages/budgets/[id].vue
   - backend/app/modules/budget/router.py
-last_verified_commit: 7a1637d
+last_verified_commit: a13bd29
 ---
 
 # Budget detail
@@ -50,6 +50,7 @@ signed, invoiced, or renegotiated.
 
 ## At a glance
 
+- **Net price per line.** Each line shows what the patient pays after the line discount **and** its share of the global discount, with the pre-discount price struck through. The footer discount and VAT follow the same rule (VAT on the discounted base), matching the invoice.
 - **Two-column layout.** Left: budget line items with catalog item,
   tooth, surfaces, quantity, discount, and VAT. Right (top to
   bottom): **payments** card (slot `budget.detail.sidebar`, filled
