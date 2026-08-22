@@ -437,7 +437,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.INVOICE_ISSUED`
 - **Publishers:**
-  - `billing` — `backend/app/modules/billing/workflow.py:277`
+  - `billing` — `backend/app/modules/billing/workflow.py:275`
 - **Subscribers:**
   - `patient_timeline`
 
@@ -445,7 +445,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.INVOICE_PAID`
 - **Publishers:**
-  - `billing` — `backend/app/modules/billing/workflow.py:468`
+  - `billing` — `backend/app/modules/billing/workflow.py:466`
 - **Subscribers:**
   - `patient_timeline`
   - `verifactu`
