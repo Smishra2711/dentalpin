@@ -1644,3 +1644,143 @@ def test_reprice_sessions_keeps_completed_amounts() -> None:
     # Unknown treatment → untouched.
     TreatmentPlanService._reprice_sessions(plan, {uuid4(): Decimal("1.00")})
     assert pend_b.amount == Decimal("0.01")
+
+
+# ---------------------------------------------------------------------------
+# Issue #176 / #177 — the plan owns the lines of its linked quote
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_plan_linked_quote_rejects_manual_lines(
+    client: AsyncClient, auth_headers: dict, setup: dict
+) -> None:
+    """Lines on a plan-linked quote are added/removed from the plan only (#176).
+
+    Reception adding a treatment straight on the quote would bill work the
+    clinical plan never sees, so the quote answers 409 and points at the
+    plan. The plan → quote mirror keeps working.
+    """
+    plan_id, _ = await _create_plan_with_items(client, auth_headers, setup, [16])
+    r = await client.post(
+        f"/api/v1/treatment_plan/treatment-plans/{plan_id}/confirm", headers=auth_headers
+    )
+    assert r.status_code == 200, r.text
+    budget_id = r.json()["data"]["budget_id"]
+
+    r = await client.post(
+        f"/api/v1/budget/budgets/{budget_id}/items",
+        headers=auth_headers,
+        json={"catalog_item_id": setup["crown_id"], "quantity": 1, "tooth_number": 15},
+    )
+    assert r.status_code == 409, r.text
+
+    detail = await client.get(f"/api/v1/budget/budgets/{budget_id}", headers=auth_headers)
+    items = detail.json()["data"]["items"]
+    assert len(items) == 1
+    r = await client.delete(
+        f"/api/v1/budget/budgets/{budget_id}/items/{items[0]['id']}", headers=auth_headers
+    )
+    assert r.status_code == 409, r.text
+
+    # Plan side still mirrors into the draft quote.
+    treatment_id = await _create_treatment(client, auth_headers, setup, tooth_number=14)
+    r = await client.post(
+        f"/api/v1/treatment_plan/treatment-plans/{plan_id}/items",
+        headers=auth_headers,
+        json={"treatment_id": treatment_id},
+    )
+    assert r.status_code == 201, r.text
+    detail = await client.get(f"/api/v1/budget/budgets/{budget_id}", headers=auth_headers)
+    assert len(detail.json()["data"]["items"]) == 2
+
+
+@pytest.mark.asyncio
+async def test_standalone_quote_still_accepts_manual_lines(
+    client: AsyncClient, auth_headers: dict, setup: dict
+) -> None:
+    r = await client.post(
+        "/api/v1/budget/budgets",
+        headers=auth_headers,
+        json={"patient_id": setup["patient_id"], "valid_from": "2026-01-01"},
+    )
+    assert r.status_code == 201, r.text
+    budget_id = r.json()["data"]["id"]
+    r = await client.post(
+        f"/api/v1/budget/budgets/{budget_id}/items",
+        headers=auth_headers,
+        json={"catalog_item_id": setup["crown_id"], "quantity": 1},
+    )
+    assert r.status_code == 201, r.text
+
+
+@pytest.mark.asyncio
+async def test_link_budget_validations(
+    client: AsyncClient, auth_headers: dict, setup: dict
+) -> None:
+    """``link-budget`` refuses terminal quotes, double links and a plan that
+    already has a live quote — 400s instead of a unique-violation 500 (#177)."""
+    plan_a, _ = await _create_plan_with_items(client, auth_headers, setup, [16])
+    r = await client.post(
+        f"/api/v1/treatment_plan/treatment-plans/{plan_a}/confirm", headers=auth_headers
+    )
+    assert r.status_code == 200, r.text
+    budget_a = r.json()["data"]["budget_id"]
+
+    r = await client.post(
+        "/api/v1/treatment_plan/treatment-plans",
+        headers=auth_headers,
+        json={"patient_id": setup["patient_id"], "title": "Second plan"},
+    )
+    plan_c = r.json()["data"]["id"]
+
+    # Budget already linked to plan A.
+    r = await client.post(
+        f"/api/v1/treatment_plan/treatment-plans/{plan_c}/link-budget",
+        headers=auth_headers,
+        json={"budget_id": budget_a},
+    )
+    assert r.status_code == 400, r.text
+
+    # Plan A already has a live budget.
+    r = await client.post(
+        "/api/v1/budget/budgets",
+        headers=auth_headers,
+        json={"patient_id": setup["patient_id"], "valid_from": "2026-01-01"},
+    )
+    standalone = r.json()["data"]["id"]
+    r = await client.post(
+        f"/api/v1/treatment_plan/treatment-plans/{plan_a}/link-budget",
+        headers=auth_headers,
+        json={"budget_id": standalone},
+    )
+    assert r.status_code == 400, r.text
+
+    # Happy path: a draft plan takes a live standalone quote.
+    r = await client.post(
+        f"/api/v1/treatment_plan/treatment-plans/{plan_c}/link-budget",
+        headers=auth_headers,
+        json={"budget_id": standalone},
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["data"]["budget_id"] == standalone
+
+    # Terminal budget → refused.
+    r = await client.post(
+        f"/api/v1/budget/budgets/{standalone}/cancel",
+        headers=auth_headers,
+        json={"reason": "test"},
+    )
+    assert r.status_code == 200, r.text
+    r = await client.post(
+        "/api/v1/treatment_plan/treatment-plans",
+        headers=auth_headers,
+        json={"patient_id": setup["patient_id"], "title": "Third plan"},
+    )
+    plan_d = r.json()["data"]["id"]
+    r = await client.post(
+        f"/api/v1/treatment_plan/treatment-plans/{plan_d}/link-budget",
+        headers=auth_headers,
+        json={"budget_id": standalone},
+    )
+    assert r.status_code == 400, r.text

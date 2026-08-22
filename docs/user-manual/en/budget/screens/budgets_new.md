@@ -34,70 +34,62 @@ related_permissions:
 related_paths:
   - backend/app/modules/budget/frontend/pages/budgets/new.vue
   - backend/app/modules/budget/router.py
+  - backend/app/modules/treatment_plan/frontend/components/budget/NewBudgetPlanHint.vue
 last_verified_commit: b1b82f5
 ---
 
-# New budget
+# New quote
 
-Form to create a budget from scratch. The budget is born in `draft`
-state on save, and the workflow continues from the
-[detail](./budgets_id.md).
+Form to create a quote **without a treatment plan**. On save it is born
+in `draft` and the [detail](./budgets_id.md) opens, where lines are
+added.
 
 ## At a glance
 
-- **How you usually get here.**
-  - From the patient record → *New budget* (patient pre-selected).
-  - From the list → **New budget** (patient picker required).
-  - From a treatment plan → generates a budget kept in sync via
-    `treatment_plan.treatment_added` /
-    `treatment_plan.budget_sync_requested` events.
-- **Auto-numbering.** The number (`PRES-YYYY-####`) is assigned on
-  save; it is not editable.
-- **Default validity** — the form proposes `valid_from = today` and
-  `valid_until = today + 30 days`. Adjust if your policy differs.
-- **Price snapshot.** Each line records the catalog price effective
-  at creation time. Editing the catalog later does not change
-  existing budgets.
+- **Header only.** Pick the patient, validity and notes here. Lines
+  (catalog items, tooth, discounts, VAT) are added on the detail page
+  after saving.
+- **If the patient already has a treatment plan** in `draft` or
+  `pending` without a quote, the form says so with a link to the plan:
+  a plan's quote is generated **from the plan** (on confirm) so both
+  stay linked and in sync. A quote created here is never linked to the
+  plan.
+- **Automatic numbering.** The number (`PRES-YYYY-####`) is assigned on
+  save; not editable.
+- **Validity.** `valid_from` defaults to today; `valid_until` is left
+  empty (no expiry) unless you fill it in.
 
-## Create a budget
+## Create a quote
 
 > Requires `budget.write`.
 
-1. If you didn't come from a patient record, pick the patient in
-   the header.
-2. Add items from the catalog. For each line you can choose:
-   - Tooth and surfaces (FDI notation).
-   - Quantity, unit price (prefilled from the catalog), line
-     discount (percent or absolute).
-   - VAT type (prefilled from the catalog).
-3. Apply a global discount if needed.
-4. Review the totals in the sidebar.
-5. **Save**. The budget is created in `draft` and you land on the
-   [detail](./budgets_id.md) to send it, sign it, or invoice it
-   later.
+1. Select the patient (coming from their record, cancel takes you
+   back there).
+2. If the "plan without quote" notice shows, click **Open plan** and
+   generate the quote from there. Continue only when the quote belongs
+   to no plan.
+3. Adjust validity and notes (internal or patient-facing).
+4. **Create and add items**. The detail opens in `draft` to add lines,
+   send or sign.
 
 ## Create from a treatment plan
 
-> Requires `budget.write` and `treatment_plan.write`.
+> Requires `treatment_plan.plans.confirm`.
 
-1. On the treatment plan, click **Generate budget**.
-2. The plan's treatments arrive in the form as prefilled lines via
-   a snapshot event payload.
-3. Adjust what you need and save.
+On the plan, click **Confirm**: a linked `draft` quote is created with
+the plan's treatments as lines. From then on the lines are managed from
+the plan (see [quote detail](./budgets_id.md#edit-lines)).
 
 ## Permissions
 
 | What you see / can do | Permission |
 |-----------------------|------------|
-| Access the form and see the catalog | `budget.read` |
-| Create the budget | `budget.write` |
+| Create the quote | `budget.write` |
+| See the "plan without quote" notice | `treatment_plan.plans.read` |
 
 ## Troubleshooting
 
-- **Patient picker is empty.** You lack `patients.read` (without it
-  the form cannot list patients).
-- **A catalog item is missing.** Make sure it is active under
-  *Settings → Catalog* and your role has `catalog.read`.
-- **Totals don't match what you expect.** Check line vs global
-  discount. Application order: price × quantity → line discount →
-  VAT → global discount on the total.
+- **The patient selector is empty.** You lack `patients.read`.
+- **No notice although the patient has a plan.** Only `draft`/`pending`
+  plans without a quote are flagged; a confirmed plan already has its
+  quote on its own detail page.

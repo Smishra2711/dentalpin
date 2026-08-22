@@ -1826,6 +1826,10 @@
         "noteLabel": "Nota (opcional)",
         "submit": "Registar"
       }
+    },
+    "newBudgetHint": {
+      "text": "Este paciente tem o plano {plan} sem orçamento. Gere o orçamento a partir do plano para que fiquem ligados.",
+      "cta": "Abrir plano"
     }
   },
   "pipeline": {
@@ -1962,7 +1966,8 @@
       "toothNumberPlaceholder": "Ex.: 11, 21, 36...",
       "surfaces": "Faces",
       "notes": "Notas",
-      "notesPlaceholder": "Notas sobre este tratamento..."
+      "notesPlaceholder": "Notas sobre este tratamento...",
+      "managedByPlan": "As linhas deste orçamento são geridas a partir do plano de tratamento {plan}."
     },
     "signature": {
       "title": "Assinatura digital",

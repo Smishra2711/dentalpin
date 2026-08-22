@@ -730,7 +730,7 @@ function getItemName(item: DeepReadonly<BudgetItem>): string {
                   {{ t('budget.items.title') }}
                 </h2>
                 <UButton
-                  v-if="canEdit(currentBudget) && can(PERMISSIONS.budget.write)"
+                  v-if="canEdit(currentBudget) && can(PERMISSIONS.budget.write) && !currentBudget.treatment_plan"
                   icon="i-lucide-plus"
                   size="sm"
                   @click="isAddItemModalOpen = true"
@@ -738,6 +738,16 @@ function getItemName(item: DeepReadonly<BudgetItem>): string {
                   {{ t('budget.items.add') }}
                 </UButton>
               </div>
+              <!-- Plan-linked quote: lines live on the plan (issue #176). -->
+              <UAlert
+                v-if="canEdit(currentBudget) && currentBudget.treatment_plan"
+                class="mt-3"
+                color="info"
+                variant="subtle"
+                icon="i-lucide-clipboard-list"
+                :description="t('budget.items.managedByPlan', { plan: currentBudget.treatment_plan.plan_number })"
+                :actions="[{ label: t('budget.treatmentPlan'), to: `/treatment-plans/${currentBudget.treatment_plan.id}`, variant: 'link' }]"
+              />
             </template>
 
             <div
@@ -792,7 +802,7 @@ function getItemName(item: DeepReadonly<BudgetItem>): string {
                     </p>
                   </div>
                   <UButton
-                    v-if="canEdit(currentBudget) && can(PERMISSIONS.budget.write)"
+                    v-if="canEdit(currentBudget) && can(PERMISSIONS.budget.write) && !currentBudget.treatment_plan"
                     variant="ghost"
                     color="error"
                     icon="i-lucide-trash-2"

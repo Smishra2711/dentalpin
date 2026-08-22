@@ -72,6 +72,11 @@ signed, invoiced, or renegotiated.
 
 > Requires `budget.write` and `draft` status.
 
+> **Quote linked to a treatment plan:** lines cannot be added or
+> removed here (the API answers `409`). Treatments are added and
+> removed **from the plan**, which mirrors them onto the quote. You can
+> still edit a line's price, discount or VAT.
+
 1. Click **Edit** on a line or **Add item** below the table.
 2. Change catalog item, tooth, surfaces, quantity, discount, or
    VAT. Totals recompute on save.

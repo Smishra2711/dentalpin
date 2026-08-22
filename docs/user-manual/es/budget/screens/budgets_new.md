@@ -34,73 +34,64 @@ related_permissions:
 related_paths:
   - backend/app/modules/budget/frontend/pages/budgets/new.vue
   - backend/app/modules/budget/router.py
+  - backend/app/modules/treatment_plan/frontend/components/budget/NewBudgetPlanHint.vue
 last_verified_commit: b1b82f5
 ---
 
 # Nuevo presupuesto
 
-Formulario para crear un presupuesto desde cero. Al guardar nace en
-estado `draft` y el flujo continúa desde el
-[detalle](./budgets_id.md).
+Formulario para crear un presupuesto **sin plan de tratamiento**. Al
+guardar nace en estado `draft` y se abre el
+[detalle](./budgets_id.md), donde se añaden las líneas.
 
 ## De un vistazo
 
-- **Origen del presupuesto.** Suele llegarse aquí desde:
-  - La ficha del paciente → *Nuevo presupuesto* (paciente
-    preseleccionado).
-  - El listado → **Nuevo presupuesto** (selector de paciente
-    obligatorio).
-  - Un plan de tratamiento → genera un presupuesto sincronizado por
-    eventos `treatment_plan.treatment_added` /
-    `treatment_plan.budget_sync_requested`.
+- **Solo cabecera.** Aquí se elige paciente, validez y notas. Las
+  líneas (ítems del catálogo, diente, descuentos, IVA) se añaden en el
+  detalle después de guardar.
+- **Si el paciente ya tiene un plan de tratamiento** en `draft` o
+  `pending` sin presupuesto, el formulario lo avisa con un enlace al
+  plan: el presupuesto de un plan se genera **desde el plan** (al
+  confirmarlo) para que ambos queden vinculados y sincronizados. Un
+  presupuesto creado aquí nunca se vincula al plan.
 - **Numeración automática.** El número (`PRES-AAAA-####`) se asigna
   al guardar; no es editable.
-- **Validez por defecto** — el formulario propone `valid_from = hoy`
-  y `valid_until = hoy + 30 días`. Edítalo si vuestra política es
-  otra.
-- **Snapshot de precios.** Cada línea guarda el precio del catálogo
-  vigente al crear el presupuesto. Cambiar el catálogo después no
-  afecta a presupuestos existentes.
+- **Validez.** `valid_from` se propone a hoy; `valid_until` queda
+  vacío (sin caducidad) salvo que lo rellenes.
 
 ## Crear un presupuesto
 
 > Requiere `budget.write`.
 
-1. Si no vienes de la ficha del paciente, selecciona el paciente en
-   la cabecera.
-2. Añade ítems desde el catálogo. Por cada línea puedes elegir:
-   - Diente y superficies (notación FDI).
-   - Cantidad, precio unitario (precargado del catálogo),
-     descuento por línea (porcentaje o absoluto).
-   - Tipo de IVA (precargado del catálogo).
-3. Aplica un descuento global si procede.
-4. Revisa los totales en el panel lateral.
-5. **Guardar**. El presupuesto se crea en `draft` y te lleva al
-   [detalle](./budgets_id.md) para enviarlo, firmarlo o
-   facturarlo más tarde.
+1. Selecciona el paciente (si vienes de su ficha, vuelves a ella al
+   cancelar).
+2. Si aparece el aviso de plan sin presupuesto, pulsa **Ir al plan** y
+   genera el presupuesto desde allí. Sigue solo si el presupuesto no
+   corresponde a ningún plan.
+3. Ajusta validez y notas (internas o visibles para el paciente).
+4. **Crear y añadir ítems**. Se abre el detalle en `draft` para
+   añadir líneas, enviar o firmar.
 
 ## Crear desde un plan de tratamiento
 
-> Requiere `budget.write` y `treatment_plan.write`.
+> Requiere `treatment_plan.plans.confirm`.
 
-1. En el plan de tratamiento, pulsa **Generar presupuesto**.
-2. Los tratamientos del plan llegan al formulario como líneas
-   prerrellenadas mediante un evento snapshot.
-3. Ajusta lo que necesites y guarda.
+En el plan, pulsa **Confirmar**: se crea un presupuesto `draft`
+vinculado con los tratamientos del plan como líneas. A partir de ahí
+las líneas se gestionan desde el plan (ver
+[detalle del presupuesto](./budgets_id.md#editar-líneas)).
 
 ## Permisos
 
 | Lo que ves / puedes hacer | Permiso |
 |---------------------------|---------|
-| Acceder al formulario y ver el catálogo | `budget.read` |
 | Crear el presupuesto | `budget.write` |
+| Ver el aviso de planes sin presupuesto | `treatment_plan.plans.read` |
 
 ## Resolución de problemas
 
 - **El selector de paciente está vacío.** No tienes el permiso
-  `patients.read` (sin él el formulario no puede listar pacientes).
-- **No encuentro un ítem del catálogo.** Comprueba que esté activo en
-  *Ajustes → Catálogo* y que tu rol tenga `catalog.read`.
-- **El total no suma lo que espero.** Revisa el descuento por línea
-  vs el global. Orden de aplicación: precio × cantidad → descuento
-  línea → IVA → descuento global sobre el total.
+  `patients.read`.
+- **No veo el aviso aunque el paciente tiene un plan.** Solo se avisa
+  de planes en `draft`/`pending` sin presupuesto; un plan ya
+  confirmado tiene su propio presupuesto en su detalle.

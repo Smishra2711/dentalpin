@@ -75,6 +75,11 @@ Desde aquí se mueve el presupuesto por todo su flujo
 
 > Requiere `budget.write` y que el presupuesto esté en `draft`.
 
+> **Presupuesto vinculado a un plan de tratamiento:** no se pueden
+> añadir ni borrar líneas aquí (la API responde `409`). Se añaden y
+> quitan tratamientos **desde el plan**, que las refleja en el
+> presupuesto. Sí puedes editar precio, descuento o IVA de una línea.
+
 1. Pulsa **Editar** sobre la línea o **Añadir ítem** abajo de la
    tabla.
 2. Cambia ítem del catálogo, diente, superficies, cantidad,
