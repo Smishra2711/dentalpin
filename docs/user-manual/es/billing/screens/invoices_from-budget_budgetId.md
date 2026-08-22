@@ -87,4 +87,5 @@ y qué cantidades incluir.
   ítem.
 - **Falta una línea del presupuesto.** Está marcada como ya
   facturada al 100% (`invoiced_quantity == quantity`). Para revertir,
-  anula la factura previa y vuelve a entrar aquí.
+  anula o borra el borrador (o emite una rectificativa si ya está
+  emitida) y vuelve a entrar aquí: las líneas se liberan al instante.

@@ -84,5 +84,6 @@ include.
 - **Backend returns 400 on create.** You picked more quantity than
   pending. Check `invoiced_quantity` vs `quantity` per line.
 - **A budget line is missing.** It is already 100% invoiced
-  (`invoiced_quantity == quantity`). To revert, void the previous
-  invoice and re-enter this wizard.
+  (`invoiced_quantity == quantity`). To revert, void or delete the
+  draft invoice (or issue a credit note for an issued one) and re-enter
+  this wizard — the lines come back as soon as the document is voided.
