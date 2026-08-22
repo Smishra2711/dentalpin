@@ -37,7 +37,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/budget/frontend/pages/budgets/[id].vue
   - backend/app/modules/budget/router.py
-last_verified_commit: 7a1637d
+last_verified_commit: a13bd29
 ---
 
 # Detalle del presupuesto

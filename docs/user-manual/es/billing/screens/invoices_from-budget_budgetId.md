@@ -15,7 +15,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/billing/frontend/pages/invoices/from-budget/[budgetId].vue
   - backend/app/modules/billing/router.py
-last_verified_commit: 3212255
+last_verified_commit: a13bd29
 ---
 
 # Factura desde presupuesto
