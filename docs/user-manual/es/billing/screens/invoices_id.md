@@ -49,6 +49,7 @@ se emite un abono.
 
 ## De un vistazo
 
+- **Presupuesto y plan vinculados.** Una factura creada desde un presupuesto enlaza a él y, si ese presupuesto nació de un plan de tratamiento, también al plan.
 - **Datos legales** — receptor (paciente o tercero pagador), NIF,
   dirección fiscal y serie + número (en `issued`). Si el pagador no
   es el paciente se ve un chip *Pagador distinto*.

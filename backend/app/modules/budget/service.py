@@ -12,6 +12,7 @@ from app.core.list_query import parse_sort
 from app.modules.catalog.models import TreatmentCatalogItem, VatType
 
 from .models import Budget, BudgetHistory, BudgetItem
+from .pricing import allocate_global_discount, net_line_total
 from .schemas import TreatmentPlanBrief
 
 
@@ -832,25 +833,26 @@ class BudgetService:
         result = await db.execute(select(BudgetItem).where(BudgetItem.budget_id == budget.id))
         items = list(result.scalars().all())
 
-        # Sum up line totals
+        # The global discount is prorated per line (the single formula every
+        # consumer uses) and VAT is charged on the discounted base, so the
+        # quote's discount/VAT split matches the invoice built from it and
+        # Σ net_line_total == total (issue #181).
+        shares = allocate_global_discount(
+            budget.global_discount_type, budget.global_discount_value, items
+        )
         subtotal = sum((item.line_subtotal for item in items), Decimal("0.00"))
-        total_line_discount = sum((item.line_discount for item in items), Decimal("0.00"))
-        total_tax = sum((item.line_tax for item in items), Decimal("0.00"))
-        items_total = sum((item.line_total for item in items), Decimal("0.00"))
+        total_discount = sum((item.line_discount for item in items), Decimal("0.00")) + sum(
+            shares, Decimal("0.00")
+        )
+        total = sum(
+            (net_line_total(item, share) for item, share in zip(items, shares, strict=True)),
+            Decimal("0.00"),
+        )
 
-        # Apply global discount
-        global_discount = Decimal("0.00")
-        if budget.global_discount_value and budget.global_discount_type:
-            if budget.global_discount_type == "percentage":
-                global_discount = items_total * (budget.global_discount_value / Decimal("100"))
-            else:  # absolute
-                global_discount = min(budget.global_discount_value, items_total)
-
-        # Update budget totals
         budget.subtotal = subtotal
-        budget.total_discount = total_line_discount + global_discount
-        budget.total_tax = total_tax
-        budget.total = items_total - global_discount
+        budget.total_discount = total_discount
+        budget.total_tax = total - (subtotal - total_discount)
+        budget.total = total
 
 
 class BudgetHistoryService:

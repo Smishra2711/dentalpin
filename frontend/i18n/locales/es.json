@@ -478,7 +478,8 @@
     "invoices": "Facturas",
     "createInvoice": "Crear factura",
     "noInvoices": "Este paciente no tiene facturas",
-    "pending": "Pendiente"
+    "pending": "Pendiente",
+    "totalDiscount": "en descuentos"
   },
   "odontogram": {
     "title": "Odontograma",
@@ -2586,7 +2587,8 @@
       "lastMonth": "Mes anterior",
       "lastQuarter": "Trimestre anterior",
       "lastYear": "Año anterior"
-    }
+    },
+    "linkedPlan": "Plan de tratamiento"
   },
   "reports": {
     "title": "Informes",

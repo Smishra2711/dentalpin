@@ -249,3 +249,29 @@ async def test_credit_note_releases_quote_lines(
     r = await client.delete(f"{b}/{cn_id}", headers=h)
     assert r.status_code == 204, r.text
     assert await _invoiced_qty(client, h, budget_id) == 2
+
+
+@pytest.mark.asyncio
+async def test_partial_invoices_with_global_discount_add_up_to_the_quote(
+    client: AsyncClient, auth_headers: dict, budget_clinic_setup: dict
+) -> None:
+    """qty 2 with a 20 % line discount and a 10 % global: invoicing 1 + 1 must
+    reproduce the quote's discount and total exactly (issue #181)."""
+    budget_id, item_id = await _accepted_budget(
+        client,
+        auth_headers,
+        budget_clinic_setup,
+        quantity=2,
+        line_discount={"discount_type": "percentage", "discount_value": 20},
+        global_discount={"global_discount_type": "percentage", "global_discount_value": 10},
+    )
+    quote = (await client.get(f"/api/v1/budget/budgets/{budget_id}", headers=auth_headers)).json()[
+        "data"
+    ]
+    first = await _invoice_from_budget(client, auth_headers, budget_id, item_id, quantity=1)
+    second = await _invoice_from_budget(client, auth_headers, budget_id, item_id, quantity=1)
+
+    invoiced_discount = Decimal(first["total_discount"]) + Decimal(second["total_discount"])
+    invoiced_total = Decimal(first["total"]) + Decimal(second["total"])
+    assert invoiced_discount == Decimal(quote["total_discount"])  # 40 + 16
+    assert invoiced_total == Decimal(quote["total"])  # 200 − 56

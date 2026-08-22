@@ -450,7 +450,8 @@
     "invoices": "Faturas",
     "createInvoice": "Criar fatura",
     "noInvoices": "Este paciente não tem faturas",
-    "pending": "Pendente"
+    "pending": "Pendente",
+    "totalDiscount": "em descontos"
   },
   "odontogram": {
     "title": "Odontograma",
@@ -2654,7 +2655,8 @@
       "selectCatalogItem": "Selecione um tratamento do catálogo",
       "cannotEdit": "Só é possível editar faturas em rascunho"
     },
-    "newItemsPending": "Novas linhas por guardar"
+    "newItemsPending": "Novas linhas por guardar",
+    "linkedPlan": "Plano de tratamento"
   },
   "reports": {
     "title": "Relatórios",

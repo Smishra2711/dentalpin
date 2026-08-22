@@ -50,6 +50,7 @@ Desde aquí se mueve el presupuesto por todo su flujo
 
 ## De un vistazo
 
+- **Precio neto por línea.** Cada línea muestra lo que paga el paciente tras el descuento de línea **y** su parte del descuento global, con el precio sin descuento tachado. El descuento y el IVA del pie siguen la misma regla (IVA sobre la base descontada), igual que la factura.
 - **Layout en dos columnas.** Izquierda: líneas del presupuesto con
   ítem del catálogo, diente, superficies, cantidad, descuento e IVA.
   Derecha (de arriba abajo): tarjeta de **cobros** (slot

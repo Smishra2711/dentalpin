@@ -40,8 +40,9 @@ include.
   **and** its global discount (spread across the lines, ex-tax) are
   written on each invoice line — the invoice totals what the patient
   signed. On partial invoicing the discount is prorated by the
-  invoiced quantity. The preview shows the same figures the invoice
-  will have.
+  invoiced quantity; the discount caption on each row follows the
+  quantity you are invoicing. Unselected rows show the quote's net
+  price. The preview shows the same figures the invoice will have.
 - **Receiver.** Defaults to the patient. You can switch to a
   different payer (company, insurer, family member) before issuing.
 - **Billing data.** The card shows the name, tax id and email the

@@ -32,6 +32,7 @@ the link is forwarded to them.
 
 ## At a glance
 
+- **Prices are net.** Every treatment shows the discounted price (line + global discount); when there is a discount the original price appears struck through next to it, so the patient sees exactly what the footer total adds up from.
 - **Two-factor.** The patient enters the numeric code the clinic
   provided (you configure it from the budget detail under *Set
   public code*). `POST /verify` is rate-limited and, on success,

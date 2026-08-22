@@ -7,7 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from .pricing import allocate_global_discount
+from .pricing import allocate_global_discount, net_line_total
 
 # ============================================================================
 # Budget Status Types (Simplified)
@@ -168,6 +168,10 @@ class BudgetItemResponse(BaseModel):
     # populated inside ``BudgetDetailResponse`` (needs the sibling lines);
     # standalone item responses report 0.
     global_discount_share: Decimal = Decimal("0.00")
+    # VAT-inclusive price after line + global discount — what the patient
+    # pays for this line. Populated like ``global_discount_share``;
+    # standalone item responses report ``line_total``.
+    net_line_total: Decimal = Decimal("0.00")
 
     # Dental specifics
     tooth_number: int | None
@@ -410,6 +414,7 @@ class BudgetDetailResponse(BudgetResponse):
         )
         for item, share in zip(self.items, shares, strict=True):
             item.global_discount_share = share
+            item.net_line_total = net_line_total(item, share)
         return self
 
 

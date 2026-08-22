@@ -73,6 +73,7 @@ class BillingReportService:
 
         Returns:
             - total_budgeted: Sum of all budgets
+            - total_discount: Sum of line + global discounts on those budgets
             - work_in_progress: Sum of accepted budgets
             - work_completed: Sum of completed budgets
             - total_invoiced: Sum of issued invoices
@@ -85,6 +86,9 @@ class BillingReportService:
         budget_result = await db.execute(
             select(
                 func.coalesce(func.sum(Budget.total), Decimal("0")).label("total_budgeted"),
+                func.coalesce(func.sum(Budget.total_discount), Decimal("0")).label(
+                    "total_discount"
+                ),
                 func.coalesce(
                     func.sum(case((Budget.status == "accepted", Budget.total), else_=0)),
                     Decimal("0"),
@@ -128,6 +132,7 @@ class BillingReportService:
         return {
             "patient_id": patient_id,
             "total_budgeted": budget_totals.total_budgeted,
+            "total_discount": budget_totals.total_discount,
             "work_in_progress": budget_totals.work_in_progress,
             "work_completed": budget_totals.work_completed,
             "total_invoiced": total_invoiced,

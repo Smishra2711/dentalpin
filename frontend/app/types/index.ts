@@ -888,6 +888,8 @@ export interface BudgetItem {
   line_total: number
   /** Ex-tax share of the budget's global discount (populated in budget detail only). */
   global_discount_share: number
+  /** VAT-inclusive price after line + global discount (populated in budget detail only). */
+  net_line_total: number
   // Dental specifics
   tooth_number?: number
   surfaces?: string[]
@@ -1657,6 +1659,8 @@ export interface Invoice {
 export interface InvoiceDetail extends Invoice {
   items: InvoiceItem[]
   invoice_payments: InvoicePayment[]
+  /** Plan behind the linked quote, resolved at read time. */
+  treatment_plan?: { id: string, plan_number: string, title?: string | null, status: string } | null
 }
 
 export interface InvoiceListItem {
@@ -1803,6 +1807,7 @@ export interface PatientBillingSummary {
   patient_id: string
   // Budget metrics
   total_budgeted: number
+  total_discount: number
   work_in_progress: number
   work_completed: number
   // Invoice metrics

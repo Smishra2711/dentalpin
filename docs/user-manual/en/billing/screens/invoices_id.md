@@ -43,6 +43,7 @@ or issue a credit note.
 
 ## At a glance
 
+- **Linked quote and plan.** An invoice created from a quote links back to it and, when that quote came from a treatment plan, to the plan as well.
 - **Legal data** — receiver (patient or third-party payer), tax ID,
   fiscal address, series + number (on `issued`). If the payer is
   not the patient, a *Different payer* chip is shown.

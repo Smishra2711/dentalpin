@@ -2,7 +2,7 @@
 
 from decimal import Decimal
 from types import SimpleNamespace
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from httpx import AsyncClient
@@ -1015,3 +1015,96 @@ async def test_budget_accepted_payload_carries_net_line_amounts(
     assert len(items) == 1
     assert items[0]["net_amount"] == "72.00"  # 100 → 80 (line 20%) → 72 (global 10%)
     assert items[0]["quantity"] == 1
+
+
+# ---------------------------------------------------------------------------
+# Issue #181 — VAT on the discounted base, net price per line
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_global_discount_vat_on_discounted_base(
+    client: AsyncClient,
+    auth_headers: dict,
+    db_session: AsyncSession,
+    budget_clinic_setup: dict,
+):
+    """Quote and invoice must agree on the discount/VAT split, not just the total.
+
+    100 € line @21 % with 10 % global: discount 10.00 (ex-tax), VAT 18.90 on
+    the discounted base, total 108.90 — and the line's net price is the total.
+    """
+    vat21 = VatType(
+        id=uuid4(),
+        clinic_id=budget_clinic_setup["clinic_id"],
+        names={"es": "General", "en": "Standard"},
+        rate=21.0,
+        is_default=False,
+        is_system=False,
+    )
+    db_session.add(vat21)
+    catalog_item = await db_session.get(
+        TreatmentCatalogItem, UUID(budget_clinic_setup["catalog_item_id"])
+    )
+    catalog_item.vat_type_id = vat21.id  # lines inherit the VAT from the catalog item
+    await db_session.commit()
+
+    r = await client.post(
+        "/api/v1/budget/budgets",
+        json={
+            "patient_id": budget_clinic_setup["patient_id"],
+            "valid_from": "2024-01-01",
+            "global_discount_type": "percentage",
+            "global_discount_value": 10,
+        },
+        headers=auth_headers,
+    )
+    budget_id = r.json()["data"]["id"]
+    r = await client.post(
+        f"/api/v1/budget/budgets/{budget_id}/items",
+        json={"catalog_item_id": budget_clinic_setup["catalog_item_id"], "quantity": 1},
+        headers=auth_headers,
+    )
+    assert r.status_code == 201, r.text
+
+    data = (await client.get(f"/api/v1/budget/budgets/{budget_id}", headers=auth_headers)).json()[
+        "data"
+    ]
+    assert Decimal(data["subtotal"]) == Decimal("100.00")
+    assert Decimal(data["total_discount"]) == Decimal("10.00")
+    assert Decimal(data["total_tax"]) == Decimal("18.90")
+    assert Decimal(data["total"]) == Decimal("108.90")
+    item = data["items"][0]
+    assert Decimal(item["line_total"]) == Decimal("121.00")  # pre-global, shown struck through
+    assert Decimal(item["net_line_total"]) == Decimal("108.90")
+
+
+@pytest.mark.asyncio
+async def test_absolute_global_discount_total_and_net_lines_agree(
+    client: AsyncClient, auth_headers: dict, budget_clinic_setup: dict
+):
+    """An absolute global discount is a gross figure: total == items − D and
+    Σ net_line_total == total."""
+    r = await client.post(
+        "/api/v1/budget/budgets",
+        json={
+            "patient_id": budget_clinic_setup["patient_id"],
+            "valid_from": "2024-01-01",
+            "global_discount_type": "absolute",
+            "global_discount_value": 30,
+        },
+        headers=auth_headers,
+    )
+    budget_id = r.json()["data"]["id"]
+    for qty in (1, 2):
+        await client.post(
+            f"/api/v1/budget/budgets/{budget_id}/items",
+            json={"catalog_item_id": budget_clinic_setup["catalog_item_id"], "quantity": qty},
+            headers=auth_headers,
+        )
+    data = (await client.get(f"/api/v1/budget/budgets/{budget_id}", headers=auth_headers)).json()[
+        "data"
+    ]
+    assert Decimal(data["total"]) == Decimal("270.00")
+    assert Decimal(data["total_discount"]) == Decimal("30.00")
+    assert sum(Decimal(i["net_line_total"]) for i in data["items"]) == Decimal(data["total"])

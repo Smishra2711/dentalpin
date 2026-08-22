@@ -145,6 +145,12 @@ watch(() => props.patientId, () => {
           <p class="text-display text-default text-default mt-1">
             {{ formatCurrency(summary.total_budgeted) }}
           </p>
+          <p
+            v-if="summary.total_discount > 0"
+            class="text-caption text-success-accent tnum mt-1"
+          >
+            −{{ formatCurrency(summary.total_discount) }} {{ t('patientBilling.totalDiscount') }}
+          </p>
         </div>
 
         <div class="alert-surface-info rounded-token-lg p-4">

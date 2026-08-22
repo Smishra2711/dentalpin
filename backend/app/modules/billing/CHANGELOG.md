@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix(#181): from-budget wizard — the per-row discount caption follows the quantity being invoiced and unselected rows show the quote's net price (after global discount). Invoice detail exposes `treatment_plan` (read-time lookup through the budget module, no FK) and links to the plan. Patient billing summary exposes `total_discount`.
 - fix(#175): voiding or deleting a draft invoice, editing/removing one of its lines, or issuing a credit note now releases the quote lines it consumed. `BudgetItem.invoiced_quantity` is recomputed from the live invoice lines (`resync_invoiced_quantities`) instead of incremented on create; `create_from_budget` takes the budget row lock so two wizards can't over-invoice the same line.
 - fix(#206): issue snapshot reads `Patient.effective_billing_*` (no duplicated name fallback). "Faltan datos" now shows on the from-budget wizard and turns the draft's *Emitir* action into *Completar datos*; every "edit patient billing" link opens the billing modal and returns to the invoice. Payment terms are hidden (form) and omitted (PDF, #204 §4) when the budget is fully collected / the invoice has no balance due.
 - docs(#91): `BillingHookRegistry` docstring shows the real hook (`BaseModule.on_activate`) instead of the never-implemented `on_load/on_unload`.
