@@ -48,9 +48,14 @@ onActivated(load)
 
 const { format: formatMoney } = useCurrency()
 
-function delta(cur: number, prev: number): { pct: number | null, dir: 'up' | 'down' | 'flat' } {
-  if (!prev) return { pct: null, dir: 'flat' }
-  const pct = ((cur - prev) / prev) * 100
+function delta(cur: number | string, prev: number | string): { pct: number | null, dir: 'up' | 'down' | 'flat' } {
+  // Monetary fields arrive as decimal strings ("0.00"), which are truthy —
+  // coerce before guarding, or a fresh clinic renders NaN% (#201).
+  const curNum = Number(cur)
+  const prevNum = Number(prev)
+  if (!prevNum) return { pct: null, dir: 'flat' }
+  const pct = ((curNum - prevNum) / prevNum) * 100
+  if (!Number.isFinite(pct)) return { pct: null, dir: 'flat' }
   if (Math.abs(pct) < 0.5) return { pct: 0, dir: 'flat' }
   return { pct, dir: pct > 0 ? 'up' : 'down' }
 }
