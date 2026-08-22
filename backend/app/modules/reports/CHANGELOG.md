@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(#201): dashboard week-glance no longer shows `↘ NaN%` on a fresh clinic — `delta()` coerces its operands (the API sends monetary fields as decimal strings, so the `!prev` guard never fired for `"0.00"`) and treats a non-finite percentage as no-delta.
+
 - feat(#181): `get_patient_summary` returns `total_discount` (Σ line + global discounts on the patient's budgets).
 - fix(#184): type-check clean — sibling composable imports are relative (the `~/` form resolved to the host for vue-tsc and made half the page implicitly `any`), ISO dates via `.slice(0, 10)`, budget status badge colour is `UiColor`.
 - style(lint): first ESLint pass over this module's frontend layer —
