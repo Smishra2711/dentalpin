@@ -15,7 +15,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/billing/frontend/pages/invoices/from-budget/[budgetId].vue
   - backend/app/modules/billing/router.py
-last_verified_commit: 6c91240
+last_verified_commit: 0f30803
 ---
 
 # Invoice from budget

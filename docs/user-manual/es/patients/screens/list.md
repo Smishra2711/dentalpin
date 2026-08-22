@@ -12,7 +12,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/patients/router.py
   - backend/app/modules/patients/frontend/pages/patients/index.vue
-last_verified_commit: 0e9a0ac
+last_verified_commit: 0f30803
 screenshots:
   - patients.png
 ---

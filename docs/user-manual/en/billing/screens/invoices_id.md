@@ -30,7 +30,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/billing/frontend/pages/invoices/[id]/index.vue
   - backend/app/modules/billing/router.py
-last_verified_commit: 4752264
+last_verified_commit: 0f30803
 ---
 
 # Invoice detail
