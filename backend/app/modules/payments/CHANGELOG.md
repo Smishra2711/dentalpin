@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- fix(#180): payments recorded before #178 on a budget-linked invoice
+  were labeled `on_account` instead of `budget`, so the quote's
+  "Budget payments" total missed them even though the invoice was
+  correctly paid. `backend/scripts/backfill_on_account_budget_target.py`
+  relabels the affected rows — run once with `--apply` after
+  upgrading (dry-run by default, safe to re-run).
+
 - fix(#179): `/payments` → New payment's patient field was a plain
   text input bound to `patient_id` (a UUID) with a "Search patient…"
   placeholder that didn't actually search — typing a name posted an
