@@ -43,8 +43,8 @@ Idempotent: once reclassified, a row's ``target_type`` is no longer
 
 Usage::
 
-    docker-compose exec backend python backend/scripts/backfill_on_account_budget_target.py
-    docker-compose exec backend python backend/scripts/backfill_on_account_budget_target.py --apply
+    docker-compose exec backend python scripts/backfill_on_account_budget_target.py
+    docker-compose exec backend python scripts/backfill_on_account_budget_target.py --apply
 
 Run once after deploying this backfill. Can be re-run safely.
 """
