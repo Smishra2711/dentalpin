@@ -14,10 +14,7 @@ from decimal import Decimal
 import pytest
 from httpx import AsyncClient
 
-from tests.modules.billing.test_invoice_from_budget import (
-    _accepted_budget,
-    _invoice_from_budget,
-)
+from tests.modules.billing.helpers import accepted_budget, invoice_from_budget
 
 
 async def _patient_summary(client: AsyncClient, auth_headers: dict, patient_id: str) -> dict:
@@ -31,10 +28,10 @@ async def test_partially_invoiced_budget_counts_as_in_progress(
     client: AsyncClient, auth_headers: dict, budget_clinic_setup: dict
 ) -> None:
     """An accepted quote with lines still to invoice is work in progress."""
-    budget_id, item_id = await _accepted_budget(
+    budget_id, item_id = await accepted_budget(
         client, auth_headers, budget_clinic_setup, quantity=2
     )
-    await _invoice_from_budget(client, auth_headers, budget_id, item_id, quantity=1)
+    await invoice_from_budget(client, auth_headers, budget_id, item_id, quantity=1)
 
     summary = await _patient_summary(client, auth_headers, budget_clinic_setup["patient_id"])
     assert Decimal(summary["work_in_progress"]) == Decimal("200.00")
@@ -46,11 +43,11 @@ async def test_fully_invoiced_budget_counts_as_completed(
     client: AsyncClient, auth_headers: dict, budget_clinic_setup: dict
 ) -> None:
     """Once every line is fully invoiced the total moves to work completed."""
-    budget_id, item_id = await _accepted_budget(
+    budget_id, item_id = await accepted_budget(
         client, auth_headers, budget_clinic_setup, quantity=2
     )
-    await _invoice_from_budget(client, auth_headers, budget_id, item_id, quantity=1)
-    await _invoice_from_budget(client, auth_headers, budget_id, item_id, quantity=1)
+    await invoice_from_budget(client, auth_headers, budget_id, item_id, quantity=1)
+    await invoice_from_budget(client, auth_headers, budget_id, item_id, quantity=1)
 
     summary = await _patient_summary(client, auth_headers, budget_clinic_setup["patient_id"])
     assert Decimal(summary["work_in_progress"]) == Decimal("0.00")

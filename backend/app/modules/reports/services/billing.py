@@ -94,7 +94,12 @@ class BillingReportService:
                     "fully_invoiced"
                 ),
             )
-            .where(BudgetItem.clinic_id == clinic_id)
+            .join(Budget, Budget.id == BudgetItem.budget_id)
+            .where(
+                BudgetItem.clinic_id == clinic_id,
+                Budget.clinic_id == clinic_id,
+                Budget.patient_id == patient_id,
+            )
             .group_by(BudgetItem.budget_id)
             .subquery()
         )
