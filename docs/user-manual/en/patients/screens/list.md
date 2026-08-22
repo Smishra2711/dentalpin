@@ -46,9 +46,10 @@ filter, open a patient's detail page, or create a new patient.
 > Requires the `patients.write` permission.
 
 1. Click **New patient** in the top-right toolbar.
-2. Fill in the required identity fields (name, surname, date of birth).
-   Contact details and demographics can be added now or later from the
-   patient detail page.
+2. Fill in first and last name. Contact details, **identity document
+   (NIF/NIE)** and date of birth are optional and can be completed
+   later from the patient detail page. The document is used as the
+   invoice tax id unless separate billing data is set.
 3. Click **Save**. The new patient appears at the top of the list and
    the system publishes a `patient.created` event so other modules
    (recalls, notifications, …) can react.

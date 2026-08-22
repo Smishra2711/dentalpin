@@ -75,7 +75,10 @@ se emite un abono.
 > Requiere `billing.write`.
 
 1. Comprueba que los datos legales y las líneas son correctos. Una
-   vez emitida, no se podrá editar.
+   vez emitida, no se podrá editar. Si el paciente no tiene NIF (ni
+   DNI/NIE), el borrador muestra *Faltan datos* y el botón principal
+   pasa a ser **Completar datos**: abre el modal de facturación del
+   paciente y vuelve a la factura al guardar.
 2. Pulsa **Emitir**. La serie activa asigna número fiscal, se
    publica `invoice.issued` y se congela el documento.
 3. Si `verifactu` está instalado, el *hook* encolará el envío a

@@ -7,6 +7,8 @@ related_endpoints:
   - GET /api/v1/billing/settings
   - GET /api/v1/budget/budgets/{budget_id}
   - POST /api/v1/billing/invoices/from-budget/{budget_id}
+  - GET /api/v1/patients/{patient_id}
+  - POST /api/v1/payments/summary/by-budgets
 related_permissions:
   - billing.read
   - billing.write
@@ -44,6 +46,14 @@ y qué cantidades incluir.
   muestra las mismas cifras que tendrá la factura.
 - **Receptor.** Por defecto el paciente. Puedes definir un pagador
   distinto (compañía, mutua, familiar) antes de emitir.
+- **Datos de facturación.** La tarjeta muestra nombre, NIF y email
+  que irán en la factura. Si el paciente no tiene NIF ni DNI/NIE
+  aparece el aviso *Faltan datos* con el botón **Editar datos del
+  paciente**, que abre el modal de facturación y vuelve aquí al
+  guardar.
+- **Plazo de pago.** Solo se muestra si el presupuesto tiene importe
+  pendiente de cobro. Un presupuesto cobrado al 100 % genera una
+  factura sin plazo ni vencimiento.
 
 ## Facturar desde presupuesto
 

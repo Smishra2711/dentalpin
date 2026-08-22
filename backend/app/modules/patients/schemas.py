@@ -32,6 +32,8 @@ class PatientCreate(BaseModel):
     date_of_birth: date | None = None
     notes: str | None = None
     do_not_contact: bool = False
+    national_id: str | None = Field(default=None, max_length=50)
+    national_id_type: str | None = Field(default=None, max_length=20)
     billing_name: str | None = Field(default=None, max_length=200)
     billing_tax_id: str | None = Field(default=None, max_length=50)
     billing_address: BillingAddress | None = None

@@ -20,6 +20,8 @@ const budget = ref<BudgetDetail | null>(null)
 // fields, and drafts take their billing party from the patient.
 const patient = ref<Patient | null>(null)
 const vatTypes = ref<VatType[]>([])
+// Fully collected budgets get no payment terms: the invoice is born paid.
+const budgetFullyPaid = ref(false)
 
 // Selected items with quantities to invoice
 const selectedItems = ref<Map<string, number>>(new Map())
@@ -35,13 +37,19 @@ const form = ref({
 // Load budget and VAT types
 onMounted(async () => {
   try {
-    const [budgetData, vatResponse] = await Promise.all([
+    const [budgetData, vatResponse, paymentSummary] = await Promise.all([
       fetchBudget(budgetId),
-      api.get<{ data: VatType[] }>('/api/v1/catalog/vat-types')
+      api.get<{ data: VatType[] }>('/api/v1/catalog/vat-types'),
+      api.post<ApiResponse<{ summaries: Record<string, { payment_status: string }> }>>(
+        '/api/v1/payments/summary/by-budgets',
+        { budget_ids: [budgetId] }
+      )
     ])
 
     budget.value = budgetData
     vatTypes.value = vatResponse.data
+    budgetFullyPaid.value = paymentSummary.data.summaries[budgetId]?.payment_status === 'paid'
+    if (budgetFullyPaid.value) form.value.payment_term_days = 0
     if (budgetData?.patient) {
       patient.value = (await api.get<ApiResponse<Patient>>(`/api/v1/patients/${budgetData.patient.id}`)).data
     }
@@ -441,13 +449,42 @@ function goBack() {
             </div>
           </div>
 
-          <p class="mt-4 text-caption text-subtle italic">
+          <div
+            v-if="!patient.has_complete_billing_info"
+            class="mt-4 flex items-center gap-2 px-3 py-2 alert-surface-warning rounded-token-md"
+          >
+            <UIcon
+              name="i-lucide-alert-triangle"
+              class="w-5 h-5 flex-shrink-0"
+            />
+            <div class="flex-1">
+              <p class="font-medium">
+                {{ t('invoice.billingDataIncomplete') }}
+              </p>
+              <p class="text-sm text-warning-accent">
+                {{ t('invoice.billingDataIncompleteHint') }}
+              </p>
+            </div>
+            <UButton
+              size="sm"
+              variant="outline"
+              color="warning"
+              :to="patientBillingEditPath(patient.id, route.fullPath)"
+            >
+              {{ t('invoice.editPatientBilling') }}
+            </UButton>
+          </div>
+
+          <p
+            v-else
+            class="mt-4 text-caption text-subtle italic"
+          >
             {{ t('invoice.billingFromPatientHint') }}
           </p>
         </UCard>
 
-        <!-- Payment terms -->
-        <UCard>
+        <!-- Payment terms (hidden when the budget is already collected) -->
+        <UCard v-if="!budgetFullyPaid">
           <template #header>
             <h3 class="font-semibold text-default">
               {{ t('invoice.paymentTerms') }}

@@ -2647,8 +2647,7 @@
       "itemsRequired": "Au moins une ligne est requise",
       "itemRequired": "La description et le prix sont requis",
       "selectCatalogItem": "Veuillez sélectionner un traitement dans le catalogue",
-      "cannotEdit": "Seules les factures en brouillon peuvent être modifiées",
-      "billingIncomplete": "La facture ne peut pas être émise car les données de facturation sont incomplètes. Veuillez compléter les informations de facturation du patient pour continuer."
+      "cannotEdit": "Seules les factures en brouillon peuvent être modifiées"
     },
     "newItemsPending": "Nouvelles lignes en attente d'enregistrement"
   },

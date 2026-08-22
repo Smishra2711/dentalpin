@@ -165,6 +165,13 @@ class InvoicePDFService:
         # Format dates
         issue_date = invoice.issue_date.strftime("%d/%m/%Y") if invoice.issue_date else "-"
         due_date = invoice.due_date.strftime("%d/%m/%Y") if invoice.due_date else "-"
+        # Payment terms only make sense while something is still owed (#204).
+        payment_terms_html = (
+            f'<div class="payment-info"><strong>{labels["payment_terms"]}:</strong> '
+            f"{invoice.payment_term_days} {labels['days']}</div>"
+            if balance_due > 0
+            else ""
+        )
 
         # Document title
         doc_title = labels["credit_note"] if is_credit_note else labels["invoice"]
@@ -599,11 +606,7 @@ class InvoicePDFService:
             else ""
         }
 
-            <div class="payment-info">
-                <strong>{labels["payment_terms"]}:</strong> {invoice.payment_term_days} {
-            labels["days"]
-        }
-            </div>
+            {payment_terms_html}
 
             {legal_notices_html}
 

@@ -7,6 +7,8 @@ related_endpoints:
   - GET /api/v1/billing/settings
   - GET /api/v1/budget/budgets/{budget_id}
   - POST /api/v1/billing/invoices/from-budget/{budget_id}
+  - GET /api/v1/patients/{patient_id}
+  - POST /api/v1/payments/summary/by-budgets
 related_permissions:
   - billing.read
   - billing.write
@@ -42,6 +44,14 @@ include.
   will have.
 - **Receiver.** Defaults to the patient. You can switch to a
   different payer (company, insurer, family member) before issuing.
+- **Billing data.** The card shows the name, tax id and email the
+  invoice will carry. If the patient has neither a tax id nor a
+  DNI/NIE, a *Missing data* warning appears with an **Edit patient
+  data** button that opens the billing modal and returns here on
+  save.
+- **Payment terms.** Only shown when the budget still has an
+  outstanding amount. A fully collected budget produces an invoice
+  with no terms or due date.
 
 ## Invoice from a budget
 

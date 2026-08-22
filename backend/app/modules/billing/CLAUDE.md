@@ -97,3 +97,7 @@ that event was never published.
 ## CHANGELOG
 
 See `./CHANGELOG.md`.
+
+## Billing party on drafts
+
+Drafts store no billing data. `InvoiceWorkflowService.issue` snapshots `Patient.effective_billing_name` / `effective_billing_tax_id` (explicit billing fields, else patient name and DNI/NIE — never a passport). `has_complete_billing_info` is the same rule, so the UI warning and the issue gate agree (modulo the country hook waiver). The from-budget wizard reads `POST /api/v1/payments/summary/by-budgets` to hide payment terms on fully collected budgets (`payments` is in `depends`).

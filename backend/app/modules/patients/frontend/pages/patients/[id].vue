@@ -31,7 +31,6 @@ const patientIdRef = computed(() => patientId)
 
 // Handle returnTo query param (from invoice edit page)
 const returnTo = computed(() => route.query.returnTo as string | undefined)
-const openBillingEdit = computed(() => route.query.tab === 'billing')
 
 // Fetch patient identity from the patients module. The Resumen smart-
 // cards each fetch their own module's data via slot registration; the
@@ -167,23 +166,13 @@ function openSectionModal(section: SectionType) {
   editModalOpen.value = true
 }
 
-// Auto-open billing modal if coming from invoice edit
+// Deep-link to a section modal: ?tab=info&edit=medical (medical-history
+// card) or ?tab=info&edit=billing (invoice pages, with returnTo).
 watch(
-  () => patient.value,
-  (newPatient) => {
-    if (openBillingEdit.value && newPatient && !editModalOpen.value) {
-      openSectionModal('billing')
-    }
-  },
-  { immediate: true }
-)
-
-// Deep-link from the medical-history card: ?tab=info&edit=medical.
-watch(
-  () => route.query.edit,
-  (edit) => {
-    if (edit === 'medical' && patient.value && !editModalOpen.value) {
-      openSectionModal('medical')
+  [() => route.query.edit, () => patient.value],
+  ([edit]) => {
+    if ((edit === 'medical' || edit === 'billing') && patient.value && !editModalOpen.value) {
+      openSectionModal(edit)
     }
   },
   { immediate: true }

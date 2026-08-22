@@ -46,9 +46,10 @@ buscar, filtrar, abrir la ficha de un paciente o crear uno nuevo.
 > Requiere el permiso `patients.write`.
 
 1. Pulsa **Nuevo paciente** en la barra superior derecha.
-2. Rellena los campos obligatorios de identidad (nombre, apellidos,
-   fecha de nacimiento). El contacto y la demografía se pueden añadir
-   ahora o más tarde desde la ficha.
+2. Rellena nombre y apellidos. Contacto, **documento (NIF/NIE)** y
+   fecha de nacimiento son opcionales y se pueden completar después
+   desde la ficha. El documento se usa como NIF en las facturas si
+   no se definen datos de facturación aparte.
 3. Pulsa **Guardar**. El nuevo paciente aparece arriba del listado y
    el sistema publica un evento `patient.created` para que otros
    módulos (recalls, notificaciones…) reaccionen.

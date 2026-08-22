@@ -115,16 +115,17 @@ const complianceRejection = computed<{ message?: string } | null>(() => {
 })
 
 // Actions
+function goToPatientBilling() {
+  const patientId = currentInvoice.value?.patient?.id
+  if (patientId) router.push(patientBillingEditPath(patientId, route.fullPath))
+}
+
 function requestIssue() {
   if (!currentInvoice.value) return
 
-  // Check billing data is complete before issuing
+  // Billing data missing: send the user to fix it and come back.
   if (hasBillingDataIncomplete.value) {
-    toast.add({
-      title: t('common.error'),
-      description: t('invoice.errors.billingIncomplete'),
-      color: 'error'
-    })
+    goToPatientBilling()
     return
   }
 
@@ -340,13 +341,23 @@ const primaryActions = computed<EntityAction[]>(() => {
   }
 
   if (canIssue(inv) && can(PERMISSIONS.billing.write)) {
-    actions.push({
-      key: 'issue',
-      label: t('invoice.actions.issue'),
-      icon: 'i-lucide-send',
-      color: 'primary',
-      onClick: requestIssue
-    })
+    actions.push(
+      hasBillingDataIncomplete.value
+        ? {
+            key: 'issue',
+            label: t('invoice.criticalBanner.billingIncomplete.cta'),
+            icon: 'i-lucide-user-pen',
+            color: 'warning',
+            onClick: requestIssue
+          }
+        : {
+            key: 'issue',
+            label: t('invoice.actions.issue'),
+            icon: 'i-lucide-send',
+            color: 'primary',
+            onClick: requestIssue
+          }
+    )
   }
 
   if (canSend(inv) && can(PERMISSIONS.billing.write)) {
@@ -655,7 +666,7 @@ function goToCreditNoteFor() {
                   size="sm"
                   variant="outline"
                   color="warning"
-                  @click="router.push(`/patients/${currentInvoice.patient?.id}`)"
+                  @click="goToPatientBilling"
                 >
                   {{ t('invoice.editPatientBilling') }}
                 </UButton>

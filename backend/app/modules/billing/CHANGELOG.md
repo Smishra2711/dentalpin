@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix(#206): issue snapshot reads `Patient.effective_billing_*` (no duplicated name fallback). "Faltan datos" now shows on the from-budget wizard and turns the draft's *Emitir* action into *Completar datos*; every "edit patient billing" link opens the billing modal and returns to the invoice. Payment terms are hidden (form) and omitted (PDF, #204 §4) when the budget is fully collected / the invoice has no balance due.
 - docs(#91): `BillingHookRegistry` docstring shows the real hook (`BaseModule.on_activate`) instead of the never-implemented `on_load/on_unload`.
 - refactor(#184): the invoice edit page no longer casts the embedded patient brief to `Patient`; a `displayedPatient` computed falls back from the user's pick to the invoice brief, and `patient_id` is only sent when a different patient was actually chosen.
 - fix(#184): type-check clean. `GET /invoices/{id}/payments` returns `InvoicePaymentDetailResponse` (link row + embedded `PaymentResponse`) — the patient billing summary rendered `payment_date`/`method` the link row never had; `InvoiceDetail.invoice_payments` mirrors the API (`payments` did not exist); invoices embed billing's own patient brief (`InvoicePatientBrief`, with billing fields); the from-budget page loads the full patient for the billing card (the budget brief has no billing fields, so it always showed the fallback); the new-invoice form drops the dead billing inputs the API ignores; readonly items typed `DeepReadonly` where only read.
