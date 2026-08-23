@@ -28,9 +28,7 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(["clinic_id"], ["clinics.id"]),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "clinic_id", "name", name="uq_medical_reference_surgery_clinic_name"
-        ),
+        sa.UniqueConstraint("clinic_id", "name", name="uq_medical_reference_surgery_clinic_name"),
     )
     op.create_index(
         "ix_medical_reference_surgery_clinic_id", "medical_reference_surgery", ["clinic_id"]

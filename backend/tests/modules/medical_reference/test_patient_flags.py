@@ -22,9 +22,7 @@ import pytest
 from httpx import AsyncClient
 
 
-async def _create_reference_medication(
-    client: AsyncClient, auth_headers: dict, name: str
-) -> str:
+async def _create_reference_medication(client: AsyncClient, auth_headers: dict, name: str) -> str:
     res = await client.post(
         "/api/v1/medical_reference/medications",
         json={"name": name},
@@ -34,7 +32,9 @@ async def _create_reference_medication(
     return res.json()["data"]["id"]
 
 
-async def _save_history(client: AsyncClient, auth_headers: dict, patient_id, medications, diseases=()):
+async def _save_history(
+    client: AsyncClient, auth_headers: dict, patient_id, medications, diseases=()
+):
     res = await client.put(
         f"/api/v1/patients_clinical/patients/{patient_id}/medical-history",
         json={"medications": medications, "systemic_diseases": list(diseases)},
@@ -141,9 +141,7 @@ async def test_contraindication_and_free_text_exclusion(
 
 
 @pytest.mark.asyncio
-async def test_no_flags_for_unlinked_history(
-    client: AsyncClient, auth_headers: dict, test_patient
-):
+async def test_no_flags_for_unlinked_history(client: AsyncClient, auth_headers: dict, test_patient):
     """A patient whose entire history is free-text-only produces no flags
     (and no error) — the pre-integration behavior stays intact."""
     await _create_reference_medication(client, auth_headers, "Warfarin")

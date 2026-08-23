@@ -159,8 +159,7 @@ def test_medical_reference_uninstall_roundtrip_is_branch_scoped() -> None:
     _alembic("upgrade", "heads")
     before = _list_tables()
     assert MEDICAL_REFERENCE_TABLES.issubset(before), (
-        f"expected medical_reference tables at heads; "
-        f"missing: {MEDICAL_REFERENCE_TABLES - before}"
+        f"expected medical_reference tables at heads; missing: {MEDICAL_REFERENCE_TABLES - before}"
     )
     baseline_non_medical_reference = before - MEDICAL_REFERENCE_TABLES
 
@@ -168,8 +167,7 @@ def test_medical_reference_uninstall_roundtrip_is_branch_scoped() -> None:
 
     after_down = _list_tables()
     assert MEDICAL_REFERENCE_TABLES.isdisjoint(after_down), (
-        f"medical_reference tables survived downgrade: "
-        f"{MEDICAL_REFERENCE_TABLES & after_down}"
+        f"medical_reference tables survived downgrade: {MEDICAL_REFERENCE_TABLES & after_down}"
     )
     assert baseline_non_medical_reference <= after_down, (
         "downgrade leaked into other modules; missing tables: "

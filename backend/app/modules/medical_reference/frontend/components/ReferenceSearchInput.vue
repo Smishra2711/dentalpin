@@ -45,10 +45,16 @@ onMounted(async () => {
   isLoading.value = false
 })
 
-const selected = computed<ReferenceItem | null>({
+const selected = computed<ReferenceItem | undefined>({
   get() {
-    if (!props.referenceId) return null
-    return items.value.find(i => i.id === props.referenceId) ?? { id: props.referenceId, name: props.modelValue, is_active: true }
+    if (!props.referenceId) return undefined
+    return (
+      items.value.find(i => i.id === props.referenceId) ?? {
+        id: props.referenceId,
+        name: props.modelValue,
+        is_active: true
+      }
+    )
   },
   set(item) {
     if (!item) {
