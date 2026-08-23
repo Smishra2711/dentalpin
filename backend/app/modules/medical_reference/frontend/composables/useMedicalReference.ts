@@ -6,7 +6,6 @@ export interface ReferenceItem {
   id: string
   name: string
   is_active: boolean
-  is_apci?: boolean // only present for 'diseases'
 }
 
 export interface ReferenceInteraction {
@@ -62,7 +61,7 @@ export function useMedicalReference() {
     }
   }
 
-  async function create(kind: ReferenceKind, data: { name: string, is_apci?: boolean }): Promise<ReferenceItem | null> {
+  async function create(kind: ReferenceKind, data: { name: string }): Promise<ReferenceItem | null> {
     try {
       const res = await api.post<ApiResponse<ReferenceItem>>(`/api/v1/medical_reference/${kind}`, data)
       toast.add({ title: t('common.success'), description: t('medicalReference.addSuccess'), color: 'success' })
@@ -82,7 +81,7 @@ export function useMedicalReference() {
   async function update(
     kind: ReferenceKind,
     id: string,
-    data: { name?: string, is_apci?: boolean, is_active?: boolean }
+    data: { name?: string, is_active?: boolean }
   ): Promise<ReferenceItem | null> {
     try {
       const res = await api.put<ApiResponse<ReferenceItem>>(`/api/v1/medical_reference/${kind}/${id}`, data)

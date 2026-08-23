@@ -1,6 +1,6 @@
 """medical_reference — clinic-managed lookup lists for allergies,
-medications, systemic diseases, and surgeries, plus the APCI flag on
-diseases and active per-patient interaction/contraindication flagging.
+medications, systemic diseases, and surgeries, plus active per-patient
+interaction/contraindication flagging.
 
 ``depends: ["patients_clinical"]`` — the one deliberate exception to this
 module otherwise not reading patient data: get_patient_flags() reads a
@@ -32,14 +32,18 @@ class MedicalReferenceModule(BaseModule):
 
     manifest = {
         "name": "medical_reference",
-        "version": "0.3.0",
-        "summary": "Managed allergy/medication/disease/surgery lists, APCI flag, and interaction/contraindication warnings.",
+        "version": "0.4.0",
+        "summary": (
+            "Managed allergy/medication/disease/surgery lists with "
+            "searchable medical-history inputs and interaction/"
+            "contraindication warnings."
+        ),
         "author": "lamanji",
         "license": "BSL-1.1",
         "category": "community",
         "depends": ["patients_clinical", "patients"],
         "installable": True,
-        "auto_install": True,
+        "auto_install": False,
         "removable": True,
         "role_permissions": {
             "admin": ["*"],

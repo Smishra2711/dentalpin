@@ -41,13 +41,7 @@ def _create_lookup_table(name: str, extra_columns: list[sa.Column] | None = None
 def upgrade() -> None:
     _create_lookup_table("medical_reference_allergy")
     _create_lookup_table("medical_reference_medication")
-    _create_lookup_table(
-        "medical_reference_disease",
-        extra_columns=[sa.Column("is_apci", sa.Boolean(), nullable=False, server_default=sa.false())],
-    )
-    op.create_index(
-        "ix_medical_reference_disease_is_apci", "medical_reference_disease", ["is_apci"]
-    )
+    _create_lookup_table("medical_reference_disease")
 
 
 def downgrade() -> None:

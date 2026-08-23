@@ -10,18 +10,23 @@
  * simply excluded from the active check rather than guessed at — see
  * MedicalReferenceService.get_patient_flags.)
  *
- * Consumed cross-module by patients_clinical's MedicalHistoryForm.vue —
- * auto-imported via Nuxt layer merging, same as PatientSearch is consumed
- * by lab_orders, no import statement needed on the consuming side.
+ * Consumed in-module by the settings page (interactions/contraindications
+ * pickers) and by MedicalReferenceNameField.vue, the adapter registered
+ * into patients_clinical's medical-history name-input slots.
  */
 import type { ReferenceItem, ReferenceKind } from '../composables/useMedicalReference'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   kind: ReferenceKind
   modelValue: string
   referenceId?: string | null
   placeholder?: string
-}>()
+  disabled?: boolean
+}>(), {
+  referenceId: null,
+  placeholder: undefined,
+  disabled: false
+})
 
 const emit = defineEmits<{
   'update:modelValue': [value: string]
@@ -76,6 +81,7 @@ async function handleCreate(name: string) {
     v-model="selected"
     :items="items"
     :loading="isLoading || isCreating"
+    :disabled="disabled"
     label-key="name"
     create-item="always"
     searchable

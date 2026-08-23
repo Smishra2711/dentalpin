@@ -48,6 +48,9 @@ class AllergyCreate(BaseModel):
     severity: str = Field(default="medium", max_length=20)
     reaction: str | None = Field(default=None, max_length=500)
     notes: str | None = None
+    # Loose link to an optional medical_reference list item (no DB FK —
+    # stays null when that module isn't installed).
+    reference_id: UUID | None = None
 
 
 class AllergyUpdate(BaseModel):
@@ -56,6 +59,7 @@ class AllergyUpdate(BaseModel):
     severity: str | None = Field(default=None, max_length=20)
     reaction: str | None = Field(default=None, max_length=500)
     notes: str | None = None
+    reference_id: UUID | None = None
 
 
 class AllergyResponse(AllergyCreate):
@@ -73,6 +77,8 @@ class MedicationCreate(BaseModel):
     frequency: str | None = Field(default=None, max_length=100)
     start_date: date | None = None
     notes: str | None = None
+    # Loose link to an optional medical_reference list item (no DB FK).
+    reference_id: UUID | None = None
 
 
 class MedicationUpdate(BaseModel):
@@ -81,6 +87,7 @@ class MedicationUpdate(BaseModel):
     frequency: str | None = Field(default=None, max_length=100)
     start_date: date | None = None
     notes: str | None = None
+    reference_id: UUID | None = None
 
 
 class MedicationResponse(MedicationCreate):
@@ -100,6 +107,8 @@ class SystemicDiseaseCreate(BaseModel):
     is_critical: bool = False
     medications: str | None = None
     notes: str | None = None
+    # Loose link to an optional medical_reference list item (no DB FK).
+    reference_id: UUID | None = None
 
 
 class SystemicDiseaseUpdate(BaseModel):
@@ -110,6 +119,7 @@ class SystemicDiseaseUpdate(BaseModel):
     is_critical: bool | None = None
     medications: str | None = None
     notes: str | None = None
+    reference_id: UUID | None = None
 
 
 class SystemicDiseaseResponse(SystemicDiseaseCreate):
@@ -126,6 +136,8 @@ class SurgicalHistoryCreate(BaseModel):
     surgery_date: date | None = None
     complications: str | None = None
     notes: str | None = None
+    # Loose link to an optional medical_reference list item (no DB FK).
+    reference_id: UUID | None = None
 
 
 class SurgicalHistoryUpdate(BaseModel):
@@ -133,6 +145,7 @@ class SurgicalHistoryUpdate(BaseModel):
     surgery_date: date | None = None
     complications: str | None = None
     notes: str | None = None
+    reference_id: UUID | None = None
 
 
 class SurgicalHistoryResponse(SurgicalHistoryCreate):

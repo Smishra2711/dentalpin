@@ -1,6 +1,29 @@
 # Changelog — medical_reference module
 
-## Unreleased
+## Unreleased (0.4.0)
+
+- **patients_clinical integration** — the lists now have a real reader:
+  - `patients_clinical` gained a nullable `reference_id` UUID on its four
+    history tables (own migration, no DB-level FK), exposed in its
+    schemas.
+  - `MedicalHistoryForm.vue` exposes a slot per name input
+    (`patients_clinical.medical_history.*_name`) with the plain input as
+    fallback; this module registers its searchable combobox into the
+    slots from its own plugin (dependency direction preserved — no
+    core-module → community-component imports).
+  - Per-patient flags surface by registering into the existing
+    `patient.header.alerts` slot; patients_clinical's banner is untouched.
+  - End-to-end regression test for `GET /patients/{id}/flags`
+    (`test_patient_flags.py`) — two interacting reference-linked
+    medications → flag returned.
+- Dropped `is_apci` from `ReferenceDisease` (model/schema/migration/
+  settings UI). CNAM/APCI is country-specific compliance hardcoded into a
+  Spain-first product's disease model; may return as an optional
+  follow-up modeled on india_gst's compliance_section approach (#210).
+- `auto_install=False` — new optional modules ship manual-install;
+  activated from the admin UI.
+
+## Prior review fixes (same release)
 
 - `get`, `get_interaction`, and `get_contraindication` now filter by
   `clinic_id` in addition to the row's own id. These back every

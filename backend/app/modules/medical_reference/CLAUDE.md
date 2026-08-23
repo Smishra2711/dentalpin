@@ -58,10 +58,28 @@ only goes one direction.
 
 ## Lifecycle
 
-- `installable=True`, `auto_install=True`, `removable=True`.
+- `installable=True`, `auto_install=False` (optional modules ship
+  manual-install here — activated from the admin UI), `removable=True`.
 - Own Alembic branch (`medical_reference`), rooted independently on core
   `"0001"`. No `depends_on` needed — every FK here is either core
   (`clinics.id`) or within this module's own branch.
+
+## patients_clinical integration
+
+The searchable comboboxes and the per-patient warning flags are wired via
+**slots**, never direct component imports:
+
+- `patients_clinical`'s `MedicalHistoryForm.vue` renders a named slot for
+  each history-table name input
+  (`patients_clinical.medical_history.{allergy|medication|disease|surgery}_name`)
+  with the plain `UInput` as fallback when nothing is registered.
+- This module's `frontend/plugins/settings.client.ts` registers its
+  adapter component into those slots; when the module isn't installed the
+  form silently falls back to free-text inputs (and those entries simply
+  have no `reference_id`, so they're excluded from flag matching).
+- Flags surface by registering a chip component into the existing
+  `patient.header.alerts` slot owned by `patients`/`patients_clinical`
+  (same pattern they themselves use) — their alert banner is never edited.
 
 ## CHANGELOG
 

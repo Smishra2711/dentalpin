@@ -79,6 +79,11 @@ class Allergy(Base, TimestampMixin):
     severity: Mapped[str] = mapped_column(String(20), default="medium", index=True)
     reaction: Mapped[str | None] = mapped_column(String(500))
     notes: Mapped[str | None] = mapped_column(Text)
+    # Loose link to medical_reference.ReferenceAllergy — a plain nullable
+    # UUID, deliberately NOT a DB-level FK, so this module stays fully
+    # standalone if the optional medical_reference module is uninstalled
+    # (see pc_0002 migration).
+    reference_id: Mapped[UUID | None] = mapped_column(UUID(as_uuid=True))
 
 
 class Medication(Base, TimestampMixin):
@@ -99,6 +104,8 @@ class Medication(Base, TimestampMixin):
     frequency: Mapped[str | None] = mapped_column(String(100))
     start_date: Mapped[date | None] = mapped_column(Date)
     notes: Mapped[str | None] = mapped_column(Text)
+    # Loose (FK-less) link to medical_reference.ReferenceMedication.
+    reference_id: Mapped[UUID | None] = mapped_column(UUID(as_uuid=True))
 
 
 class SystemicDisease(Base, TimestampMixin):
@@ -121,6 +128,8 @@ class SystemicDisease(Base, TimestampMixin):
     is_critical: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     medications: Mapped[str | None] = mapped_column(Text)
     notes: Mapped[str | None] = mapped_column(Text)
+    # Loose (FK-less) link to medical_reference.ReferenceDisease.
+    reference_id: Mapped[UUID | None] = mapped_column(UUID(as_uuid=True))
 
 
 class SurgicalHistory(Base, TimestampMixin):
@@ -140,6 +149,8 @@ class SurgicalHistory(Base, TimestampMixin):
     surgery_date: Mapped[date | None] = mapped_column(Date)
     complications: Mapped[str | None] = mapped_column(Text)
     notes: Mapped[str | None] = mapped_column(Text)
+    # Loose (FK-less) link to medical_reference.ReferenceSurgery.
+    reference_id: Mapped[UUID | None] = mapped_column(UUID(as_uuid=True))
 
 
 class EmergencyContact(Base, TimestampMixin):

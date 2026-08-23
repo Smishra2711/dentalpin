@@ -51,20 +51,16 @@ async function loadNameList() {
 }
 
 const newName = ref('')
-const newIsApci = ref(false)
 const saving = ref(false)
 
 async function handleAddName() {
   if (!newName.value.trim()) return
   saving.value = true
   try {
-    const data: { name: string, is_apci?: boolean } = { name: newName.value.trim() }
-    if (activeTab.value === 'diseases') data.is_apci = newIsApci.value
-    const created = await create(activeTab.value as ReferenceKind, data)
+    const created = await create(activeTab.value as ReferenceKind, { name: newName.value.trim() })
     if (created) {
       items.value.push(created)
       newName.value = ''
-      newIsApci.value = false
     }
   } finally {
     saving.value = false
@@ -211,20 +207,10 @@ watch([activeTab, includeInactive], loadActiveTab)
           :loading="loading"
           :columns="[
             { accessorKey: 'name', header: t('medicalReference.name') },
-            ...(activeTab === 'diseases' ? [{ accessorKey: 'is_apci', header: 'APCI' }] : []),
             { accessorKey: 'is_active', header: t('medicalReference.status') },
             { accessorKey: 'actions', header: '' }
           ]"
         >
-          <template #is_apci-cell="{ row }">
-            <UBadge
-              v-if="row.original.is_apci"
-              color="info"
-              size="xs"
-            >
-              APCI
-            </UBadge>
-          </template>
           <template #is_active-cell="{ row }">
             <UBadge
               :color="row.original.is_active ? 'success' : 'neutral'"
@@ -251,11 +237,6 @@ watch([activeTab, includeInactive], loadActiveTab)
             v-model="newName"
             :placeholder="t('medicalReference.newItemPlaceholder')"
             class="flex-1"
-          />
-          <UCheckbox
-            v-if="activeTab === 'diseases'"
-            v-model="newIsApci"
-            label="APCI"
           />
           <UButton
             icon="i-lucide-plus"

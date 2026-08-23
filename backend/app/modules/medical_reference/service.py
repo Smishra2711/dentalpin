@@ -1,9 +1,9 @@
-"""MedicalReferenceService — generic search/CRUD over the three lookup tables.
+"""MedicalReferenceService — generic search/CRUD over the lookup tables.
 
-The three tables (allergy/medication/disease) are shaped identically apart
-from ``ReferenceDisease.is_apci``, so CRUD is implemented once, generically,
-against whichever model class is passed in — search/create/update/delete
-methods are typed narrowly per-entity only where ``is_apci`` matters.
+The four name-list tables (allergy/medication/disease/surgery) are shaped
+identically, so CRUD is implemented once, generically, against whichever
+model class is passed in. Interactions and contraindications have their
+own pair-specific methods below.
 """
 
 from __future__ import annotations

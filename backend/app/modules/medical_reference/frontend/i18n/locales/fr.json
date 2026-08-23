@@ -26,6 +26,10 @@
     "medicationA": "Médicament A",
     "medicationB": "Médicament B",
     "riskNote": "Risque",
-    "riskNotePlaceholder": "Décrivez le risque…"
+    "riskNotePlaceholder": "Décrivez le risque…",
+    "flags": {
+      "interaction": "Interaction {a} + {b}",
+      "contraindication": "{a} : contre-indiqué avec {b}"
+    }
   }
 }

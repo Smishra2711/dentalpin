@@ -65,16 +65,13 @@ class ReferenceSurgery(Base, TimestampMixin):
 
 
 class ReferenceDisease(Base, TimestampMixin):
-    """Systemic disease reference entry. ``is_apci`` marks it as being on
-    the clinic's Liste des Affections Prises en Charge Intégralement —
-    the flag that drives the auto-computed APCI coverage indicator."""
+    """Systemic disease reference entry."""
 
     __tablename__ = "medical_reference_disease"
 
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     clinic_id: Mapped[UUID] = mapped_column(ForeignKey("clinics.id"), index=True)
     name: Mapped[str] = mapped_column(String(150))
-    is_apci: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
 
     __table_args__ = (
