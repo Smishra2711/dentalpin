@@ -81,17 +81,17 @@ export default defineConfig({
     socialLinks: [
       {
         icon: "github",
-        link: "https://github.com/martinezsalmeron/dentalpin",
+        link: "https://github.com/dentalpin/dentalpin",
       },
     ],
     editLink: {
       pattern:
-        "https://github.com/martinezsalmeron/dentalpin/edit/main/docs/:path",
+        "https://github.com/dentalpin/dentalpin/edit/main/docs/:path",
       text: "Edit this page on GitHub",
     },
     footer: {
       message:
-        'Source: <a href="https://github.com/martinezsalmeron/dentalpin">github.com/martinezsalmeron/dentalpin</a>',
+        'Source: <a href="https://github.com/dentalpin/dentalpin">github.com/dentalpin/dentalpin</a>',
       copyright: "BSL 1.1 (converts to Apache 2.0 after 4 years)",
     },
   },

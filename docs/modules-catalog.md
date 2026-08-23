@@ -19,6 +19,7 @@ Maintained by `backend/scripts/generate_catalogs.py`. CI fails if a manifest cha
 | `contacts` | 0.1.0 | community | — | manual | yes | 2 | 0 | 0 | yes |
 | `copilot` | 0.1.0 | official | — | auto | yes | 5 | 3 | 1 | yes |
 | `india_gst` | 0.1.0 | official | billing, catalog | manual | yes | 4 | 0 | 0 | yes |
+| `integrations` | 0.1.0 | official | patients | manual | yes | 4 | 0 | 2 | no |
 | `media` | 0.2.0 | official | patients | auto | no | 4 | 7 | 1 | yes |
 | `migration_import` | 0.1.0 | official | patients, patients_clinical, clinical_notes, agenda, schedules, recalls, catalog, budget, odontogram, treatment_plan, billing, payments, media | manual | yes | 4 | 5 | 0 | yes |
 | `notifications` | 0.1.0 | official | patients, agenda, budget, billing, catalog | auto | no | 8 | 7 | 6 | yes |
@@ -244,6 +245,27 @@ CGST/SGST/IGST GST billing compliance for Indian clinics.
 - **Events emitted:** —
 - **Events consumed:** —
 - **Module CLAUDE.md:** [`backend/app/modules/india_gst/CLAUDE.md`](../backend/app/modules/india_gst/CLAUDE.md)
+
+### `integrations` — v0.1.0
+
+Webhook subscriptions (REST Hooks) for third-party automations.
+
+- **Author:** DentalPin Core Team
+- **License:** BSL-1.1
+- **Category:** official
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `patients`
+- **Frontend layer:** —
+- **Permissions:**
+  - `integrations.subscriptions.read`
+  - `integrations.subscriptions.write`
+  - `integrations.tokens.read`
+  - `integrations.tokens.write`
+- **Events emitted:** —
+- **Events consumed:**
+  - `appointment.completed`
+  - `patient.created`
+- **Module CLAUDE.md:** [`backend/app/modules/integrations/CLAUDE.md`](../backend/app/modules/integrations/CLAUDE.md)
 
 ### `media` — v0.2.0
 

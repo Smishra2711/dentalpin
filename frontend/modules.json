@@ -16,7 +16,6 @@
     "/module_layers/schedules/frontend",
     "/module_layers/treatment_plan/frontend",
     "/module_layers/clinical_notes/frontend",
-    "/module_layers/contacts/frontend",
     "/module_layers/payments/frontend"
   ],
   "modules": [
@@ -83,10 +82,6 @@
     {
       "name": "clinical_notes",
       "path": "/module_layers/clinical_notes/frontend"
-    },
-    {
-      "name": "contacts",
-      "path": "/module_layers/contacts/frontend"
     },
     {
       "name": "payments",

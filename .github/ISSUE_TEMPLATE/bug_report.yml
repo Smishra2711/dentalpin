@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         Installation trouble is usually faster to sort out in
-        [Q&A](https://github.com/martinezsalmeron/dentalpin/discussions/categories/q-a)
+        [Q&A](https://github.com/dentalpin/dentalpin/discussions/categories/q-a)
         or on [Telegram](https://t.me/dentalpin). Use this form when the
         software itself misbehaves.
 
