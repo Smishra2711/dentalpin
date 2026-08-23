@@ -352,13 +352,6 @@
         "smokerFreq": "புகைப்பிடிப்பவர் · {freq}/நாள்"
       }
     },
-    "visitSummary": {
-      "title": "வருகை சுருக்கம்",
-      "lastVisit": "கடைசி வருகை",
-      "nextAppointment": "அடுத்த சந்திப்பு",
-      "noLastVisit": "முந்தைய வருகைகள் இல்லை",
-      "noNextAppointment": "சந்திப்பு எதுவும் திட்டமிடப்படவில்லை"
-    },
     "personalInfo": {
       "title": "தனிப்பட்ட தகவல்",
       "ageLabel": "{age} ஆண்டுகள்",

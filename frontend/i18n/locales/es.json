@@ -380,13 +380,6 @@
         "smokerFreq": "Fumadora · {freq}/día"
       }
     },
-    "visitSummary": {
-      "title": "Resumen de visitas",
-      "lastVisit": "Última visita",
-      "nextAppointment": "Próxima cita",
-      "noLastVisit": "Sin visitas previas",
-      "noNextAppointment": "Sin cita programada"
-    },
     "personalInfo": {
       "title": "Datos personales",
       "ageLabel": "{age} años",
