@@ -40,6 +40,7 @@ _appointments_t = table(
     column("patient_id"),
     column("clinic_id"),
     column("start_time"),
+    column("status"),
 )
 
 
@@ -91,6 +92,10 @@ class PatientService:
     ) -> list[Patient]:
         """Patients ordered by last visit, falling back to newest created.
 
+        A "visit" is a **completed** appointment — the same definition
+        the patient-summary last-visit card uses — so a future booking
+        never counts as having been seen.
+
         ``last_visit`` lives in the consumer ``agenda.appointments``
         table. ``patients`` is foundational (``depends=[]``) so we
         cannot import the ``Appointment`` model — instead we read the
@@ -105,6 +110,7 @@ class PatientService:
                     FROM appointments
                     WHERE clinic_id = :clinic_id
                       AND patient_id IS NOT NULL
+                      AND status = 'completed'
                     GROUP BY patient_id
                     ORDER BY last_visit DESC
                     LIMIT :limit
@@ -199,6 +205,10 @@ class PatientService:
                     status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=f"Invalid sort direction {sort_dir!r}. Use 'asc' or 'desc'.",
                 )
+            # "Last visit" is the last **completed** appointment — kept in
+            # lock step with the patient-summary last-visit card, so the
+            # list order never disagrees with the card (a future or
+            # cancelled appointment is not a visit).
             last_visit_sq = (
                 select(
                     _appointments_t.c.patient_id.label("patient_id"),
@@ -207,6 +217,7 @@ class PatientService:
                 .where(
                     _appointments_t.c.clinic_id == clinic_id,
                     _appointments_t.c.patient_id.is_not(None),
+                    _appointments_t.c.status == "completed",
                 )
                 .group_by(_appointments_t.c.patient_id)
                 .subquery()

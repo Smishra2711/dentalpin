@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: `last_visit` (list sort and `get_recent_patients`) counts **completed** appointments only, matching the patient-summary last-visit card's definition — a future booking or a cancellation no longer ranks a patient as recently seen (PR #251 review follow-up).
+
 - fix(#206): `Patient.effective_billing_name` / `effective_billing_tax_id` — a DNI/NIE doubles as the invoice tax id when `billing_tax_id` is empty (passports don't); `has_complete_billing_info` follows the same rule. `PatientCreate` accepts `national_id` / `national_id_type` and the *Nuevo paciente* modal asks for the document. `?tab=info&edit=billing` deep-links to the billing modal (the old `?tab=billing` selected a tab that didn't exist).
 - fix(#184): type-check clean. `PatientUpdate`/`PatientExtendedUpdate` are declared explicitly with `| null` (an explicit `null` clears the field — the section edit modal already relied on it); `ClinicalMode` moves to the shared types (the tab imported it from another module's `.vue`); the visit summary renders the treatment's localized `names` (`.name` never existed); the Administration → Budgets tab shows the linked plan number via `plan_number_snapshot` (the old `treatment_plan_id` check never rendered); `UAvatar :ui.text` is `fallback` in Nuxt UI v4.
 - fix(#183): `patient.created` / `patient.archived` are published with `db=` so the notifications, recalls and media handlers see the row and roll back with it (ADR 0019).
