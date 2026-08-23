@@ -33,18 +33,19 @@ def test_intra_state_split_reconciles_exactly_18_percent():
     assert line.sgst_amount == Decimal("900.00")
 
 
-def test_intra_state_split_reconciles_on_odd_cents():
-    """Odd-cent tax amounts must not lose or gain a paisa on the split."""
+def test_intra_state_halves_are_equal_even_on_odd_paise():
+    """CGST and SGST are the same rate on the same value — the two heads
+    must be EQUAL (GSTR-1 reconciliation rejects asymmetric heads). Each
+    half rounds HALF_UP per head; the ±1 paisa drift vs line_tax on an
+    odd-paise line is the expected consequence of head-wise rounding.
+    """
     breakdown = compute_gst_breakdown(
         [_line(Decimal("12"), Decimal("100.01"))],
         clinic_state="27",
         place_of_supply="27",
     )
     line = breakdown.lines[0]
-    assert line.cgst_amount + line.sgst_amount == Decimal("100.01")
-    # Remainder-absorption: cgst rounds down, sgst absorbs the odd cent.
-    assert line.cgst_amount == Decimal("50.00")
-    assert line.sgst_amount == Decimal("50.01")
+    assert line.cgst_amount == line.sgst_amount == Decimal("50.01")
 
 
 def test_inter_state_uses_full_rate_as_igst():

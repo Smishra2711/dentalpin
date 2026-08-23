@@ -6,6 +6,7 @@ Mounted at ``/api/v1/india_gst/`` by the module loader.
 from __future__ import annotations
 
 import dataclasses
+from datetime import date
 from typing import Annotated
 from uuid import UUID
 
@@ -15,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.auth.dependencies import ClinicContext, get_clinic_context, require_permission
-from app.core.schemas import ApiResponse
+from app.core.schemas import ApiResponse, PaginatedApiResponse
 from app.database import get_db
 
 from .constants import DEFAULT_DENTAL_SAC_CODE, is_valid_gstin, state_name
@@ -51,12 +52,7 @@ router = APIRouter()
 
 def _settings_response(settings: IndiaGstSettings) -> IndiaGstSettingsResponse:
     payload = IndiaGstSettingsResponse.model_validate(settings, from_attributes=True)
-    return payload.model_copy(
-        update={
-            "clinic_state_name": state_name(settings.clinic_state),
-            "has_logo": settings.logo_image is not None,
-        }
-    )
+    return payload.model_copy(update={"clinic_state_name": state_name(settings.clinic_state)})
 
 
 # ----------------------------------------------------------------------------
@@ -101,8 +97,6 @@ async def update_settings(
         settings.show_gstin_on_invoice = body.show_gstin_on_invoice
     if body.show_sac_on_invoice is not None:
         settings.show_sac_on_invoice = body.show_sac_on_invoice
-    if body.rounding_rule is not None:
-        settings.rounding_rule = body.rounding_rule
 
     await db.commit()
     await db.refresh(settings)
@@ -147,6 +141,7 @@ async def autoconfigure_catalog_defaults(
     GET/PUT, but keeping it above documents the intent.
     """
     created = await IndiaGstCatalogService.autoconfigure_missing_sac(db, ctx.clinic_id)
+    await IndiaGstCatalogService.ensure_gst_vat_type(db, ctx.clinic_id)
     await db.commit()
     return ApiResponse(
         data=IndiaGstCatalogAutoconfigureResponse(
@@ -182,7 +177,6 @@ async def update_catalog_default(
         ctx.clinic_id,
         catalog_item_id,
         sac_code=body.sac_code,
-        default_gst_rate_override=body.default_gst_rate_override,
         notes=body.notes,
     )
     await db.commit()
@@ -243,8 +237,10 @@ async def update_invoice_gst_fields(
     if invoice is None:
         raise HTTPException(status_code=404, detail="Invoice not found")
     if invoice.status != "draft":
+        # 409 conflict per repo convention — the request is authorized,
+        # the invoice's state just no longer allows it.
         raise HTTPException(
-            status_code=403, detail="GST fields can only be edited on draft invoices."
+            status_code=409, detail="GST fields can only be edited on draft invoices."
         )
 
     if body.place_of_supply is not None:
@@ -265,7 +261,8 @@ async def update_invoice_gst_fields(
 
             row_q = await db.execute(
                 select(IndiaGstInvoiceItem).where(
-                    IndiaGstInvoiceItem.invoice_item_id == invoice_item.id
+                    IndiaGstInvoiceItem.clinic_id == ctx.clinic_id,
+                    IndiaGstInvoiceItem.invoice_item_id == invoice_item.id,
                 )
             )
             row = row_q.scalar_one_or_none()
@@ -275,24 +272,7 @@ async def update_invoice_gst_fields(
                 )
                 db.add(row)
 
-            default_sac = None
-            if invoice_item.catalog_item_id:
-                from .models import IndiaGstCatalogItem
-
-                default_q = await db.execute(
-                    select(IndiaGstCatalogItem.sac_code).where(
-                        IndiaGstCatalogItem.catalog_item_id == invoice_item.catalog_item_id
-                    )
-                )
-                default_sac = default_q.scalar_one_or_none()
-
             row.sac_code = item_update.sac_code
-            row.sac_overridden = bool(item_update.sac_code and item_update.sac_code != default_sac)
-            if row.sac_overridden:
-                row.override_note = (
-                    f"SAC manually changed from catalog default"
-                    f"{f' ({default_sac})' if default_sac else ''}."
-                )
 
     await db.commit()
     return ApiResponse(data=None)
@@ -350,13 +330,9 @@ async def retry_einvoice(
     if row is None:
         raise HTTPException(status_code=404, detail="No e-invoice record for this invoice")
 
-    from .services.einvoice_provider import get_registered_provider
-
-    if get_registered_provider() is None:
-        raise HTTPException(status_code=409, detail=IndiaGstEinvoiceRetryError().message)
-    # Unreachable in v1 (no provider is ever registered) — kept so the
-    # code is honest about what happens once a real adapter ships.
-    raise HTTPException(status_code=501, detail="E-invoice provider submission not implemented")
+    # No e-invoice provider exists in v1 — always 409, never a
+    # fabricated success. A real GSP/IRP adapter replaces this line.
+    raise HTTPException(status_code=409, detail=IndiaGstEinvoiceRetryError().message)
 
 
 # ----------------------------------------------------------------------------
@@ -369,8 +345,8 @@ async def report_summary(
     ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
     _: Annotated[None, Depends(require_permission("india_gst.reports.read"))],
     db: Annotated[AsyncSession, Depends(get_db)],
-    date_from: str | None = Query(default=None),
-    date_to: str | None = Query(default=None),
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
 ) -> ApiResponse[GstReportSummaryResponse]:
     from .reports import build_summary
 
@@ -378,22 +354,22 @@ async def report_summary(
     return ApiResponse(data=summary)
 
 
-@router.get("/reports/transactions", response_model=ApiResponse[list[GstReportTransactionRow]])
+@router.get("/reports/transactions", response_model=PaginatedApiResponse[GstReportTransactionRow])
 async def report_transactions(
     ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
     _: Annotated[None, Depends(require_permission("india_gst.reports.read"))],
     db: Annotated[AsyncSession, Depends(get_db)],
-    date_from: str | None = Query(default=None),
-    date_to: str | None = Query(default=None),
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
-) -> ApiResponse[list[GstReportTransactionRow]]:
+) -> PaginatedApiResponse[GstReportTransactionRow]:
     from .reports import list_transactions
 
-    rows = await list_transactions(
+    rows, total = await list_transactions(
         db, ctx.clinic_id, date_from=date_from, date_to=date_to, page=page, page_size=page_size
     )
-    return ApiResponse(data=rows)
+    return PaginatedApiResponse(data=rows, total=total, page=page, page_size=page_size)
 
 
 @router.get("/reports/export")
@@ -401,8 +377,8 @@ async def report_export(
     ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
     _: Annotated[None, Depends(require_permission("india_gst.reports.read"))],
     db: Annotated[AsyncSession, Depends(get_db)],
-    date_from: str | None = Query(default=None),
-    date_to: str | None = Query(default=None),
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
 ):
     from fastapi.responses import StreamingResponse
 

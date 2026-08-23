@@ -41,8 +41,5 @@
     "typescript": "^5.9.3",
     "vitest": "^3.1.0",
     "vue-tsc": "^3.2.5"
-  },
-  "overrides": {
-    "vue-router": "5.0.4"
   }
 }

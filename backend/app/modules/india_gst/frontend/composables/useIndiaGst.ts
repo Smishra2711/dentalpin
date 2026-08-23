@@ -1,3 +1,5 @@
+import type { ApiResponse } from '~~/app/types'
+
 interface GstLineBreakdown {
   invoice_item_id: string | null
   sac_code: string | null
@@ -29,16 +31,11 @@ export interface IndiaGstSettings {
   turnover_threshold: string | null
   show_gstin_on_invoice: boolean
   show_sac_on_invoice: boolean
-  rounding_rule: string
-  has_logo: boolean
 }
 
 export interface IndiaGstEinvoice {
   invoice_id: string
   state: 'not_required' | 'not_configured' | 'pending' | 'generated' | 'rejected' | 'error'
-  irn: string | null
-  ack_number: string | null
-  ack_date: string | null
   provider_error_message: string | null
 }
 
@@ -49,8 +46,6 @@ export interface IndiaGstMissingSacItem {
   name: string | null
   internal_code: string | null
 }
-
-interface ApiResponse<T> { data: T }
 
 export function useIndiaGst() {
   const api = useApi()

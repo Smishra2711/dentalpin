@@ -1,7 +1,8 @@
 # India GST module
 
 CGST/SGST/IGST billing compliance for Indian clinics (GSTIN, place of
-supply, SAC codes, credit-note reversal, e-invoice scaffolding).
+supply, SAC codes, FY-scoped document numbering, credit-note reversal,
+e-invoice applicability tracking).
 
 ## Public API
 
@@ -25,10 +26,15 @@ or router modules.
 ## Permissions
 
 `india_gst.settings.read`, `india_gst.settings.configure`,
-`india_gst.catalog.manage`, `india_gst.reports.read`. Editing GST
-fields on a *draft* invoice reuses billing's own `billing.write`
-(billing-owned data), matching verifactu's precedent of not gating
-invoice fields behind its own permission.
+`india_gst.catalog.manage`, `india_gst.reports.read`.
+`settings.read` is granted to every clinical role — the invoice
+form/detail panels call tax-preview and e-invoice status
+mid-invoicing, so any role that can touch invoices needs it.
+
+Editing GST fields on a *draft* invoice reuses billing's own
+`billing.write`: the operation IS invoice editing, and a module-own
+permission would drift out of sync with billing's role grants
+(cross-module gating precedent: agenda → clinical_notes).
 
 ## Tools exposed
 
@@ -47,10 +53,13 @@ None in v1.
 
 - `installable=True`, `auto_install=False` (activated from admin UI),
   `removable=True`.
+- `install()` only registers the compliance hook — it must NEVER touch
+  clinic data (the original PR seeded demo data into real clinics from
+  here; that entire path was removed in the fix-up). Configuration is
+  UI-driven: the settings auto-configure action creates SAC defaults
+  and the `GST 18%` VatType idempotently.
 - `uninstall()` blocks if **any** `IndiaGstInvoiceItem` is linked to a
-  non-draft invoice (issued/partial/paid/credit-note), or any
-  `IndiaGstEinvoiceSubmission` reached `generated` (IRN issued) —
-  broader than "just block on generated e-invoices" because the module
+  non-draft invoice (issued/partial/paid/credit-note) — the module
   owns tax-split data needed to render/audit any issued invoice.
 - Migrations on the `india_gst` Alembic branch (`igst_0001`).
 
@@ -61,11 +70,18 @@ None in v1.
   generic) is the *recipient's* GSTIN. Never conflate them.
 - **Tax math never recomputes — it splits.** `compute_gst_breakdown`
   divides each line's already-computed `InvoiceItem.line_tax` into
-  CGST+SGST (remainder-absorption: `sgst = tax_amount - cgst`, not two
-  independent halvings) or IGST. This is sign-agnostic by construction,
-  so credit-note amounts (already negative — billing negates
-  `unit_price` once in `create_credit_note`) split correctly without
-  re-negation.
+  CGST+SGST or IGST. CGST and SGST are always **equal** (each =
+  line tax / 2, rounded HALF_UP per head — GSTR-1 reconciliation
+  rejects asymmetric heads); odd-paise lines may drift ±0.01 vs
+  `line_tax`, which is expected head-wise rounding. Sign-agnostic, so
+  credit-note amounts (already negative — billing negates `unit_price`
+  once in `create_credit_note`) split correctly without re-negation.
+- **GST document numbers come from the module's own FY counter**
+  (`india_gst_document_sequences`, one row per clinic+prefix+FY,
+  `SELECT … FOR UPDATE`, unique constraint). NEVER derive them from
+  billing's `sequential_number`: that series resets on the calendar
+  year and repeats within a financial year between January and March.
+  Idempotent re-issue reuses the number already in the snapshot.
 - **`Invoice.compliance_data` is a plain JSONB column, not
   `MutableDict`.** SQLAlchemy only detects a change on reassignment,
   never on in-place mutation. Billing's own
@@ -87,11 +103,11 @@ None in v1.
   Composition/Unregistered/Exempt are stored but the hook returns `{}`
   (no GST rows) — Composition-scheme rules are materially different
   and out of scope for v1.
-- **E-invoice is scaffolding only.** No live GSP/IRP provider is wired
-  in (`services/einvoice_provider.py`). The retry endpoint always
-  returns `409` — never a fake success. State only reaches
-  `not_required`/`not_configured` through the real path; other states
-  are seeded-row-only in tests.
+- **E-invoice tracks applicability only.** No live GSP/IRP provider is
+  wired in; the retry endpoint always returns `409` — never a fake
+  success. State is `not_required` (below the turnover threshold) or
+  `not_configured` (above it). Provider adapters, queues and IRN
+  columns arrive together with a real integration, not before.
 - **State codes, never display strings.** `clinic_state`/
   `place_of_supply` are always the 2-digit codes from `constants.py`
   (`INDIA_STATES`), compared directly — never free-text names.
@@ -105,24 +121,31 @@ None in v1.
   (state code/name mapping).
 - **Components**: `IndiaGstBadge`, `IndiaGstInvoicePanel`,
   `IndiaGstInvoiceFormPanel`, `IndiaGstListFilter`,
-  `IndiaGstUnregisteredBanner`, `SettingsCardsSlot`.
-- **Pages**: `/reports/india-gst`, `/settings/india-gst`.
-- **i18n**: English, Spanish, Tamil (`frontend/i18n/locales/`).
+  `IndiaGstUnregisteredBanner`, `IndiaGstSettingsCardsSlot` (prefixed —
+  verifactu registers its own `SettingsCardsSlot` auto-import name).
+- **Pages**: `/reports/india-gst`, `/settings/india-gst`. Both are
+  permission-gated with `usePermissions().can()`; the CSV export uses
+  an authenticated blob fetch (JWT in header — `window.open` gets 401).
+- **i18n**: en, es, fr, pt, ta (`frontend/i18n/locales/`), matching the
+  host's five locales.
 - **Utils**: `gstBadgeLogic.ts` — pure logic extracted from badge/panel
   components for unit testing (badge color/label, e-invoice color/label,
   Indian clinic detection).
-- **Invoice screen**: billing's `invoices/[id]/index.vue` conditionally
-  shows "GST" labels (instead of "Tax"/"VAT") via `isIndianClinic`
-  computed property.
-- **PDF**: `enhance_pdf_data` provides label overrides ("GST" instead of
-  "VAT"/"Tax") and a structured GST breakdown HTML section. Tamil locale
-  (`ta`) supported with `Noto Sans Tamil` font.
+- **Invoice screens**: integration is 100% slot-based
+  (`plugins/slots.client.ts`); billing pages carry no india_gst
+  conditionals or i18n keys.
+- **PDF**: `enhance_pdf_data` provides `label_overrides` ("GST" instead
+  of "VAT"/"Tax") and a **structured** `compliance_section` dict
+  (title/rows/hint) that billing renders and escapes — never HTML
+  across the module boundary. Tamil locale (`ta`) supported with
+  `Noto Sans Tamil` font.
 
 ## Tests
 
 - **Backend**: `tests/modules/india_gst/` — GST calculator, hook issue,
-  uninstall guard, settings router, tax preview, reports, e-invoice
-  scaffolding.
+  credit-note hook, FY sequence, multi-tenant isolation, permission
+  matrix, PDF escaping, uninstall guard/roundtrip, settings router,
+  tax preview, reports, e-invoice retry.
 - **Frontend**: `frontend/tests/india_gst/` — `useIndiaGstStates`
   (state mapping), `gstBadgeLogic` (badge/panel pure logic).
 

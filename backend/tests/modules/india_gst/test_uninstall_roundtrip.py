@@ -26,6 +26,7 @@ INDIA_GST_TABLES = {
     "india_gst_settings",
     "india_gst_catalog_items",
     "india_gst_invoice_items",
+    "india_gst_document_sequences",
     "india_gst_einvoice_submissions",
 }
 

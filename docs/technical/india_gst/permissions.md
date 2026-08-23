@@ -25,7 +25,10 @@ not a india_gst-specific concern.
 
 See `backend/app/core/auth/permissions.py` for the canonical role table.
 `india_gst`'s own `role_permissions` grants `admin: ["*"]`,
-`dentist`/`receptionist`: `["reports.read"]`, `hygienist`/`assistant`: `[]`.
+`dentist`/`receptionist`: `["reports.read", "settings.read"]`,
+`hygienist`/`assistant`: `["settings.read"]` — `settings.read` goes to
+every clinical role because the invoice form/detail panels call
+tax-preview and e-invoice status mid-invoicing.
 
 ## Adding a new permission
 

@@ -39,33 +39,12 @@ from app.modules.billing.hooks import BillingComplianceHook
 
 from .constants import is_valid_gstin, state_name
 from .models import IndiaGstEinvoiceSubmission, IndiaGstInvoiceItem, IndiaGstSettings
-from .service import GstLineInput, compute_fy_document_number, compute_gst_breakdown
-from .services.severity import severity_for
+from .service import GstLineInput, allocate_fy_document_number, compute_gst_breakdown
 
 if TYPE_CHECKING:
     from app.modules.billing.models import Invoice
 
 logger = logging.getLogger(__name__)
-
-
-def _gst_row(label: str, value: str) -> str:
-    """One label/value row in the GST breakdown grid."""
-    return (
-        f'<div class="gst-row">'
-        f'<span class="gst-label">{label}</span>'
-        f'<span class="gst-value">{value}</span>'
-        f"</div>"
-    )
-
-
-def _gst_amount_row(label: str, amount: str) -> str:
-    """One amount row in the GST breakdown grid (right-aligned)."""
-    return (
-        f'<div class="gst-row gst-amount-row">'
-        f'<span class="gst-label">{label}</span>'
-        f'<span class="gst-value gst-amount">{amount}</span>'
-        f"</div>"
-    )
 
 
 async def _get_settings(db: AsyncSession, clinic_id) -> IndiaGstSettings | None:
@@ -86,7 +65,8 @@ async def _load_items_with_sac(
 
     existing_rows = await db.execute(
         select(IndiaGstInvoiceItem).where(
-            IndiaGstInvoiceItem.invoice_item_id.in_([i.id for i in invoice.items])
+            IndiaGstInvoiceItem.clinic_id == invoice.clinic_id,
+            IndiaGstInvoiceItem.invoice_item_id.in_([i.id for i in invoice.items]),
         )
     )
     existing_by_item = {row.invoice_item_id: row for row in existing_rows.scalars()}
@@ -95,7 +75,10 @@ async def _load_items_with_sac(
     defaults_by_catalog: dict = {}
     if catalog_ids:
         defaults_q = await db.execute(
-            select(IndiaGstCatalogItem).where(IndiaGstCatalogItem.catalog_item_id.in_(catalog_ids))
+            select(IndiaGstCatalogItem).where(
+                IndiaGstCatalogItem.clinic_id == invoice.clinic_id,
+                IndiaGstCatalogItem.catalog_item_id.in_(catalog_ids),
+            )
         )
         defaults_by_catalog = {row.catalog_item_id: row for row in defaults_q.scalars()}
 
@@ -137,6 +120,16 @@ class IndiaGstHook(BillingComplianceHook):
         if settings is None or settings.registration_type != "regular":
             return True, None
 
+        # Without the clinic's own state the intra/inter comparison in
+        # compute_gst_breakdown silently classifies EVERY invoice as
+        # inter-state IGST — block issue instead of mis-taxing.
+        if not settings.clinic_state:
+            return (
+                False,
+                "Set your clinic's state in India GST settings — without it "
+                "CGST/SGST vs IGST cannot be determined.",
+            )
+
         # Credit notes inherit place of supply from the original invoice
         # (see _apply) — they never carry their own compliance_data
         # until issued, so this check only applies to regular invoices.
@@ -170,9 +163,10 @@ class IndiaGstHook(BillingComplianceHook):
     def enhance_pdf_data(self, pdf_data: dict, invoice) -> dict:
         """Append the GST breakdown section to the PDF.
 
-        Produces a ``compliance_section_html`` key rendered as a
-        dedicated section in the invoice PDF (after totals, before
-        footer) — matching the on-screen GST panel. Also appends a
+        Produces a structured ``compliance_section`` dict (title + rows)
+        that billing renders — and escapes — itself; this hook never
+        hands HTML across the module boundary (the values include
+        user-entered GSTINs and trade names). Also appends a
         ``legal_notices`` entry for the "Tax Invoice — GST" header.
 
         Reads only from the immutable issue-time snapshot in
@@ -256,45 +250,24 @@ class IndiaGstHook(BillingComplianceHook):
             if recipient_gstin:
                 gstin_display += f" / {recipient_gstin}"
 
-        # Build rows
-        rows_html = ""
-
-        # GST document number
+        rows: list[dict[str, Any]] = []
         if gst_doc:
-            rows_html += _gst_row("GST document number", gst_doc)
-
-        # Corrects reference (credit notes)
+            rows.append({"label": "GST document number", "value": gst_doc})
         if original_ref:
-            rows_html += _gst_row("Corrects document", original_ref)
+            rows.append({"label": "Corrects document", "value": original_ref})
+        rows.append({"label": "Place of supply", "value": place_display})
+        rows.append({"label": "GSTIN on invoice", "value": gstin_display})
+        rows.append({"label": "GST calculation", "value": tax_calc_label})
+        rows.append({"label": "CGST", "value": cgst_total, "amount": True})
+        rows.append({"label": "SGST", "value": sgst_total, "amount": True})
+        rows.append({"label": "IGST", "value": igst_total, "amount": True})
+        rows.append({"label": "E-invoice status", "value": einvoice_label})
 
-        # Place of supply
-        rows_html += _gst_row("Place of supply", place_display)
-
-        # GSTIN on invoice
-        rows_html += _gst_row("GSTIN on invoice", gstin_display)
-
-        # Tax calculation header
-        rows_html += _gst_row("GST calculation", tax_calc_label)
-
-        # CGST / SGST / IGST amounts
-        rows_html += _gst_amount_row("CGST", cgst_total)
-        rows_html += _gst_amount_row("SGST", sgst_total)
-        rows_html += _gst_amount_row("IGST", igst_total)
-
-        # E-invoice status
-        rows_html += _gst_row("E-invoice status", einvoice_label)
-        if einvoice_hint:
-            rows_html += f'<div class="gst-hint">{einvoice_hint}</div>'
-
-        section_html = f"""
-        <div class="gst-section">
-            <div class="section-title">GST and e-invoice</div>
-            <div class="gst-grid">
-                {rows_html}
-            </div>
-        </div>
-        """
-        pdf_data["compliance_section_html"] = section_html
+        pdf_data["compliance_section"] = {
+            "title": "GST and e-invoice",
+            "rows": rows,
+            "hint": einvoice_hint or None,
+        }
         return pdf_data
 
     async def _apply(
@@ -327,7 +300,8 @@ class IndiaGstHook(BillingComplianceHook):
         # never duplicates rows.
         existing_rows = await db.execute(
             select(IndiaGstInvoiceItem).where(
-                IndiaGstInvoiceItem.invoice_item_id.in_([i.id for i in invoice.items])
+                IndiaGstInvoiceItem.clinic_id == invoice.clinic_id,
+                IndiaGstInvoiceItem.invoice_item_id.in_([i.id for i in invoice.items]),
             )
         )
         existing_by_item = {row.invoice_item_id: row for row in existing_rows.scalars()}
@@ -353,7 +327,8 @@ class IndiaGstHook(BillingComplianceHook):
         # not_configured in v1 — no live provider is wired in.
         einvoice_q = await db.execute(
             select(IndiaGstEinvoiceSubmission).where(
-                IndiaGstEinvoiceSubmission.invoice_id == invoice.id
+                IndiaGstEinvoiceSubmission.clinic_id == invoice.clinic_id,
+                IndiaGstEinvoiceSubmission.invoice_id == invoice.id,
             )
         )
         einvoice = einvoice_q.scalar_one_or_none()
@@ -378,14 +353,25 @@ class IndiaGstHook(BillingComplianceHook):
             from app.modules.billing.models import InvoiceSeries
 
             series_prefix = await db.execute(
-                select(InvoiceSeries.prefix).where(InvoiceSeries.id == invoice.series_id)
+                select(InvoiceSeries.prefix).where(
+                    InvoiceSeries.clinic_id == invoice.clinic_id,
+                    InvoiceSeries.id == invoice.series_id,
+                )
             )
             row = series_prefix.first()
             if row and row[0]:
                 prefix = row[0]
-        gst_document_number = compute_fy_document_number(
-            prefix, invoice.sequential_number or 0, invoice.issue_date
-        )
+        # Idempotent re-issue: a snapshot that already carries a GST
+        # document number keeps it — only a first issue allocates one
+        # from the FY-scoped counter (never billing's sequential_number,
+        # which resets on the calendar year and would repeat within a
+        # financial year between January and March).
+        existing_cd = (invoice.compliance_data or {}).get("IN") or {}
+        gst_document_number = existing_cd.get("gst_document_number")
+        if not gst_document_number:
+            gst_document_number = await allocate_fy_document_number(
+                db, invoice.clinic_id, prefix, invoice.issue_date
+            )
 
         snapshot: dict[str, Any] = {
             "supplier": {
@@ -403,7 +389,10 @@ class IndiaGstHook(BillingComplianceHook):
             "igst_total": str(breakdown.igst_total),
             "gst_document_number": gst_document_number,
             "einvoice_state": einvoice_state,
-            "severity": severity_for(einvoice_state, has_sac_warning=has_sac_warning),
+            # Billing's generic compliance_severity filter vocabulary
+            # (ok|warning|pending|error). v1 never submits anywhere, so
+            # the only non-ok signal is a line missing its SAC code.
+            "severity": "warning" if has_sac_warning else "ok",
             # Snapshotted (not read live) so a later settings change never
             # alters how an already-issued invoice's PDF renders — same
             # invariant as everything else in this dict.

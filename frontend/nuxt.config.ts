@@ -54,15 +54,8 @@ export default defineNuxtConfig({
     }
   ],
 
-  // Opt-in only (`NUXT_DEVTOOLS=true npm run dev`). DevTools injects
-  // `@vue/devtools-core` / `@vue/devtools-kit` at runtime, which Vite then
-  // discovers mid-navigation and answers with a full page reload — that
-  // aborts Playwright's in-flight `goto` (net::ERR_ABORTED). Pre-bundling
-  // them instead drags Nuxt's runtime through the dep optimizer, where the
-  // `#app-manifest` client alias is not applied, so Vite paints an error
-  // overlay over the whole app and every click hits the overlay.
   devtools: {
-    enabled: process.env.NUXT_DEVTOOLS === 'true'
+    enabled: true
   },
   app: {
     head: {
@@ -117,7 +110,9 @@ export default defineNuxtConfig({
       // route that uses these packages.
       include: [
         'nprogress',
-        '@vueuse/core'
+        '@vueuse/core',
+        '@vue/devtools-core',
+        '@vue/devtools-kit'
       ]
     }
   },
@@ -126,19 +121,7 @@ export default defineNuxtConfig({
     tsConfig: {
       include: localLayers.map(layer => join('..', layer, '**/*')),
       // Layer nuxt.config files belong to the node tsconfig, not the app one.
-      exclude: localLayers.map(layer => join('..', layer, 'nuxt.config.*')),
-      // Module-layer source files live outside /app (at /module_layers/),
-      // so TypeScript's node resolution can't find packages from
-      // /app/node_modules. Nuxt already adds paths for vue, vue-router,
-      // etc., but not for these deps used by module layers.
-      compilerOptions: {
-        paths: {
-          'marked': ['../node_modules/marked'],
-          'isomorphic-dompurify': ['../node_modules/isomorphic-dompurify'],
-          '@nuxt/ui': ['../node_modules/@nuxt/ui'],
-          'vue-draggable-plus': ['../node_modules/vue-draggable-plus']
-        }
-      }
+      exclude: localLayers.map(layer => join('..', layer, 'nuxt.config.*'))
     }
   },
 

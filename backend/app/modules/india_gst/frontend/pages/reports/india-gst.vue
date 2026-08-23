@@ -2,10 +2,18 @@
 // GST reconciliation report — explicitly a reconciliation aid, not a
 // validated statutory GSTR-1 filing artifact (see the module CLAUDE.md).
 
+import { PERMISSIONS } from '~~/app/config/permissions'
+
 definePageMeta({ layout: 'default' })
 
 const { t } = useI18n()
 const api = useApi()
+const auth = useAuth()
+const config = useRuntimeConfig()
+const toast = useToast()
+const { can } = usePermissions()
+
+const canRead = computed(() => can(PERMISSIONS.indiaGst.reportsRead))
 
 interface Summary {
   cgst_total: string
@@ -35,20 +43,50 @@ const summary = ref<Summary | null>(null)
 const transactions = ref<TransactionRow[]>([])
 
 async function load() {
+  if (!canRead.value) {
+    isLoading.value = false
+    return
+  }
   isLoading.value = true
-  const [summaryRes, txRes] = await Promise.all([
-    api.get<{ data: Summary }>('/api/v1/india_gst/reports/summary'),
-    api.get<{ data: TransactionRow[] }>('/api/v1/india_gst/reports/transactions')
-  ])
-  summary.value = summaryRes.data
-  transactions.value = txRes.data
-  isLoading.value = false
+  try {
+    const [summaryRes, txRes] = await Promise.all([
+      api.get<{ data: Summary }>('/api/v1/india_gst/reports/summary'),
+      api.get<{ data: TransactionRow[] }>('/api/v1/india_gst/reports/transactions')
+    ])
+    summary.value = summaryRes.data
+    transactions.value = txRes.data
+  } catch {
+    toast.add({ title: t('common.error'), color: 'error' })
+  } finally {
+    isLoading.value = false
+  }
 }
 
 onMounted(load)
 
-function exportCsv() {
-  window.open('/api/v1/india_gst/reports/export', '_blank')
+// Authenticated blob download (JWT goes in a header, so window.open /
+// a plain <a href> would come back 401) — same pattern as
+// accounting_export's useAccountingExport.download().
+async function exportCsv() {
+  try {
+    const res = await fetch(`${config.public.apiBaseUrl}/api/v1/india_gst/reports/export`, {
+      headers: auth.accessToken.value
+        ? { Authorization: `Bearer ${auth.accessToken.value}` }
+        : {}
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const blob = await res.blob()
+    const blobUrl = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = blobUrl
+    a.download = 'gst_transactions.csv'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(blobUrl)
+  } catch {
+    toast.add({ title: t('common.error'), color: 'error' })
+  }
 }
 </script>
 
@@ -64,6 +102,7 @@ function exportCsv() {
         </p>
       </div>
       <UButton
+        v-if="canRead"
         icon="i-lucide-download"
         variant="outline"
         @click="exportCsv"
@@ -72,8 +111,15 @@ function exportCsv() {
       </UButton>
     </div>
 
+    <p
+      v-if="!canRead"
+      class="text-subtle"
+    >
+      {{ t('common.forbidden') }}
+    </p>
+
     <USkeleton
-      v-if="isLoading"
+      v-else-if="isLoading"
       class="h-96 w-full"
     />
 

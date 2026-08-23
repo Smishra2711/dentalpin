@@ -4,11 +4,18 @@
 // in the host's generic SettingsLayout/SettingsSection).
 
 import type { IndiaGstMissingSacItem, IndiaGstSettings } from '../../../composables/useIndiaGst'
+import { PERMISSIONS } from '~~/app/config/permissions'
 
 definePageMeta({ layout: 'default' })
 
 const { t, locale } = useI18n()
 const toast = useToast()
+const { can } = usePermissions()
+
+// Read-only view for roles with settings.read; every mutating control
+// needs settings.configure (verifactu's canManage pattern).
+const canManage = computed(() => can(PERMISSIONS.indiaGst.settingsConfigure))
+const canManageCatalog = computed(() => can(PERMISSIONS.indiaGst.catalogManage))
 const { options: stateOptions } = useIndiaGstStates()
 const {
   getSettings,
@@ -29,8 +36,7 @@ const form = ref({
   clinic_state: undefined as string | undefined,
   turnover_threshold: null as number | null,
   show_gstin_on_invoice: true,
-  show_sac_on_invoice: true,
-  rounding_rule: 'nearest_rupee' as 'nearest_rupee' | 'none'
+  show_sac_on_invoice: true
 })
 
 const registrationOptions = [
@@ -38,11 +44,6 @@ const registrationOptions = [
   { label: t('indiaGst.settings.registrationComposition'), value: 'composition' },
   { label: t('indiaGst.settings.registrationUnregistered'), value: 'unregistered' },
   { label: t('indiaGst.settings.registrationExempt'), value: 'exempt' }
-]
-
-const roundingOptions = [
-  { label: t('indiaGst.settings.roundingNearestRupee'), value: 'nearest_rupee' },
-  { label: t('indiaGst.settings.roundingNone'), value: 'none' }
 ]
 
 const missingSac = ref<IndiaGstMissingSacItem[]>([])
@@ -71,8 +72,7 @@ onMounted(async () => {
       clinic_state: settings.value.clinic_state ?? undefined,
       turnover_threshold: settings.value.turnover_threshold ? Number(settings.value.turnover_threshold) : null,
       show_gstin_on_invoice: settings.value.show_gstin_on_invoice,
-      show_sac_on_invoice: settings.value.show_sac_on_invoice,
-      rounding_rule: (settings.value.rounding_rule as 'nearest_rupee' | 'none') ?? 'nearest_rupee'
+      show_sac_on_invoice: settings.value.show_sac_on_invoice
     }
     const catalogDefaults = await getCatalogDefaults()
     missingSac.value = catalogDefaults.missing
@@ -93,8 +93,7 @@ async function save() {
       clinic_state: form.value.clinic_state ?? null,
       turnover_threshold: form.value.turnover_threshold != null ? String(form.value.turnover_threshold) : null,
       show_gstin_on_invoice: form.value.show_gstin_on_invoice,
-      show_sac_on_invoice: form.value.show_sac_on_invoice,
-      rounding_rule: form.value.rounding_rule
+      show_sac_on_invoice: form.value.show_sac_on_invoice
     })
     toast.add({ title: t('common.success'), description: t('indiaGst.settings.saved'), color: 'success' })
   } catch {
@@ -203,17 +202,6 @@ async function saveSac(catalogItemId: string) {
           </h3>
         </template>
         <div class="space-y-4">
-          <UFormField
-            :label="t('indiaGst.settings.rounding')"
-            :hint="t('indiaGst.settings.roundingHint')"
-          >
-            <USelectMenu
-              v-model="form.rounding_rule"
-              :items="roundingOptions"
-              value-key="value"
-            />
-          </UFormField>
-
           <div
             v-if="missingSac.length === 0"
             class="text-caption text-subtle"
@@ -229,6 +217,7 @@ async function saveSac(catalogItemId: string) {
                 {{ t('indiaGst.settings.missingSacCount', { count: missingSac.length }) }}
               </p>
               <UButton
+                v-if="canManageCatalog"
                 size="xs"
                 variant="soft"
                 icon="i-lucide-wand-2"
@@ -252,8 +241,10 @@ async function saveSac(catalogItemId: string) {
                 size="xs"
                 class="w-28"
                 placeholder="999312"
+                :disabled="!canManageCatalog"
               />
               <UButton
+                v-if="canManageCatalog"
                 size="xs"
                 variant="soft"
                 @click="saveSac(item.catalog_item_id)"
@@ -329,6 +320,7 @@ async function saveSac(catalogItemId: string) {
       </UCard>
 
       <UButton
+        v-if="canManage"
         block
         color="primary"
         :loading="isSaving"

@@ -5,8 +5,9 @@ exactly like ``verifactu`` (Spain/AEAT); never imports billing internals
 directly. Country-gated: inactive (and invisible) for clinics whose
 ``clinic.settings['country'] != 'IN'``.
 
-Manual install only (``auto_install=False``). E-invoice integration is
-scaffolding only in v1 — see ``services/einvoice_provider.py``.
+Manual install only (``auto_install=False``). E-invoice in v1 only
+tracks applicability per invoice (``not_required``/``not_configured``);
+there is no GSP/IRP provider integration — retry always answers 409.
 """
 
 from fastapi import APIRouter
@@ -15,6 +16,7 @@ from app.core.plugins import BaseModule
 
 from .models import (
     IndiaGstCatalogItem,
+    IndiaGstDocumentSequence,
     IndiaGstEinvoiceSubmission,
     IndiaGstInvoiceItem,
     IndiaGstSettings,
@@ -27,7 +29,7 @@ class IndiaGstModule(BaseModule):
         "name": "india_gst",
         "version": "0.1.0",
         "summary": "CGST/SGST/IGST GST billing compliance for Indian clinics.",
-        "author": "DentalPin Core Team",
+        "author": "tresundios",
         "license": "BSL-1.1",
         "category": "official",
         "depends": ["billing", "catalog"],
@@ -36,10 +38,14 @@ class IndiaGstModule(BaseModule):
         "removable": True,
         "role_permissions": {
             "admin": ["*"],
-            "dentist": ["reports.read"],
-            "hygienist": [],
-            "assistant": [],
-            "receptionist": ["reports.read"],
+            # settings.read gates the read-only endpoints the invoice
+            # form/detail panels call (tax-preview, e-invoice status) —
+            # every role that can touch invoices needs it or the panel
+            # 403s mid-invoicing.
+            "dentist": ["reports.read", "settings.read"],
+            "hygienist": ["settings.read"],
+            "assistant": ["settings.read"],
+            "receptionist": ["reports.read", "settings.read"],
         },
         "frontend": {
             "layer_path": "frontend",
@@ -73,6 +79,7 @@ class IndiaGstModule(BaseModule):
             IndiaGstSettings,
             IndiaGstCatalogItem,
             IndiaGstInvoiceItem,
+            IndiaGstDocumentSequence,
             IndiaGstEinvoiceSubmission,
         ]
 
@@ -96,9 +103,6 @@ class IndiaGstModule(BaseModule):
         return get_tools()
 
     async def install(self, ctx) -> None:
-        from sqlalchemy import select
-
-        from app.core.auth.models import Clinic
         from app.modules.billing.hooks import BillingHookRegistry
 
         from .hook import IndiaGstHook
@@ -106,34 +110,13 @@ class IndiaGstModule(BaseModule):
         BillingHookRegistry.register(IndiaGstHook())
         ctx.logger.info("india_gst hook registered for country=IN")
 
-        # Backfill GST demo data for any existing Indian clinic (country=IN
-        # in settings). This covers the case where the demo was seeded
-        # before the module was installed — the user installs the module
-        # and the GST data appears without needing a re-seed.
-        from .seed import seed_india_gst_demo
-
-        clinic_q = await ctx.db.execute(select(Clinic).order_by(Clinic.id))
-        for clinic in clinic_q.scalars().all():
-            country = (clinic.settings or {}).get("country")
-            if country == "IN":
-                stats = await seed_india_gst_demo(ctx.db, clinic.id)
-                ctx.logger.info(
-                    f"india_gst demo data seeded for clinic {clinic.id}: "
-                    f"{stats['catalog_items']} SAC defaults, "
-                    f"{stats['invoices']} invoices with GST data, "
-                    f"{stats['quotes']} new GST quotes, "
-                    f"{stats['new_invoices']} new GST invoices"
-                )
-
     async def uninstall(self, ctx) -> None:
         from sqlalchemy import func, select
 
-        from app.core.auth.models import Clinic
         from app.modules.billing.hooks import BillingHookRegistry
         from app.modules.billing.models import Invoice, InvoiceItem
 
         from .models import IndiaGstInvoiceItem
-        from .seed import cleanup_india_gst_demo
 
         # Guard: refuse uninstall if any non-draft invoice has GST line-item
         # data.  Removing the module would orphan the CGST/SGST/IGST
@@ -155,24 +138,6 @@ class IndiaGstModule(BaseModule):
                 f"issued invoices still have GST data. "
                 f"Void or credit-note those invoices first."
             )
-
-        # Clean up India GST demo data for every clinic that has it.
-        # ModuleContext has no clinic_id (modules are global), so we
-        # find clinics with country=IN or existing GST settings.
-        clinic_q = await ctx.db.execute(select(Clinic.id).order_by(Clinic.id))
-        for row in clinic_q.all():
-            clinic_id = row[0]
-            stats = await cleanup_india_gst_demo(ctx.db, clinic_id)
-            if stats["invoice_items"] or stats["catalog_items"] or stats["settings"]:
-                ctx.logger.info(
-                    f"india_gst seed data cleaned up for clinic {clinic_id}: "
-                    f"{stats['invoice_items']} invoice items, "
-                    f"{stats['catalog_items']} SAC defaults, "
-                    f"{stats['settings']} settings, "
-                    f"{stats['quotes']} quotes, "
-                    f"{stats['compliance_cleared']} invoices cleared, "
-                    f"{stats['vat_types']} VAT types removed"
-                )
 
         BillingHookRegistry.unregister("IN")
         ctx.logger.info("india_gst hook unregistered")

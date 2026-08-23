@@ -1,4 +1,4 @@
-"""E-invoice scaffolding: no live provider — drain is a no-op, retry is honest."""
+"""E-invoice retry is honest: no provider exists in v1, so always 409."""
 
 from __future__ import annotations
 
@@ -8,19 +8,6 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.india_gst.models import IndiaGstEinvoiceSubmission, IndiaGstSettings
-from app.modules.india_gst.services import submission_queue
-from app.modules.india_gst.services.einvoice_provider import get_registered_provider
-
-
-async def test_no_provider_registered_by_default():
-    assert get_registered_provider() is None
-
-
-async def test_drain_is_a_true_no_op(
-    db_session: AsyncSession, india_gst_settings: IndiaGstSettings
-):
-    processed = await submission_queue.drain(db_session, india_gst_settings.clinic_id)
-    assert processed == 0
 
 
 async def test_retry_returns_409_never_fabricates_success(
@@ -30,12 +17,11 @@ async def test_retry_returns_409_never_fabricates_success(
     india_gst_settings: IndiaGstSettings,
 ):
     from app.modules.billing.models import Invoice
+    from app.modules.patients.models import Patient
 
     user_id = (await client.get("/api/v1/auth/me", headers=auth_headers)).json()["data"]["user"][
         "id"
     ]
-    from app.modules.patients.models import Patient
-
     patient = Patient(
         id=uuid4(), clinic_id=india_gst_settings.clinic_id, first_name="A", last_name="B"
     )

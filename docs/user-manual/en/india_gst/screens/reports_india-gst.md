@@ -10,7 +10,7 @@ related_permissions:
   - india_gst.reports.read
 related_paths:
   - backend/app/modules/india_gst/frontend/pages/reports/india-gst.vue
-last_verified_commit: 0000000
+last_verified_commit: d158c2f
 ---
 
 # /reports/india-gst

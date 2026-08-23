@@ -732,37 +732,6 @@ async def main(lang: str = "en") -> None:
                     f"Attempts logged: {stats['attempts']}"
                 )
 
-            # India GST only makes sense for an Indian clinic — today
-            # that's the Tamil persona (Chennai, INR, country=IN in
-            # clinic settings), but gate on the *data* rather than the
-            # CLI flag so any future Indian persona gets it too.
-            # Requires an explicit install first:
-            #   ./bin/dentalpin modules install india_gst
-            #   ./bin/dentalpin modules restart
-            clinic_country = (get_clinic_data().get("settings") or {}).get("country")
-            if clinic_country == "IN" and await _module_is_installed(db, "india_gst"):
-                print("\n[opt] Creating India GST demo (module installed)...")
-                from app.modules.india_gst.seed import seed_india_gst_demo
-
-                stats = await seed_india_gst_demo(db, clinic_id=CLINIC_ID)
-                print(
-                    f"  SAC defaults: {stats['catalog_items']} | "
-                    f"Retaxed to GST 18%: {stats['retaxed_items']} items | "
-                    f"Invoices with GST data: {stats['invoices']} "
-                    f"(intra-state: {stats['intra']}, inter-state: {stats['inter']}) | "
-                    f"New GST quotes: {stats['quotes']} | New GST invoices: {stats['new_invoices']}"
-                )
-            elif clinic_country == "IN":
-                print(
-                    "\n[warn] Indian clinic seeded WITHOUT India GST demo data: "
-                    "the india_gst module is not installed, and installing it "
-                    "later does not backfill demo data. To get GST invoices, "
-                    "quotes and SAC defaults, run:\n"
-                    "  ./bin/dentalpin modules install india_gst\n"
-                    "  docker compose restart backend\n"
-                    "  ./scripts/reset-db.sh && ./scripts/seed-demo.sh"
-                )
-
             await db.commit()
             print("\n" + "=" * 60)
             print("Demo data created successfully!")

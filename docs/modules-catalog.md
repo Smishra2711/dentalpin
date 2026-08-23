@@ -230,7 +230,7 @@ Conversational AI agent over DentalPin, scoped to the caller's permissions.
 
 CGST/SGST/IGST GST billing compliance for Indian clinics.
 
-- **Author:** DentalPin Core Team
+- **Author:** tresundios
 - **License:** BSL-1.1
 - **Category:** official
 - **Install policy:** installable=True · auto_install=False · removable=True

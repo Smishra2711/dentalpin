@@ -19,7 +19,11 @@ function isIndiaInvoiceCtx(raw: unknown): boolean {
 export default defineNuxtPlugin(() => {
   registerSlot('settings.sections', {
     id: 'india_gst.settings.cards',
-    component: defineAsyncComponent(() => import('../components/india-gst/SettingsCardsSlot.vue')),
+    component: defineAsyncComponent(
+      // Prefixed name — verifactu ships its own SettingsCardsSlot.vue and
+      // both layers auto-import components with pathPrefix: false.
+      () => import('../components/india-gst/IndiaGstSettingsCardsSlot.vue')
+    ),
     order: 61,
     category: 'billing',
     labelKey: 'indiaGst.settingsCards.title',

@@ -6,17 +6,14 @@ Business logic only, no FastAPI imports (mirrors billing/verifactu).
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .constants import (
-    DEFAULT_DENTAL_SAC_CODE,
-    EINVOICE_STATES,  # noqa: F401  (re-exported for schemas/router)
-)
+from .constants import DEFAULT_DENTAL_SAC_CODE
 from .models import IndiaGstCatalogItem, IndiaGstSettings
 
 INDIA_FY_START_MONTH = 4  # India's financial year runs April (4) to March.
@@ -25,10 +22,12 @@ INDIA_FY_START_MONTH = 4  # India's financial year runs April (4) to March.
 def _quantize(value) -> Decimal:
     """Always route through ``str()`` before ``Decimal()`` — guards
     against float contamination, mirroring verifactu's ``_format_amount``.
+    ``ROUND_HALF_UP`` (away from zero on ties), the rounding GST
+    reporting expects — not Python's default banker's rounding.
     """
-    if isinstance(value, Decimal):
-        return value.quantize(Decimal("0.01"))
-    return Decimal(str(value or 0)).quantize(Decimal("0.01"))
+    if not isinstance(value, Decimal):
+        value = Decimal(str(value or 0))
+    return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 @dataclass
@@ -73,10 +72,12 @@ def compute_gst_breakdown(
 
     Sign-agnostic: works unmodified for negative (credit-note) amounts,
     since it only ever adds/subtracts the line's own ``line_tax`` — it
-    never assumes a positive amount. The CGST/SGST split uses a
-    remainder-absorption trick (``sgst = tax_amount - cgst``, not two
-    independent halvings) so the pair always reconciles exactly to
-    ``line_tax``, including on odd cents.
+    never assumes a positive amount. CGST and SGST are levied at the
+    same rate on the same value, so the two halves MUST be equal —
+    GSTR-1 reconciliation rejects asymmetric heads. Each half is the
+    line tax / 2 rounded HALF_UP per head; on an odd-paise line the two
+    heads together may differ from ``line_tax`` by ±0.01, which is the
+    expected consequence of head-wise rounding (never an unequal split).
     """
     is_intra = bool(clinic_state) and bool(place_of_supply) and clinic_state == place_of_supply
 
@@ -93,7 +94,7 @@ def compute_gst_breakdown(
         if is_intra:
             half_rate = rate / 2
             cgst_amount = _quantize(tax_amount / 2)
-            sgst_amount = tax_amount - cgst_amount
+            sgst_amount = cgst_amount
             lines.append(
                 GstLineBreakdown(
                     invoice_item_id=item.invoice_item_id,
@@ -128,18 +129,74 @@ def compute_gst_breakdown(
     )
 
 
-def compute_fy_document_number(prefix: str, sequential_number: int, issue_date) -> str:
-    """Format ``{prefix}/FY{yy}-{yy+1}/{seq}`` — India's financial year
-    runs April through March, so a March invoice and the following
-    April's invoice fall in different FYs even though they're one
-    month apart.
+def fy_label(issue_date) -> str:
+    """``FY{yy}-{yy+1}`` — India's financial year runs April through
+    March, so a March invoice and the following April's invoice fall in
+    different FYs even though they're one month apart.
     """
     year = issue_date.year
     if issue_date.month >= INDIA_FY_START_MONTH:
         fy_start, fy_end = year, year + 1
     else:
         fy_start, fy_end = year - 1, year
-    return f"{prefix}/FY{fy_start % 100:02d}-{fy_end % 100:02d}/{sequential_number:04d}"
+    return f"FY{fy_start % 100:02d}-{fy_end % 100:02d}"
+
+
+def compute_fy_document_number(prefix: str, sequential_number: int, issue_date) -> str:
+    """Format ``{prefix}/FY{yy}-{yy+1}/{seq}``."""
+    return f"{prefix}/{fy_label(issue_date)}/{sequential_number:04d}"
+
+
+async def allocate_fy_document_number(
+    db: AsyncSession, clinic_id: UUID, prefix: str, issue_date
+) -> str:
+    """Allocate the next GST document number for ``(clinic, prefix, FY)``.
+
+    GST Rule 46(b) requires a consecutive serial unique within the
+    financial year. Billing's ``sequential_number`` resets on the
+    *calendar* year, so reusing it repeats numbers inside one FY between
+    January and March — this module keeps its own FY-scoped counter.
+
+    Concurrency-safe: ``INSERT … ON CONFLICT DO NOTHING`` creates the
+    counter row on first use, then ``SELECT … FOR UPDATE`` serializes the
+    increment (same locking pattern as billing's
+    ``InvoiceService.generate_invoice_number``).
+    """
+    from datetime import UTC, datetime
+    from uuid import uuid4
+
+    from sqlalchemy.dialects.postgresql import insert as pg_insert
+
+    from .models import IndiaGstDocumentSequence
+
+    label = fy_label(issue_date)
+    now = datetime.now(UTC)
+    await db.execute(
+        pg_insert(IndiaGstDocumentSequence)
+        .values(
+            id=uuid4(),
+            clinic_id=clinic_id,
+            prefix=prefix,
+            fy_label=label,
+            last_number=0,
+            created_at=now,
+            updated_at=now,
+        )
+        .on_conflict_do_nothing(constraint="uq_india_gst_document_sequences")
+    )
+    seq_q = await db.execute(
+        select(IndiaGstDocumentSequence)
+        .where(
+            IndiaGstDocumentSequence.clinic_id == clinic_id,
+            IndiaGstDocumentSequence.prefix == prefix,
+            IndiaGstDocumentSequence.fy_label == label,
+        )
+        .with_for_update()
+    )
+    seq = seq_q.scalar_one()
+    seq.last_number += 1
+    await db.flush()
+    return compute_fy_document_number(prefix, seq.last_number, issue_date)
 
 
 async def get_or_create_settings(db: AsyncSession, clinic_id: UUID) -> IndiaGstSettings:
@@ -176,7 +233,6 @@ class IndiaGstCatalogService:
         catalog_item_id: UUID,
         *,
         sac_code: str,
-        default_gst_rate_override: Decimal | None = None,
         notes: str | None = None,
     ) -> IndiaGstCatalogItem:
         existing = await IndiaGstCatalogService.get_default(db, clinic_id, catalog_item_id)
@@ -184,7 +240,6 @@ class IndiaGstCatalogService:
             existing = IndiaGstCatalogItem(clinic_id=clinic_id, catalog_item_id=catalog_item_id)
             db.add(existing)
         existing.sac_code = sac_code
-        existing.default_gst_rate_override = default_gst_rate_override
         existing.notes = notes
         await db.flush()
         return existing
@@ -232,6 +287,33 @@ class IndiaGstCatalogService:
                 }
             )
         return missing
+
+    @staticmethod
+    async def ensure_gst_vat_type(db: AsyncSession, clinic_id: UUID) -> None:
+        """Get-or-create the clinic's ``GST 18%`` VAT type.
+
+        Dental clinics coming from the default demo/catalog only have a
+        0% VAT type, so without this the user would have to hand-create
+        the GST slab in the catalog module before any invoice line could
+        carry tax. Idempotent: matched by the English display name.
+        """
+        from app.modules.catalog.models import VatType
+
+        existing = await db.execute(
+            select(VatType.id).where(
+                VatType.clinic_id == clinic_id,
+                VatType.names.op("->>")("en") == "GST 18%",
+            )
+        )
+        if existing.first() is None:
+            db.add(
+                VatType(
+                    clinic_id=clinic_id,
+                    names={"en": "GST 18%", "es": "GST 18%", "fr": "GST 18%", "ta": "GST 18%"},
+                    rate=18.0,
+                )
+            )
+            await db.flush()
 
     @staticmethod
     async def autoconfigure_missing_sac(
