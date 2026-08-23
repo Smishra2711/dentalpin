@@ -79,6 +79,7 @@ copilot = "app.modules.copilot:CopilotModule"
 patient_relationships = "app.modules.patient_relationships:PatientRelationshipsModule"
 recall_reminders = "app.modules.recall_reminders:RecallRemindersModule"
 contacts = "app.modules.contacts:ContactsModule"
+integrations = "app.modules.integrations:IntegrationsModule"
 
 [tool.setuptools.packages.find]
 where = ["."]
