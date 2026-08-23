@@ -1,7 +1,6 @@
 # Reviews from the listed owner are required on these paths (branch protection on main).
 # Module directories not listed here only need one approving review from any maintainer.
 
-*                                   @martinezsalmeron
 
 # Core: kernel, auth, events, plugin registry, shared schemas
 backend/app/core/**                 @martinezsalmeron
