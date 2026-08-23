@@ -25,7 +25,7 @@ body:
       label: Which module
       description: |
         Leave blank if unsure. See
-        [docs/modules-catalog.md](https://github.com/martinezsalmeron/dentalpin/blob/main/docs/modules-catalog.md).
+        [docs/modules-catalog.md](https://github.com/dentalpin/dentalpin/blob/main/docs/modules-catalog.md).
       placeholder: agenda
 
   - type: input

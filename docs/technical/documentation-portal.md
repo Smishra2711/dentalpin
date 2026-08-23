@@ -335,7 +335,7 @@ After the standard module bootstrap in
 
 Coolify configuration:
 
-- Repo: `martinezsalmeron/dentalpin`
+- Repo: `dentalpin/dentalpin`
 - Build context: `/`
 - Dockerfile path: `docs/portal/Dockerfile`
 - Exposed port: `80`
