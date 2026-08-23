@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat: `GET /agenda/appointments` accepts `order=asc|desc` (by `start_time`, default `asc`). `LastVisitCard` now fetches the most recent completed visit with a single `order=desc&page_size=1` request instead of paging to the tail (PR #251 follow-up).
+
 - feat(#182): `LastVisitCard` on `patient.summary.cards` (order 21, next to the next-appointment card) — shows the patient's most recent completed appointment (date/time/professional/treatment) with an explicit "Sin visitas previas" empty state, so reception can tell a first-timer from a regular on the Resumen tab. Click opens the appointment on the agenda, or the agenda with the patient pre-selected when there is none.
 
 - fix(#184): type-check clean. `useAppointments`/`useHomeAgenda` expose their lists with `shallowReadonly` (the deep `readonly()` view forced `DeepReadonly<Appointment>` through every child prop); the mobile day summary/timeline called `t()` with a 3-arg (key, fallback, params) form vue-i18n does not have — the keys exist in every locale, so params only; `getCabinetColor` accepts the nullable cabinet; the modal no longer sends a `media` field `PlannedTreatmentItem` does not have.
