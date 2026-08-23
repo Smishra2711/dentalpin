@@ -187,7 +187,7 @@ class InvoicePDFService:
         payment_terms_html = (
             f'<div class="payment-info"><strong>{labels["payment_terms"]}:</strong> '
             f"{invoice.payment_term_days} {labels['days']}</div>"
-            if balance_due > 0
+            if balance_due is not None and balance_due > 0
             else ""
         )
 
