@@ -29,7 +29,6 @@ Design notes (see the module ``CLAUDE.md`` for the full rationale):
 from __future__ import annotations
 
 import logging
-from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import select
@@ -218,12 +217,16 @@ class IndiaGstHook(BillingComplianceHook):
         # E-invoice hint text
         einvoice_hints = {
             "not_required": (
-                "Your clinic is below the turnover threshold configured in "
-                "settings, so this invoice is not submitted to the e-invoice portal."
+                "E-invoice applicability has not been assessed. "
+                "Set a turnover threshold in India GST settings if your "
+                "clinic's aggregate annual turnover exceeds the e-invoice "
+                "threshold. Nothing is sent for this invoice."
             ),
             "not_configured": (
-                "E-invoicing applies to clinics above the turnover threshold "
-                "set in India GST settings. Nothing is sent for this invoice."
+                "E-invoicing applies to clinics whose aggregate annual "
+                "turnover exceeds the threshold set in India GST settings. "
+                "No e-invoice provider is configured yet — nothing is "
+                "sent for this invoice."
             ),
         }
         einvoice_hint = einvoice_hints.get(einvoice_state, "")
@@ -332,10 +335,17 @@ class IndiaGstHook(BillingComplianceHook):
             )
         )
         einvoice = einvoice_q.scalar_one_or_none()
-        below_threshold = settings.turnover_threshold is None or Decimal(
-            str(invoice.total or 0)
-        ) < Decimal(str(settings.turnover_threshold))
-        einvoice_state = "not_required" if below_threshold else "not_configured"
+        # E-invoice applicability is based on aggregate annual turnover
+        # (PAN-wide across relevant GSTINs), NOT a single invoice amount.
+        # The turnover_threshold is a clinic-level declaration: if set,
+        # the clinic has assessed itself as above the threshold and
+        # e-invoicing applies — but no provider is wired in v1, so the
+        # state stays "not_configured". If unset, applicability hasn't
+        # been assessed → "not_required".
+        if settings.turnover_threshold is not None:
+            einvoice_state = "not_configured"
+        else:
+            einvoice_state = "not_required"
         if einvoice is None:
             einvoice = IndiaGstEinvoiceSubmission(
                 clinic_id=invoice.clinic_id, invoice_id=invoice.id, state=einvoice_state
