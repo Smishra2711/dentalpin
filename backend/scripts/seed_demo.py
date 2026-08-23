@@ -585,6 +585,76 @@ async def seed_invoices(db: AsyncSession, catalog_map: dict, budgets_result: dic
     return data
 
 
+async def seed_india_gst(db: AsyncSession) -> dict:
+    """Create India GST settings, GST 18% VAT type, and SAC defaults.
+
+    Only called when ``LANG == "ta"`` and the ``india_gst`` module is
+    installed. Mirrors what a clinic admin would do via the settings UI:
+
+    1. Create ``IndiaGstSettings`` with a Tamil Nadu GSTIN and
+       ``clinic_state="33"``.
+    2. Get-or-create the ``GST 18%`` VAT type (via the service layer).
+    3. Auto-configure SAC 999312 on every catalog item missing one.
+    4. Re-assign all catalog items from the exempt (0%) VAT type to
+       GST 18% so invoices carry 18% tax and the hook produces a
+       CGST/SGST or IGST split.
+    """
+    from app.modules.catalog.models import TreatmentCatalogItem, VatType
+    from app.modules.india_gst.service import (
+        IndiaGstCatalogService,
+        get_or_create_settings,
+    )
+
+    # 1 — IndiaGstSettings
+    settings = await get_or_create_settings(db, CLINIC_ID)
+    settings.trade_name = "Chennai Dental Care"
+    settings.gstin = "33ABCDE1234F1Z5"
+    settings.registration_type = "regular"
+    settings.clinic_state = "33"
+    settings.show_gstin_on_invoice = True
+    settings.show_sac_on_invoice = True
+    await db.flush()
+    print("  Created India GST settings (GSTIN: 33ABCDE1234F1Z5, TN)")
+
+    # 2 — GST 18% VAT type
+    await IndiaGstCatalogService.ensure_gst_vat_type(db, CLINIC_ID)
+    gst_vat_q = await db.execute(
+        select(VatType).where(
+            VatType.clinic_id == CLINIC_ID,
+            VatType.names.op("->>")("en") == "GST 18%",
+        )
+    )
+    gst_vat = gst_vat_q.scalar_one()
+    print(f"  Created GST 18% VAT type ({gst_vat.id})")
+
+    # 3 — SAC defaults
+    sac_count = await IndiaGstCatalogService.autoconfigure_missing_sac(db, CLINIC_ID)
+    print(f"  Auto-configured SAC 999312 on {sac_count} catalog items")
+
+    # 4 — Re-assign all catalog items to GST 18%
+    items_q = await db.execute(
+        select(TreatmentCatalogItem).where(
+            TreatmentCatalogItem.clinic_id == CLINIC_ID,
+            TreatmentCatalogItem.is_active.is_(True),
+            TreatmentCatalogItem.deleted_at.is_(None),
+            TreatmentCatalogItem.vat_type_id != gst_vat.id,
+        )
+    )
+    reassigned = 0
+    for item in items_q.scalars():
+        item.vat_type_id = gst_vat.id
+        reassigned += 1
+    await db.flush()
+    print(f"  Re-assigned {reassigned} catalog items to GST 18%")
+
+    return {
+        "settings_created": True,
+        "vat_type_id": str(gst_vat.id),
+        "sac_configured": sac_count,
+        "items_reassigned": reassigned,
+    }
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -650,6 +720,22 @@ async def main(lang: str = "en") -> None:
             print(f"  Created {catalog_result['categories']} categories")
             print(f"  Created {catalog_result['items']} catalog items")
             catalog_map = await _load_catalog_map(db)
+
+            # India GST demo data — only when the module is installed and
+            # the Tamil locale is selected. Must run after the catalog
+            # seed so SAC defaults and VAT reassignment have items to
+            # act on, and before invoices so the catalog_map reflects
+            # the GST 18% VAT type.
+            if lang == "ta" and await _module_is_installed(db, "india_gst"):
+                print("\n[opt] Creating India GST demo data (module installed, Tamil)...")
+                gst_stats = await seed_india_gst(db)
+                print(
+                    f"  Settings: {'created' if gst_stats['settings_created'] else 'skipped'} | "
+                    f"SAC items: {gst_stats['sac_configured']} | "
+                    f"Reassigned: {gst_stats['items_reassigned']}"
+                )
+                # Reload catalog map so invoice lines pick up GST 18%.
+                catalog_map = await _load_catalog_map(db)
 
             print("\n[5/10] Creating odontogram data...")
             await seed_odontogram(db)

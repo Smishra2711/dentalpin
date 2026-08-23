@@ -137,6 +137,10 @@ def get_clinic_data() -> dict:
                 "thursday": {"morning": ["09:00", "14:00"], "afternoon": ["16:00", "20:00"]},
                 "friday": {"morning": ["09:00", "14:00"], "afternoon": ["16:00", "20:00"]},
             },
+            # Activate the India GST compliance hook for the Tamil demo
+            # clinic. The hook checks ``settings.country == "IN"`` to
+            # decide whether to split line tax into CGST/SGST/IGST.
+            **({"country": "IN"} if LANG == "ta" else {}),
         },
         "cabinets": [
             {
