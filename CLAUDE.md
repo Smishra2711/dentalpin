@@ -324,7 +324,7 @@ class MyModule(BaseModule):
     def get_router(self) -> APIRouter: return router
     def get_permissions(self) -> list[str]: return ["resource.read", "resource.write"]
     def get_event_handlers(self) -> dict: return {"patient.created": self._on_patient_created}
-    def get_tools(self) -> list[Tool]: return []   # mandatory, even if empty
+    # get_tools() is optional — BaseModule returns []; override only when exposing tools
 ```
 
 Event bus:
