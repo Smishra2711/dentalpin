@@ -145,6 +145,37 @@ async def test_missing_place_of_supply_blocks_issue(
     assert "place of supply" in r.json()["message"].lower()
 
 
+async def test_missing_clinic_state_blocks_issue(
+    client: AsyncClient,
+    auth_headers,
+    db_session: AsyncSession,
+    india_gst_settings: IndiaGstSettings,
+    test_patient: Patient,
+):
+    """A clinic without ``clinic_state`` configured cannot determine
+    intra vs inter-state tax — issue must be blocked."""
+    india_gst_settings.clinic_state = None
+    db_session.add(india_gst_settings)
+    await db_session.commit()
+
+    vat, item = await _make_catalog_item(db_session, india_gst_settings.clinic_id, rate=18.0)
+    invoice_id, _ = await _create_and_add_item(
+        client, auth_headers, test_patient.id, vat.id, item.id
+    )
+
+    await client.put(
+        f"/api/v1/india_gst/invoices/{invoice_id}",
+        json={"place_of_supply": "33"},
+        headers=auth_headers,
+    )
+
+    r = await client.post(
+        f"/api/v1/billing/invoices/{invoice_id}/issue", json={}, headers=auth_headers
+    )
+    assert r.status_code == 400
+    assert "state" in r.json()["message"].lower()
+
+
 async def test_non_regular_registration_issues_with_no_gst_rows(
     client: AsyncClient,
     auth_headers,

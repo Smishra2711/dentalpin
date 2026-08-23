@@ -151,3 +151,46 @@ async def test_autoconfigure_fills_missing_sac_without_touching_configured(
     # Idempotent: a second run has nothing left to do.
     r = await client.post("/api/v1/india_gst/catalog-defaults/autoconfigure", headers=auth_headers)
     assert r.json()["data"]["configured_count"] == 0
+
+
+async def test_autoconfigure_creates_gst_vat_type_idempotently(
+    client: AsyncClient, auth_headers, db_session: AsyncSession, india_gst_clinic: Clinic
+):
+    """Auto-configure must create the ``GST 18%`` VAT type if missing,
+    and must not duplicate it on repeated runs."""
+    from sqlalchemy import func, select
+
+    from app.modules.catalog.models import VatType
+
+    clinic_id = india_gst_clinic.id
+
+    # No GST 18% VAT type exists yet.
+    count_q = await db_session.execute(
+        select(func.count())
+        .select_from(VatType)
+        .where(VatType.clinic_id == clinic_id, VatType.names.op("->>")("en") == "GST 18%")
+    )
+    assert count_q.scalar() == 0
+
+    r = await client.post("/api/v1/india_gst/catalog-defaults/autoconfigure", headers=auth_headers)
+    assert r.status_code == 200, r.text
+
+    db_session.expire_all()
+    count_q = await db_session.execute(
+        select(func.count())
+        .select_from(VatType)
+        .where(VatType.clinic_id == clinic_id, VatType.names.op("->>")("en") == "GST 18%")
+    )
+    assert count_q.scalar() == 1
+
+    # Second run must not create a duplicate.
+    r = await client.post("/api/v1/india_gst/catalog-defaults/autoconfigure", headers=auth_headers)
+    assert r.status_code == 200, r.text
+
+    db_session.expire_all()
+    count_q = await db_session.execute(
+        select(func.count())
+        .select_from(VatType)
+        .where(VatType.clinic_id == clinic_id, VatType.names.op("->>")("en") == "GST 18%")
+    )
+    assert count_q.scalar() == 1

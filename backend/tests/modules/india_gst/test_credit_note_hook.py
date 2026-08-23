@@ -125,3 +125,75 @@ async def test_credit_note_links_original_reference(
     )
     cd = r.json()["data"]["compliance_data"]["IN"]
     assert cd["original_reference"] == original_number
+
+
+async def test_interstate_credit_note_preserves_igst_regime(
+    client: AsyncClient,
+    auth_headers,
+    db_session: AsyncSession,
+    india_gst_settings: IndiaGstSettings,
+    test_patient: Patient,
+):
+    """An interstate invoice (IGST) must produce a credit note that also
+    uses IGST — not CGST/SGST — with correct negative amounts."""
+    vat = VatType(clinic_id=india_gst_settings.clinic_id, names={"en": "GST 18%"}, rate=18.0)
+    category = TreatmentCategory(
+        clinic_id=india_gst_settings.clinic_id, key="inter-cn", names={"en": "Restorative"}
+    )
+    db_session.add_all([vat, category])
+    await db_session.flush()
+    item = TreatmentCatalogItem(
+        clinic_id=india_gst_settings.clinic_id,
+        category_id=category.id,
+        internal_code="INTER-CN-01",
+        names={"en": "Crown"},
+        default_price="5000.00",
+        vat_type_id=vat.id,
+    )
+    db_session.add(item)
+    await db_session.commit()
+
+    r = await client.post(
+        "/api/v1/billing/invoices", json={"patient_id": str(test_patient.id)}, headers=auth_headers
+    )
+    invoice_id = r.json()["data"]["id"]
+    await client.post(
+        f"/api/v1/billing/invoices/{invoice_id}/items",
+        json={
+            "description": "Crown",
+            "catalog_item_id": str(item.id),
+            "unit_price": "5000.00",
+            "quantity": 1,
+            "vat_type_id": str(vat.id),
+        },
+        headers=auth_headers,
+    )
+    await client.put(
+        f"/api/v1/india_gst/invoices/{invoice_id}",
+        json={"place_of_supply": "29"},
+        headers=auth_headers,
+    )
+    r = await client.post(
+        f"/api/v1/billing/invoices/{invoice_id}/issue", json={}, headers=auth_headers
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["data"]["compliance_data"]["IN"]["tax_type"] == "inter"
+
+    r = await client.post(
+        f"/api/v1/billing/invoices/{invoice_id}/credit-note",
+        json={"reason": "Treatment cancelled"},
+        headers=auth_headers,
+    )
+    assert r.status_code == 201, r.text
+    credit_note_id = r.json()["data"]["id"]
+
+    r = await client.post(
+        f"/api/v1/billing/invoices/{credit_note_id}/issue", json={}, headers=auth_headers
+    )
+    assert r.status_code == 200, r.text
+    cd = r.json()["data"]["compliance_data"]["IN"]
+    assert cd["tax_type"] == "inter"
+    assert cd["igst_total"] == "-900.00"
+    assert cd["cgst_total"] == "0.00"
+    assert cd["sgst_total"] == "0.00"
+    assert cd["gst_document_number"].startswith("CN/FY")

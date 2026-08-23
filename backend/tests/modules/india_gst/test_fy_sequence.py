@@ -49,3 +49,54 @@ async def test_prefixes_count_independently(db_session: AsyncSession, india_gst_
     cn = await allocate_fy_document_number(db_session, india_gst_clinic.id, "CN", when)
     assert inv == "GST/FY26-27/0001"
     assert cn == "CN/FY26-27/0001"
+
+
+async def test_separate_clinics_get_independent_sequences(
+    db_session: AsyncSession, india_gst_clinic: Clinic
+):
+    """Two clinics allocating in the same FY must each start at 0001."""
+    from uuid import uuid4
+
+    from app.core.auth.models import Clinic
+
+    other = Clinic(
+        id=uuid4(), name="Other Clinic", tax_id="B2", address={}, settings={"country": "IN"}
+    )
+    db_session.add(other)
+    await db_session.flush()
+
+    when = date(2026, 8, 21)
+    a1 = await allocate_fy_document_number(db_session, india_gst_clinic.id, "GST", when)
+    b1 = await allocate_fy_document_number(db_session, other.id, "GST", when)
+    a2 = await allocate_fy_document_number(db_session, india_gst_clinic.id, "GST", when)
+    b2 = await allocate_fy_document_number(db_session, other.id, "GST", when)
+
+    assert a1 == "GST/FY26-27/0001"
+    assert b1 == "GST/FY26-27/0001"
+    assert a2 == "GST/FY26-27/0002"
+    assert b2 == "GST/FY26-27/0002"
+
+
+async def test_repeated_allocations_never_produce_duplicate_numbers(
+    db_session: AsyncSession, india_gst_clinic: Clinic
+):
+    """Ten allocations for the same (clinic, prefix, FY) must all come
+    back unique and consecutive — the ``SELECT … FOR UPDATE`` row lock
+    plus the unique constraint on ``(clinic_id, prefix, fy_label)`` is
+    what serializes real concurrent issuance in production. (A genuine
+    concurrent race — e.g. via ``asyncio.gather`` on this session — isn't
+    reproducible in the single-session test harness: ``AsyncSession``
+    itself isn't safe for concurrent use, so `InvalidRequestError:
+    Session is already flushing` fires before the DB-level lock is
+    even reached. Same rationale as
+    `tests/modules/billing/test_issue_and_payment_guards.py` — the lock
+    is exercised here the same way it's exercised there: sequential
+    calls proving the counter never drops or repeats a serial.)
+    """
+    when = date(2026, 8, 21)
+    results = [
+        await allocate_fy_document_number(db_session, india_gst_clinic.id, "GST", when)
+        for _ in range(10)
+    ]
+    assert results == [f"GST/FY26-27/{n:04d}" for n in range(1, 11)]
+    assert len(set(results)) == 10

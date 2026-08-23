@@ -9,6 +9,7 @@ from __future__ import annotations
 from uuid import uuid4
 
 from httpx import AsyncClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth.models import Clinic
@@ -162,3 +163,28 @@ async def test_draft_update_on_foreign_invoice_is_404(
         headers=auth_headers,
     )
     assert r.status_code == 404
+
+
+async def test_autoconfigure_does_not_create_vat_type_in_foreign_clinic(
+    client: AsyncClient,
+    auth_headers: dict,
+    db_session: AsyncSession,
+    india_gst_settings: IndiaGstSettings,
+):
+    """Auto-configuring clinic A must not create a GST 18% VAT type in
+    clinic B — the VAT type is tenant-scoped."""
+    from sqlalchemy import func
+
+    from app.modules.catalog.models import VatType
+
+    other = await _foreign_clinic_with_gst_data(db_session, await _user_id(client, auth_headers))
+
+    r = await client.post("/api/v1/india_gst/catalog-defaults/autoconfigure", headers=auth_headers)
+    assert r.status_code == 200, r.text
+
+    foreign_vat_q = await db_session.execute(
+        select(func.count())
+        .select_from(VatType)
+        .where(VatType.clinic_id == other.id, VatType.names.op("->>")("en") == "GST 18%")
+    )
+    assert foreign_vat_q.scalar() == 0
