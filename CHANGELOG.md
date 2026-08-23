@@ -248,7 +248,7 @@ narrative version of that work belongs to the next major.
 ### Added
 
 - **Prebuilt images and a one-command install.** Tagging a release now
-  builds and publishes `ghcr.io/martinezsalmeron/dentalpin-backend` and
+  builds and publishes `ghcr.io/dentalpin/dentalpin-backend` and
   `-frontend`, and publishes the GitHub Release with notes taken from
   this file. `docker-compose.prod.yml` runs the stack straight from those
   images with no clone and no build; a Caddy container fronts both

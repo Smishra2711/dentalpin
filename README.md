@@ -94,9 +94,9 @@ Join our [**Telegram channel**](https://t.me/dentalpin) for support, installatio
 Prebuilt images, no clone, no build. On any server with Docker:
 
 ```bash
-curl -O https://raw.githubusercontent.com/martinezsalmeron/dentalpin/main/docker-compose.prod.yml
-curl -O https://raw.githubusercontent.com/martinezsalmeron/dentalpin/main/Caddyfile
-curl -o .env https://raw.githubusercontent.com/martinezsalmeron/dentalpin/main/.env.prod.example
+curl -O https://raw.githubusercontent.com/dentalpin/dentalpin/main/docker-compose.prod.yml
+curl -O https://raw.githubusercontent.com/dentalpin/dentalpin/main/Caddyfile
+curl -o .env https://raw.githubusercontent.com/dentalpin/dentalpin/main/.env.prod.example
 
 # Set PUBLIC_URL, POSTGRES_PASSWORD and SECRET_KEY in .env, then:
 docker compose -f docker-compose.prod.yml up -d
@@ -107,8 +107,8 @@ provisioned on first boot — Caddy fronts both services on a single origin, so
 there is no CORS and no certificate to renew. Set `SEED_ON_STARTUP=1` to load
 the demo clinic and look around before going live.
 
-Images: [`dentalpin-backend`](https://github.com/martinezsalmeron/dentalpin/pkgs/container/dentalpin-backend) ·
-[`dentalpin-frontend`](https://github.com/martinezsalmeron/dentalpin/pkgs/container/dentalpin-frontend)
+Images: [`dentalpin-backend`](https://github.com/dentalpin/dentalpin/pkgs/container/dentalpin-backend) ·
+[`dentalpin-frontend`](https://github.com/dentalpin/dentalpin/pkgs/container/dentalpin-frontend)
 
 ## Quick Start (development)
 

@@ -8,7 +8,7 @@
 # rendered without duplication.
 #
 # Coolify usage:
-#   - Repository:        martinezsalmeron/dentalpin
+#   - Repository:        dentalpin/dentalpin
 #   - Build context:     /                  (repo root)
 #   - Dockerfile path:   docs/portal/Dockerfile
 #   - Exposed port:      80
