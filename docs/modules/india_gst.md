@@ -26,6 +26,7 @@
 13. [Testing](#13-testing)
 14. [Troubleshooting](#14-troubleshooting)
 15. [Known limitations & roadmap](#15-known-limitations--roadmap)
+16. [Validation guide — Tamil Nadu GST acceptance matrix](#16-validation-guide--tamil-nadu-gst-acceptance-matrix)
 
 ---
 
@@ -320,8 +321,15 @@ in `pdf.py::_get_labels` and the CSS font-family includes
 E-invoice in v1 only tracks **applicability** per invoice:
 
 - `IndiaGstEinvoiceSubmission` holds one row per invoice with
-  `state` (`not_required` below the turnover threshold,
-  `not_configured` above it) and `provider_error_message`.
+  `state` (`not_required` when turnover threshold is not set,
+  `not_configured` when it is) and `provider_error_message`.
+- **Applicability is based on aggregate annual turnover** (PAN-wide
+  across relevant GSTINs), NOT a single invoice's amount. The
+  `turnover_threshold` field in `IndiaGstSettings` is a clinic-level
+  declaration: if set, the clinic has assessed itself as above the
+  threshold and e-invoicing applies (`not_configured` since no
+  provider is wired in v1). If unset, applicability hasn't been
+  assessed (`not_required`).
 - The retry endpoint always returns `409` — never a fabricated success.
 - There is no provider adapter, submission queue, or IRN storage —
   those arrive together with a real GSP/IRP integration, which will
@@ -507,15 +515,38 @@ Backend test files:
   cents, credit notes, zero-rate, multi-line totals, FY document
   numbering)
 - `test_hook_issue.py` — hook integration (intra/inter-state issue,
-  missing place of supply, non-regular registration, re-issue
-  idempotency)
+  missing place of supply, missing clinic state, non-regular
+  registration, re-issue idempotency)
+- `test_credit_note_hook.py` — credit-note GST reversal (intra-state
+  CGST/SGST sign-safety, interstate IGST regime preservation,
+  original reference linking, FY-scoped CN numbering)
+- `test_fy_sequence.py` — FY-scoped document numbering (calendar-year
+  boundary continuity, April restart, prefix independence,
+  multi-clinic independence, repeated-allocation uniqueness proving
+  the `SELECT … FOR UPDATE` lock never drops or repeats a serial)
 - `test_uninstall_guard.py` — uninstall guard (blocked when issued
   invoices have GST data, allowed when no issued GST invoices)
+- `test_uninstall_roundtrip.py` — Alembic branch-scoped
+  install/uninstall/reinstall round-trip
 - `test_settings_router.py` — settings CRUD, GSTIN validation, SAC
-  defaults, autoconfigure, missing SAC translations
+  defaults, autoconfigure (SAC + GST 18% VAT type idempotency),
+  missing SAC translations
 - `test_tax_preview_endpoint.py` — tax preview API
-- `test_reports_service.py` — reconciliation report totals
-- `test_einvoice_scaffolding.py` — e-invoice retry returns 409
+- `test_draft_update_endpoint.py` — draft-only guard, compliance_data
+  merge
+- `test_reports_service.py` — reconciliation report totals, CSV
+  formula injection neutralization
+- `test_multitenant.py` — tenant isolation (settings, catalog, reports,
+  export, draft update, autoconfigure VAT type scoping)
+- `test_pdf_escaping.py` — structured compliance data, HTML escaping,
+  label override safety, snapshot immutability
+- `test_permissions.py` — role permission boundaries
+- `test_einvoice_retry.py` — e-invoice retry 409, applicability based
+  on turnover threshold (not invoice amount)
+- `test_seed_data.py` — Tamil demo fixture wiring: `country=IN` only
+  applies to the `ta` locale's clinic settings, and `seed_india_gst`
+  (in `scripts/seed_demo.py`) creates settings/VAT type/SAC defaults
+  only when explicitly invoked — never from module install
 
 ### Frontend tests
 
@@ -564,6 +595,18 @@ GSTIN must match the CBIC format: `^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z
 Example: `33ABCDE1234F1Z5`. The first two digits must be a valid state
 code from `constants.INDIA_STATES`.
 
+**This is a structural (regex) check only — it does not verify the
+15th-character mod-36 checksum digit.** `33ABCDE1234F1Z5` is the
+fixture/demo GSTIN used throughout this module's test suite and demo
+data; it is structurally well-formed (state `33` = Tamil Nadu, valid
+PAN shape, entity code, `Z`, checksum-position character) but is not a
+real taxpayer's registration and its checksum digit has not been
+verified against the official mod-36 algorithm. Do not present it as
+belonging to a real business. A future PR could add real checksum
+validation — tracked as a v1 limitation (§15), not silently
+implemented here, since tightening validation is a product decision
+that could reject GSTINs clinics are already relying on.
+
 ### "Tamil PDF shows boxes/squares"
 
 Tamil characters require the `Noto Sans Tamil` font. Ensure
@@ -598,6 +641,9 @@ docker compose restart frontend
 - **No reverse charge mechanism.** RCM is out of scope for v1.
 - **No TDS/TCS support.** Tax deducted/collected at source is not
   handled.
+- **GSTIN validation is structural only.** `is_valid_gstin` checks the
+  CBIC format regex, not the 15th-character mod-36 checksum — see
+  §14 "GSTIN validation fails".
 
 ### Roadmap
 
@@ -608,6 +654,194 @@ docker compose restart frontend
 - [ ] TDS/TCS handling
 - [ ] Multi-GSTIN support (one clinic, multiple state registrations)
 - [ ] Invoice-level SAC override (currently catalog-level only)
+
+---
+
+## 16. Validation guide — Tamil Nadu GST acceptance matrix
+
+This section documents the real-world Indian billing scenarios validated
+by the test suite. Every scenario is covered by at least one automated
+test that fails against the defect or missing behaviour it protects.
+
+### Acceptance matrix
+
+| # | Scenario | Test file | Key assertions |
+|---|----------|-----------|----------------|
+| A1 | Auto-configure creates GST 18% VAT type idempotently | `test_settings_router.py` | VAT type count goes 0→1, second run stays at 1 |
+| A2 | Auto-configure SAC defaults is additive + idempotent | `test_settings_router.py` | Existing SAC preserved, missing filled, second run = 0 |
+| A3 | Auto-configure does not cross tenant boundaries | `test_multitenant.py` | Clinic A auto-config does not create VAT type in clinic B |
+| B1 | Same-state (intra) CGST/SGST split — exact 18% | `test_gst_calculator.py` | CGST=900, SGST=900, sum=1800 |
+| B2 | Same-state odd-paise HALF_UP equality | `test_gst_calculator.py` | CGST==SGST==50.01 on 100.01 @12% |
+| B3 | Same-state per-line rates derived, not hardcoded | `test_gst_calculator.py` | 5%→2.5+2.5, 12%→6+6 in same invoice |
+| B4 | Same-state hook integration via real issue endpoint | `test_hook_issue.py` | compliance_data IN: tax_type=intra, cgst=90, sgst=90 |
+| C1 | Interstate IGST — full rate, no CGST/SGST | `test_gst_calculator.py` | IGST=1800, CGST=0, SGST=0 |
+| C2 | Interstate hook integration via real issue endpoint | `test_hook_issue.py` | compliance_data IN: tax_type=inter, igst=180 |
+| C3 | Missing place of supply blocks issue | `test_hook_issue.py` | 400, "place of supply" in message |
+| C4 | Missing clinic_state blocks issue | `test_hook_issue.py` | 400, "state" in message |
+| D1 | Credit note reverses CGST/SGST with correct sign | `test_credit_note_hook.py` | cgst=-810, sgst=-810, CN/FY prefix |
+| D2 | Interstate credit note preserves IGST regime | `test_credit_note_hook.py` | tax_type=inter, igst=-900, cgst=0, sgst=0 |
+| D3 | Credit note links original reference | `test_credit_note_hook.py` | original_reference == original gst_document_number |
+| D4 | Credit note per-line reconciliation | `test_credit_note_hook.py` | cgst+sgst==line_tax, line_tax<0 |
+| D5 | Negative amounts split without re-negation | `test_gst_calculator.py` | cgst+sgst==-1800, no double-flip |
+| E1 | FY numbering — March/April boundary | `test_gst_calculator.py` | Mar 2026→FY25-26, Apr 2026→FY26-27 |
+| E2 | FY numbering — continues across calendar year | `test_fy_sequence.py` | Dec 2026→0001, Jan 2027→0002 (same FY) |
+| E3 | FY numbering — restarts each April | `test_fy_sequence.py` | Mar 2027→FY26-27/0001, Apr 2027→FY27-28/0001 |
+| E4 | FY numbering — prefixes count independently | `test_fy_sequence.py` | GST and CN both start at 0001 |
+| E5 | FY numbering — separate clinics independent | `test_fy_sequence.py` | Both clinics start at 0001, increment separately |
+| E6 | FY numbering — repeated allocations never collide | `test_fy_sequence.py` | 10 sequential allocations → 10 unique consecutive numbers |
+| F1 | Report summary reconciles intra + inter totals | `test_reports_service.py` | cgst=90, sgst=90, igst=180, count=2 |
+| F2 | Report transactions list matches invoice count | `test_reports_service.py` | 2 rows returned |
+| F3 | CSV export includes headers | `test_reports_service.py` | b"gst_document_number" in content |
+| F4 | CSV formula injection neutralized | `test_reports_service.py` | `=cmd`→`'=cmd`, `@evil`→`'@evil` |
+| F5 | Reports exclude foreign clinic data | `test_multitenant.py` | invoice_count=0, no foreign doc number in CSV |
+| G1 | PDF hook emits structured rows, not HTML | `test_pdf_escaping.py` | No `<div` in row values, no compliance_section_html key |
+| G2 | PDF billing escapes all compliance values | `test_pdf_escaping.py` | XSS string not in HTML, escaped version present ≥5 times |
+| G3 | PDF label overrides cannot inject keys | `test_pdf_escaping.py` | "PWNED" not in HTML, "Issued" preserved |
+| G4 | PDF renders from immutable snapshot | `test_pdf_escaping.py` | Original trade name/GSTIN/totals present, deterministic |
+| H1 | E-invoice retry always 409, never fabricates | `test_einvoice_retry.py` | 409, "provider" in message, state unchanged |
+| H2 | E-invoice applicability: turnover, not invoice amount | `test_einvoice_retry.py` | Large invoice w/o threshold→not_required; small w/ threshold→not_configured |
+| I1 | Settings: GSTIN format validated | `test_settings_router.py` | Valid accepted, invalid → 400 |
+| I2 | Settings: default row created on first GET | `test_settings_router.py` | registration_type=regular, gstin=null |
+| I3 | Draft update: merges compliance_data | `test_draft_update_endpoint.py` | place_of_supply persisted in compliance_data |
+| I4 | Draft update: rejects issued invoice (409) | `test_draft_update_endpoint.py` | 409 on issued invoice |
+| I5 | Draft update: foreign invoice → 404 | `test_multitenant.py` | 404 for other clinic's invoice |
+| J1 | Permissions: receptionist reads, cannot configure | `test_permissions.py` | 200 on read, 403 on configure |
+| J2 | Permissions: hygienist reads settings, not reports | `test_permissions.py` | 200 on settings, 403 on reports |
+| J3 | Permissions: assistant cannot manage catalog | `test_permissions.py` | 403 on catalog-defaults + autoconfigure |
+| K1 | Uninstall blocked when issued GST data exists | `test_uninstall_guard.py` | RuntimeError "issued invoices", hook stays registered |
+| K2 | Uninstall allowed with no issued GST invoices | `test_uninstall_guard.py` | No exception, hook unregistered |
+| K3 | Uninstall Alembic round-trip is branch-scoped | `test_uninstall_roundtrip.py` | Only india_gst tables dropped/restored |
+| L1 | Non-regular registration: no GST rows | `test_hook_issue.py` | No compliance_data IN, no IndiaGstInvoiceItem rows |
+| L2 | Re-issuing hook path does not duplicate rows | `test_hook_issue.py` | Exactly 1 IndiaGstInvoiceItem after second hook call |
+| M1 | Tamil demo clinic gets `country=IN`, other locales don't | `test_seed_data.py` | `get_clinic_data()["settings"]["country"]` only set for `lang="ta"` |
+| M2 | Explicit Tamil demo GST fixture is reproducible | `test_seed_data.py` | `seed_india_gst()` creates settings (GSTIN `33ABCDE1234F1Z5`, state `33`), `GST 18%` VAT type, SAC defaults on every active catalog item — only when explicitly called, never from install |
+
+### Safety invariants verified
+
+- **Immutability of issued invoices**: compliance_data['IN'] is a fiscal
+  snapshot written once at issue time; `enhance_pdf_data` reads from it,
+  not live settings.
+- **Tenant isolation**: every endpoint filters by `clinic_id`; no
+  cross-clinic data leakage (settings, catalog, reports, draft update,
+  autoconfigure VAT type).
+- **FY-scoped numbering**: unique and consecutive within April–March FY;
+  does not reset at January 1st; separate per clinic and per prefix.
+- **HALF_UP rounding**: CGST and SGST are equal halves, each rounded
+  per-head; ±0.01 drift on odd-paise lines is expected.
+- **Sign-agnostic split**: credit-note negative amounts split without
+  re-negation; per-line sums always reconcile to `line_tax`.
+- **Structured PDF data**: hooks pass data (not HTML) across module
+  boundary; billing escapes all values.
+- **Non-destructive install**: module install creates no demo data and
+  mutates no real clinic data.
+- **Idempotent auto-configure**: repeated runs produce the same result
+  without duplicates (SAC codes, VAT types).
+- **CSV formula injection protection**: user-controlled columns prefixed
+  with `'` when starting with `= + - @ \t \r`.
+- **E-invoice honesty**: no fabricated success; retry always 409 in v1.
+
+### Items requiring a practising Indian CA/GST accountant
+
+This is implementation guidance, not legal or CA advice. The following
+product decisions are documented as the current implementation policy;
+each is flagged here because it is exactly the kind of judgment call
+that should be confirmed against a clinic's actual filing practice
+before being relied on for statutory GSTR-1 filing.
+
+- **CGST/SGST rounding convention**: the module rounds each head
+  (CGST, SGST) independently with `ROUND_HALF_UP`, so CGST always
+  equals SGST exactly — this is treated as a hard invariant because
+  GSTR-1 reconciliation rejects asymmetric heads levied at the same
+  rate on the same value. The side effect is that on an odd-paise
+  line, `cgst_amount + sgst_amount` can differ from an independently-
+  rounded whole-line tax figure by ±₹0.01. Whether a clinic's
+  accountant/GSTR-1 tool prefers this per-head rounding or an
+  invoice-level Section 170-style rounding is a filing-convention
+  question this module does not resolve — a CA should confirm which
+  convention the clinic's actual GSTR-1 workflow expects.
+- **FY numbering convention**: document numbers reset to `0001` every
+  1 April, scoped per `(clinic, prefix, financial year)`, and are
+  never reused. This is Rule 46(b)'s minimum requirement (consecutive,
+  unique within the FY). A continuous series spanning multiple FYs is
+  a legitimate alternative some practices prefer; it has not been
+  implemented here (or requested by any specific clinic) — it would
+  only be added as an explicit clinic-level preference that cannot
+  weaken uniqueness/auditability, not as a default.
+- **E-invoice applicability / turnover threshold value**: applicability
+  is determined by aggregate annual turnover, evaluated PAN-wide
+  across the taxpayer's relevant GSTINs — never a single invoice's
+  amount (fixed in this validation pass; see CHANGELOG). The
+  `turnover_threshold` field is a clinic-level self-declaration; the
+  software does not fetch or verify actual turnover. The statutory
+  threshold figure itself, and whether a given clinic has crossed it
+  for the relevant (or preceding) FY, needs the clinic's accountant —
+  operationally this should be tracked as an accountant-attested
+  turnover status with a PAN-level turnover source/date and periodic
+  (e.g. annual) review, not a one-time field.
+- **Composition scheme rates**: composition-scheme tax calculation is
+  out of scope for v1; a CA must advise if composition-scheme clinics
+  need invoicing support beyond "no GST rows."
+- **Reverse charge mechanism (RCM)**: not supported in v1; a CA must
+  advise if RCM invoices are needed.
+- **GSTR-1 filing format**: the CSV export is a reconciliation aid, not
+  a validated statutory filing artifact. A CA must confirm whether a
+  GSTR-1-compliant export format is needed.
+
+### Manual validation checklist
+
+Automated tests cover the scenarios below (see the acceptance matrix);
+this is the browser-driven walkthrough for a final human check before
+relying on the module for real invoicing. Requires an India-configured
+clinic (§4) with the module installed.
+
+1. **Auto-configure idempotency** — `/settings/india-gst` → click
+   **Auto-configure** twice. First run creates the `GST 18%` VAT type
+   and stamps missing SAC codes; second run reports zero new items and
+   the catalog module shows exactly one `GST 18%` VAT type.
+2. **Same-state invoice** — set clinic state = Tamil Nadu (`33`).
+   Create an invoice with place of supply = `33`, issue it. Confirm
+   the GST panel shows CGST + SGST (equal amounts), IGST = 0.00.
+3. **Interstate invoice** — same clinic, place of supply = a different
+   state (e.g. `29` Karnataka). Issue. Confirm IGST only, CGST/SGST =
+   0.00.
+4. **Missing-state block** — temporarily clear clinic state in
+   settings, attempt to issue a draft invoice. Confirm a clear
+   validation error and the invoice stays in `draft` (no silent IGST
+   fallback).
+5. **Credit note** — issue a credit note against both a same-state and
+   an interstate invoice from steps 2–3. Confirm the credit note shows
+   the same tax regime (CGST+SGST or IGST) as its source invoice, with
+   negative amounts, and the PDF/reconciliation reflect the reversal.
+6. **FY boundary** — with system/test date control (or by inspecting
+   `india_gst_document_sequences` after issuing invoices dated 31 March
+   and 1 April of consecutive years), confirm the document number
+   resets to `0001` on 1 April and does not collide with the prior FY.
+7. **Reconciliation** — `/reports/india-gst`: confirm summary totals
+   (CGST/SGST/IGST) match the invoices issued above, filtered by date
+   range.
+8. **Authenticated CSV export** — click **Export CSV** on the
+   reconciliation page; confirm the browser downloads via the app's
+   authenticated fetch (not a plain link opening a 401), and the file
+   is UTF-8 with Tamil characters intact if any patient/description
+   used them.
+9. **Formula-injection check** — set a recipient GSTIN or invoice text
+   field starting with `=`, `+`, `-`, or `@`, issue, export CSV, and
+   open the file in a spreadsheet app — confirm the cell shows as text
+   (prefixed with `'`), not an executed formula.
+10. **Tamil PDF rendering** — issue an invoice for a Tamil-named
+    patient (`locale=ta`), download the PDF, confirm Tamil glyphs
+    render (no tofu/boxes) and any punctuation/ampersands in
+    user-entered text are readable, not raw HTML.
+11. **Tenant isolation** — as a second clinic, attempt to fetch the
+    first clinic's invoice GST fields, reports, or CSV export by ID;
+    confirm 404/empty results, never the other clinic's data.
+12. **Uninstall guard** — with at least one issued GST invoice, attempt
+    `Admin → Modules → india_gst → Uninstall`; confirm it is blocked
+    with a clear message. Void/credit-note the invoice and retry;
+    confirm uninstall then succeeds.
+13. **E-invoice retry** — on any issued invoice's e-invoice panel,
+    click retry; confirm an honest `409`/"no provider configured"
+    result, never a fabricated success.
 
 ---
 

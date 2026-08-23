@@ -2,6 +2,35 @@
 
 ## Unreleased
 
+### Real-world GST validation pass (tresundios, post fix-up)
+
+- **Fixed**: e-invoice applicability compared a single invoice's
+  `total` against `turnover_threshold` — the statutory trigger is
+  aggregate annual turnover (PAN-wide across relevant GSTINs), not a
+  per-invoice amount. `einvoice_state` now derives from whether the
+  clinic has declared a `turnover_threshold` at all (`not_configured`)
+  vs not (`not_required`), never from the invoice being issued. Hint
+  text on the invoice PDF updated to match.
+- **Tests**: interstate credit-note regime preservation, missing
+  `clinic_state` issue-block, e-invoice applicability (turnover vs
+  invoice amount), CSV formula-injection neutralization, auto-configure
+  `GST 18%` VAT-type idempotency and tenant scoping, cross-clinic FY
+  counter independence, and a repeated-allocation test proving the
+  `SELECT … FOR UPDATE` counter lock never drops or repeats a serial.
+- **Demo fixtures**: added an explicit, isolated `seed_india_gst()` step
+  to `scripts/seed_demo.py` (Tamil Nadu clinic, GSTIN
+  `33ABCDE1234F1Z5` — structurally valid per the CBIC format regex,
+  labelled test/demo data, not a real taxpayer's registration) that
+  only runs for `--lang ta` and only when `india_gst` is already
+  installed. `demo_data.py` sets `country=IN` on the Tamil clinic so
+  the hook activates for it. Neither path runs from module install,
+  auto-install, or any production tenant lifecycle.
+- **Docs**: GSTIN validation clarified as format-only (no mod-36
+  checksum); manual validation checklist and expanded CA-confirmation
+  guidance for CGST/SGST rounding, FY numbering convention, and
+  turnover-based e-invoice applicability added to
+  `docs/modules/india_gst.md`.
+
 ### Maintainer fix-up on top of PR #210
 
 - **Lifecycle made safe**: `install()` no longer runs any seed against
