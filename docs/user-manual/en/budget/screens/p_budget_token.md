@@ -13,7 +13,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/budget/frontend/pages/p/budget/[token].vue
   - backend/app/modules/budget/router.py
-last_verified_commit: b1b82f5
+last_verified_commit: a13bd29
 ---
 
 # Public patient acceptance
@@ -32,6 +32,7 @@ the link is forwarded to them.
 
 ## At a glance
 
+- **Prices are net.** Every treatment shows the discounted price (line + global discount); when there is a discount the original price appears struck through next to it, so the patient sees exactly what the footer total adds up from.
 - **Two-factor.** The patient enters the numeric code the clinic
   provided (you configure it from the budget detail under *Set
   public code*). `POST /verify` is rate-limited and, on success,

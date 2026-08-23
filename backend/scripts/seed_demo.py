@@ -132,6 +132,7 @@ async def _load_catalog_map(db: AsyncSession) -> dict[str, dict]:
         )
         mapping[item.internal_code] = {
             "id": item.id,
+            "treatment_scope": item.treatment_scope,
             "default_price": item.default_price,
             "vat_type_id": item.vat_type_id,
             "vat_rate": rate_or_zero(vat_rate),

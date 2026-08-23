@@ -161,6 +161,18 @@ A medida que el paciente acude a sus citas:
 
 ## 4. Cómo se hace cada cosa (recetas)
 
+### 🧩 Añadir un tratamiento más cuando ya hay presupuesto
+
+El presupuesto de un plan **se edita desde el plan**: añade o quita el
+tratamiento en el plan y la línea aparece/desaparece sola en el
+presupuesto en `Borrador`. En el presupuesto no se pueden añadir ni
+borrar líneas (sí cambiar precio o descuento). Si el presupuesto ya se
+envió, usa **Renegociar** para volver a `Borrador` primero.
+
+Y al revés: para un paciente con plan, **no** crees un presupuesto desde
+*Presupuestos → Nuevo* — nunca quedaría vinculado al plan. El formulario
+avisa si el paciente tiene un plan sin presupuesto.
+
 ### 🟢 Aceptación verbal en clínica (con o sin firma tablet)
 
 El paciente está sentado en recepción y dice "sí, lo quiero".

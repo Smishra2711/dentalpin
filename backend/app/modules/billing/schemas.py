@@ -15,6 +15,7 @@ InvoiceStatus = Literal["draft", "issued", "partial", "paid", "cancelled", "void
 
 # Payment domain literals live in the payments module; billing only
 # imports them where it orchestrates Payment+InvoicePayment creation.
+from app.modules.budget.schemas import TreatmentPlanBrief  # noqa: E402
 from app.modules.payments.schemas import PaymentMethod as PaymentMethodLiteral  # noqa: E402
 from app.modules.payments.schemas import PaymentResponse  # noqa: E402
 
@@ -489,6 +490,9 @@ class InvoiceResponse(BaseModel):
     creator: UserBrief | None = None
     issuer: UserBrief | None = None
     budget: BudgetBrief | None = None
+    # Plan behind the quote, resolved at read time (billing has no FK to
+    # treatment_plan — it is not in ``depends``; issue #181).
+    treatment_plan: TreatmentPlanBrief | None = None
     credit_note_for: InvoiceBrief | None = None
 
     model_config = ConfigDict(from_attributes=True)
@@ -602,6 +606,7 @@ class PatientBillingSummary(BaseModel):
 
     # Budget metrics
     total_budgeted: Decimal
+    total_discount: Decimal = Decimal("0.00")
     work_in_progress: Decimal
     work_completed: Decimal
 

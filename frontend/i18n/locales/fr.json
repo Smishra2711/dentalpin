@@ -24,6 +24,7 @@
     "settings": "Paramètres",
     "defaultClinicName": "Clinique",
     "catalog": "Catalogue",
+    "contacts": "Contacts",
     "menu": "Menu",
     "openMenu": "Ouvrir le menu",
     "close": "Fermer",
@@ -450,7 +451,8 @@
     "invoices": "Factures",
     "createInvoice": "Créer une facture",
     "noInvoices": "Ce patient n'a aucune facture",
-    "pending": "En attente"
+    "pending": "En attente",
+    "totalDiscount": "de remises"
   },
   "odontogram": {
     "title": "Odontogramme",
@@ -460,7 +462,8 @@
       "applied": "{name} ajouté au plan",
       "archPickerTitle": "Quelle arcade pour « {name} » ?",
       "upperArch": "Arcade supérieure",
-      "lowerArch": "Arcade inférieure"
+      "lowerArch": "Arcade inférieure",
+      "searchPlaceholder": "Rechercher un traitement…"
     },
     "selectCondition": "Sélectionner l'état",
     "readOnly": "Lecture seule",
@@ -592,7 +595,8 @@
         "rotate": "Tournée",
         "displace": "Déplacée",
         "splint": "Attelle",
-        "migrated": "Traitement général"
+        "migrated": "Traitement général",
+        "other": "Autre traitement"
       },
       "treatmentAdded": "Traitement ajouté",
       "treatmentPerformed": "Traitement marqué comme réalisé",
@@ -1528,6 +1532,7 @@
     "itemUpdateFailed": "Erreur lors de la mise à jour du traitement",
     "itemDeleteFailed": "Erreur lors de la suppression du traitement",
     "cannotModifySystemItem": "Impossible de modifier un traitement système",
+    "systemItemHint": "Traitement système : code, catégorie, stratégie de prix et portée sont verrouillés ; prix, coût, TVA, noms, durée, séances et statut restent modifiables.",
     "cannotDeleteSystemItem": "Impossible de supprimer un traitement système",
     "odontogramMapping": "Visualisation odontogramme",
     "odontogramMappingDescription": "Associez ce traitement à un type de visualisation odontogramme pour qu'il apparaisse dans le dossier patient.",
@@ -1823,6 +1828,10 @@
         "noteLabel": "Note (facultatif)",
         "submit": "Enregistrer"
       }
+    },
+    "newBudgetHint": {
+      "text": "Ce patient a le plan {plan} sans devis. Générez le devis depuis le plan pour qu'ils restent liés.",
+      "cta": "Ouvrir le plan"
     }
   },
   "pipeline": {
@@ -1959,7 +1968,8 @@
       "toothNumberPlaceholder": "Ex. : 11, 21, 36...",
       "surfaces": "Surfaces",
       "notes": "Notes",
-      "notesPlaceholder": "Notes sur ce traitement..."
+      "notesPlaceholder": "Notes sur ce traitement...",
+      "managedByPlan": "Les lignes de ce devis sont gérées depuis le plan de traitement {plan}."
     },
     "signature": {
       "title": "Signature numérique",
@@ -2644,10 +2654,10 @@
       "itemsRequired": "Au moins une ligne est requise",
       "itemRequired": "La description et le prix sont requis",
       "selectCatalogItem": "Veuillez sélectionner un traitement dans le catalogue",
-      "cannotEdit": "Seules les factures en brouillon peuvent être modifiées",
-      "billingIncomplete": "La facture ne peut pas être émise car les données de facturation sont incomplètes. Veuillez compléter les informations de facturation du patient pour continuer."
+      "cannotEdit": "Seules les factures en brouillon peuvent être modifiées"
     },
-    "newItemsPending": "Nouvelles lignes en attente d'enregistrement"
+    "newItemsPending": "Nouvelles lignes en attente d'enregistrement",
+    "linkedPlan": "Plan de traitement"
   },
   "reports": {
     "title": "Rapports",

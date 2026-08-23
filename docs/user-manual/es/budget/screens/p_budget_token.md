@@ -13,7 +13,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/budget/frontend/pages/p/budget/[token].vue
   - backend/app/modules/budget/router.py
-last_verified_commit: b1b82f5
+last_verified_commit: a13bd29
 ---
 
 # Aceptación pública del paciente
@@ -31,6 +31,7 @@ paciente cuando le pasan el enlace.
 
 ## De un vistazo
 
+- **Los precios son netos.** Cada tratamiento muestra el precio con descuento (de línea + global); si hay descuento, el precio original aparece tachado al lado, de modo que el paciente ve de qué se compone el total del pie.
 - **Doble factor.** Para abrir el contenido el paciente teclea el
   código numérico que la clínica le ha facilitado (lo configuras
   desde el detalle del presupuesto, *Definir código público*). El

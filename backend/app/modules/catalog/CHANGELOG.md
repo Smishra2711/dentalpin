@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- fix(#237): `PUT /catalog/items/{id}` no longer rejects every edit on
+  system items. Price, cost, VAT, names, duration, sessions and `is_active`
+  are editable; only structural fields (`SYSTEM_ITEM_LOCKED_FIELDS`) return
+  403 when changed. Modal: `is_active` switch enabled, tooltip on the
+  *System* badge, 403 toast shows the server detail.
+- fix: the treatment modal sent `odontogram_mapping.visualization_rules`
+  as the legacy string list, so saving any mapped treatment (create or
+  edit) failed with 422. It now sends only type + clinical category; the
+  layered rules stay server-owned.
+- fix: `GET /catalog/odontogram-treatments` also returns **unmapped
+  global-scope items** (`global_mouth`/`global_arch`) with
+  `odontogram_treatment_type`/`clinical_category` as `null` — hygiene and
+  diagnostic treatments (limpieza, primera visita, radiografía…) were
+  invisible to the TreatmentBar because none of them carries a
+  `TreatmentOdontogramMapping`. Unmapped tooth/multi_tooth items stay
+  excluded; `/by-category` skips the null category (contract unchanged).
+  `OdontogramTreatmentResponse` mapping fields are now nullable/defaulted.
+
 - fix(#184): type-check clean — VAT-type toasts use semantic colours; `useCatalog` passes typed payloads to `useApi` without `Record` casts; `CatalogItemModal` builds a typed payload (create narrows the required fields instead of casting), option lists are typed to the form's unions, `UTextarea :rows` is a number; VAT badge colours are `UiColor`.
 - feat(onboarding): the `catalog-empty` getting-started step resolves inline — `CatalogSeedQuickModal` calls `POST /catalog/seed` from the dashboard card, or hands off to `/settings/catalog`.
 

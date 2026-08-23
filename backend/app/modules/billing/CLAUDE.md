@@ -54,6 +54,12 @@ that event was never published.
 
 ## Gotchas
 
+- **`BudgetItem.invoiced_quantity` is a derived cache, never a
+  counter.** `service.resync_invoiced_quantities` recomputes it from the
+  live `invoice_items` (credit-note lines subtract, deleted/voided
+  documents don't count). Call it after any mutation of a line carrying
+  `budget_item_id` — `create_from_budget`, void/delete, item edits and
+  credit notes already do. Never `+=`/`-=` it by hand (issue #175).
 - **Compliance hooks live in compliance modules**, not here. The
   `verifactu` module attaches via `BillingComplianceHook` on
   `invoice.issued` to chain into AEAT. Don't import verifactu from
@@ -97,3 +103,7 @@ that event was never published.
 ## CHANGELOG
 
 See `./CHANGELOG.md`.
+
+## Billing party on drafts
+
+Drafts store no billing data. `InvoiceWorkflowService.issue` snapshots `Patient.effective_billing_name` / `effective_billing_tax_id` (explicit billing fields, else patient name and DNI/NIE — never a passport). `has_complete_billing_info` is the same rule, so the UI warning and the issue gate agree (modulo the country hook waiver). The from-budget wizard reads `POST /api/v1/payments/summary/by-budgets` to hide payment terms on fully collected budgets (`payments` is in `depends`).

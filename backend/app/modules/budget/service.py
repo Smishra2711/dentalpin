@@ -4,7 +4,7 @@ from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -12,6 +12,36 @@ from app.core.list_query import parse_sort
 from app.modules.catalog.models import TreatmentCatalogItem, VatType
 
 from .models import Budget, BudgetHistory, BudgetItem
+from .pricing import allocate_global_discount, net_line_total
+from .schemas import TreatmentPlanBrief
+
+
+class PlanOwnsLinesError(ValueError):
+    """The quote is linked to a treatment plan; its lines are managed there (issue #176)."""
+
+
+async def lookup_linked_plan(
+    db: AsyncSession, clinic_id: UUID, budget_id: UUID
+) -> TreatmentPlanBrief | None:
+    """Reverse-lookup the treatment plan that references a budget.
+
+    Raw SQL on purpose: ``treatment_plans`` belongs to the treatment_plan
+    module, which is not in budget's ``depends`` (ADR 0003). Deliberately
+    does NOT walk the ``parent_budget_id`` chain — a stale old version must
+    resolve to no plan once the link moved on.
+    """
+    row = (
+        await db.execute(
+            text(
+                "SELECT id, plan_number, title, status FROM treatment_plans "
+                "WHERE budget_id = :bid AND clinic_id = :cid AND deleted_at IS NULL "
+                "LIMIT 1"
+            ),
+            {"bid": budget_id, "cid": clinic_id},
+        )
+    ).first()
+    return TreatmentPlanBrief.model_validate(row) if row else None
+
 
 # Public sort field → SQL column. ``payment_status`` is intentionally
 # absent — that sort would require joining payments which violates
@@ -623,6 +653,18 @@ class BudgetService:
         await db.flush()
 
     @staticmethod
+    async def _ensure_lines_not_owned_by_plan(db: AsyncSession, budget: Budget) -> None:
+        """Staff can't add/remove lines on a plan-linked quote — the plan is the
+        source of truth and mirrors its items here (issue #176). The mirror
+        itself goes through ``BudgetItemService`` directly, so it is unaffected.
+        """
+        plan = await lookup_linked_plan(db, budget.clinic_id, budget.id)
+        if plan is not None:
+            raise PlanOwnsLinesError(
+                f"Lines of a quote linked to plan {plan.plan_number} are managed from the plan"
+            )
+
+    @staticmethod
     async def add_item(
         db: AsyncSession,
         budget: Budget,
@@ -632,6 +674,7 @@ class BudgetService:
         """Add an item to a budget."""
         if budget.status != "draft":
             raise ValueError("Items can only be added to draft budgets")
+        await BudgetService._ensure_lines_not_owned_by_plan(db, budget)
 
         item = await BudgetItemService.create_item(db, budget.clinic_id, budget.id, item_data)
 
@@ -664,6 +707,7 @@ class BudgetService:
         """Remove an item from a budget."""
         if budget.status != "draft":
             raise ValueError("Items can only be removed from draft budgets")
+        await BudgetService._ensure_lines_not_owned_by_plan(db, budget)
 
         item_id = item.id
         await BudgetItemService.delete_item(db, item)
@@ -789,25 +833,26 @@ class BudgetService:
         result = await db.execute(select(BudgetItem).where(BudgetItem.budget_id == budget.id))
         items = list(result.scalars().all())
 
-        # Sum up line totals
+        # The global discount is prorated per line (the single formula every
+        # consumer uses) and VAT is charged on the discounted base, so the
+        # quote's discount/VAT split matches the invoice built from it and
+        # Σ net_line_total == total (issue #181).
+        shares = allocate_global_discount(
+            budget.global_discount_type, budget.global_discount_value, items
+        )
         subtotal = sum((item.line_subtotal for item in items), Decimal("0.00"))
-        total_line_discount = sum((item.line_discount for item in items), Decimal("0.00"))
-        total_tax = sum((item.line_tax for item in items), Decimal("0.00"))
-        items_total = sum((item.line_total for item in items), Decimal("0.00"))
+        total_discount = sum((item.line_discount for item in items), Decimal("0.00")) + sum(
+            shares, Decimal("0.00")
+        )
+        total = sum(
+            (net_line_total(item, share) for item, share in zip(items, shares, strict=True)),
+            Decimal("0.00"),
+        )
 
-        # Apply global discount
-        global_discount = Decimal("0.00")
-        if budget.global_discount_value and budget.global_discount_type:
-            if budget.global_discount_type == "percentage":
-                global_discount = items_total * (budget.global_discount_value / Decimal("100"))
-            else:  # absolute
-                global_discount = min(budget.global_discount_value, items_total)
-
-        # Update budget totals
         budget.subtotal = subtotal
-        budget.total_discount = total_line_discount + global_discount
-        budget.total_tax = total_tax
-        budget.total = items_total - global_discount
+        budget.total_discount = total_discount
+        budget.total_tax = total - (subtotal - total_discount)
+        budget.total = total
 
 
 class BudgetHistoryService:

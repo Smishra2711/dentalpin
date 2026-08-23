@@ -24,6 +24,7 @@
     "settings": "Settings",
     "defaultClinicName": "Clinic",
     "catalog": "Catalog",
+    "contacts": "Contacts",
     "menu": "Menu",
     "openMenu": "Open menu",
     "close": "Close",
@@ -450,7 +451,8 @@
     "invoices": "Invoices",
     "createInvoice": "Create invoice",
     "noInvoices": "This patient has no invoices",
-    "pending": "Pending"
+    "pending": "Pending",
+    "totalDiscount": "in discounts"
   },
   "odontogram": {
     "title": "Dental Chart",
@@ -460,7 +462,8 @@
       "applied": "{name} added to plan",
       "archPickerTitle": "Which arch for \"{name}\"?",
       "upperArch": "Upper arch",
-      "lowerArch": "Lower arch"
+      "lowerArch": "Lower arch",
+      "searchPlaceholder": "Search treatment…"
     },
     "selectCondition": "Select Condition",
     "readOnly": "View only",
@@ -592,7 +595,8 @@
         "rotate": "Rotated",
         "displace": "Displaced",
         "splint": "Splint",
-        "migrated": "General treatment"
+        "migrated": "General treatment",
+        "other": "Other treatment"
       },
       "treatmentAdded": "Treatment added",
       "treatmentPerformed": "Treatment marked as performed",
@@ -1528,6 +1532,7 @@
     "itemUpdateFailed": "Error updating treatment",
     "itemDeleteFailed": "Error deleting treatment",
     "cannotModifySystemItem": "Cannot modify a system treatment",
+    "systemItemHint": "System treatment: code, category, pricing strategy and scope are locked; price, cost, VAT, names, duration, sessions and status can be edited.",
     "cannotDeleteSystemItem": "Cannot delete a system treatment",
     "odontogramMapping": "Odontogram Visualization",
     "odontogramMappingDescription": "Associate this treatment with an odontogram visualization type so it appears in the patient chart.",
@@ -1823,6 +1828,10 @@
         "noteLabel": "Note (optional)",
         "submit": "Log"
       }
+    },
+    "newBudgetHint": {
+      "text": "This patient has plan {plan} without a quote. Generate the quote from the plan so they stay linked.",
+      "cta": "Open plan"
     }
   },
   "pipeline": {
@@ -1959,7 +1968,8 @@
       "toothNumberPlaceholder": "E.g.: 11, 21, 36...",
       "surfaces": "Surfaces",
       "notes": "Notes",
-      "notesPlaceholder": "Notes about this treatment..."
+      "notesPlaceholder": "Notes about this treatment...",
+      "managedByPlan": "The lines of this quote are managed from treatment plan {plan}."
     },
     "signature": {
       "title": "Digital signature",
@@ -2644,10 +2654,10 @@
       "itemsRequired": "At least one item is required",
       "itemRequired": "Description and price are required",
       "selectCatalogItem": "Please select a treatment from the catalog",
-      "cannotEdit": "Only draft invoices can be edited",
-      "billingIncomplete": "The invoice cannot be issued because billing data is incomplete. Please fill in the patient's billing information to continue."
+      "cannotEdit": "Only draft invoices can be edited"
     },
-    "newItemsPending": "New items pending save"
+    "newItemsPending": "New items pending save",
+    "linkedPlan": "Treatment plan"
   },
   "reports": {
     "title": "Reports",

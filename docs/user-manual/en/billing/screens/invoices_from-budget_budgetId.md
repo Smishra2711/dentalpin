@@ -7,13 +7,15 @@ related_endpoints:
   - GET /api/v1/billing/settings
   - GET /api/v1/budget/budgets/{budget_id}
   - POST /api/v1/billing/invoices/from-budget/{budget_id}
+  - GET /api/v1/patients/{patient_id}
+  - POST /api/v1/payments/summary/by-budgets
 related_permissions:
   - billing.read
   - billing.write
 related_paths:
   - backend/app/modules/billing/frontend/pages/invoices/from-budget/[budgetId].vue
   - backend/app/modules/billing/router.py
-last_verified_commit: 6c91240
+last_verified_commit: a13bd29
 ---
 
 # Invoice from budget
@@ -38,10 +40,19 @@ include.
   **and** its global discount (spread across the lines, ex-tax) are
   written on each invoice line — the invoice totals what the patient
   signed. On partial invoicing the discount is prorated by the
-  invoiced quantity. The preview shows the same figures the invoice
-  will have.
+  invoiced quantity; the discount caption on each row follows the
+  quantity you are invoicing. Unselected rows show the quote's net
+  price. The preview shows the same figures the invoice will have.
 - **Receiver.** Defaults to the patient. You can switch to a
   different payer (company, insurer, family member) before issuing.
+- **Billing data.** The card shows the name, tax id and email the
+  invoice will carry. If the patient has neither a tax id nor a
+  DNI/NIE, a *Missing data* warning appears with an **Edit patient
+  data** button that opens the billing modal and returns here on
+  save.
+- **Payment terms.** Only shown when the budget still has an
+  outstanding amount. A fully collected budget produces an invoice
+  with no terms or due date.
 
 ## Invoice from a budget
 
@@ -74,5 +85,6 @@ include.
 - **Backend returns 400 on create.** You picked more quantity than
   pending. Check `invoiced_quantity` vs `quantity` per line.
 - **A budget line is missing.** It is already 100% invoiced
-  (`invoiced_quantity == quantity`). To revert, void the previous
-  invoice and re-enter this wizard.
+  (`invoiced_quantity == quantity`). To revert, void or delete the
+  draft invoice (or issue a credit note for an issued one) and re-enter
+  this wizard — the lines come back as soon as the document is voided.

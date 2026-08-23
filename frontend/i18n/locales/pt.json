@@ -24,6 +24,7 @@
     "settings": "Definições",
     "defaultClinicName": "Clínica",
     "catalog": "Catálogo",
+    "contacts": "Contactos",
     "menu": "Menu",
     "openMenu": "Abrir menu",
     "close": "Fechar",
@@ -450,7 +451,8 @@
     "invoices": "Faturas",
     "createInvoice": "Criar fatura",
     "noInvoices": "Este paciente não tem faturas",
-    "pending": "Pendente"
+    "pending": "Pendente",
+    "totalDiscount": "em descontos"
   },
   "odontogram": {
     "title": "Odontograma",
@@ -460,7 +462,8 @@
       "applied": "{name} adicionado ao plano",
       "archPickerTitle": "Qual a arcada para \"{name}\"?",
       "upperArch": "Arcada superior",
-      "lowerArch": "Arcada inferior"
+      "lowerArch": "Arcada inferior",
+      "searchPlaceholder": "Pesquisar tratamento…"
     },
     "selectCondition": "Selecionar condição",
     "readOnly": "Apenas visualização",
@@ -592,7 +595,8 @@
         "rotate": "Rodado",
         "displace": "Deslocado",
         "splint": "Ferulização",
-        "migrated": "Tratamento geral"
+        "migrated": "Tratamento geral",
+        "other": "Outro tratamento"
       },
       "treatmentAdded": "Tratamento adicionado",
       "treatmentPerformed": "Tratamento marcado como realizado",
@@ -1528,6 +1532,7 @@
     "itemUpdateFailed": "Erro ao atualizar o tratamento",
     "itemDeleteFailed": "Erro ao eliminar o tratamento",
     "cannotModifySystemItem": "Não é possível modificar um tratamento de sistema",
+    "systemItemHint": "Tratamento de sistema: código, categoria, estratégia de preço e âmbito estão bloqueados; preço, custo, IVA, nomes, duração, sessões e estado podem ser editados.",
     "cannotDeleteSystemItem": "Não é possível eliminar um tratamento de sistema",
     "odontogramMapping": "Visualização no odontograma",
     "odontogramMappingDescription": "Associe este tratamento a um tipo de visualização no odontograma para que apareça na ficha do paciente.",
@@ -1823,6 +1828,10 @@
         "noteLabel": "Nota (opcional)",
         "submit": "Registar"
       }
+    },
+    "newBudgetHint": {
+      "text": "Este paciente tem o plano {plan} sem orçamento. Gere o orçamento a partir do plano para que fiquem ligados.",
+      "cta": "Abrir plano"
     }
   },
   "pipeline": {
@@ -1959,7 +1968,8 @@
       "toothNumberPlaceholder": "Ex.: 11, 21, 36...",
       "surfaces": "Faces",
       "notes": "Notas",
-      "notesPlaceholder": "Notas sobre este tratamento..."
+      "notesPlaceholder": "Notas sobre este tratamento...",
+      "managedByPlan": "As linhas deste orçamento são geridas a partir do plano de tratamento {plan}."
     },
     "signature": {
       "title": "Assinatura digital",
@@ -2644,10 +2654,10 @@
       "itemsRequired": "É necessária pelo menos uma linha",
       "itemRequired": "A descrição e o preço são obrigatórios",
       "selectCatalogItem": "Selecione um tratamento do catálogo",
-      "cannotEdit": "Só é possível editar faturas em rascunho",
-      "billingIncomplete": "A fatura não pode ser emitida porque os dados de faturação estão incompletos. Preencha os dados de faturação do paciente para continuar."
+      "cannotEdit": "Só é possível editar faturas em rascunho"
     },
-    "newItemsPending": "Novas linhas por guardar"
+    "newItemsPending": "Novas linhas por guardar",
+    "linkedPlan": "Plano de tratamento"
   },
   "reports": {
     "title": "Relatórios",

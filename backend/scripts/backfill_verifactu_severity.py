@@ -13,7 +13,7 @@ Idempotent — rows that already carry a severity are left alone.
 
 Usage::
 
-    docker-compose exec backend python backend/scripts/backfill_verifactu_severity.py
+    docker-compose exec backend python scripts/backfill_verifactu_severity.py
 
 Run once after deploying the badge sprint. Can be re-run safely.
 """

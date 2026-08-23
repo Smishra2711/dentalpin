@@ -18,7 +18,9 @@
     "/module_layers/treatment_plan/frontend",
     "/module_layers/clinical_notes/frontend",
     "/module_layers/payments/frontend",
-    "/module_layers/periodontogram/frontend"
+    "/module_layers/periodontogram/frontend",
+    "/module_layers/contacts/frontend",
+    "/module_layers/payments/frontend"
   ],
   "modules": [
     {
@@ -28,6 +30,14 @@
     {
       "name": "billing",
       "path": "/module_layers/billing/frontend"
+    },
+    {
+      "name": "budget",
+      "path": "/module_layers/budget/frontend"
+    },
+    {
+      "name": "catalog",
+      "path": "/module_layers/catalog/frontend"
     },
     {
       "name": "budget",
@@ -96,6 +106,14 @@
     {
       "name": "periodontogram",
       "path": "/module_layers/periodontogram/frontend"
+    },
+    {
+      "name": "contacts",
+      "path": "/module_layers/contacts/frontend"
+    },
+    {
+      "name": "payments",
+      "path": "/module_layers/payments/frontend"
     }
   ],
   "version": 1

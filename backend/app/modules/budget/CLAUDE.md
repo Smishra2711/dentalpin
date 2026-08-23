@@ -82,6 +82,7 @@ only — never combined with payments data.
 
 | Slot | Ctx | Consumer |
 |---|---|---|
+| `budget.new.form` | `{ patient }` | `treatment_plan` registers `NewBudgetPlanHint` (patient has a draft/pending plan without a quote → go generate it from the plan, issue #177). |
 | `budget.detail.sidebar` | `{ budget }` | `payments` registers `BudgetPaymentsCard` (cobrado vs pendiente, "Cobrar" action). Other modules may add follow-up reminders, signature blocks, etc. |
 
 Budget never imports its slot consumers — the registry is the only
@@ -103,11 +104,20 @@ contract.
   publisher's tables. They are transactional (ADR 0019, issue #183): the
   quote mirrors the plan inside the publisher's transaction, so a failed
   mirror fails the request instead of silently dropping a line.
-- **Plan reverse-lookup uses raw SQL** (`_lookup_plan` /
-  `_lookup_plan_id`) instead of importing the `TreatmentPlan` model, so
-  event payloads can carry `plan_id` without violating ADR 0003. It
-  deliberately does NOT walk the `parent_budget_id` chain — a stale old
-  version must resolve to no plan once the link moved on.
+- **Plan reverse-lookup uses raw SQL** — `service.lookup_linked_plan`
+  is the single implementation (workflow's `_lookup_plan*`, the detail
+  endpoint and billing's invoice detail all go through it) instead of
+  importing the `TreatmentPlan` model, so event payloads can carry
+  `plan_id` without violating ADR 0003. It deliberately does NOT walk
+  the `parent_budget_id` chain — a stale old version must resolve to no
+  plan once the link moved on.
+- **A plan-linked quote's lines belong to the plan (issue #176).**
+  `add_item` / `remove_item` raise `PlanOwnsLinesError` (→ 409) when a
+  plan references the budget; staff add/remove treatments on the plan
+  and the `treatment_plan.treatment_{added,removed}` handlers mirror
+  them. The handlers call `BudgetItemService` directly, so they are not
+  gated. `update_item` (price, discount, VAT) stays open — negotiating a
+  line is reception's job and the plan reprices at acceptance.
 - **`budget.superseded` publishes before commit**, like every other
   event. It used to be the sole deviation: the treatment_plan handler
   points `treatment_plans.budget_id` (an FK) at the new budget row, which
@@ -121,12 +131,16 @@ contract.
   and publish. (Pre-#183 this was also a deadlock guard — the handler ran
   on its own session; it shares the publisher's now.)
 - **`pricing.allocate_global_discount` is the only proration formula.**
-  The global discount is applied to the VAT-inclusive items total in
-  `_recalculate_totals`; every per-line consumer (the `budget.accepted`
-  payload, `BudgetDetailResponse.items[].global_discount_share`,
-  `billing.create_from_budget`) goes through that helper. Don't
-  re-derive it — the invoice wizard and the plan sessions must land on
-  the same cents.
+  `_recalculate_totals` itself goes through it (issue #181): the global
+  discount is prorated per line ex-tax and VAT is charged on the
+  discounted base, so `total_discount`/`total_tax` on the quote equal
+  the invoice's. Every per-line consumer (the `budget.accepted`
+  payload, `BudgetDetailResponse.items[].{global_discount_share,
+  net_line_total}`, `billing.create_from_budget`, the PDF) uses the same
+  helper. Don't re-derive it — the invoice wizard and the plan sessions
+  must land on the same cents. `net_line_total` (VAT-inclusive, after
+  both discounts) is the figure every price surface shows; `line_total`
+  is the pre-global gross, shown struck through.
 - **Budget versioning** keeps every prior version — never overwrite.
 - **Public-link sessions are per-token** (cookie path scoped to
   `/api/v1/public/budgets/{token}`) so a stolen cookie from one

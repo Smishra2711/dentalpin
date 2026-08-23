@@ -114,14 +114,27 @@ async def _seed_catalog_items(db_session: AsyncSession, clinic_id) -> dict:
         treatment_scope="global_arch",
         vat_type_id=vat.id,
     )
-    db_session.add_all([filling, crown, bridge, cleaning, splint])
+    # Tooth-scoped item with no odontogram mapping — creating a treatment from
+    # it without an explicit clinical_type must be rejected.
+    nomap_tooth = TreatmentCatalogItem(
+        clinic_id=clinic_id,
+        category_id=cat.id,
+        internal_code="TST-NOMAP",
+        names={"es": "Sin mapping"},
+        default_price=Decimal("50.00"),
+        pricing_strategy="flat",
+        treatment_scope="tooth",
+        vat_type_id=vat.id,
+    )
+    db_session.add_all([filling, crown, bridge, cleaning, splint, nomap_tooth])
     await db_session.flush()
 
+    # Note: `cleaning` (global_mouth) deliberately has NO mapping — like the
+    # production seeds. The service falls back to clinical_type='other'.
     for item, otype in (
         (filling, "filling_composite"),
         (crown, "crown"),
         (bridge, "bridge"),
-        (cleaning, "caries"),  # arbitrary visual type; cleaning has no dedicated rule
         (splint, "splint"),
     ):
         db_session.add(
@@ -142,6 +155,7 @@ async def _seed_catalog_items(db_session: AsyncSession, clinic_id) -> dict:
         "bridge_id": str(bridge.id),
         "cleaning_id": str(cleaning.id),
         "splint_arch_id": str(splint.id),
+        "nomap_tooth_id": str(nomap_tooth.id),
     }
 
 
@@ -491,6 +505,28 @@ async def test_create_global_mouth_treatment(
     assert data["arch"] is None
     assert data["teeth"] == []
     assert data["price_snapshot"] == "60.00"
+    # Unmapped catalog item + global scope → server-side 'other' fallback.
+    assert data["clinical_type"] == "other"
+
+
+@pytest.mark.asyncio
+async def test_unmapped_tooth_item_requires_clinical_type(
+    client: AsyncClient, auth_headers: dict, setup: dict
+) -> None:
+    """Tooth-scoped items without an odontogram mapping still require an
+    explicit clinical_type — the 'other' fallback is global-scope only."""
+    pid = setup["patient_id"]
+    r = await client.post(
+        f"/api/v1/odontogram/patients/{pid}/treatments",
+        headers=auth_headers,
+        json={
+            "catalog_item_id": setup["nomap_tooth_id"],
+            "tooth_numbers": [26],
+            "status": "planned",
+        },
+    )
+    assert r.status_code == 400
+    assert "clinical_type" in r.text
 
 
 @pytest.mark.asyncio

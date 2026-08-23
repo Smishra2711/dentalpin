@@ -116,6 +116,12 @@ async function handleCreate() {
           </p>
         </UFormField>
 
+        <!-- Other modules (treatment_plan) may warn about existing plans. -->
+        <ModuleSlot
+          name="budget.new.form"
+          :ctx="{ patient: selectedPatient }"
+        />
+
         <!-- Validity dates -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <UFormField

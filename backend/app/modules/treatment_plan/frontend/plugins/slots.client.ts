@@ -19,4 +19,15 @@ export default defineNuxtPlugin(() => {
     order: 10,
     permission: 'treatment_plan.plans.read'
   })
+
+  // "New quote" form — tells reception the patient already has a plan
+  // without a quote and sends them to generate it from the plan (#177).
+  registerSlot('budget.new.form', {
+    id: 'treatment_plan.budget.new.form.plan-hint',
+    component: defineAsyncComponent(
+      () => import('../components/budget/NewBudgetPlanHint.vue')
+    ),
+    order: 10,
+    permission: 'treatment_plan.plans.read'
+  })
 })

@@ -569,7 +569,7 @@ class TreatmentService:
 
     @staticmethod
     def _resolve_clinical_type(
-        explicit: str | None, catalog_item: TreatmentCatalogItem | None
+        explicit: str | None, catalog_item: TreatmentCatalogItem | None, scope: str
     ) -> str:
         if catalog_item is not None and catalog_item.odontogram_mapping is not None:
             mapping: TreatmentOdontogramMapping = catalog_item.odontogram_mapping
@@ -580,6 +580,11 @@ class TreatmentService:
                 )
             return mapping.odontogram_treatment_type
         if explicit is None:
+            if scope in ("global_mouth", "global_arch"):
+                # Global treatments have no teeth to visualize, so no mapping is
+                # required. Server-internal neutral type, mirroring 'migrated'
+                # (migration_import) — not accepted as explicit API input.
+                return "other"
             raise ValueError(
                 "clinical_type is required when catalog item has no odontogram mapping"
             )
@@ -658,7 +663,7 @@ class TreatmentService:
         if catalog_item_id is not None:
             catalog_item = await TreatmentService._load_catalog_item(db, clinic_id, catalog_item_id)
         resolved_clinical_type = TreatmentService._resolve_clinical_type(
-            clinical_type, catalog_item
+            clinical_type, catalog_item, scope
         )
 
         # 2. Normalize teeth input + assign roles for bridges.

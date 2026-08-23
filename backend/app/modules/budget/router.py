@@ -33,9 +33,14 @@ from .schemas import (
     BudgetVersionListResponse,
     BudgetVersionResponse,
     SignatureMetaResponse,
-    TreatmentPlanBrief,
 )
-from .service import BudgetHistoryService, BudgetItemService, BudgetService
+from .service import (
+    BudgetHistoryService,
+    BudgetItemService,
+    BudgetService,
+    PlanOwnsLinesError,
+    lookup_linked_plan,
+)
 from .workflow import BudgetWorkflowError, BudgetWorkflowService
 
 router = APIRouter()
@@ -110,37 +115,8 @@ async def get_budget(
     if not budget:
         raise HTTPException(status_code=404, detail="Budget not found")
 
-    # Reverse lookup of the linked treatment plan via raw SQL — the
-    # treatment_plans table is owned by the treatment_plan module and
-    # we deliberately avoid importing its ORM model from here (ADR 0003).
-    # plan_number_snapshot / plan_status_snapshot on Budget already
-    # cover the common card/list use cases; this fetch is only for the
-    # detail endpoint where we expose the live plan id + title.
-    from sqlalchemy import text
-
-    plan_row = (
-        await db.execute(
-            text(
-                "SELECT id, plan_number, title, status "
-                "FROM treatment_plans "
-                "WHERE budget_id = :budget_id "
-                "  AND clinic_id = :clinic_id "
-                "  AND deleted_at IS NULL "
-                "LIMIT 1"
-            ),
-            {"budget_id": budget_id, "clinic_id": ctx.clinic_id},
-        )
-    ).first()
-
     response_data = BudgetDetailResponse.model_validate(budget)
-    if plan_row:
-        response_data.treatment_plan = TreatmentPlanBrief(
-            id=plan_row.id,
-            plan_number=plan_row.plan_number,
-            title=plan_row.title,
-            status=plan_row.status,
-        )
-
+    response_data.treatment_plan = await lookup_linked_plan(db, ctx.clinic_id, budget_id)
     return ApiResponse(data=response_data)
 
 
@@ -237,6 +213,8 @@ async def add_budget_item(
 
     try:
         item = await BudgetService.add_item(db, budget, data.model_dump(), ctx.user_id)
+    except PlanOwnsLinesError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
@@ -302,6 +280,8 @@ async def remove_budget_item(
 
     try:
         await BudgetService.remove_item(db, budget, item, ctx.user_id)
+    except PlanOwnsLinesError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
@@ -557,7 +537,7 @@ async def resend_budget(
             detail="Only rejected, expired or cancelled budgets can be resent",
         )
     new_budget = await BudgetWorkflowService.clone_to_new_draft(db, budget, ctx.user_id)
-    plan_ref = await BudgetWorkflowService._lookup_plan(db, budget.id)
+    plan_ref = await BudgetWorkflowService._lookup_plan(db, budget)
     response = ApiResponse(data=BudgetResponse.model_validate(new_budget))
 
     if plan_ref is not None:

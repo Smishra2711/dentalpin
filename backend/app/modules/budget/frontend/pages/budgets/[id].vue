@@ -730,7 +730,7 @@ function getItemName(item: DeepReadonly<BudgetItem>): string {
                   {{ t('budget.items.title') }}
                 </h2>
                 <UButton
-                  v-if="canEdit(currentBudget) && can(PERMISSIONS.budget.write)"
+                  v-if="canEdit(currentBudget) && can(PERMISSIONS.budget.write) && !currentBudget.treatment_plan"
                   icon="i-lucide-plus"
                   size="sm"
                   @click="isAddItemModalOpen = true"
@@ -738,6 +738,16 @@ function getItemName(item: DeepReadonly<BudgetItem>): string {
                   {{ t('budget.items.add') }}
                 </UButton>
               </div>
+              <!-- Plan-linked quote: lines live on the plan (issue #176). -->
+              <UAlert
+                v-if="canEdit(currentBudget) && currentBudget.treatment_plan"
+                class="mt-3"
+                color="info"
+                variant="subtle"
+                icon="i-lucide-clipboard-list"
+                :description="t('budget.items.managedByPlan', { plan: currentBudget.treatment_plan.plan_number })"
+                :actions="[{ label: t('budget.treatmentPlan'), to: `/treatment-plans/${currentBudget.treatment_plan.id}`, variant: 'link' }]"
+              />
             </template>
 
             <div
@@ -778,6 +788,12 @@ function getItemName(item: DeepReadonly<BudgetItem>): string {
                       >
                         -{{ formatMoney(item.line_discount) }}
                       </span>
+                      <span
+                        v-if="item.global_discount_share > 0"
+                        class="text-success-accent"
+                      >
+                        -{{ formatMoney(item.global_discount_share) }} ({{ t('budget.globalDiscount') }})
+                      </span>
                     </div>
                     <p
                       v-if="item.notes"
@@ -788,11 +804,14 @@ function getItemName(item: DeepReadonly<BudgetItem>): string {
                   </div>
                   <div class="text-right shrink-0">
                     <p class="font-semibold tabular-nums">
-                      {{ formatMoney(item.line_total) }}
+                      <s
+                        v-if="item.net_line_total < item.line_total"
+                        class="text-caption text-subtle font-normal mr-1"
+                      >{{ formatMoney(item.line_total) }}</s>{{ formatMoney(item.net_line_total) }}
                     </p>
                   </div>
                   <UButton
-                    v-if="canEdit(currentBudget) && can(PERMISSIONS.budget.write)"
+                    v-if="canEdit(currentBudget) && can(PERMISSIONS.budget.write) && !currentBudget.treatment_plan"
                     variant="ghost"
                     color="error"
                     icon="i-lucide-trash-2"

@@ -38,6 +38,7 @@ export interface PublicBudgetItem {
   unit_price: number
   quantity: number
   line_total: number
+  net_line_total: number
   tooth_number: number | null
   notes: string | null
   // Backend exposes ``names`` as an i18n map (es/en/...). Pick the

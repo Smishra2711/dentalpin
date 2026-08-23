@@ -54,6 +54,9 @@ It is the price source for budgets, plans and invoices.
 - **Categories** (header button, `catalog.admin` only) — create, rename,
   reorder and deactivate/reactivate categories. System (seeded) categories
   are locked: shown with a padlock, and the server rejects edits/deletes.
+- **System treatments** (*System* badge) — price, cost, VAT, names, duration,
+  sessions and active status can be edited. Code, category, pricing strategy
+  and scope are locked, and they cannot be deleted.
 - **Load default catalog** — shown in the empty state (no treatments, no
   filters) to `catalog.admin`. Adds VAT types for the clinic country, the
   categories and the reference treatments (prices at 0 when the currency is

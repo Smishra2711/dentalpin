@@ -7,13 +7,15 @@ related_endpoints:
   - GET /api/v1/billing/settings
   - GET /api/v1/budget/budgets/{budget_id}
   - POST /api/v1/billing/invoices/from-budget/{budget_id}
+  - GET /api/v1/patients/{patient_id}
+  - POST /api/v1/payments/summary/by-budgets
 related_permissions:
   - billing.read
   - billing.write
 related_paths:
   - backend/app/modules/billing/frontend/pages/invoices/from-budget/[budgetId].vue
   - backend/app/modules/billing/router.py
-last_verified_commit: 6c91240
+last_verified_commit: a13bd29
 ---
 
 # Factura desde presupuesto
@@ -40,10 +42,20 @@ y qué cantidades incluir.
   **y** el descuento global del presupuesto (repartido entre las
   líneas, sin IVA) se escriben en cada línea de la factura — la
   factura suma lo que el paciente firmó. En facturación parcial el
-  descuento se prorratea por la cantidad facturada. La vista previa
-  muestra las mismas cifras que tendrá la factura.
+  descuento se prorratea por la cantidad facturada; la etiqueta de
+  descuento de cada fila sigue la cantidad que estás facturando. Las
+  filas no seleccionadas muestran el precio neto del presupuesto. La
+  vista previa muestra las mismas cifras que tendrá la factura.
 - **Receptor.** Por defecto el paciente. Puedes definir un pagador
   distinto (compañía, mutua, familiar) antes de emitir.
+- **Datos de facturación.** La tarjeta muestra nombre, NIF y email
+  que irán en la factura. Si el paciente no tiene NIF ni DNI/NIE
+  aparece el aviso *Faltan datos* con el botón **Editar datos del
+  paciente**, que abre el modal de facturación y vuelve aquí al
+  guardar.
+- **Plazo de pago.** Solo se muestra si el presupuesto tiene importe
+  pendiente de cobro. Un presupuesto cobrado al 100 % genera una
+  factura sin plazo ni vencimiento.
 
 ## Facturar desde presupuesto
 
@@ -77,4 +89,5 @@ y qué cantidades incluir.
   ítem.
 - **Falta una línea del presupuesto.** Está marcada como ya
   facturada al 100% (`invoiced_quantity == quantity`). Para revertir,
-  anula la factura previa y vuelve a entrar aquí.
+  anula o borra el borrador (o emite una rectificativa si ya está
+  emitida) y vuelve a entrar aquí: las líneas se liberan al instante.

@@ -1,10 +1,11 @@
 """Billing module service layer - business logic."""
 
+from collections.abc import Iterable
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import and_, desc, func, or_, select
+from sqlalchemy import and_, case, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
@@ -544,6 +545,7 @@ class InvoiceItemService:
 
         # Recalculate invoice totals
         await InvoiceService.recalculate_totals(db, invoice)
+        await resync_invoiced_quantities(db, clinic_id, [item.budget_item_id])
 
         return item
 
@@ -554,11 +556,13 @@ class InvoiceItemService:
         invoice: Invoice,
     ) -> None:
         """Delete an invoice item."""
+        budget_item_id = item.budget_item_id
         await db.delete(item)
         await db.flush()
 
         # Recalculate invoice totals
         await InvoiceService.recalculate_totals(db, invoice)
+        await resync_invoiced_quantities(db, invoice.clinic_id, [budget_item_id])
 
 
 class InvoiceService:
@@ -985,6 +989,7 @@ class InvoiceService:
         )
 
         await db.flush()
+        await resync_invoiced_quantities_for_invoice(db, invoice)
 
     @staticmethod
     async def create_from_budget(
@@ -1015,6 +1020,11 @@ class InvoiceService:
         """
         from app.modules.budget.models import Budget, BudgetItem
         from app.modules.budget.pricing import allocate_global_discount
+
+        from .payment_bridge import lock_budget
+
+        # Serialize concurrent wizards on the same quote (available-qty check below).
+        await lock_budget(db, clinic_id, budget_id)
 
         # Get budget
         result = await db.execute(
@@ -1074,8 +1084,7 @@ class InvoiceService:
                 raise ValueError(f"Budget item {budget_item_id} not found")
 
             # Calculate available quantity
-            invoiced_qty = getattr(budget_item, "invoiced_quantity", 0) or 0
-            available_qty = budget_item.quantity - invoiced_qty
+            available_qty = budget_item.quantity - budget_item.invoiced_quantity
 
             if available_qty <= 0:
                 raise ValueError(f"Budget item {budget_item_id} is fully invoiced")
@@ -1140,17 +1149,65 @@ class InvoiceService:
             # Calculate line totals
             await InvoiceService.calculate_item_totals(invoice_item)
 
-            # Update budget item invoiced quantity
-            budget_item.invoiced_quantity = invoiced_qty + quantity
-
         await db.flush()
 
         # Recalculate invoice totals
         await InvoiceService.recalculate_totals(db, invoice)
 
         await db.flush()
+        await resync_invoiced_quantities_for_invoice(db, invoice)
 
         return invoice
+
+
+async def resync_invoiced_quantities(
+    db: AsyncSession, clinic_id: UUID, budget_item_ids: Iterable[UUID | None]
+) -> None:
+    """Recompute ``BudgetItem.invoiced_quantity`` from the live invoice lines.
+
+    The column is a derived cache, never incremented by hand (issue #175):
+    a line counts while its document is not deleted/voided, and credit-note
+    lines subtract. Idempotent — call after any mutation of an ``InvoiceItem``
+    that carries a ``budget_item_id``.
+    """
+    from app.modules.budget.models import BudgetItem
+
+    ids = {i for i in budget_item_ids if i is not None}
+    if not ids:
+        return
+
+    signed_qty = case(
+        (Invoice.credit_note_for_id.is_not(None), -InvoiceItem.quantity),
+        else_=InvoiceItem.quantity,
+    )
+    rows = await db.execute(
+        select(InvoiceItem.budget_item_id, func.sum(signed_qty))
+        .join(Invoice, Invoice.id == InvoiceItem.invoice_id)
+        .where(
+            Invoice.clinic_id == clinic_id,
+            Invoice.deleted_at.is_(None),
+            InvoiceItem.budget_item_id.in_(ids),
+        )
+        .group_by(InvoiceItem.budget_item_id)
+    )
+    totals = dict(rows.all())
+
+    items = await db.execute(
+        select(BudgetItem).where(BudgetItem.id.in_(ids), BudgetItem.clinic_id == clinic_id)
+    )
+    for item in items.scalars():
+        item.invoiced_quantity = max(0, totals.get(item.id, 0))
+    await db.flush()
+
+
+async def resync_invoiced_quantities_for_invoice(db: AsyncSession, invoice: Invoice) -> None:
+    """``resync_invoiced_quantities`` for every budget line the invoice touches."""
+    rows = await db.execute(
+        select(InvoiceItem.budget_item_id).where(
+            InvoiceItem.invoice_id == invoice.id, InvoiceItem.budget_item_id.is_not(None)
+        )
+    )
+    await resync_invoiced_quantities(db, invoice.clinic_id, rows.scalars().all())
 
 
 async def compute_paid_summaries_for_invoices(

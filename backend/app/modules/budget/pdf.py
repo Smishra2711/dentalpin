@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from app.core.auth.models import Clinic
 
 from .models import Budget, BudgetSignature
+from .pricing import allocate_global_discount, net_line_total
 
 _LOCALE_BY_LANG = {"es": "es_ES", "en": "en_US"}
 
@@ -170,9 +171,15 @@ class BudgetPDFService:
         def format_currency(amount: Decimal) -> str:
             return _fmt_currency(amount, clinic.currency, locale=money_locale)
 
-        # Build items table rows
+        # Build items table rows. Discount column = line + prorated global
+        # share; total column = what the patient pays (issue #181).
+        shares = allocate_global_discount(
+            budget.global_discount_type, budget.global_discount_value, budget.items
+        )
         items_html = ""
-        for i, item in enumerate(budget.items, 1):
+        for i, (item, share) in enumerate(zip(budget.items, shares, strict=True), 1):
+            line_discount = (Decimal(str(item.line_discount)) + share).quantize(Decimal("0.01"))
+            net_total = net_line_total(item, share)
             # Get item name from catalog
             item_name = ""
             if item.catalog_item:
@@ -197,8 +204,8 @@ class BudgetPDFService:
                 </td>
                 <td class="quantity">{item.quantity}</td>
                 <td class="price">{format_currency(item.unit_price)}</td>
-                {f'<td class="discount">{format_currency(item.line_discount)}</td>' if item.line_discount else '<td class="discount">-</td>'}
-                <td class="total">{format_currency(item.line_total)}</td>
+                {f'<td class="discount">{format_currency(line_discount)}</td>' if line_discount else '<td class="discount">-</td>'}
+                <td class="total">{f"<small><s>{format_currency(item.line_total)}</s></small> " if line_discount else ""}{format_currency(net_total)}</td>
             </tr>
             """
 

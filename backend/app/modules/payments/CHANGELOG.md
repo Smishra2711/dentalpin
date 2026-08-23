@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- fix(#180): payments recorded before #178 on a budget-linked invoice
+  were labeled `on_account` instead of `budget`, so the quote's
+  "Budget payments" total missed them even though the invoice was
+  correctly paid. `backend/scripts/backfill_on_account_budget_target.py`
+  relabels the affected rows — run once with `--apply` after
+  upgrading (dry-run by default, safe to re-run).
+
+- fix(#179): `/payments` → New payment's patient field was a plain
+  text input bound to `patient_id` (a UUID) with a "Search patient…"
+  placeholder that didn't actually search — typing a name posted an
+  invalid `patient_id` and the modal showed a generic error.
+  `PaymentCreateModal` now uses `PatientVisualSelector`, same as New
+  quote/New invoice/New appointment. Switching the selected patient
+  also resets the "Apply to" destination back to on-account, so a
+  budget chosen for a previous patient can't silently carry over.
 - fix(#183): the earned-ledger handlers are transactional (ADR 0019). Revenue is booked in the same transaction as the treatment; a failed request no longer leaves an orphan `PatientEarnedEntry` (there is no FK to `treatments` to catch one).
 - fix(#178): `payment.allocated` and `payment.refunded` are published
   transactionally (`db=db`, ADR 0019) so billing mirrors budget

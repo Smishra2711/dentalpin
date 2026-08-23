@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.auth.dependencies import ClinicContext, get_clinic_context, require_permission
 from app.core.schemas import ApiResponse, PaginatedApiResponse
 from app.database import get_db
+from app.modules.budget.service import lookup_linked_plan
 from app.modules.payments.schemas import PaymentResponse
 
 from .hooks import BillingHookRegistry
@@ -262,6 +263,8 @@ async def get_invoice(
         raise HTTPException(status_code=404, detail="Invoice not found")
 
     response = InvoiceDetailResponse.model_validate(invoice)
+    if invoice.budget_id:
+        response.treatment_plan = await lookup_linked_plan(db, ctx.clinic_id, invoice.budget_id)
     summaries = await compute_paid_summaries_for_invoices(db, ctx.clinic_id, [invoice.id])
     _attach_paid_summary(response, summaries.get(invoice.id, (0, invoice.total)))
     return ApiResponse(data=response)

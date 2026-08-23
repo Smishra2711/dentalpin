@@ -33,7 +33,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/treatment_plan/frontend/pages/treatment-plans/[id].vue
   - backend/app/modules/treatment_plan/router.py
-last_verified_commit: e1d6873
+last_verified_commit: 68b0262
 ---
 
 # Treatment plan detail
@@ -76,6 +76,24 @@ and close or reactivate.
   plan is *pending* awaiting acceptance.
 - **Clinical notes.** Can be attached to the plan from the
   `clinical_notes` module (slot `patient.detail.clinical.notes`).
+
+## Adding treatments from the odontogram
+
+The treatment bar under the odontogram shows the therapeutic
+categories (Restorative, Surgery, Endodontics, Orthodontics) plus the
+**Full mouth** tab:
+
+- **Per-tooth treatments** — select the treatment, then click the
+  tooth (or teeth) on the odontogram.
+- **Full mouth** — treatments with no tooth attached (first visit,
+  dental cleaning, panoramic X-ray, whitening, dentures…), grouped by
+  clinical category. Clicking one adds it straight to the plan without
+  going through the odontogram. **Arch** items (splints,
+  partial/complete dentures) ask for upper or lower arch first.
+- With more than 12 global treatments a **search box** appears to
+  filter by name.
+- In the plan item list, full-mouth treatments show no tooth number;
+  arch treatments indicate upper/lower.
 
 ## Confirm a plan
 

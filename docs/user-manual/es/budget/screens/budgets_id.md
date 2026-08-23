@@ -37,7 +37,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/budget/frontend/pages/budgets/[id].vue
   - backend/app/modules/budget/router.py
-last_verified_commit: 4752264
+last_verified_commit: a13bd29
 ---
 
 # Detalle del presupuesto
@@ -50,6 +50,7 @@ Desde aquí se mueve el presupuesto por todo su flujo
 
 ## De un vistazo
 
+- **Precio neto por línea.** Cada línea muestra lo que paga el paciente tras el descuento de línea **y** su parte del descuento global, con el precio sin descuento tachado. El descuento y el IVA del pie siguen la misma regla (IVA sobre la base descontada), igual que la factura.
 - **Layout en dos columnas.** Izquierda: líneas del presupuesto con
   ítem del catálogo, diente, superficies, cantidad, descuento e IVA.
   Derecha (de arriba abajo): tarjeta de **cobros** (slot
@@ -74,6 +75,11 @@ Desde aquí se mueve el presupuesto por todo su flujo
 ## Editar líneas
 
 > Requiere `budget.write` y que el presupuesto esté en `draft`.
+
+> **Presupuesto vinculado a un plan de tratamiento:** no se pueden
+> añadir ni borrar líneas aquí (la API responde `409`). Se añaden y
+> quitan tratamientos **desde el plan**, que las refleja en el
+> presupuesto. Sí puedes editar precio, descuento o IVA de una línea.
 
 1. Pulsa **Editar** sobre la línea o **Añadir ítem** abajo de la
    tabla.

@@ -15,6 +15,7 @@
  */
 
 import type {
+  Patient,
   PaymentAllocationCreate,
   PaymentMethod,
   PaymentRecord
@@ -107,6 +108,12 @@ const formError = ref<string | null>(null)
 // while the split hasn't been edited by hand (issue #178).
 const primaryTarget = ref<string>(props.defaultBudgetId || 'on_account')
 const patientBudgetCount = ref(0)
+// Unlocked-patient picker (issue #179) — only used at /payments/new,
+// where isPatientLocked is false. Source of truth for form.patient_id;
+// synced below so every other reference in this file (canSubmit,
+// submit(), AllocationTargetSelect) keeps reading form.patient_id
+// unchanged.
+const selectedPatient = ref<Patient | null>(null)
 const hasBudgetTargets = computed(() => patientBudgetCount.value > 0 || isBudgetContext.value)
 const isSubmitting = ref(false)
 const showAdvanced = ref(false)
@@ -119,6 +126,7 @@ watch(() => props.open, async (isOpen) => {
   if (isOpen) {
     form.value = buildInitialForm()
     primaryTarget.value = props.defaultBudgetId || 'on_account'
+    selectedPatient.value = null
     formError.value = null
     showAdvanced.value = false
     showSecondaryMethods.value = false
@@ -147,6 +155,22 @@ watch(primaryTarget, (target) => {
   if (!sole) return
   sole.target_type = target === 'on_account' ? 'on_account' : 'budget'
   sole.target_id = target === 'on_account' ? undefined : target
+})
+
+// Sync the picker into form.patient_id. Switching to a *different*
+// patient also resets the destination back to "a cuenta" — a budget
+// id chosen for the previous patient must never carry over onto the
+// new one (AllocationTargetSelect has no such guard itself).
+watch(selectedPatient, (patient, previous) => {
+  form.value.patient_id = patient?.id || ''
+  if (patient?.id === previous?.id) return
+  primaryTarget.value = 'on_account'
+  splitManually.value = false
+  form.value.allocations = [{
+    target_type: 'on_account',
+    target_id: undefined,
+    amount: Number(form.value.amount) || 0
+  }]
 })
 
 const allocationsSum = computed(() =>
@@ -261,8 +285,9 @@ function handleKeydown(e: KeyboardEvent) {
         @keydown="handleKeydown"
       >
         <!-- Patient header (read-only when locked). The admin flow at
-             /payments/new is the only place where the picker stays an
-             editable input — everywhere else we already know the patient. -->
+             /payments/new is the only place where the patient isn't
+             already known — PatientVisualSelector search/create picker
+             there, same as elsewhere in the app (issue #179). -->
         <div
           v-if="isPatientLocked"
           class="flex items-center gap-3 p-3 rounded-token-md bg-surface-muted"
@@ -285,8 +310,9 @@ function handleKeydown(e: KeyboardEvent) {
           v-else
           :label="t('payments.new.patient')"
         >
-          <UInput
-            v-model="form.patient_id"
+          <PatientVisualSelector
+            v-model="selectedPatient"
+            in-modal
             :placeholder="t('payments.new.patientPlaceholder')"
           />
         </UFormField>

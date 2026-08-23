@@ -182,6 +182,7 @@ const newPatient = reactive<PatientCreate>({
   last_name: '',
   phone: '',
   email: '',
+  national_id: '',
   date_of_birth: '',
   notes: ''
 })
@@ -199,6 +200,7 @@ function resetForm() {
     last_name: '',
     phone: '',
     email: '',
+    national_id: '',
     date_of_birth: '',
     notes: ''
   })
@@ -212,6 +214,7 @@ async function createPatient() {
       last_name: newPatient.last_name,
       phone: newPatient.phone || null,
       email: newPatient.email || null,
+      national_id: newPatient.national_id || null,
       date_of_birth: newPatient.date_of_birth || null,
       notes: newPatient.notes || null
     })
@@ -475,12 +478,20 @@ function patientCity(p: Patient): string {
             </UFormField>
           </div>
 
-          <UFormField :label="t('patients.dateOfBirth')">
-            <UInput
-              v-model="newPatient.date_of_birth"
-              type="date"
-            />
-          </UFormField>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <UFormField :label="t('patients.nationalId')">
+              <UInput
+                v-model="newPatient.national_id"
+                placeholder="12345678A"
+              />
+            </UFormField>
+            <UFormField :label="t('patients.dateOfBirth')">
+              <UInput
+                v-model="newPatient.date_of_birth"
+                type="date"
+              />
+            </UFormField>
+          </div>
 
           <UFormField :label="t('patients.notes')">
             <UTextarea

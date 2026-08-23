@@ -182,6 +182,8 @@ export interface PatientCreate {
   date_of_birth?: string
   notes?: string
   do_not_contact?: boolean
+  national_id?: string
+  national_id_type?: 'dni' | 'nie' | 'passport'
   // Billing fields
   billing_name?: string
   billing_tax_id?: string
@@ -455,6 +457,10 @@ export type ClinicalType
   // legacy type has no mapping (see migration_import/mappers). Not creatable
   // through the API; the original label lives in `Treatment.notes`.
     | 'migrated'
+  // Server-side fallback for global-scope treatments created from catalog
+  // items without an odontogram mapping (limpieza, primera visita…). Not
+  // creatable explicitly through the API; labels come from catalog names.
+    | 'other'
 
 /** @deprecated — kept for gradual migration; prefer ClinicalType. */
 export type TreatmentType = ClinicalType
@@ -668,15 +674,16 @@ export interface TreatmentCatalogCategoryUpdate {
 export interface OdontogramMapping {
   id: string
   odontogram_treatment_type: string
-  visualization_rules: string[]
+  visualization_rules: VisualizationRuleLayer[]
   visualization_config: Record<string, unknown>
   clinical_category: string
 }
 
+/** Rules/config are server-owned (layered JSONB, seeded); omit to preserve them. */
 export interface OdontogramMappingCreate {
   odontogram_treatment_type: string
-  visualization_rules: string[]
-  visualization_config: Record<string, unknown>
+  visualization_rules?: VisualizationRuleLayer[]
+  visualization_config?: Record<string, unknown>
   clinical_category: string
 }
 
@@ -806,11 +813,12 @@ export interface OdontogramTreatment {
   pricing_strategy: PricingStrategy
   pricing_config?: Record<string, number> | null
   surface_prices?: Record<string, number> | null
-  // Odontogram specific
-  odontogram_treatment_type: ClinicalType
+  // Odontogram specific. Null/empty for unmapped global-scope items
+  // (no per-tooth visualization; offered only in the plan UI).
+  odontogram_treatment_type: ClinicalType | null
   visualization_rules: VisualizationRuleLayer[]
   visualization_config: Record<string, unknown>
-  clinical_category: string
+  clinical_category: string | null
   // Category info
   category_key: string
   category_names: Record<string, string>
@@ -880,6 +888,8 @@ export interface BudgetItem {
   line_total: number
   /** Ex-tax share of the budget's global discount (populated in budget detail only). */
   global_discount_share: number
+  /** VAT-inclusive price after line + global discount (populated in budget detail only). */
+  net_line_total: number
   // Dental specifics
   tooth_number?: number
   surfaces?: string[]
@@ -1649,6 +1659,8 @@ export interface Invoice {
 export interface InvoiceDetail extends Invoice {
   items: InvoiceItem[]
   invoice_payments: InvoicePayment[]
+  /** Plan behind the linked quote, resolved at read time. */
+  treatment_plan?: { id: string, plan_number: string, title?: string | null, status: string } | null
 }
 
 export interface InvoiceListItem {
@@ -1795,6 +1807,7 @@ export interface PatientBillingSummary {
   patient_id: string
   // Budget metrics
   total_budgeted: number
+  total_discount: number
   work_in_progress: number
   work_completed: number
   // Invoice metrics

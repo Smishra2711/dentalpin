@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- fix(#181): `_recalculate_totals` prorates the global discount per line (`pricing.allocate_global_discount`) and charges VAT on the discounted base, so the quote's `total_discount`/`total_tax` match the invoice built from it (`total` unchanged). New `pricing.net_line_total` + `items[].net_line_total` on the detail response; quote detail, public page and PDF show the net price with the gross struck through and the global share labelled.
+- fix(#176): adding/removing lines on a quote linked to a treatment plan is refused (409 `PlanOwnsLinesError`); lines are managed from the plan. The detail page hides the add/remove actions and points at the plan.
+- feat(#177): new `budget.new.form` slot on `/budgets/new` (`ctx = { patient }`).
+- refactor: `service.lookup_linked_plan` is the single raw-SQL plan reverse-lookup (was duplicated in `workflow.py` and the detail endpoint).
 - fix(#184): type-check clean — item helpers on the detail page accept the readonly item view.
 - feat(#184): `BudgetListResponse` exposes `plan_number_snapshot` so patient-side lists can show the plan link without importing treatment_plan.
 - fix(#183): the three plan-sync handlers are transactional (ADR 0019); a failed mirror now fails the request instead of leaving the quote out of sync with the plan.
