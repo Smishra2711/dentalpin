@@ -28,7 +28,7 @@ async def post_webhook(url: str, body: bytes, headers: dict[str, str]) -> httpx.
     a non-2xx HTTP response is returned normally — the caller decides how
     to treat the status code."""
     try:
-        validate_before_dispatch(url)
+        await validate_before_dispatch(url)
     except UnsafeWebhookURLError as exc:
         raise WebhookDeliveryError(f"unsafe target_url: {exc}") from exc
     try:

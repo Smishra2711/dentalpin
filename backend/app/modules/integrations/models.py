@@ -3,9 +3,8 @@
 ``WebhookSubscription`` is the clinic-owned config row (target URL,
 event types, signing secret). ``WebhookDelivery`` is BOTH the outbox
 queue row and the audit record for one delivery attempt — same split
-as ``notifications.models.CommunicationMessage`` (see
-[[../../../../../notes/dentalpin/CLAUDE.md]] "Outbox/retry/DLQ
-precedent" for the shape this mirrors).
+as ``notifications.models.CommunicationMessage`` (see this module's
+``CLAUDE.md`` "Outbox" for the shape this mirrors).
 """
 
 from datetime import datetime
@@ -33,11 +32,10 @@ class WebhookSubscription(Base, TimestampMixin):
     """A clinic's subscription to one or more event types.
 
     ``secret_encrypted`` is Fernet-derived-from-``SECRET_KEY`` (5th
-    consumer of ``app.core.email.encryption._get_fernet`` — Ramón
-    2026-08-21, see notes/dentalpin/65-integrations-api.md "Resolved
-    (was Genuinely open)"). The plaintext secret is generated
-    server-side and shown once on creation; it is never returned again,
-    only decrypted internally to sign a delivery.
+    consumer of ``app.core.email.encryption._get_fernet``). The
+    plaintext secret is generated server-side and shown once on
+    creation; it is never returned again, only decrypted internally to
+    sign a delivery.
 
     Auto-disabled after ``MAX_CONSECUTIVE_FAILURES`` (issue #65 §1) —
     a per-subscription concept ``CommunicationMessage`` has no
@@ -104,20 +102,20 @@ class ApiToken(Base, TimestampMixin):
     """A bearer token issued to a clinic for third-party automations.
 
     ``token_hash`` is SHA-256 of the plaintext, not bcrypt: the token is
-    a high-entropy ``secrets.token_urlsafe(32)`` value (same generator
-    as ``WebhookSubscription``'s signing secret), never a human-chosen
-    password, so it needs no slow/salted hash — only a fast, indexable
-    lookup by hash, which bcrypt's per-hash random salt can't give.
-    Plaintext is shown once, at creation, and never stored or returned
-    again.
+    a high-entropy ``dp_`` + ``secrets.token_urlsafe(32)`` value (same
+    generator as ``WebhookSubscription``'s signing secret, plus a
+    recognizable prefix for secret-scanning tools), never a
+    human-chosen password, so it needs no slow/salted hash — only a
+    fast, indexable lookup by hash, which bcrypt's per-hash random salt
+    can't give. Plaintext is shown once, at creation, and never stored
+    or returned again.
 
     Revocation mirrors ``WebhookSubscription``'s own
     ``disabled_at``/``disabled_reason`` shape (soft revoke, not delete)
     rather than a new pattern.
 
-    No endpoint depends on this yet (issue #65, Phase 1 per Ramón's
-    2026-08-21 email) — the public data-read API that will consume it
-    is a follow-up PR.
+    No endpoint depends on this yet (issue #65, Phase 1) — the public
+    data-read API that will consume it is a follow-up PR.
     """
 
     __tablename__ = "api_tokens"
@@ -127,8 +125,10 @@ class ApiToken(Base, TimestampMixin):
 
     name: Mapped[str] = mapped_column(String(255))
     token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
-    # Ordered list of scope strings, e.g. "patients:read" (issue #65 §2/§11).
-    # Not yet enforced anywhere — no consumer endpoint exists in Phase 1.
+    # Ordered list of scope strings from SUPPORTED_TOKEN_SCOPES
+    # (triggers.py), e.g. "patients:read" (issue #65 §2/§11). Validated
+    # against that closed catalog at create time (schemas.py) even
+    # though no consumer endpoint enforces scopes yet in Phase 1.
     scopes: Mapped[list[str]] = mapped_column(JSONB)
 
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)

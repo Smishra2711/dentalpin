@@ -4,8 +4,7 @@ Admin CRUD for webhook subscriptions and API tokens, staff-
 authenticated (``integrations.subscriptions.*``, ``integrations.
 tokens.*``). Tokens are issued/revoked here but have no consumer
 endpoint yet — the public data-read API (issue #65 §2, §11) that
-would authenticate with them is follow-up scope — see
-notes/dentalpin/65-integrations-api.md "Scope reality check".
+would authenticate with them is follow-up scope.
 """
 
 from __future__ import annotations
@@ -30,6 +29,7 @@ from .schemas import (
     WebhookSubscriptionUpdate,
 )
 from .service import IntegrationsService
+from .url_safety import UnsafeWebhookURLError
 
 router = APIRouter()
 
@@ -71,9 +71,14 @@ async def create_subscription(
     _: Annotated[None, Depends(require_permission("integrations.subscriptions.write"))],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> ApiResponse[WebhookSubscriptionCreated]:
-    subscription, secret = await IntegrationsService.create_subscription(
-        db, ctx.clinic_id, data.model_dump()
-    )
+    try:
+        subscription, secret = await IntegrationsService.create_subscription(
+            db, ctx.clinic_id, data.model_dump()
+        )
+    except UnsafeWebhookURLError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
     response = WebhookSubscriptionCreated(
         **WebhookSubscriptionResponse.model_validate(subscription).model_dump(),
         secret=secret,
@@ -96,9 +101,14 @@ async def update_subscription(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> ApiResponse[WebhookSubscriptionResponse]:
     subscription = await _get_owned_subscription(db, ctx.clinic_id, subscription_id)
-    subscription = await IntegrationsService.update_subscription(
-        db, subscription, data.model_dump(exclude_unset=True)
-    )
+    try:
+        subscription = await IntegrationsService.update_subscription(
+            db, subscription, data.model_dump(exclude_unset=True)
+        )
+    except UnsafeWebhookURLError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
     return ApiResponse(data=WebhookSubscriptionResponse.model_validate(subscription))
 
 

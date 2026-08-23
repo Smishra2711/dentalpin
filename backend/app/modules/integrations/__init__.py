@@ -1,11 +1,9 @@
 """Integrations module - webhook subscriptions for third-party automations.
 
-Phase 1 (issue #65, per Ramón's 2026-08-21 email — supersedes the
-original PR #246 slice): outbox infra + two working triggers
+Phase 1 (issue #65): outbox infra + two working triggers
 (patient.created, appointment.completed) + Stripe-style HMAC signing +
 subscription CRUD + API tokens. Public data-read API, the full trigger
-catalog, Zapier/Make apps, and admin UI are follow-up PRs — see
-notes/dentalpin/65-integrations-api.md.
+catalog, Zapier/Make apps, and admin UI are follow-up PRs.
 """
 
 from fastapi import APIRouter
@@ -38,7 +36,7 @@ class IntegrationsModule(BaseModule):
         "author": "DentalPin Core Team",
         "license": "BSL-1.1",
         "category": "official",
-        "depends": ["patients", "agenda"],
+        "depends": ["patients"],
         "installable": True,
         "auto_install": False,
         "removable": True,
@@ -56,6 +54,9 @@ class IntegrationsModule(BaseModule):
 
     def get_router(self) -> APIRouter:
         return router
+
+    def get_tools(self) -> list:
+        return []
 
     def get_scheduled_jobs(self) -> list[ScheduledJob]:
         from .tasks import dispatch_outbox

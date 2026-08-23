@@ -1,9 +1,8 @@
 """integrations: add api_tokens table.
 
-Issue #65, Phase 1 per Ramón's 2026-08-21 email. ``token_hash`` is
-SHA-256 (fixed 64 hex chars), not Fernet/bcrypt — see
-``models.ApiToken`` docstring. No consumer endpoint yet; the public
-data-read API is a follow-up PR.
+Issue #65, Phase 1. ``token_hash`` is SHA-256 (fixed 64 hex chars),
+not Fernet/bcrypt — see ``models.ApiToken`` docstring. No consumer
+endpoint yet; the public data-read API is a follow-up PR.
 
 Revision ID: int_0002
 Revises: int_0001

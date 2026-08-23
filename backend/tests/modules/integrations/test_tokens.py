@@ -52,6 +52,24 @@ async def test_two_tokens_get_distinct_plaintext_and_hash(
 
 
 @pytest.mark.asyncio
+async def test_token_prefix_is_recognizable(client: AsyncClient, auth_headers, test_clinic):
+    created = await client.post(BASE, json={"name": "Zapier"}, headers=auth_headers)
+    assert created.json()["data"]["token"].startswith("dp_")
+
+
+@pytest.mark.asyncio
+async def test_unsupported_scope_rejected(client: AsyncClient, auth_headers, test_clinic):
+    """`scopes` is validated against a closed catalog (SUPPORTED_TOKEN_SCOPES),
+    not accepted as free text."""
+    resp = await client.post(
+        BASE,
+        json={"name": "Zapier", "scopes": ["patients:delete_everything"]},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
 async def test_revoke_roundtrip(client: AsyncClient, auth_headers, test_clinic):
     created = await client.post(BASE, json={"name": "Make"}, headers=auth_headers)
     token_id = created.json()["data"]["id"]

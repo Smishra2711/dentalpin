@@ -88,6 +88,31 @@ async def test_update_and_delete_roundtrip(client: AsyncClient, auth_headers, te
 
 
 @pytest.mark.asyncio
+async def test_update_can_clear_description_to_null(client: AsyncClient, auth_headers, test_clinic):
+    """Regression test: `description` must actually be clearable — the
+    old `update_subscription` used `data.get(field) is not None`, which
+    could never distinguish "not sent" from "sent as null" and so could
+    never clear it."""
+    created = await client.post(
+        BASE,
+        json={
+            "target_url": "https://example.com/hook",
+            "event_types": ["patient.created"],
+            "description": "Zapier prod",
+        },
+        headers=auth_headers,
+    )
+    subscription_id = created.json()["data"]["id"]
+    assert created.json()["data"]["description"] == "Zapier prod"
+
+    cleared = await client.patch(
+        f"{BASE}/{subscription_id}", json={"description": None}, headers=auth_headers
+    )
+    assert cleared.status_code == 200
+    assert cleared.json()["data"]["description"] is None
+
+
+@pytest.mark.asyncio
 async def test_non_admin_role_forbidden(
     client: AsyncClient, auth_headers, db_session: AsyncSession, test_clinic
 ):

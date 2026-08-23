@@ -5,20 +5,30 @@ clinic admin can set it) and the server POSTs to it directly
 (``client.post_webhook``). Without a check, that URL could point at
 an internal service, the cloud metadata endpoint
 (``169.254.169.254``), or loopback. Not part of the original design
-doc (notes/dentalpin/65-integrations-api.md) — added as a required
-part of Phase 1, not deferred, since it's a real vulnerability in the
-outbox as originally scoped.
+doc for issue #65 — added as a required part of Phase 1, not
+deferred, since it's a real vulnerability in the outbox as originally
+scoped.
 
 Two checkpoints, not one: ``validate_new_url`` runs at subscription
-create/update (schemas.py); ``validate_before_dispatch`` runs again
+create/update (``service.py`` — not a Pydantic validator, since a
+validator can't ``await``); ``validate_before_dispatch`` runs again
 immediately before each send (client.py). A hostname can be
-repointed after a subscription is created — validating only once at
-creation doesn't defend against DNS rebinding or a delayed re-point,
-since deliveries can fire days after subscribe.
+repointed after a subscription is created — this narrows the window
+(TOCTOU: httpx re-resolves when it actually connects) rather than
+fully defending against DNS rebinding, but re-checking immediately
+before every send still catches a delayed re-point, since deliveries
+can fire days after subscribe.
+
+Resolution runs via the running event loop's own resolver
+(``loop.getaddrinfo``), not the blocking ``socket.getaddrinfo`` — this
+is called from the request path (subscription create/update) and from
+the scheduler's dispatch tick, both on the same event loop as the
+rest of the API; a slow or non-resolving host must not freeze it.
 """
 
 from __future__ import annotations
 
+import asyncio
 import ipaddress
 import socket
 from urllib.parse import urlsplit
@@ -30,9 +40,9 @@ class UnsafeWebhookURLError(ValueError):
     """Raised when a target URL fails the SSRF safety check."""
 
 
-def _resolved_ips(hostname: str) -> list[ipaddress.IPv4Address | ipaddress.IPv6Address]:
+async def _resolved_ips(hostname: str) -> list[ipaddress.IPv4Address | ipaddress.IPv6Address]:
     try:
-        infos = socket.getaddrinfo(hostname, None)
+        infos = await asyncio.get_running_loop().getaddrinfo(hostname, None)
     except socket.gaierror as exc:
         raise UnsafeWebhookURLError(f"could not resolve host: {hostname}") from exc
     ips = []
@@ -58,7 +68,7 @@ def _is_unsafe(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
     )
 
 
-def _check(url: str) -> None:
+async def _check(url: str) -> None:
     parts = urlsplit(url)
     if parts.scheme not in ALLOWED_SCHEMES:
         raise UnsafeWebhookURLError(
@@ -80,20 +90,21 @@ def _check(url: str) -> None:
             f"webhook target_url resolves to a disallowed address: {literal}"
         )
 
-    for ip in _resolved_ips(hostname):
+    for ip in await _resolved_ips(hostname):
         if _is_unsafe(ip):
             raise UnsafeWebhookURLError(
                 f"webhook target_url resolves to a disallowed address: {ip}"
             )
 
 
-def validate_new_url(url: str) -> None:
-    """Run at subscription create/update. Raises :class:`UnsafeWebhookURLError`."""
-    _check(url)
+async def validate_new_url(url: str) -> None:
+    """Run at subscription create/update (service.py). Raises
+    :class:`UnsafeWebhookURLError`."""
+    await _check(url)
 
 
-def validate_before_dispatch(url: str) -> None:
+async def validate_before_dispatch(url: str) -> None:
     """Run again immediately before each delivery attempt, to catch a
     hostname that was repointed after the subscription was created
     (DNS rebinding / delayed re-point). Same check, same errors."""
-    _check(url)
+    await _check(url)

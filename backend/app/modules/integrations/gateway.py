@@ -1,12 +1,12 @@
 """Webhook delivery gateway: enqueue + dispatch loop.
 
 Mirrors ``notifications.gateway.NotificationGateway``'s method shapes
-1:1 (see notes/dentalpin/CLAUDE.md "Outbox/retry/DLQ precedent"):
-``enqueue`` never touches the network — it inserts a ``queued`` row and
-flushes (never commits, leaving the decision to the caller's
-transaction); the scheduled ``dispatch_outbox`` job sends with
-retry/backoff, batched ``FOR UPDATE SKIP LOCKED``, commit-before-
-network-call so no row lock is held across I/O.
+1:1 (see this module's ``CLAUDE.md`` "Outbox"): ``enqueue`` never
+touches the network — it inserts a ``queued`` row and flushes (never
+commits, leaving the decision to the caller's transaction); the
+scheduled ``dispatch_outbox`` job sends with retry/backoff, batched
+``FOR UPDATE SKIP LOCKED``, commit-before-network-call so no row lock
+is held across I/O.
 """
 
 import json

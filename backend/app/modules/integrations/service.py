@@ -1,4 +1,9 @@
-"""integrations business logic: subscription + API token CRUD. Clinic-scoped."""
+"""integrations business logic: subscription + API token CRUD. Clinic-scoped.
+
+``target_url`` SSRF validation lives here, not in a Pydantic
+validator (schemas.py) — a validator can't ``await``, and the check
+needs the event loop's own resolver (url_safety.py).
+"""
 
 from __future__ import annotations
 
@@ -13,15 +18,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.email.encryption import encrypt_password
 
 from .models import ApiToken, WebhookSubscription
+from .url_safety import validate_new_url
 
-# Ramón 2026-08-21: server-side generated, shown once, never Fernet-decrypted
-# back out for display (only internally, to sign a delivery).
+# Server-side generated, shown once, never Fernet-decrypted back out for
+# display (only internally, to sign a delivery).
 _SECRET_BYTES = 32
 # Same generator, same byte length — API tokens and webhook secrets share the
 # convention. Hashed with SHA-256 (not Fernet, not bcrypt): never decrypted
 # back out, and high-entropy enough that no per-hash salt is needed, only a
 # fast indexable lookup by hash — see models.ApiToken docstring.
 _TOKEN_BYTES = 32
+# Recognizable prefix so secret-scanning tools (and humans skimming a
+# leaked log) can recognize a dentalpin API token on sight, same idea
+# as Stripe's `sk_`/GitHub's `ghp_`.
+_TOKEN_PREFIX = "dp_"
 
 
 def _hash_token(plaintext: str) -> str:
@@ -57,6 +67,7 @@ class IntegrationsService:
     ) -> tuple[WebhookSubscription, str]:
         """Returns ``(subscription, plaintext_secret)`` — the caller must
         hand the secret to the response and never persist/log it."""
+        await validate_new_url(data["target_url"])
         plaintext_secret = secrets.token_urlsafe(_SECRET_BYTES)
         subscription = WebhookSubscription(
             clinic_id=clinic_id,
@@ -74,7 +85,21 @@ class IntegrationsService:
     async def update_subscription(
         db: AsyncSession, subscription: WebhookSubscription, data: dict
     ) -> WebhookSubscription:
-        for field in ("description", "target_url", "event_types"):
+        if "target_url" in data and data["target_url"] is not None:
+            await validate_new_url(data["target_url"])
+        # ``description`` is the only nullable field of the three — it uses
+        # ``if field in data`` (not ``data.get(field) is not None``) so it
+        # can actually be cleared to null: the router sends
+        # `exclude_unset=True`, so a field's *absence* means "leave alone"
+        # but its presence as `null` means "clear it", and the old
+        # `is not None` check could never distinguish the two.
+        # `target_url`/`event_types` are non-nullable columns —
+        # `null` for either would violate the DB constraint, not clear
+        # anything, so they stay on the narrower "provided and non-null"
+        # check.
+        if "description" in data:
+            subscription.description = data["description"]
+        for field in ("target_url", "event_types"):
             if data.get(field) is not None:
                 setattr(subscription, field, data[field])
         if data.get("is_active") is True and not subscription.is_active:
@@ -117,7 +142,7 @@ class IntegrationsService:
     async def create_token(db: AsyncSession, clinic_id: UUID, data: dict) -> tuple[ApiToken, str]:
         """Returns ``(token, plaintext)`` — the caller must hand the
         plaintext to the response and never persist/log it."""
-        plaintext = secrets.token_urlsafe(_TOKEN_BYTES)
+        plaintext = _TOKEN_PREFIX + secrets.token_urlsafe(_TOKEN_BYTES)
         token = ApiToken(
             clinic_id=clinic_id,
             name=data["name"],

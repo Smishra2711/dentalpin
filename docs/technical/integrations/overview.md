@@ -40,7 +40,9 @@ for one delivery attempt, same split as
 `api_tokens` — clinic-owned bearer token (name, scopes, SHA-256
 `token_hash`, `revoked_at`/`revoked_reason`). Never Fernet-encrypted
 like the webhook secret — the plaintext is never read back, only
-looked up by hash.
+looked up by hash. Plaintext is `dp_` + a random token; `scopes` is
+validated against a closed catalog (`SUPPORTED_TOKEN_SCOPES`), not
+free text.
 
 ## Delivery
 
@@ -52,17 +54,21 @@ subscription auto-disables after 10 consecutive failures.
 ## Signing
 
 Stripe's exact scheme (`signing.py`): header
-`X-Integrations-Signature`, `t=<unix_ts>,v1=<hex_hmac>`, HMAC-SHA256
+`X-DentalPin-Signature`, `t=<unix_ts>,v1=<hex_hmac>`, HMAC-SHA256
 over `timestamp.body`, 5-minute tolerance.
 
 ## SSRF guard
 
 `url_safety.py` — not in the original issue text. `target_url` is
 clinic-supplied and the server POSTs to it directly, so it's checked
-at subscription create/update *and* again immediately before every
-dispatch (a hostname can be repointed after creation). Requires
-`https`, rejects any hostname or IP literal that resolves to a
-private, loopback, link-local, reserved, or multicast address.
+(async, via the event loop's own resolver) at subscription
+create/update — in `service.py`, not a Pydantic validator, since a
+validator can't `await` — *and* again immediately before every
+dispatch (a hostname can be repointed after creation; this narrows
+the window rather than fully defending against DNS rebinding, since
+httpx re-resolves on connect). Requires `https`, rejects any hostname
+or IP literal that resolves to a private, loopback, link-local,
+reserved, or multicast address.
 
 ## Tenancy
 

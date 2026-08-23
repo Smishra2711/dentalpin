@@ -10,7 +10,7 @@ from app.core.email.encryption import encrypt_password
 from app.modules.integrations import client as webhook_client
 from app.modules.integrations.gateway import MAX_CONSECUTIVE_FAILURES, WebhookGateway
 from app.modules.integrations.models import WebhookDelivery, WebhookSubscription
-from app.modules.integrations.signing import verify
+from app.modules.integrations.signing import SIGNATURE_HEADER, verify
 
 EVENT = "patient.created"
 
@@ -85,7 +85,7 @@ async def test_dispatch_success_signs_and_marks_sent(
     assert deliveries[0].sent_at is not None
 
     assert captured["url"] == sub.target_url
-    assert verify("s3cret", captured["body"], captured["headers"]["X-Integrations-Signature"])
+    assert verify("s3cret", captured["body"], captured["headers"][SIGNATURE_HEADER])
 
 
 @pytest.mark.asyncio

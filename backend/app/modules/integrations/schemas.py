@@ -1,9 +1,14 @@
 """integrations Pydantic schemas.
 
 ``secret`` is returned ONLY from ``WebhookSubscriptionCreated`` (the
-create response) — never again after, per Ramón's requirement
-(secrets.token_urlsafe(32), shown once). Every other response uses
+create response) — never again after (secrets.token_urlsafe(32),
+shown once). Every other response uses
 ``WebhookSubscriptionResponse``, which carries no secret at all.
+
+``target_url`` is NOT validated for SSRF safety here — a Pydantic
+validator can't ``await``, and the check needs the event loop's
+resolver (see ``url_safety.py``). It's validated in ``service.py``
+instead, at create/update, before the row is written.
 """
 
 from datetime import datetime
@@ -11,28 +16,13 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
-from .triggers import SUPPORTED_EVENT_TYPES
-from .url_safety import UnsafeWebhookURLError, validate_new_url
-
-
-def _safe_target_url(value: str) -> str:
-    """Shared SSRF check for create/update — see url_safety.py."""
-    try:
-        validate_new_url(value)
-    except UnsafeWebhookURLError as exc:
-        raise ValueError(str(exc)) from exc
-    return value
+from .triggers import SUPPORTED_EVENT_TYPES, SUPPORTED_TOKEN_SCOPES
 
 
 class WebhookSubscriptionCreate(BaseModel):
     description: str | None = Field(default=None, max_length=255)
     target_url: str = Field(max_length=2048)
     event_types: list[str] = Field(min_length=1)
-
-    @field_validator("target_url")
-    @classmethod
-    def _target_url_is_safe(cls, value: str) -> str:
-        return _safe_target_url(value)
 
     @field_validator("event_types")
     @classmethod
@@ -51,13 +41,6 @@ class WebhookSubscriptionUpdate(BaseModel):
     target_url: str | None = Field(default=None, max_length=2048)
     event_types: list[str] | None = Field(default=None, min_length=1)
     is_active: bool | None = None
-
-    @field_validator("target_url")
-    @classmethod
-    def _target_url_is_safe(cls, value: str | None) -> str | None:
-        if value is None:
-            return value
-        return _safe_target_url(value)
 
     @field_validator("event_types")
     @classmethod
@@ -96,6 +79,16 @@ class WebhookSubscriptionCreated(WebhookSubscriptionResponse):
 class ApiTokenCreate(BaseModel):
     name: str = Field(max_length=255)
     scopes: list[str] = Field(default_factory=list)
+
+    @field_validator("scopes")
+    @classmethod
+    def _known_scopes(cls, value: list[str]) -> list[str]:
+        unsupported = sorted(set(value) - SUPPORTED_TOKEN_SCOPES)
+        if unsupported:
+            raise ValueError(
+                f"unsupported scope(s): {unsupported}. Supported: {sorted(SUPPORTED_TOKEN_SCOPES)}"
+            )
+        return value
 
 
 class ApiTokenResponse(BaseModel):

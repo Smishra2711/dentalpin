@@ -36,7 +36,9 @@ async def test_on_patient_created_enqueues_delivery(db_session: AsyncSession, te
     rows = (await db_session.execute(select(WebhookDelivery))).scalars().all()
     assert len(rows) == 1
     assert rows[0].event_type == EVENT
-    assert rows[0].payload == {"clinic_id": str(test_clinic.id), "patient_id": "p1"}
+    assert rows[0].payload["clinic_id"] == str(test_clinic.id)
+    assert rows[0].payload["patient_id"] == "p1"
+    assert "occurred_at" in rows[0].payload
 
 
 @pytest.mark.asyncio
@@ -99,7 +101,9 @@ async def test_on_appointment_completed_enqueues_delivery(db_session: AsyncSessi
     rows = (await db_session.execute(select(WebhookDelivery))).scalars().all()
     assert len(rows) == 1
     assert rows[0].event_type == APPOINTMENT_EVENT
-    assert rows[0].payload == {"clinic_id": str(test_clinic.id), "appointment_id": "a1"}
+    assert rows[0].payload["clinic_id"] == str(test_clinic.id)
+    assert rows[0].payload["appointment_id"] == "a1"
+    assert "occurred_at" in rows[0].payload
 
 
 @pytest.mark.asyncio

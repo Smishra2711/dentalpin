@@ -1,18 +1,22 @@
 """Outbound webhook delivery signing — Stripe's exact scheme.
 
-Header ``X-Integrations-Signature``: ``t=<unix_ts>,v1=<hex_hmac>``.
+Header ``X-DentalPin-Signature``: ``t=<unix_ts>,v1=<hex_hmac>``.
 Signed string is ``f"{timestamp}.{payload}"`` over the raw body bytes
 (never a re-serialized copy — formatting drift breaks the signature).
 5-minute tolerance on verify, same as Stripe. Receivers already
 carrying a Stripe webhook verifier can reuse it unmodified, minus the
-header name (see notes/dentalpin/65-integrations-api.md "Signing spec").
+header name.
+
+Named ``X-DentalPin-Signature`` rather than ``X-Integrations-Signature``:
+it's a public contract once shipped, and the product name is the
+right one to commit to long-term, not the internal module name.
 """
 
 import hashlib
 import hmac
 import time
 
-SIGNATURE_HEADER = "X-Integrations-Signature"
+SIGNATURE_HEADER = "X-DentalPin-Signature"
 DEFAULT_TOLERANCE_SECONDS = 300
 
 
@@ -21,7 +25,7 @@ def _signed_string(timestamp: int, payload: bytes) -> bytes:
 
 
 def sign(secret: str, payload: bytes, *, timestamp: int | None = None) -> str:
-    """Build the ``X-Integrations-Signature`` header value for ``payload``.
+    """Build the ``X-DentalPin-Signature`` header value for ``payload``.
 
     ``timestamp`` defaults to now (unix seconds); pass explicitly only
     in tests that need a fixed clock.
@@ -38,7 +42,7 @@ def verify(
     *,
     tolerance_seconds: int = DEFAULT_TOLERANCE_SECONDS,
 ) -> bool:
-    """Verify an ``X-Integrations-Signature`` header against ``payload``.
+    """Verify an ``X-DentalPin-Signature`` header against ``payload``.
 
     Checks the HMAC first (constant-time), then the timestamp tolerance —
     a malformed or forged header is always rejected regardless of clock,
