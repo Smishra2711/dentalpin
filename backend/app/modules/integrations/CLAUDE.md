@@ -19,6 +19,11 @@ delivers a JSON payload to that URL whenever a subscribed event fires.
 A clinic can also issue bearer API tokens (name + scopes), shown once
 on creation, revocable — no endpoint consumes them yet.
 
+Every payload carries `occurred_at`, but there's no frozen sample
+payload per trigger yet and no event id stable across subscribers
+(`WebhookDelivery.id` is per-subscription) — both are follow-up work
+(issue #65 §3), not in Phase 1.
+
 ## Outbox
 
 `WebhookDelivery` is both the outbox queue row and the audit record
