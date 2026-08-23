@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix: `last_visit` (list sort and `get_recent_patients`) counts **completed** appointments only, matching the patient-summary last-visit card's definition — a future booking or a cancellation no longer ranks a patient as recently seen (PR #251 review follow-up).
 - chore: delete the orphaned `VisitSummaryCard.vue` (never mounted; superseded by the agenda-owned `NextAppointmentCard` + `LastVisitCard` on `patient.summary.cards`, #182) and its now-unused `patients.visitSummary.*` i18n keys in all five locales.
 
 - fix(#206): `Patient.effective_billing_name` / `effective_billing_tax_id` — a DNI/NIE doubles as the invoice tax id when `billing_tax_id` is empty (passports don't); `has_complete_billing_info` follows the same rule. `PatientCreate` accepts `national_id` / `national_id_type` and the *Nuevo paciente* modal asks for the document. `?tab=info&edit=billing` deep-links to the billing modal (the old `?tab=billing` selected a tab that didn't exist).
