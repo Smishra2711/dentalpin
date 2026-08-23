@@ -105,6 +105,8 @@ cd frontend && npm run typecheck:layers && git checkout modules.json   # vue-tsc
 # Reset DB + reseed demo data (use after tests wipe tables)
 ./scripts/reset-db.sh        # drop, dentalpin db upgrade (core + installed modules)
 ./scripts/seed-demo.sh       # demo clinic, users, sample data
+./scripts/seed-demo.sh --lang ta                  # + India GST demo (Tamil UI; module must be installed)
+./scripts/seed-demo.sh --lang en --country in      # + India GST demo (English UI) — see docs/modules/india_gst.md §3.5
 
 # Demo login
 # admin@demo.clinic / demo1234

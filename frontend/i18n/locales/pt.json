@@ -352,13 +352,6 @@
         "smokerFreq": "Fumador · {freq}/dia"
       }
     },
-    "visitSummary": {
-      "title": "Resumo de visitas",
-      "lastVisit": "Última visita",
-      "nextAppointment": "Próxima consulta",
-      "noLastVisit": "Sem visitas anteriores",
-      "noNextAppointment": "Sem consulta agendada"
-    },
     "personalInfo": {
       "title": "Dados pessoais",
       "ageLabel": "{age} anos",
