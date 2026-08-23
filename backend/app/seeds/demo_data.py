@@ -18,11 +18,33 @@ from uuid import UUID, uuid4
 SupportedLang = Literal["es", "en", "fr", "ta"]
 LANG: SupportedLang = "en"  # Default language
 
+# Independent of LANG: forces the India GST demo clinic (Chennai, GSTIN,
+# CGST/SGST/IGST invoices) onto a non-Tamil UI language — currently only
+# combined with --lang en. The `ta` language always implies India on its
+# own (see is_india_demo()) regardless of this flag.
+SupportedCountry = Literal["generic", "in"]
+COUNTRY: SupportedCountry = "generic"
+
 
 def set_language(lang: SupportedLang) -> None:
     """Set the language for seed data."""
     global LANG
     LANG = lang
+
+
+def set_country(country: SupportedCountry) -> None:
+    """Set the country variant for seed data (independent of LANG)."""
+    global COUNTRY
+    COUNTRY = country
+
+
+def is_india_demo() -> bool:
+    """True when the demo clinic should be India-GST-enabled.
+
+    Either the Tamil language (which has always implied an Indian clinic)
+    or the explicit ``--country in`` override.
+    """
+    return LANG == "ta" or COUNTRY == "in"
 
 
 def t(translations: dict[str, str]) -> str:
@@ -79,7 +101,7 @@ PATIENT_IDS = [
 # Clinic data with translations
 def get_clinic_data() -> dict:
     """Get clinic data in current language."""
-    return {
+    data = {
         "id": CLINIC_ID,
         "name": t(
             {
@@ -137,10 +159,10 @@ def get_clinic_data() -> dict:
                 "thursday": {"morning": ["09:00", "14:00"], "afternoon": ["16:00", "20:00"]},
                 "friday": {"morning": ["09:00", "14:00"], "afternoon": ["16:00", "20:00"]},
             },
-            # Activate the India GST compliance hook for the Tamil demo
-            # clinic. The hook checks ``settings.country == "IN"`` to
-            # decide whether to split line tax into CGST/SGST/IGST.
-            **({"country": "IN"} if LANG == "ta" else {}),
+            # Activate the India GST compliance hook. The hook checks
+            # ``settings.country == "IN"`` to decide whether to split line
+            # tax into CGST/SGST/IGST.
+            **({"country": "IN"} if is_india_demo() else {}),
         },
         "cabinets": [
             {
@@ -153,6 +175,21 @@ def get_clinic_data() -> dict:
             },
         ],
     }
+    # --country in on a non-Tamil language (currently only --lang en):
+    # the `t()` calls above already produced that language's own generic
+    # clinic (e.g. the English demo's New York/USD clinic) — overlay the
+    # physical India details in plain English text, the same values the
+    # `ta` branch already carries in Tamil script.
+    if COUNTRY == "in" and LANG != "ta":
+        data["tax_id"] = "33-1234567"
+        data["address"]["street"] = "123 Main Street"
+        data["address"]["city"] = "Chennai"
+        data["address"]["postal_code"] = "600001"
+        data["address"]["country"] = "India"
+        data["phone"] = "+91 98401 23456"
+        data["currency"] = "INR"
+        data["timezone"] = "Asia/Kolkata"
+    return data
 
 
 # User names by language
@@ -1431,32 +1468,87 @@ def _translate_medical_history(mh: dict | None) -> dict | None:
     return result
 
 
+# Native Indian names (Romanized) for the English + India GST demo
+# (--lang en --country in). Index-aligned with PATIENTS_I18N/PATIENT_IDS —
+# each entry is the same "character" as that patient's ``ta`` (Tamil
+# script) identity, just transliterated to Latin script, since the India
+# GST module is meant for Indian clinics/patients and American/European
+# demo names read oddly next to a GSTIN and CGST/SGST breakdown.
+# ``emergency_contact_name`` is omitted where the patient has none.
+INDIA_PATIENT_NAMES: list[dict] = [
+    {"first_name": "Aravind", "last_name": "Selvam", "emergency_contact_name": "Selvam Selvaraj"},
+    {"first_name": "Karthikeyan", "last_name": "Nandini", "emergency_contact_name": "Nandini Devi"},
+    {"first_name": "Annamalai", "last_name": "Meenakshi", "emergency_contact_name": "Kavya"},
+    {"first_name": "Senthil", "last_name": "Nathan", "emergency_contact_name": "Priya Ramasamy"},
+    {"first_name": "Venkatesan", "last_name": "Ilamaran"},
+    {"first_name": "Nandhini", "last_name": "Poongkuzhali", "emergency_contact_name": "Muthukumar"},
+    {"first_name": "Tamil", "last_name": "Selvan", "emergency_contact_name": "Meena Lakshmi"},
+    {"first_name": "Arul", "last_name": "Kumar", "emergency_contact_name": "Kavin Raj"},
+    {
+        "first_name": "Muthukumar",
+        "last_name": "Tamilarasan",
+        "emergency_contact_name": "Yazhini Priya",
+    },
+    {
+        "first_name": "Chandrasekar",
+        "last_name": "Rajendran",
+        "emergency_contact_name": "Sevvanthi Roja",
+    },
+    {"first_name": "Antonio", "last_name": "Tamilarasan", "emergency_contact_name": "Maria"},
+    {"first_name": "Gabriel", "last_name": "Nathan", "emergency_contact_name": "Arulraj"},
+    {"first_name": "Joseph", "last_name": "Vijay", "emergency_contact_name": "Sangeetha"},
+    {"first_name": "Arul", "last_name": "Vijay", "emergency_contact_name": "Vijay Kumar"},
+    {"first_name": "Charles", "last_name": "Raj", "emergency_contact_name": "Mary Josephine"},
+]
+
+
 def get_patients_data() -> list[dict]:
     """Get patients data in current language."""
+    # English + India GST demo (--lang en --country in): names swap to
+    # INDIA_PATIENT_NAMES; phone/email reuse the Tamil demo's values
+    # verbatim since those are already plain digits / Romanized strings,
+    # not script-dependent.
+    india_english = is_india_demo() and LANG != "ta"
+
     patients = []
-    for p in PATIENTS_I18N:
+    for idx, p in enumerate(PATIENTS_I18N):
         # Handle phone: dict with translations or None
         phone = p["phone"]
         if isinstance(phone, dict):
-            phone = t(phone)
+            phone = phone["ta"] if india_english else t(phone)
 
         # Handle email: dict with translations, string, or None
         email = p["email"]
         if isinstance(email, dict):
-            email = t(email)
+            email = email["ta"] if india_english else t(email)
 
         # Handle emergency_contact: dict with language keys or None
-        emergency_contact = p.get("emergency_contact")
+        raw_emergency_contact = p.get("emergency_contact")
+        emergency_contact = raw_emergency_contact
         if isinstance(emergency_contact, dict) and LANG in emergency_contact:
             emergency_contact = emergency_contact[LANG]
+        if india_english and isinstance(raw_emergency_contact, dict):
+            ta_contact = raw_emergency_contact["ta"]
+            emergency_contact = {
+                **emergency_contact,
+                "name": INDIA_PATIENT_NAMES[idx]["emergency_contact_name"],
+                "phone": ta_contact["phone"],
+                "email": ta_contact["email"],
+            }
 
         # Handle medical_history: translate nested fields
         medical_history = _translate_medical_history(p.get("medical_history"))
 
+        first_name = p[LANG]["first_name"]
+        last_name = p[LANG]["last_name"]
+        if india_english:
+            first_name = INDIA_PATIENT_NAMES[idx]["first_name"]
+            last_name = INDIA_PATIENT_NAMES[idx]["last_name"]
+
         patient = {
             "id": p["id"],
-            "first_name": p[LANG]["first_name"],
-            "last_name": p[LANG]["last_name"],
+            "first_name": first_name,
+            "last_name": last_name,
             "phone": phone,
             "email": email,
             "date_of_birth": p["date_of_birth"],
@@ -2199,6 +2291,12 @@ PATIENT_JOURNEYS = [
                 "fr": "Brouillon - en attente d'émission",
                 "ta": "வரைவு - வழங்குவதற்காக நிலுவையில் உள்ளது",
             },
+            # India GST (Tamil, or English + --country in): place of supply
+            # pre-filled as a draft would have it from the invoice form, but
+            # seed_india_gst_invoice_breakdown() never runs the hook against
+            # a draft — no CGST/SGST split yet, matching the real "issue"
+            # workflow.
+            "gst": {"place_of_supply": "33"},
         },
     },
     # Patient 3 — Carmen / Emma (pending plan with sent budget, surfaces in
@@ -2331,6 +2429,8 @@ PATIENT_JOURNEYS = [
                 "fr": "Paiement partiel reçu",
                 "ta": "பகுதி பணப்பரிவர்த்தனை பெறப்பட்டது",
             },
+            # India GST (Tamil, or English + --country in): intra-state (Tamil Nadu) → CGST + SGST.
+            "gst": {"place_of_supply": "33"},
         },
     },
     # Patient 6 — Javier / Daniel (diabetic; accepted+signed budget, paid invoice)
@@ -2385,6 +2485,8 @@ PATIENT_JOURNEYS = [
                 "fr": "Payé par virement",
                 "ta": "வங்கி பரிமாற்றம் மூலம் செலுத்தப்பட்டது",
             },
+            # India GST (Tamil, or English + --country in): intra-state (Tamil Nadu) → CGST + SGST.
+            "gst": {"place_of_supply": "33"},
         },
     },
     # Patient 7 — Isabel / Mia (rejected budget, no invoice)
@@ -2496,6 +2598,10 @@ PATIENT_JOURNEYS = [
                 "fr": "Payé en deux tranches",
                 "ta": "இரண்டு தவணைகளில் செலுத்தப்பட்டது",
             },
+            # India GST (Tamil, or English + --country in): inter-state — patient billed from Karnataka
+            # (a registered recipient, e.g. an employer paying on the
+            # patient's behalf) → IGST instead of CGST/SGST.
+            "gst": {"place_of_supply": "29", "recipient_gstin": "29AAACK5678H1Z3"},
         },
     },
     # Patient 9 — Rosa / Charlotte (hypertensive; accepted+signed, paid invoice)
@@ -2556,6 +2662,8 @@ PATIENT_JOURNEYS = [
                 "fr": "Première phase facturée",
                 "ta": "முதல் கட்டத்திற்கான விலைப்பட்டியல் வழங்கப்பட்டது",
             },
+            # India GST (Tamil, or English + --country in): intra-state (Tamil Nadu) → CGST + SGST.
+            "gst": {"place_of_supply": "33"},
         },
     },
     # Patient 10 — Antonio / Robert (completed prosthetic workflow)
@@ -2603,6 +2711,9 @@ PATIENT_JOURNEYS = [
             "payments": [{"method": "direct_debit", "percent": 100}],
             "covers": [0, 1],
             "notes": None,
+            # India GST (Tamil, or English + --country in): inter-state — patient billed from
+            # Maharashtra → IGST instead of CGST/SGST.
+            "gst": {"place_of_supply": "27", "recipient_gstin": "27AABCM9012L1Z6"},
         },
     },
     # Patient 11 — María Teresa / Patricia (corona multi-sesión en curso).
@@ -2694,6 +2805,8 @@ PATIENT_JOURNEYS = [
                 "fr": "Facture échue",
                 "ta": "காலக்கெடு கடந்த விலைப்பட்டியல்",
             },
+            # India GST (Tamil, or English + --country in): intra-state (Tamil Nadu) → CGST + SGST.
+            "gst": {"place_of_supply": "33"},
         },
     },
     # Patient 13 — Dolores / Barbara (evaluation; no budget)
@@ -3446,12 +3559,15 @@ def generate_invoices_data(catalog_items_map: dict[str, dict], budgets_result: d
       series, invoices, items, payments, payment_allocations,
       invoice_payments
       invoiced_quantity_by_budget_item: {budget_item_id: total_qty}
+      gst_invoices_pending_hook: invoice ids (India demo only) that need
+        seed_india_gst_invoice_breakdown() to run the real compliance hook
     """
     import uuid
 
     patients_data = get_patients_data()
     invoices: list[dict] = []
     items: list[dict] = []
+    gst_invoices_pending_hook: list = []
     payments: list[dict] = []
     payment_allocations: list[dict] = []
     invoice_payments: list[dict] = []
@@ -3547,6 +3663,19 @@ def generate_invoices_data(catalog_items_map: dict[str, dict], budgets_result: d
         items.extend(invoice_items_local)
         total = subtotal + total_tax
 
+        # India GST (Tamil, or English + --country in): pre-fill place of
+        # supply / recipient GSTIN the way the invoice form would. The
+        # actual CGST/SGST/IGST split is computed afterwards by
+        # seed_india_gst_invoice_breakdown() running the real compliance
+        # hook — never duplicated here.
+        gst_info = invoice_scenario.get("gst") if is_india_demo() else None
+        billing_tax_id = gst_info.get("recipient_gstin") if gst_info else None
+        compliance_data = (
+            {"IN": {"place_of_supply": gst_info["place_of_supply"]}} if gst_info else None
+        )
+        if gst_info and invoice_scenario["status"] != "draft":
+            gst_invoices_pending_hook.append(invoice_id)
+
         total_paid = Decimal("0.00")
         for payment_data in invoice_scenario.get("payments", []):
             payment_id = PAYMENT_IDS[payment_idx]
@@ -3609,7 +3738,7 @@ def generate_invoices_data(catalog_items_map: dict[str, dict], budgets_result: d
                 "due_date": due_date,
                 "payment_term_days": 30,
                 "billing_name": f"{patient['first_name']} {patient['last_name']}",
-                "billing_tax_id": None,
+                "billing_tax_id": billing_tax_id,
                 "billing_address": None,
                 "billing_email": patient.get("email"),
                 "subtotal": subtotal,
@@ -3620,7 +3749,7 @@ def generate_invoices_data(catalog_items_map: dict[str, dict], budgets_result: d
                 if invoice_scenario.get("notes")
                 else None,
                 "public_notes": None,
-                "compliance_data": None,
+                "compliance_data": compliance_data,
                 "document_hash": None,
                 "created_by": USER_RECEPTIONIST_ID,
                 "issued_by": USER_RECEPTIONIST_ID
@@ -3638,4 +3767,5 @@ def generate_invoices_data(catalog_items_map: dict[str, dict], budgets_result: d
         "payment_allocations": payment_allocations,
         "invoice_payments": invoice_payments,
         "invoiced_quantity_by_budget_item": invoiced_quantity,
+        "gst_invoices_pending_hook": gst_invoices_pending_hook,
     }

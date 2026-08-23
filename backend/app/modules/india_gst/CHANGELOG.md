@@ -2,6 +2,52 @@
 
 ## Unreleased
 
+### Demo fixtures: native Indian patient names for the English variant
+
+- **Added**: `--lang en --country in` now seeds native Indian (Romanized)
+  patient names, emergency-contact names, phone numbers, and emails
+  instead of the default English demo's American ones — the India GST
+  module is meant for Indian clinics, so American names next to a GSTIN
+  and CGST/SGST breakdown read wrong. `INDIA_PATIENT_NAMES` in
+  `demo_data.py` gives each of the 15 patients the same identity as
+  their `ta` (Tamil-script) counterpart, transliterated to Latin script;
+  `get_patients_data()` reuses the Tamil demo's phone/email values
+  verbatim (already plain digits / Romanized strings). Clinic staff
+  (admin/dentist/hygienist/assistant/receptionist) are unchanged — out
+  of scope for this pass.
+
+### Demo fixtures: English-language India GST variant
+
+- **Added**: `scripts/seed_demo.py --lang en --country in` seeds the same
+  India GST clinic/invoice fixtures as `--lang ta` (Chennai, GSTIN,
+  4 intra-state CGST/SGST + 2 inter-state IGST invoices) but with English
+  UI text, for users who want an India demo without the Tamil locale.
+  `demo_data.py` gains a `COUNTRY` toggle (`set_country()`,
+  `is_india_demo()`) orthogonal to `LANG` — `--lang ta` still implies
+  India on its own; `--country in` is currently only accepted with
+  `--lang en` (validated in `main()`; `--lang ta` already implies it).
+  Default `--lang en` (no `--country`) is unchanged — still the USA/USD
+  demo clinic.
+
+### Demo fixtures: CGST/SGST/IGST breakdown on seeded invoices
+
+- **Fixed**: the Tamil demo (`--lang ta`) previously only created
+  `IndiaGstSettings`/`GST 18%`/SAC defaults — seeded invoices were
+  inserted directly into the DB, bypassing `IndiaGstHook` entirely, so
+  every issued/paid/partial invoice had `compliance_data IS NULL` and
+  no CGST/SGST/IGST split. `scripts/seed_demo.py` now runs the real
+  `IndiaGstHook.on_invoice_issued` (same method billing calls at
+  actual issue time) against each non-draft seeded invoice, after
+  pre-filling `compliance_data['IN']['place_of_supply']` on the
+  invoice dict in `demo_data.py`. No tax logic is duplicated — the
+  hook is the sole author of the CGST/SGST/IGST split, SAC snapshot,
+  and FY-scoped GST document number.
+- **Fixtures**: of the 7 seeded Tamil invoices, 4 are intra-state
+  (Tamil Nadu, `33` → CGST+SGST) and 2 are inter-state (Karnataka `29`
+  and Maharashtra `27`, both with a structurally valid recipient
+  GSTIN → IGST); the draft invoice keeps only its pre-filled place of
+  supply, matching what an actual draft looks like before issue.
+
 ### Real-world GST validation pass (tresundios, post fix-up)
 
 - **Fixed**: e-invoice applicability compared a single invoice's

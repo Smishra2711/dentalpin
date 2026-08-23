@@ -63,6 +63,38 @@ None in v1.
   owns tax-split data needed to render/audit any issued invoice.
 - Migrations on the `india_gst` Alembic branch (`igst_0001`).
 
+## Demo data
+
+`install()` never seeds clinic data (see Lifecycle above) — all India
+GST demo fixtures live in the host app's `scripts/seed_demo.py` /
+`app/seeds/demo_data.py`, gated so they never run against a real
+tenant:
+
+- `./scripts/seed-demo.sh --lang ta` and
+  `./scripts/seed-demo.sh --lang en --country in` both seed a GST-ready
+  clinic (Chennai, GSTIN `33ABCDE1234F1Z5`, `clinic_state="33"`) and 7
+  invoices — 4 intra-state (CGST+SGST) and 2 inter-state (IGST), plus 1
+  draft with only `place_of_supply` pre-filled.
+- `seed_demo.py::seed_india_gst_invoice_breakdown()` runs the real
+  `IndiaGstHook.on_invoice_issued` against each seeded non-draft
+  invoice — the exact method billing calls at actual issue time — so
+  the tax split, SAC snapshot, and FY document number are never
+  duplicated in the seed script.
+- `demo_data.py::is_india_demo()` (`LANG == "ta" or COUNTRY == "in"`)
+  is the single switch that activates `clinic.settings.country = "IN"`
+  for the seed. `--country in` is only accepted with `--lang en`
+  (`--lang ta` already implies it) — `main()` exits with an error for
+  other `--lang` values.
+- `--lang en --country in` reuses the same 15 patient "characters" as
+  `--lang ta`, transliterated from Tamil script to Latin script
+  (`INDIA_PATIENT_NAMES` in `demo_data.py`), including emergency
+  contacts — deliberately not the default English demo's American
+  names, since GST invoices next to American names read wrong. Clinic
+  staff names are unaffected.
+- Both variants gate on the module actually being installed
+  (`_module_is_installed(db, "india_gst")`) — seeding never installs
+  the module itself. Full walkthrough: `docs/modules/india_gst.md` §3.5.
+
 ## Gotchas / non-obvious invariants
 
 - **GSTIN has two owners.** `IndiaGstSettings.gstin` is the clinic's

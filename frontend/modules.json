@@ -5,6 +5,7 @@
     "/module_layers/budget/frontend",
     "/module_layers/catalog/frontend",
     "/module_layers/copilot/frontend",
+    "/module_layers/india_gst/frontend",
     "/module_layers/media/frontend",
     "/module_layers/notifications/frontend",
     "/module_layers/odontogram/frontend",
@@ -38,6 +39,10 @@
     {
       "name": "copilot",
       "path": "/module_layers/copilot/frontend"
+    },
+    {
+      "name": "india_gst",
+      "path": "/module_layers/india_gst/frontend"
     },
     {
       "name": "media",

@@ -134,6 +134,51 @@ CGST/SGST/IGST breakdown that was already communicated to the customer.
 To uninstall, void or credit-note all issued invoices with GST data
 first, then retry from `Admin → Modules`.
 
+### 3.5 Demo data (dev only)
+
+`scripts/seed_demo.py` (wrapped by `./scripts/seed-demo.sh`) seeds a
+fully GST-compliant demo clinic with CGST/SGST and IGST invoices —
+useful for exploring the module without configuring a clinic by hand.
+The module must already be installed (§3.3) before seeding.
+
+```bash
+./scripts/seed-demo.sh --lang ta                 # Tamil UI, India GST demo
+./scripts/seed-demo.sh --lang en --country in     # English UI, India GST demo
+./scripts/seed-demo.sh --lang en                  # default — USA/USD clinic, no GST
+```
+
+Both India variants seed the same fixture set:
+
+- Clinic: **Chennai Dental Care**, GSTIN `33ABCDE1234F1Z5`, `regular`
+  registration, `clinic_state="33"` (Tamil Nadu).
+- Catalog: every active treatment reassigned to a `GST 18%` VAT type
+  and auto-configured with SAC `999312`.
+- 7 invoices, run through the real `IndiaGstHook` (not a hand-rolled
+  approximation), so `compliance_data['IN']`, `india_gst_invoice_items`,
+  and `india_gst_einvoice_submissions` are populated exactly as they
+  would be at real issue time:
+  - 4 intra-state (place of supply `33`, Tamil Nadu) → CGST + SGST.
+  - 2 inter-state (place of supply `29` Karnataka and `27` Maharashtra,
+    each with a structurally valid recipient GSTIN on
+    `Invoice.billing_tax_id`) → IGST.
+  - 1 draft, with only `compliance_data['IN']['place_of_supply']`
+    pre-filled (as the invoice form would leave it) — the hook never
+    runs against a draft, so it carries no CGST/SGST/IGST split yet.
+
+`--lang ta` and `--lang en --country in` differ only in UI language and
+patient identity script — `--lang en --country in` transliterates the
+same 15 patients (and their emergency contacts) from the Tamil demo's
+native Indian names into Latin script, rather than reusing the default
+English demo's American names, since GST invoices next to American
+names read oddly. `--country in` is currently only accepted with
+`--lang en` (`--lang ta` already implies it); combining it with
+`--lang es`/`--lang fr` exits with an error. Clinic staff names are
+unaffected by `--country in` in either language.
+
+The default `./scripts/seed-demo.sh` (no flags, or any `--lang` other
+than `ta` without `--country in`) is unchanged — a generic non-India
+clinic with the India GST hook inactive.
+
 ---
 
 ## 4. Setup walkthrough
@@ -543,10 +588,13 @@ Backend test files:
 - `test_permissions.py` — role permission boundaries
 - `test_einvoice_retry.py` — e-invoice retry 409, applicability based
   on turnover threshold (not invoice amount)
-- `test_seed_data.py` — Tamil demo fixture wiring: `country=IN` only
-  applies to the `ta` locale's clinic settings, and `seed_india_gst`
-  (in `scripts/seed_demo.py`) creates settings/VAT type/SAC defaults
-  only when explicitly invoked — never from module install
+- `test_seed_data.py` — India demo fixture wiring: `country=IN` applies
+  to the `ta` locale's clinic settings and to `--lang en --country in`
+  (but not other `--lang`/`--country` combinations), the English+India
+  variant overlays Chennai/INR/GSTIN details in plain English text, and
+  `seed_india_gst` (in `scripts/seed_demo.py`) creates settings/VAT
+  type/SAC defaults only when explicitly invoked — never from module
+  install
 
 ### Frontend tests
 
@@ -713,8 +761,9 @@ test that fails against the defect or missing behaviour it protects.
 | K3 | Uninstall Alembic round-trip is branch-scoped | `test_uninstall_roundtrip.py` | Only india_gst tables dropped/restored |
 | L1 | Non-regular registration: no GST rows | `test_hook_issue.py` | No compliance_data IN, no IndiaGstInvoiceItem rows |
 | L2 | Re-issuing hook path does not duplicate rows | `test_hook_issue.py` | Exactly 1 IndiaGstInvoiceItem after second hook call |
-| M1 | Tamil demo clinic gets `country=IN`, other locales don't | `test_seed_data.py` | `get_clinic_data()["settings"]["country"]` only set for `lang="ta"` |
+| M1 | Tamil demo clinic gets `country=IN`, generic-country locales don't | `test_seed_data.py` | `get_clinic_data()["settings"]["country"]` set for `lang="ta"` and `lang="en" + country="in"`; unset otherwise |
 | M2 | Explicit Tamil demo GST fixture is reproducible | `test_seed_data.py` | `seed_india_gst()` creates settings (GSTIN `33ABCDE1234F1Z5`, state `33`), `GST 18%` VAT type, SAC defaults on every active catalog item — only when explicitly called, never from install |
+| M3 | English + India demo overlays Chennai/INR in English, not Tamil script | `test_seed_data.py` | `lang="en", country="in"` → `address.city == "Chennai"`, `currency == "INR"`, `timezone == "Asia/Kolkata"` |
 
 ### Safety invariants verified
 
