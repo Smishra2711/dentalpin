@@ -25,30 +25,18 @@ const patientId = computed(() => props.ctx.patient.id)
 const { data, status } = await useAsyncData(
   () => `agenda:summary-card:last-visit:${patientId.value}`,
   async () => {
-    // The list endpoint pages in ascending ``start_time``, so the most
-    // recent completed appointment sits on the *last* page. One request
-    // covers patients with ≤100 completed visits; beyond that, fetch
-    // the final page.
-    const base = `/api/v1/agenda/appointments?patient_id=${patientId.value}&status=completed&page_size=100`
     try {
-      const first = await api.get<PaginatedResponse<Appointment>>(base)
-      const total = first.total ?? first.data.length
-      if (total > first.data.length) {
-        const lastPage = Math.ceil(total / 100)
-        return await api.get<PaginatedResponse<Appointment>>(`${base}&page=${lastPage}`)
-      }
-      return first
+      return await api.get<PaginatedResponse<Appointment>>(
+        `/api/v1/agenda/appointments?patient_id=${patientId.value}&status=completed&order=desc&page_size=1`
+      )
     } catch {
-      return { data: [], total: 0, page: 1, page_size: 100 }
+      return { data: [], total: 0, page: 1, page_size: 1 }
     }
   },
   { watch: [patientId], server: false }
 )
 
-const lastVisit = computed<Appointment | null>(() => {
-  const list = data.value?.data ?? []
-  return list[list.length - 1] ?? null
-})
+const lastVisit = computed<Appointment | null>(() => data.value?.data[0] ?? null)
 
 const dayLabel = computed(() => {
   if (!lastVisit.value) return ''

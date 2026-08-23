@@ -160,10 +160,13 @@ class AppointmentService:
         page_size: int = 100,
         *,
         patient_id: UUID | None = None,
+        order: str = "asc",
     ) -> tuple[list[Appointment], int]:
         """List appointments with filters.
 
         Naive ``start_date``/``end_date`` are clinic-local (issue #161).
+        ``order`` sorts by ``start_time`` (``asc`` default, ``desc`` for
+        most-recent-first consumers).
         """
         if (start_date and start_date.tzinfo is None) or (end_date and end_date.tzinfo is None):
             tz = await get_clinic_tz(db, clinic_id)
@@ -225,7 +228,9 @@ class AppointmentService:
             await db.execute(select(func.count(Appointment.id)).where(*count_filters))
         ).scalar() or 0
 
-        query = query.order_by(Appointment.start_time)
+        query = query.order_by(
+            Appointment.start_time.desc() if order == "desc" else Appointment.start_time
+        )
         query = query.offset(offset).limit(page_size)
         result = await db.execute(query)
         return list(result.scalars().all()), total
