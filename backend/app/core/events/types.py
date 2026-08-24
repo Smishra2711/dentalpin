@@ -262,3 +262,12 @@ class EventType:
     # min_quantity). No bundled subscriber; a future notifications or
     # procurement module may subscribe without importing inventory.
     INVENTORY_STOCK_LOW = "inventory.low_stock"
+
+    # Lab orders events (lab_orders module — external laboratory work,
+    # roadmap #221). Fired when PATCH changes an order's status (the same
+    # update auto-stamps received_date on ``received``). Payload:
+    # (clinic_id, order_id, patient_id, status, work_type,
+    # tooth_reference). No bundled subscriber; optional modules
+    # (notifications / patient_timeline) may subscribe without importing
+    # lab_orders.
+    LAB_ORDER_STATUS_CHANGED = "lab_order.status_changed"
