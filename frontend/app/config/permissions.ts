@@ -166,5 +166,8 @@ export const PERMISSIONS = {
   contacts: {
     read: 'contacts.read',
     write: 'contacts.write'
+  },
+  activityJournal: {
+    read: 'activity_journal.read'
   }
 } as const

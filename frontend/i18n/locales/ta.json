@@ -14,6 +14,7 @@
   },
   "nav": {
     "dashboard": "முகப்பு",
+    "journal": "செயல்பாட்டு பதிவு",
     "patients": "நோயாளிகள்",
     "appointments": "அட்டவணை",
     "recalls": "நினைவூட்டல்கள்",

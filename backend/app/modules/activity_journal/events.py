@@ -1,0 +1,124 @@
+"""Transactional event handlers (ADR 0019) — the whole point of this module.
+
+Every handler declares ``db``, so the bus treats it as transactional: the
+row is flushed inside the *publisher's* transaction and committed (or
+rolled back) with it. A handler failure aborts the publisher's operation
+rather than silently losing the audit entry.
+
+Subscription set: every EventType whose publishers all pass ``db=db``
+(audited across ``app/``). Events published from non-transactional
+contexts (gateways, background tasks, migration tooling — e.g.
+``email.*``, ``copilot.*``, ``migration.*``, legacy odontogram updates)
+are deliberately NOT subscribed: the bus raises RuntimeError when a
+transactional handler receives no session, so subscribing to them would
+crash those flows. See ``docs/technical/activity_journal/events.md`` for
+the full inclusion/exclusion rationale.
+"""
+
+from __future__ import annotations
+
+import logging
+from datetime import UTC, datetime
+from uuid import UUID
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from .models import ActivityJournalEntry
+
+logger = logging.getLogger(__name__)
+
+# Payload keys inspected for actor attribution, in priority order. Only
+# unambiguous user ids are honoured — e.g. ``professional_id`` may point
+# at a catalog professional rather than a user, so it is not listed.
+_ACTOR_KEYS = ("user_id", "actor_id", "created_by")
+
+# Payload keys that identify the row the event is about (after
+# clinic_id/patient_id/actor keys are excluded). First match wins.
+_SOURCE_ID_SUFFIX = "_id"
+
+
+def _source_table(event_type_value: str) -> str:
+    """``appointment.scheduled`` -> ``appointment`` (the event namespace)."""
+    return event_type_value.split(".", 1)[0]
+
+
+def _parse_occurred_at(data: dict) -> datetime:
+    raw = data.get("occurred_at") or data.get("changed_at")
+    if isinstance(raw, str):
+        try:
+            parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+            return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
+        except ValueError:
+            logger.warning("activity_journal: unparseable occurred_at %r", raw)
+    if isinstance(raw, datetime):
+        return raw if raw.tzinfo else raw.replace(tzinfo=UTC)
+    return datetime.now(UTC)
+
+
+def make_handler(event_type_value: str):
+    """Build a transactional handler bound to one event type value."""
+
+    async def _record(data: dict, db: AsyncSession) -> None:
+        clinic_raw = data.get("clinic_id")
+        if not clinic_raw:
+            # A journal row without a clinic cannot be scoped or isolated;
+            # skip instead of crashing the publisher's business operation.
+            logger.warning(
+                "activity_journal: %s payload without clinic_id — skipped",
+                event_type_value,
+            )
+            return
+
+        try:
+            clinic_id = UUID(str(clinic_raw))
+        except ValueError:
+            logger.warning(
+                "activity_journal: %s payload with invalid clinic_id %r",
+                event_type_value,
+                clinic_raw,
+            )
+            return
+
+        actor_id = next(
+            (UUID(str(data[k])) for k in _ACTOR_KEYS if data.get(k) and str(data[k]).strip()),
+            None,
+        )
+
+        patient_raw = data.get("patient_id")
+        patient_id = UUID(str(patient_raw)) if patient_raw else None
+
+        source_entity_id = None
+        for key, value in data.items():
+            if (
+                key.endswith(_SOURCE_ID_SUFFIX)
+                and key not in ("clinic_id", "patient_id", *_ACTOR_KEYS)
+                and value
+            ):
+                try:
+                    source_entity_id = UUID(str(value))
+                    break
+                except ValueError:
+                    continue
+
+        db.add(
+            ActivityJournalEntry(
+                clinic_id=clinic_id,
+                event_type=event_type_value,
+                actor_id=actor_id,
+                patient_id=patient_id,
+                source_table=_source_table(event_type_value),
+                source_entity_id=source_entity_id,
+                payload=dict(data),
+                occurred_at=_parse_occurred_at(data),
+            )
+        )
+        # flush, never commit — ADR 0019 transactional handler.
+
+    _record.__name__ = f"on_{event_type_value.replace('.', '_')}"
+    _record.__qualname__ = _record.__name__
+    return _record
+
+
+def build_handlers(event_types) -> dict:
+    """Map each EventType constant to its transactional handler."""
+    return {et: make_handler(et.value if hasattr(et, "value") else str(et)) for et in event_types}

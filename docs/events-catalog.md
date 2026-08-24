@@ -12,24 +12,24 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 |-------|----------|------------|-------------|
 | `agenda.visit_note_updated` | `EventType.AGENDA_VISIT_NOTE_UPDATED` | `agenda` | `patient_timeline` |
 | `appointment.cabinet_changed` | `EventType.APPOINTMENT_CABINET_CHANGED` | `agenda` | — |
-| `appointment.cancelled` | `EventType.APPOINTMENT_CANCELLED` | `agenda` | `copilot`, `notifications`, `patient_timeline`, `recalls`, `schedules` |
-| `appointment.checked_in` | `EventType.APPOINTMENT_CHECKED_IN` | `agenda` | `patient_timeline` |
-| `appointment.completed` | `EventType.APPOINTMENT_COMPLETED` | `agenda` | `integrations`, `patient_timeline`, `recalls`, `treatment_plan` |
-| `appointment.confirmed` | `EventType.APPOINTMENT_CONFIRMED` | `agenda` | `patient_timeline` |
-| `appointment.in_treatment` | `EventType.APPOINTMENT_IN_TREATMENT` | `agenda` | `patient_timeline` |
-| `appointment.no_show` | `EventType.APPOINTMENT_NO_SHOW` | `agenda` | `patient_timeline` |
-| `appointment.scheduled` | `EventType.APPOINTMENT_SCHEDULED` | `agenda` | `notifications`, `patient_timeline`, `recalls`, `schedules` |
+| `appointment.cancelled` | `EventType.APPOINTMENT_CANCELLED` | `agenda` | `activity_journal`, `copilot`, `notifications`, `patient_timeline`, `recalls`, `schedules` |
+| `appointment.checked_in` | `EventType.APPOINTMENT_CHECKED_IN` | `agenda` | `activity_journal`, `patient_timeline` |
+| `appointment.completed` | `EventType.APPOINTMENT_COMPLETED` | `agenda` | `activity_journal`, `integrations`, `patient_timeline`, `recalls`, `treatment_plan` |
+| `appointment.confirmed` | `EventType.APPOINTMENT_CONFIRMED` | `agenda` | `activity_journal`, `patient_timeline` |
+| `appointment.in_treatment` | `EventType.APPOINTMENT_IN_TREATMENT` | `agenda` | `activity_journal`, `patient_timeline` |
+| `appointment.no_show` | `EventType.APPOINTMENT_NO_SHOW` | `agenda` | `activity_journal`, `patient_timeline` |
+| `appointment.scheduled` | `EventType.APPOINTMENT_SCHEDULED` | `agenda` | `activity_journal`, `notifications`, `patient_timeline`, `recalls`, `schedules` |
 | `appointment.status_changed` | `EventType.APPOINTMENT_STATUS_CHANGED` | `agenda` | — |
 | `appointment.updated` | `EventType.APPOINTMENT_UPDATED` | `agenda` | `schedules` |
-| `budget.accepted` | `EventType.BUDGET_ACCEPTED` | `budget` | `notifications`, `patient_timeline`, `treatment_plan` |
-| `budget.cancelled` | `EventType.BUDGET_CANCELLED` | `budget` | `treatment_plan` |
+| `budget.accepted` | `EventType.BUDGET_ACCEPTED` | `budget` | `activity_journal`, `notifications`, `patient_timeline`, `treatment_plan` |
+| `budget.cancelled` | `EventType.BUDGET_CANCELLED` | `budget` | `activity_journal`, `treatment_plan` |
 | `budget.created` | `EventType.BUDGET_CREATED` | — | — |
 | `budget.expired` | `EventType.BUDGET_EXPIRED` | `budget` | `patient_timeline` |
-| `budget.rejected` | `EventType.BUDGET_REJECTED` | `budget` | `patient_timeline`, `treatment_plan` |
+| `budget.rejected` | `EventType.BUDGET_REJECTED` | `budget` | `activity_journal`, `patient_timeline`, `treatment_plan` |
 | `budget.reminder_sent` | `EventType.BUDGET_REMINDER_SENT` | `budget` | `patient_timeline` |
-| `budget.renegotiated` | `EventType.BUDGET_RENEGOTIATED` | `budget` | `patient_timeline`, `treatment_plan` |
-| `budget.sent` | `EventType.BUDGET_SENT` | `budget` | `notifications`, `patient_timeline` |
-| `budget.superseded` | `EventType.BUDGET_SUPERSEDED` | `budget` | `treatment_plan` |
+| `budget.renegotiated` | `EventType.BUDGET_RENEGOTIATED` | `budget` | `activity_journal`, `patient_timeline`, `treatment_plan` |
+| `budget.sent` | `EventType.BUDGET_SENT` | `budget` | `activity_journal`, `notifications`, `patient_timeline` |
+| `budget.superseded` | `EventType.BUDGET_SUPERSEDED` | `budget` | `activity_journal`, `treatment_plan` |
 | `budget.viewed` | `EventType.BUDGET_VIEWED` | `budget` | `patient_timeline` |
 | `clinic.created` | `EventType.CLINIC_CREATED` | `core:core` | `agenda`, `billing`, `catalog`, `schedules` |
 | `clinical_notes.administrative_created` | `EventType.CLINICAL_NOTE_ADMINISTRATIVE_CREATED` | `clinical_notes` | `patient_timeline` |
@@ -54,9 +54,9 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 | `invoice.issued` | `EventType.INVOICE_ISSUED` | `billing` | `patient_timeline` |
 | `invoice.paid` | `EventType.INVOICE_PAID` | `billing` | `patient_timeline`, `verifactu` |
 | `invoice.partial_paid` | `EventType.INVOICE_PARTIAL_PAID` | — | — |
-| `invoice.sent` | `EventType.INVOICE_SENT` | `billing` | `notifications` |
+| `invoice.sent` | `EventType.INVOICE_SENT` | `billing` | `activity_journal`, `notifications` |
 | `invoice.voided` | `EventType.INVOICE_VOIDED` | — | — |
-| `lab_order.status_changed` | `EventType.LAB_ORDER_STATUS_CHANGED` | `lab_orders` | — |
+| `lab_order.status_changed` | `EventType.LAB_ORDER_STATUS_CHANGED` | `lab_orders` | `activity_journal` |
 | `media.attachment_linked` | `EventType.ATTACHMENT_LINKED` | `media` | — |
 | `media.attachment_unlinked` | `EventType.ATTACHMENT_UNLINKED` | `media` | — |
 | `media.pair_created` | `EventType.PAIR_CREATED` | `media` | `patient_timeline` |
@@ -77,36 +77,36 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 | `odontogram.tooth.updated` | `EventType.ODONTOGRAM_TOOTH_UPDATED` | `odontogram` | — |
 | `odontogram.treatment.added` | `EventType.ODONTOGRAM_TREATMENT_ADDED` | `odontogram` | — |
 | `odontogram.treatment.deleted` | `EventType.ODONTOGRAM_TREATMENT_DELETED` | `odontogram` | — |
-| `odontogram.treatment.performed` | `EventType.ODONTOGRAM_TREATMENT_PERFORMED` | `odontogram` | `patient_timeline`, `payments`, `periodontogram`, `treatment_plan` |
+| `odontogram.treatment.performed` | `EventType.ODONTOGRAM_TREATMENT_PERFORMED` | `odontogram` | `activity_journal`, `patient_timeline`, `payments`, `periodontogram`, `treatment_plan` |
 | `odontogram.treatment.status_changed` | `EventType.ODONTOGRAM_TREATMENT_STATUS_CHANGED` | `odontogram` | — |
-| `patient.archived` | `EventType.PATIENT_ARCHIVED` | `patients` | `media`, `periodontogram`, `recalls` |
-| `patient.created` | `EventType.PATIENT_CREATED` | `patients` | `integrations`, `notifications` |
+| `patient.archived` | `EventType.PATIENT_ARCHIVED` | `patients` | `activity_journal`, `media`, `periodontogram`, `recalls` |
+| `patient.created` | `EventType.PATIENT_CREATED` | `patients` | `activity_journal`, `integrations`, `notifications` |
 | `patient.medical_updated` | `EventType.PATIENT_MEDICAL_UPDATED` | `patients_clinical` | `patient_timeline` |
 | `patient.updated` | `EventType.PATIENT_UPDATED` | `patients` | — |
-| `payment.allocated` | `EventType.PAYMENT_ALLOCATED` | `payments` | `billing` |
+| `payment.allocated` | `EventType.PAYMENT_ALLOCATED` | `payments` | `activity_journal`, `billing` |
 | `payment.recorded` | `EventType.PAYMENT_RECORDED` | `payments` | — |
-| `payment.refunded` | `EventType.PAYMENT_REFUNDED` | `payments` | `billing` |
+| `payment.refunded` | `EventType.PAYMENT_REFUNDED` | `payments` | `activity_journal`, `billing` |
 | `payment.voided` | `EventType.PAYMENT_VOIDED` | — | — |
 | `periodontogram.snapshot.closed` | `EventType.PERIODONTOGRAM_SNAPSHOT_CLOSED` | `periodontogram` | — |
 | `recall.cancelled` | `EventType.RECALL_CANCELLED` | `recalls` | — |
 | `recall.completed` | `EventType.RECALL_COMPLETED` | `recalls` | — |
-| `recall.created` | `EventType.RECALL_CREATED` | `recalls` | `recall_reminders` |
+| `recall.created` | `EventType.RECALL_CREATED` | `recalls` | `activity_journal`, `recall_reminders` |
 | `recall.due` | `EventType.RECALL_DUE` | — | — |
 | `recall.snoozed` | `EventType.RECALL_SNOOZED` | `recalls` | — |
 | `tenant.resolved` | `EventType.TENANT_RESOLVED` | — | — |
 | `treatment.completed` | `EventType.TREATMENT_COMPLETED` | — | — |
-| `treatment_plan.budget_sync_requested` | `EventType.TREATMENT_PLAN_BUDGET_SYNC_REQUESTED` | `treatment_plan` | `budget` |
+| `treatment_plan.budget_sync_requested` | `EventType.TREATMENT_PLAN_BUDGET_SYNC_REQUESTED` | `treatment_plan` | `activity_journal`, `budget` |
 | `treatment_plan.closed` | `EventType.TREATMENT_PLAN_CLOSED` | `treatment_plan` | `patient_timeline` |
 | `treatment_plan.confirmed` | `EventType.TREATMENT_PLAN_CONFIRMED` | `treatment_plan` | `patient_timeline` |
 | `treatment_plan.created` | `EventType.TREATMENT_PLAN_CREATED` | `treatment_plan` | `patient_timeline` |
 | `treatment_plan.item_completed_without_note` | `EventType.TREATMENT_PLAN_ITEM_COMPLETED_WITHOUT_NOTE` | `treatment_plan` | `patient_timeline` |
-| `treatment_plan.item_session_completed` | `EventType.TREATMENT_PLAN_ITEM_SESSION_COMPLETED` | `treatment_plan` | `payments` |
+| `treatment_plan.item_session_completed` | `EventType.TREATMENT_PLAN_ITEM_SESSION_COMPLETED` | `treatment_plan` | `activity_journal`, `payments` |
 | `treatment_plan.items_reordered` | `EventType.TREATMENT_PLAN_ITEMS_REORDERED` | `treatment_plan` | — |
 | `treatment_plan.reactivated` | `EventType.TREATMENT_PLAN_REACTIVATED` | `treatment_plan` | `patient_timeline` |
 | `treatment_plan.status_changed` | `EventType.TREATMENT_PLAN_STATUS_CHANGED` | `treatment_plan` | — |
-| `treatment_plan.treatment_added` | `EventType.TREATMENT_PLAN_TREATMENT_ADDED` | `treatment_plan` | `budget` |
+| `treatment_plan.treatment_added` | `EventType.TREATMENT_PLAN_TREATMENT_ADDED` | `treatment_plan` | `activity_journal`, `budget` |
 | `treatment_plan.treatment_completed` | `EventType.TREATMENT_PLAN_TREATMENT_COMPLETED` | `treatment_plan` | `patient_timeline`, `recalls` |
-| `treatment_plan.treatment_removed` | `EventType.TREATMENT_PLAN_TREATMENT_REMOVED` | `treatment_plan` | `budget` |
+| `treatment_plan.treatment_removed` | `EventType.TREATMENT_PLAN_TREATMENT_REMOVED` | `treatment_plan` | `activity_journal`, `budget` |
 | `verifactu.record.rejected` | `EventType.VERIFACTU_RECORD_REJECTED` | `verifactu` | `verifactu` |
 
 ## Detail
@@ -132,6 +132,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `agenda` — `backend/app/modules/agenda/service.py:740`
 - **Subscribers:**
+  - `activity_journal`
   - `copilot`
   - `notifications`
   - `patient_timeline`
@@ -144,6 +145,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `agenda` — `backend/app/modules/agenda/service.py:737`
 - **Subscribers:**
+  - `activity_journal`
   - `patient_timeline`
 
 ### `appointment.completed`
@@ -152,6 +154,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `agenda` — `backend/app/modules/agenda/service.py:739`
 - **Subscribers:**
+  - `activity_journal`
   - `integrations`
   - `patient_timeline`
   - `recalls`
@@ -163,6 +166,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `agenda` — `backend/app/modules/agenda/service.py:736`
 - **Subscribers:**
+  - `activity_journal`
   - `patient_timeline`
 
 ### `appointment.in_treatment`
@@ -171,6 +175,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `agenda` — `backend/app/modules/agenda/service.py:738`
 - **Subscribers:**
+  - `activity_journal`
   - `patient_timeline`
 
 ### `appointment.no_show`
@@ -179,6 +184,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `agenda` — `backend/app/modules/agenda/service.py:741`
 - **Subscribers:**
+  - `activity_journal`
   - `patient_timeline`
 
 ### `appointment.scheduled`
@@ -187,6 +193,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `agenda` — `backend/app/modules/agenda/service.py:504`
 - **Subscribers:**
+  - `activity_journal`
   - `notifications`
   - `patient_timeline`
   - `recalls`
@@ -213,6 +220,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `budget` — `backend/app/modules/budget/workflow.py:317`
 - **Subscribers:**
+  - `activity_journal`
   - `notifications`
   - `patient_timeline`
   - `treatment_plan`
@@ -223,6 +231,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `budget` — `backend/app/modules/budget/workflow.py:451`
 - **Subscribers:**
+  - `activity_journal`
   - `treatment_plan`
 
 ### `budget.created`
@@ -245,6 +254,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `budget` — `backend/app/modules/budget/workflow.py:396`
 - **Subscribers:**
+  - `activity_journal`
   - `patient_timeline`
   - `treatment_plan`
 
@@ -262,6 +272,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `budget` — `backend/app/modules/budget/workflow.py:585`
 - **Subscribers:**
+  - `activity_journal`
   - `patient_timeline`
   - `treatment_plan`
 
@@ -271,6 +282,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `budget` — `backend/app/modules/budget/workflow.py:161`
 - **Subscribers:**
+  - `activity_journal`
   - `notifications`
   - `patient_timeline`
 
@@ -280,6 +292,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `budget` — `backend/app/modules/budget/router.py:544`
 - **Subscribers:**
+  - `activity_journal`
   - `treatment_plan`
 
 ### `budget.viewed`
@@ -464,6 +477,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `billing` — `backend/app/modules/billing/router.py:702`
 - **Subscribers:**
+  - `activity_journal`
   - `notifications`
 
 ### `invoice.voided`
@@ -477,7 +491,8 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Constant:** `EventType.LAB_ORDER_STATUS_CHANGED`
 - **Publishers:**
   - `lab_orders` — `backend/app/modules/lab_orders/service.py:201`
-- **Subscribers:** —
+- **Subscribers:**
+  - `activity_journal`
 
 ### `media.attachment_linked`
 
@@ -628,6 +643,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `odontogram` — `backend/app/modules/odontogram/service.py:833`
 - **Subscribers:**
+  - `activity_journal`
   - `patient_timeline`
   - `payments`
   - `periodontogram`
@@ -646,6 +662,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `patients` — `backend/app/modules/patients/service.py:301`
 - **Subscribers:**
+  - `activity_journal`
   - `media`
   - `periodontogram`
   - `recalls`
@@ -656,6 +673,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `patients` — `backend/app/modules/patients/service.py:267`
 - **Subscribers:**
+  - `activity_journal`
   - `integrations`
   - `notifications`
 
@@ -680,6 +698,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `payments` — `backend/app/modules/payments/workflow.py:79`
 - **Subscribers:**
+  - `activity_journal`
   - `billing`
 
 ### `payment.recorded`
@@ -695,6 +714,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `payments` — `backend/app/modules/payments/workflow.py:362`
 - **Subscribers:**
+  - `activity_journal`
   - `billing`
 
 ### `payment.voided`
@@ -730,6 +750,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `recalls` — `backend/app/modules/recalls/service.py:298`
 - **Subscribers:**
+  - `activity_journal`
   - `recall_reminders`
 
 ### `recall.due`
@@ -763,6 +784,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `treatment_plan` — `backend/app/modules/treatment_plan/service.py:1315`
 - **Subscribers:**
+  - `activity_journal`
   - `budget`
 
 ### `treatment_plan.closed`
@@ -803,6 +825,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `treatment_plan` — `backend/app/modules/treatment_plan/service.py:900`
 - **Subscribers:**
+  - `activity_journal`
   - `payments`
 
 ### `treatment_plan.items_reordered`
@@ -833,6 +856,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `treatment_plan` — `backend/app/modules/treatment_plan/service.py:622`
 - **Subscribers:**
+  - `activity_journal`
   - `budget`
 
 ### `treatment_plan.treatment_completed`
@@ -851,6 +875,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `treatment_plan` — `backend/app/modules/treatment_plan/service.py:823`
 - **Subscribers:**
+  - `activity_journal`
   - `budget`
 
 ### `verifactu.record.rejected`
