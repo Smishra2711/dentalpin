@@ -13,12 +13,11 @@
     "/module_layers/patients_clinical/frontend",
     "/module_layers/recalls/frontend",
     "/module_layers/reports/frontend",
-    "/module_layers/recall_reminders/frontend",
-    "/module_layers/expenses/frontend",
     "/module_layers/schedules/frontend",
     "/module_layers/treatment_plan/frontend",
     "/module_layers/clinical_notes/frontend",
-    "/module_layers/payments/frontend"
+    "/module_layers/payments/frontend",
+    "/module_layers/medical_reference/frontend"
   ],
   "modules": [
     {
@@ -86,16 +85,12 @@
       "path": "/module_layers/clinical_notes/frontend"
     },
     {
-      "name": "recall_reminders",
-      "path": "/module_layers/recall_reminders/frontend"
-    },
-    {
-      "name": "expenses",
-      "path": "/module_layers/expenses/frontend"
-    },
-    {
       "name": "payments",
       "path": "/module_layers/payments/frontend"
+    },
+    {
+      "name": "medical_reference",
+      "path": "/module_layers/medical_reference/frontend"
     }
   ],
   "version": 1
