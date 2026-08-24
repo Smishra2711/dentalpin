@@ -932,7 +932,8 @@
       "clinicClosed": "Clínica encerrada",
       "professionalOff": "Fora de serviço",
       "onBreak": "Em pausa"
-    }
+    },
+    "actionsMenu": "Ações da consulta"
   },
   "dashboard": {
     "greetings": {

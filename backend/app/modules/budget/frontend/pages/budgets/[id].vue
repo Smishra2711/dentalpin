@@ -73,7 +73,7 @@ function goToCreateInvoice() {
 
 const budgetId = computed(() => route.params.id as string)
 const comesFromPatient = computed(() => route.query.from === 'patient' && route.query.patientId)
-const backLabel = computed(() => comesFromPatient.value ? t('actions.back') : t('budget.title'))
+const backLabel = computed(() => comesFromPatient.value ? t('common.back') : t('budget.title'))
 
 // Load budget
 async function loadBudget() {

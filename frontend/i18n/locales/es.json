@@ -953,7 +953,8 @@
       "clinicClosed": "Clínica cerrada",
       "professionalOff": "No disponible",
       "onBreak": "Pausa"
-    }
+    },
+    "actionsMenu": "Acciones de la cita"
   },
   "dashboard": {
     "greetings": {

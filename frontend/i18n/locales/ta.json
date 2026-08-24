@@ -932,7 +932,8 @@
       "clinicClosed": "கிளினிக் மூடப்பட்டுள்ளது",
       "professionalOff": "பணியில் இல்லை",
       "onBreak": "இடைவேளையில்"
-    }
+    },
+    "actionsMenu": "சந்திப்பு செயல்கள்"
   },
   "dashboard": {
     "greetings": {

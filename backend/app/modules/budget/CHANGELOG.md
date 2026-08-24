@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(#203): the back link on budget detail/new rendered the raw key `actions.back` when arriving from the patient page — the key never existed in any locale; use `common.back` ("Volver").
+
 - fix(#181): `_recalculate_totals` prorates the global discount per line (`pricing.allocate_global_discount`) and charges VAT on the discounted base, so the quote's `total_discount`/`total_tax` match the invoice built from it (`total` unchanged). New `pricing.net_line_total` + `items[].net_line_total` on the detail response; quote detail, public page and PDF show the net price with the gross struck through and the global share labelled.
 - fix(#176): adding/removing lines on a quote linked to a treatment plan is refused (409 `PlanOwnsLinesError`); lines are managed from the plan. The detail page hides the add/remove actions and points at the plan.
 - feat(#177): new `budget.new.form` slot on `/budgets/new` (`ctx = { patient }`).

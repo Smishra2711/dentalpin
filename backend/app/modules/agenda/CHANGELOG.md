@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(#203): the kanban card menu trigger carried `aria-label="Marcar llegada"` in every column; now the neutral `appointments.actionsMenu` ("Acciones de la cita"), added to all five locales.
+
 - feat: `GET /agenda/appointments` accepts `order=asc|desc` (by `start_time`, default `asc`). `LastVisitCard` now fetches the most recent completed visit with a single `order=desc&page_size=1` request instead of paging to the tail (PR #251 follow-up).
 
 - feat(#182): `LastVisitCard` on `patient.summary.cards` (order 21, next to the next-appointment card) — shows the patient's most recent completed appointment (date/time/professional/treatment) with an explicit "Sin visitas previas" empty state, so reception can tell a first-timer from a regular on the Resumen tab. Click opens the appointment on the agenda, or the agenda with the patient pre-selected when there is none.

@@ -12,7 +12,7 @@ const { createBudget } = useBudgets()
 
 // Track if coming from patient page
 const comesFromPatient = computed(() => route.query.from === 'patient' && route.query.patient_id)
-const backLabel = computed(() => comesFromPatient.value ? t('actions.back') : t('budget.title'))
+const backLabel = computed(() => comesFromPatient.value ? t('common.back') : t('budget.title'))
 
 function goBack() {
   if (comesFromPatient.value) {

@@ -932,7 +932,8 @@
       "clinicClosed": "Clinic closed",
       "professionalOff": "Off-duty",
       "onBreak": "On break"
-    }
+    },
+    "actionsMenu": "Appointment actions"
   },
   "dashboard": {
     "greetings": {
