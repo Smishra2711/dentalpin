@@ -17,6 +17,7 @@ class VatTypeCreate(BaseModel):
 
     names: dict[str, str] = Field(default_factory=dict)  # {"es": "Nombre", "en": "Name"}
     rate: float = Field(default=0.0, ge=0, le=100)
+    legal_note: str | None = Field(default=None, max_length=300)
     is_default: bool = False
 
 
@@ -25,6 +26,7 @@ class VatTypeUpdate(BaseModel):
 
     names: dict[str, str] | None = None
     rate: float | None = Field(default=None, ge=0, le=100)
+    legal_note: str | None = Field(default=None, max_length=300)
     is_default: bool | None = None
     is_active: bool | None = None
 
@@ -36,6 +38,7 @@ class VatTypeResponse(BaseModel):
     clinic_id: UUID
     names: dict[str, str]
     rate: float
+    legal_note: str | None = None
     is_default: bool
     is_active: bool
     is_system: bool

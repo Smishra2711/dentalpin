@@ -35,13 +35,22 @@ from .models import (
 # VAT types
 # ============================================================================
 
+# Statutory clause printed on invoices whose lines use the Spanish exempt
+# VAT type — dental care is exempt under art. 20.Uno.5º LIVA and
+# accountants expect the mention on every invoice (#204).
+ES_EXEMPT_LEGAL_NOTE = "Operación exenta de IVA según el art. 20.Uno.5º de la Ley 37/1992"
+
+# Country-neutral exempt type. Kept separate from the Spanish entry so the
+# generic preset never inherits the Spanish statute text.
+_EXEMPT_BASE: dict[str, Any] = {
+    "key": "exempt",
+    "names": {"es": "Exento", "en": "Exempt", "fr": "Exonéré", "ta": "விலக்கு"},
+    "rate": 0.0,
+    "is_default": True,
+}
+
 VAT_TYPES: list[dict[str, Any]] = [
-    {
-        "key": "exempt",
-        "names": {"es": "Exento", "en": "Exempt", "fr": "Exonéré", "ta": "விலக்கு"},
-        "rate": 0.0,
-        "is_default": True,
-    },
+    {**_EXEMPT_BASE, "legal_note": ES_EXEMPT_LEGAL_NOTE},
     {
         "key": "reduced",
         "names": {
@@ -72,7 +81,7 @@ VAT_TYPES: list[dict[str, Any]] = [
 # exempt-by-default is the safe generic choice.
 VAT_PRESETS: dict[str, list[dict[str, Any]]] = {
     "es": VAT_TYPES,
-    "generic": [VAT_TYPES[0]],
+    "generic": [_EXEMPT_BASE],
 }
 
 
@@ -2508,6 +2517,7 @@ async def _ensure_vat_types(
                 clinic_id=clinic_id,
                 names=vat_data["names"],
                 rate=vat_data["rate"],
+                legal_note=vat_data.get("legal_note"),
                 is_default=vat_data["is_default"],
                 is_system=True,
             )

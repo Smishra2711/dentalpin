@@ -385,3 +385,13 @@ async def test_appointment_response_no_legacy_notes_field(
     resp = await client.get(f"/api/v1/agenda/appointments/{apt.id}", headers=auth_headers)
     assert resp.status_code == 200, resp.text
     assert "notes" not in resp.json()["data"]
+
+
+def test_resolve_label_falls_back_to_any_locale():
+    """Items created under a core-only locale (de/hu, #131/#275) must still label."""
+    from app.modules.clinical_notes.service import _resolve_label
+
+    assert _resolve_label({"de": "Wurzelbehandlung"}) == "Wurzelbehandlung"
+    assert _resolve_label({"de": "Wurzelbehandlung", "es": "Endodoncia"}) == "Endodoncia"
+    assert _resolve_label({"de": ""}) is None
+    assert _resolve_label(None) is None

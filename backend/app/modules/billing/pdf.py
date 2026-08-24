@@ -2,11 +2,14 @@
 
 import asyncio
 import hashlib
-from datetime import date
+from datetime import UTC, datetime
 from decimal import Decimal
 from html import escape
 from io import BytesIO
 from typing import TYPE_CHECKING
+from zoneinfo import ZoneInfo
+
+from babel.numbers import format_decimal as _babel_format_decimal
 
 from app.core.utils.currency import format_currency as _fmt_currency
 
@@ -129,6 +132,12 @@ class InvoicePDFService:
         def format_currency(amount: Decimal) -> str:
             return _fmt_currency(amount, clinic.currency, locale=money_locale)
 
+        def format_vat_rate(rate: float) -> str:
+            # Same locale-aware separators as the amounts — "0.0%" next to
+            # "0,00 €" read as two different documents (#204). Babel drops
+            # trailing zeros: 21 → "21%", 8.5 → "8,5%" (es).
+            return f"{_babel_format_decimal(rate, locale=money_locale)}%"
+
         # Build items table rows
         items_html = ""
         for i, item in enumerate(invoice.items, 1):
@@ -149,10 +158,19 @@ class InvoicePDFService:
                 <td class="quantity">{item.quantity}</td>
                 <td class="price">{format_currency(item.unit_price)}</td>
                 {f'<td class="discount">{format_currency(item.line_discount)}</td>' if item.line_discount else '<td class="discount">-</td>'}
-                <td class="vat">{item.vat_rate}%</td>
+                <td class="vat">{format_vat_rate(item.vat_rate)}</td>
                 <td class="total">{format_currency(item.line_total)}</td>
             </tr>
             """
+
+        # Footer timestamp: real generation time in the clinic's timezone —
+        # date.today() rendered a date through %H:%M, so it always read
+        # "00:00" (#204).
+        try:
+            clinic_tz = ZoneInfo(clinic.timezone or "UTC")
+        except (KeyError, ValueError):
+            clinic_tz = UTC
+        generated_at = datetime.now(clinic_tz).strftime("%d/%m/%Y %H:%M")
 
         # Status badge
         status_label = labels["status"].get(invoice.status, invoice.status)
@@ -711,7 +729,7 @@ class InvoicePDFService:
             {legal_notices_html}
 
             <div class="footer">
-                {labels["generated_by"]} DentalPin | {date.today().strftime("%d/%m/%Y %H:%M")}
+                {labels["generated_by"]} DentalPin | {generated_at}
             </div>
         </body>
         </html>
