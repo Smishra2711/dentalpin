@@ -710,6 +710,7 @@ Maps catalog treatments to inventory items with quantity per link.
   - `treatment_consumables.write`
 - **Events emitted:** —
 - **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/treatment_consumables/CLAUDE.md`](../backend/app/modules/treatment_consumables/CLAUDE.md)
 
 ### `treatment_plan` — v0.1.0
 
