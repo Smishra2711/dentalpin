@@ -58,10 +58,13 @@ async def test_publish_commit_persists_row(db_session: AsyncSession, test_clinic
 
 @pytest.mark.asyncio
 async def test_publisher_rollback_discards_row(db_session: AsyncSession, test_clinic: Clinic):
+    # Capture before publish/rollback: rollback expires ORM objects and
+    # touching an expired attribute afterwards raises MissingGreenlet.
+    clinic_id = test_clinic.id
     await event_bus.publish(
         EventType.RECALL_CREATED,
         {
-            "clinic_id": str(test_clinic.id),
+            "clinic_id": str(clinic_id),
             "recall_id": str(uuid4()),
             "patient_id": str(uuid4()),
         },
@@ -69,7 +72,7 @@ async def test_publisher_rollback_discards_row(db_session: AsyncSession, test_cl
     )
     await db_session.rollback()
 
-    stmt = select(ActivityJournalEntry).where(ActivityJournalEntry.clinic_id == test_clinic.id)
+    stmt = select(ActivityJournalEntry).where(ActivityJournalEntry.clinic_id == clinic_id)
     rows = (await db_session.execute(stmt)).scalars().all()
     assert rows == []
 
