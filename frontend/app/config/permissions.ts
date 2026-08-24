@@ -155,6 +155,10 @@ export const PERMISSIONS = {
     read: 'patient_relationships.read',
     write: 'patient_relationships.write'
   },
+  expenses: {
+    read: 'expenses.read',
+    write: 'expenses.write'
+  },
   contacts: {
     read: 'contacts.read',
     write: 'contacts.write'
