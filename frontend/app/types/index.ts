@@ -1850,12 +1850,16 @@ export interface LegalGuardian {
 }
 
 // Medical History Entry Types
+// `reference_id` is a loose link to an item in the optional
+// medical_reference module's lookup lists (no FK). It stays undefined
+// for free-text entries created without that module installed.
 export interface AllergyEntry {
   name: string
   type?: string // drug, food, material, environmental
   severity: 'low' | 'medium' | 'high' | 'critical'
   reaction?: string
   notes?: string
+  reference_id?: string | null
 }
 
 export interface MedicationEntry {
@@ -1864,6 +1868,7 @@ export interface MedicationEntry {
   frequency?: string
   start_date?: string
   notes?: string
+  reference_id?: string | null
 }
 
 export interface SystemicDiseaseEntry {
@@ -1874,6 +1879,7 @@ export interface SystemicDiseaseEntry {
   is_critical: boolean
   medications?: string
   notes?: string
+  reference_id?: string | null
 }
 
 export interface SurgicalHistoryEntry {
@@ -1881,6 +1887,7 @@ export interface SurgicalHistoryEntry {
   surgery_date?: string
   complications?: string
   notes?: string
+  reference_id?: string | null
 }
 
 // Full Medical History
