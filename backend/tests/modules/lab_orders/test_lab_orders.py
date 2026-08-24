@@ -41,11 +41,16 @@ async def test_create_list_and_receive_lab_order(
     assert rows[0]["patient_id"] == test_patient.id
     assert rows[0]["lab_contact_name"] == "Dental Lab"
 
+    # The service auto-stamps received_date with *today* when a payload
+    # transitions to ``received`` without an explicit date — capture the
+    # expected day before the call instead of hardcoding one (a hardcoded
+    # date made this test fail everywhere but on its authoring day).
+    expected_receipt = date.today()
     updated = await LabOrderService.update_order(
         db_session, test_clinic.id, order.id, LabOrderUpdate(status="received")
     )
     assert updated.status == "received"
-    assert updated.received_date == date(2026, 8, 22)
+    assert updated.received_date == expected_receipt
 
 
 @pytest.mark.asyncio
