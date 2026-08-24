@@ -47,6 +47,12 @@ class VatType(Base, TimestampMixin):
     # VAT rate percentage (0-100)
     rate: Mapped[float] = mapped_column(Float, default=0.0)
 
+    # Statutory clause invoices must print when a line uses this VAT type
+    # (e.g. the Spanish exemption "art. 20.Uno.5º LIVA" for dental care).
+    # Plain text in the country's legal language — statute wording is not
+    # localized. Seeded by the country preset (#204).
+    legal_note: Mapped[str | None] = mapped_column(String(300), default=None)
+
     # Default flag - only one per clinic should be default
     is_default: Mapped[bool] = mapped_column(Boolean, default=False)
 
