@@ -9,13 +9,28 @@ from fastapi import HTTPException
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth.models import Clinic
+from app.core.auth.models import Clinic, User
 from app.modules.staff_tasks.schemas import StaffTaskCreate, StaffTaskUpdate
 from app.modules.staff_tasks.service import StaffTaskService
 
 
+async def _make_user(db_session: AsyncSession, email: str) -> User:
+    """Real user row — assignee_id/created_by carry an FK to users.id, so
+    actor ids can't be fabricated."""
+    user = User(
+        email=email,
+        password_hash="test-hash",
+        first_name="Test",
+        last_name="Staff",
+    )
+    db_session.add(user)
+    await db_session.commit()
+    return user
+
+
 @pytest.mark.asyncio
 async def test_create_claim_done_lifecycle(db_session: AsyncSession, test_clinic: Clinic):
+    actor = await _make_user(db_session, "actor@staff-tasks.test")
     task = await StaffTaskService.create_task(
         db_session,
         test_clinic.id,
@@ -25,24 +40,23 @@ async def test_create_claim_done_lifecycle(db_session: AsyncSession, test_clinic
     assert task.status == "open"
     assert task.assignee_id is None
 
-    actor = uuid4()
     claimed = await StaffTaskService.update_task(
         db_session,
         test_clinic.id,
         task.id,
         StaffTaskUpdate(status="claimed"),
-        actor_id=actor,
+        actor_id=actor.id,
     )
     # Claiming an unassigned task assigns the claimer.
     assert claimed.status == "claimed"
-    assert claimed.assignee_id == actor
+    assert claimed.assignee_id == actor.id
 
     done = await StaffTaskService.update_task(
         db_session,
         test_clinic.id,
         task.id,
         StaffTaskUpdate(status="done"),
-        actor_id=actor,
+        actor_id=actor.id,
     )
     assert done.status == "done"
     assert done.completed_at is not None
@@ -54,17 +68,18 @@ async def test_create_claim_done_lifecycle(db_session: AsyncSession, test_clinic
             test_clinic.id,
             task.id,
             StaffTaskUpdate(status="open"),
-            actor_id=actor,
+            actor_id=actor.id,
         )
     assert exc_info.value.status_code == 422
 
 
 @pytest.mark.asyncio
 async def test_status_filter_isolation_and_delete(db_session: AsyncSession, test_clinic: Clinic):
+    assignee = await _make_user(db_session, "assignee@staff-tasks.test")
     open_task = await StaffTaskService.create_task(
         db_session,
         test_clinic.id,
-        StaffTaskCreate(title="Prepare implant kit", assignee_id=uuid4()),
+        StaffTaskCreate(title="Prepare implant kit", assignee_id=assignee.id),
         created_by=None,
     )
     done_task = await StaffTaskService.create_task(
@@ -159,7 +174,14 @@ async def test_status_filter_and_transitions_over_http(
     assert body["status"] == "claimed"
     assert body["assignee_id"] is not None
 
-    # done → open is not a legal transition.
+    # done → open is not a legal transition (done is terminal).
+    closed = await client.patch(
+        f"/api/v1/staff_tasks/{task['id']}",
+        json={"status": "done"},
+        headers=auth_headers,
+    )
+    assert closed.status_code == 200
+
     illegal = await client.patch(
         f"/api/v1/staff_tasks/{task['id']}",
         json={"status": "open"},
