@@ -19,7 +19,7 @@ async def seeded_pair(db_session: AsyncSession, test_clinic: Clinic):
     """One catalog treatment + one inventory item in the test clinic."""
     category = TreatmentCategory(
         clinic_id=test_clinic.id,
-        internal_code="CAT-TEST",
+        key="tests",
         names={"es": "Pruebas", "en": "Tests"},
     )
     db_session.add(category)
@@ -121,7 +121,7 @@ async def test_links_to_other_clinic_are_rejected(
 
     foreign_category = TreatmentCategory(
         clinic_id=other.id,
-        internal_code="OTHER-CAT",
+        key="other-tests",
         names={"es": "Otra"},
     )
     db_session.add(foreign_category)
