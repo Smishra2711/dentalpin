@@ -13,6 +13,7 @@ from __future__ import annotations
 from uuid import uuid4
 
 import pytest
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth.models import Clinic
@@ -36,6 +37,29 @@ async def test_search_create_happy_path(db_session: AsyncSession, test_clinic: C
     )
     assert len(rows) == 1
     assert rows[0].id == allergy.id
+
+
+@pytest.mark.asyncio
+async def test_update_renaming_onto_existing_name_is_409(
+    db_session: AsyncSession, test_clinic: Clinic
+):
+    """Renaming a reference item onto another row's name must 409 like
+    create() does, not blow up on the unique constraint. Renaming a row
+    to (a case variant of) its own name stays allowed."""
+    penicillin = await MedicalReferenceService.create(
+        db_session, ReferenceAllergy, test_clinic.id, {"name": "Penicillin"}
+    )
+    latex = await MedicalReferenceService.create(
+        db_session, ReferenceAllergy, test_clinic.id, {"name": "Latex"}
+    )
+    await db_session.commit()
+
+    with pytest.raises(HTTPException) as exc_info:
+        await MedicalReferenceService.update(db_session, latex, {"name": "penicillin"})
+    assert exc_info.value.status_code == 409
+
+    renamed = await MedicalReferenceService.update(db_session, penicillin, {"name": "PENICILLIN"})
+    assert renamed.name == "PENICILLIN"
 
 
 @pytest.mark.asyncio

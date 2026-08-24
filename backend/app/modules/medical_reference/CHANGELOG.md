@@ -1,5 +1,15 @@
 # Changelog — medical_reference module
 
+## Unreleased
+
+- fix: the medical-history name combobox now follows the host form's
+  reset after adding an entry (the slot adapter mirrored `ctx.value`
+  only at mount, so the field kept showing the previous selection).
+- fix: renaming a reference item onto another row's name returns 409
+  (was a raw unique-constraint 500); renaming to a case variant of its
+  own name stays allowed.
+- chore: dropped the leftover `apci` settings search keyword.
+
 ## 0.4.0 — patients_clinical integration
 
 - `patients_clinical` gained a nullable `reference_id` UUID on its four

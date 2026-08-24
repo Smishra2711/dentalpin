@@ -70,6 +70,22 @@ class MedicalReferenceService:
 
     @staticmethod
     async def update(db: AsyncSession, row: ReferenceModel, data: dict) -> ReferenceModel:
+        # Renaming onto another row's name would otherwise hit the unique
+        # constraint and surface as a 500; mirror create()'s 409 instead.
+        # (Interaction/contraindication updates carry no "name" key.)
+        new_name = data.get("name")
+        if new_name is not None:
+            model = type(row)
+            duplicate_stmt = select(model.id).where(
+                model.clinic_id == row.clinic_id,
+                func.lower(model.name) == new_name.lower(),
+                model.id != row.id,
+            )
+            if (await db.execute(duplicate_stmt)).scalar_one_or_none() is not None:
+                raise HTTPException(
+                    status_code=http_status.HTTP_409_CONFLICT,
+                    detail=f'"{new_name}" already exists in this list',
+                )
         for key, value in data.items():
             if value is not None:
                 setattr(row, key, value)

@@ -183,10 +183,6 @@ def test_medical_reference_uninstall_roundtrip_is_branch_scoped() -> None:
         "downgrade leaked into other modules; missing tables: "
         f"{baseline_non_medical_reference - after_down}"
     )
-    assert baseline_non_medical_reference <= after_down, (
-        "downgrade leaked into other modules; missing tables: "
-        f"{baseline_non_medical_reference - after_down}"
-    )
 
     _alembic("upgrade", "medical_reference@head")
     after_up = _list_tables()

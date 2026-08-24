@@ -36,8 +36,21 @@ const kind = computed(() => KIND_BY_ENTITY[props.ctx.kind])
 
 // Local mirror of the picked/created item. The host owns the persisted
 // entry; we only report commits back through ctx.select().
-const name = ref('')
+const name = ref(props.ctx.value)
 const referenceId = ref<string | null>(null)
+
+// The host resets its entry after adding it to the list (ctx.value goes
+// back to ''); follow along or the combobox keeps showing the previous
+// selection. An externally-set value has no known reference row, so the
+// mirror id is dropped rather than guessed.
+watch(
+  () => props.ctx.value,
+  (value) => {
+    if (value === name.value) return
+    name.value = value
+    referenceId.value = null
+  }
+)
 
 function commit(nextName: string, nextReferenceId: string | null) {
   name.value = nextName

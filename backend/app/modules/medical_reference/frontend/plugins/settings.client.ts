@@ -17,7 +17,7 @@ export default defineNuxtPlugin(() => {
     icon: 'i-lucide-list-checks',
     permission: 'medical_reference.write',
     component: () => import('../components/settings/MedicalReferenceSettingsPage.vue'),
-    searchKeywords: ['allergy', 'allergies', 'medication', 'disease', 'apci', 'reference'],
+    searchKeywords: ['allergy', 'allergies', 'medication', 'disease', 'reference'],
     order: 40
   })
 })
