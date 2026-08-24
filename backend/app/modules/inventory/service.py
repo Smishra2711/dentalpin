@@ -92,7 +92,7 @@ class InventoryService:
         for field, value in payload.model_dump(exclude_unset=True).items():
             setattr(item, field, value)
         await db.flush()
-        await InventoryService._publish_low_if_crossed(db, item, was_low)
+        await InventoryService._publish_low_if_crossed(db, item, was_low=was_low)
         await db.commit()
         await db.refresh(item)
         return item
