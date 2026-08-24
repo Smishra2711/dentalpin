@@ -56,6 +56,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 | `invoice.partial_paid` | `EventType.INVOICE_PARTIAL_PAID` | — | — |
 | `invoice.sent` | `EventType.INVOICE_SENT` | `billing` | `notifications` |
 | `invoice.voided` | `EventType.INVOICE_VOIDED` | — | — |
+| `inventory.low_stock` | `EventType.INVENTORY_STOCK_LOW` | `inventory` | — |
 | `media.attachment_linked` | `EventType.ATTACHMENT_LINKED` | `media` | — |
 | `media.attachment_unlinked` | `EventType.ATTACHMENT_UNLINKED` | `media` | — |
 | `media.pair_created` | `EventType.PAIR_CREATED` | `media` | `patient_timeline` |
@@ -469,6 +470,13 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.INVOICE_VOIDED`
 - **Publishers:** _none in tree — declared but unused_
+- **Subscribers:** —
+
+### `inventory.low_stock`
+
+- **Constant:** `EventType.INVENTORY_STOCK_LOW`
+- **Publishers:**
+  - `inventory` — `backend/app/modules/inventory/service.py:154`
 - **Subscribers:** —
 
 ### `media.attachment_linked`
