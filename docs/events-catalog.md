@@ -476,7 +476,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.LAB_ORDER_STATUS_CHANGED`
 - **Publishers:**
-  - `lab_orders` — `backend/app/modules/lab_orders/service.py:152`
+  - `lab_orders` — `backend/app/modules/lab_orders/service.py:195`
 - **Subscribers:** —
 
 ### `media.attachment_linked`
