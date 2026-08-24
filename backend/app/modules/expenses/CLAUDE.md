@@ -20,9 +20,10 @@ Routes mounted at `/api/v1/expenses/`.
 
 ## Permissions
 
-`expenses.read`, `expenses.write`. Default role grants: admin full access,
-all other roles (dentist, hygienist, assistant, receptionist) read-only.
-Adjust `role_permissions` in `__init__.py` to change this.
+`expenses.read`, `expenses.write`. Default role grants: **admin only** —
+rent and salaries are sensitive, so no other role sees the module out of
+the box. Clinics can widen `role_permissions` in `__init__.py` (or from
+the module admin UI) if e.g. reception should record supplies.
 
 ## Tools exposed
 

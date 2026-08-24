@@ -17,7 +17,8 @@
     "/module_layers/notifications/frontend",
     "/module_layers/patient_timeline/frontend",
     "/module_layers/reports/frontend",
-    "/module_layers/recall_reminders/frontend"
+    "/module_layers/recall_reminders/frontend",
+    "/module_layers/expenses/frontend"
   ],
   "modules": [
     {
@@ -91,6 +92,10 @@
     {
       "name": "recall_reminders",
       "path": "/module_layers/recall_reminders/frontend"
+    },
+    {
+      "name": "expenses",
+      "path": "/module_layers/expenses/frontend"
     }
   ],
   "version": 1

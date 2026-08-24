@@ -6,6 +6,7 @@ definePageMeta({ middleware: ['auth'] })
 
 const { t } = useI18n()
 const { can } = usePermissions()
+const { format: formatCurrency } = useCurrency()
 const expensesApi = useExpenses()
 
 if (!can(PERMISSIONS.expenses.read)) {
@@ -21,9 +22,13 @@ const categoryOptions = computed(() =>
   CATEGORIES.map(c => ({ value: c, label: t(`expenses.categories.${c}`) }))
 )
 
+// --- List state (server-side pagination) ----------------------------------
 const items = ref<Expense[]>([])
 const total = ref(0)
 const loading = ref(false)
+const page = ref(1)
+const PAGE_SIZE = 20
+const totalPages = computed(() => Math.max(1, Math.ceil(total.value / PAGE_SIZE)))
 
 const now = new Date()
 const filterCategory = ref<ExpenseCategory | undefined>(undefined)
@@ -31,12 +36,26 @@ const filterCategory = ref<ExpenseCategory | undefined>(undefined)
 async function load() {
   loading.value = true
   try {
-    const res = await expensesApi.list({ category: filterCategory.value, page: 1, page_size: 100 })
+    const res = await expensesApi.list({
+      category: filterCategory.value,
+      page: page.value,
+      page_size: PAGE_SIZE
+    })
     items.value = res.data
     total.value = res.total
+    // A filter change can drop us past the last page.
+    if (page.value > totalPages.value) {
+      page.value = totalPages.value
+      await load()
+    }
   } finally {
     loading.value = false
   }
+}
+
+function onPage(p: number) {
+  page.value = p
+  load()
 }
 
 const monthlyTotals = ref<ExpenseMonthlyTotal[]>([])
@@ -49,7 +68,10 @@ onMounted(async () => {
   await Promise.all([load(), loadMonthlyTotals()])
 })
 
-watch(filterCategory, load)
+watch(filterCategory, () => {
+  page.value = 1
+  load()
+})
 
 // --- Add expense modal ---
 const showModal = ref(false)
@@ -78,9 +100,26 @@ async function submit() {
   }
 }
 
-async function remove(id: string) {
-  await expensesApi.remove(id)
-  await Promise.all([load(), loadMonthlyTotals()])
+// --- Delete confirmation (same pattern as the catalog settings page) ------
+const showDeleteConfirm = ref(false)
+const itemToDelete = ref<Expense | null>(null)
+const isDeleting = ref(false)
+
+function confirmDelete(expense: Expense) {
+  itemToDelete.value = expense
+  showDeleteConfirm.value = true
+}
+
+async function handleDelete() {
+  if (!itemToDelete.value) return
+  isDeleting.value = true
+  try {
+    await expensesApi.remove(itemToDelete.value.id)
+    showDeleteConfirm.value = false
+    await Promise.all([load(), loadMonthlyTotals()])
+  } finally {
+    isDeleting.value = false
+  }
 }
 
 const columns = [
@@ -108,14 +147,14 @@ const columns = [
     </div>
 
     <div class="flex flex-wrap gap-2">
-      <UButton
+      <UBadge
         v-for="mt in monthlyTotals"
         :key="mt.category"
-        variant="soft"
+        variant="subtle"
         size="sm"
       >
-        {{ t(`expenses.categories.${mt.category}`) }}: {{ mt.total }}
-      </UButton>
+        {{ t(`expenses.categories.${mt.category}`) }}: {{ formatCurrency(mt.total) }}
+      </UBadge>
     </div>
 
     <USelect
@@ -130,6 +169,9 @@ const columns = [
       :columns="columns"
       :loading="loading"
     >
+      <template #amount-cell="{ row }">
+        <span class="tnum">{{ formatCurrency(row.original.amount) }}</span>
+      </template>
       <template #actions-cell="{ row }">
         <UButton
           v-if="canWrite"
@@ -137,10 +179,19 @@ const columns = [
           variant="ghost"
           color="error"
           size="xs"
-          @click="remove(row.original.id)"
+          :aria-label="t('expenses.delete')"
+          @click="confirmDelete(row.original)"
         />
       </template>
     </UTable>
+
+    <PaginationBar
+      :page="page"
+      :total-pages="totalPages"
+      :total="total"
+      :page-size="PAGE_SIZE"
+      @update:page="onPage"
+    />
 
     <UModal v-model:open="showModal">
       <template #content>
@@ -178,6 +229,35 @@ const columns = [
               @click="submit"
             >
               {{ t('actions.save') }}
+            </UButton>
+          </div>
+        </div>
+      </template>
+    </UModal>
+
+    <!-- Delete confirmation -->
+    <UModal v-model:open="showDeleteConfirm">
+      <template #content>
+        <div class="p-4 space-y-4">
+          <h2 class="text-h3 text-default">
+            {{ t('expenses.deleteTitle') }}
+          </h2>
+          <p class="text-ui text-subtle">
+            {{ t('expenses.deleteMessage') }}
+          </p>
+          <div class="flex justify-end gap-2">
+            <UButton
+              variant="ghost"
+              @click="showDeleteConfirm = false"
+            >
+              {{ t('actions.cancel') }}
+            </UButton>
+            <UButton
+              color="error"
+              :loading="isDeleting"
+              @click="handleDelete"
+            >
+              {{ t('expenses.delete') }}
             </UButton>
           </div>
         </div>

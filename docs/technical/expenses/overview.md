@@ -1,6 +1,6 @@
 ---
 module: expenses
-last_verified_commit: 0000000
+last_verified_commit: 3d0fc1d1
 ---
 
 # expenses — overview

@@ -7,6 +7,9 @@
     "amount": "Amount",
     "description": "Description",
     "filterByCategory": "Filter by category",
+    "delete": "Delete",
+    "deleteTitle": "Delete expense",
+    "deleteMessage": "Delete this expense? This cannot be undone.",
     "categories": {
       "rent": "Rent",
       "utilities": "Utilities",

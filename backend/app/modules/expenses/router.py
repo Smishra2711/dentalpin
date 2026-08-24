@@ -1,5 +1,6 @@
 """Expenses HTTP surface. Mounts under ``/api/v1/expenses/*``."""
 
+from datetime import date
 from typing import Annotated
 from uuid import UUID
 
@@ -27,8 +28,11 @@ async def list_expenses(
     _: Annotated[None, Depends(require_permission("expenses.read"))],
     db: Annotated[AsyncSession, Depends(get_db)],
     category: str | None = Query(default=None),
-    date_from: str | None = Query(default=None),
-    date_to: str | None = Query(default=None),
+    # Typed as date so asyncpg receives a date and the DB can compare it
+    # against the Date column — a str here 500s on
+    # ``operator does not exist: date >= character varying``.
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
 ) -> PaginatedApiResponse[ExpenseResponse]:

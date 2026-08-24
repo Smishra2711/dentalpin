@@ -1,8 +1,8 @@
 """Expenses module — fixed/recurring office cost tracking.
 
-Standalone module: no dependency on any other module. Admin gets full
-access; other roles are read-only by default (edit ``role_permissions``
-below to change that).
+Standalone module: no dependency on any other module. Sensitive by
+nature (rent, salaries), so ``role_permissions`` defaults to admin-only;
+clinics can widen it from the module admin UI.
 """
 
 from fastapi import APIRouter
@@ -29,12 +29,10 @@ class ExpensesModule(BaseModule):
         # module admin UI (repo policy for new non-core modules).
         "auto_install": False,
         "removable": True,
+        # Rent and salaries are sensitive — default to admin-only and let
+        # each clinic widen it deliberately.
         "role_permissions": {
             "admin": ["*"],
-            "dentist": ["read"],
-            "hygienist": ["read"],
-            "assistant": ["read"],
-            "receptionist": ["read"],
         },
         "frontend": {
             "layer_path": "frontend",

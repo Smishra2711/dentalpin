@@ -6,30 +6,35 @@ related_endpoints:
   - GET /api/v1/expenses
   - GET /api/v1/expenses/monthly-totals
   - POST /api/v1/expenses
-  - PATCH /api/v1/expenses/{expense_id}
   - DELETE /api/v1/expenses/{expense_id}
 related_permissions:
   - expenses.read
   - expenses.write
 related_paths:
   - backend/app/modules/expenses/frontend/pages/expenses/index.vue
-last_verified_commit: 0000000
+last_verified_commit: 3d0fc1d1
 ---
 
-# /expenses
+# Expense list
 
 Fixed and recurring office cost tracking — rent, utilities, salaries,
 supplies, equipment, insurance, maintenance, and other.
 
 ## Permissions
 
-- `expenses.read` — view the list (`admin` plus every other role by
-  default).
-- `expenses.write` — add, edit, delete (`admin` only by default).
+- The module is **admin-only out of the box**; clinics can grant
+  `expenses.read` / `expenses.write` to other roles from the module
+  admin UI.
+- `expenses.read` — view the list and monthly totals.
+- `expenses.write` — add and delete expenses.
 
 ## What this screen does
 
-- **Filter** the list by category and date range.
+- **Filter** the list by category.
 - **Add expense** — opens a modal for category, amount, date, and an
   optional description.
-- **Edit / delete** per row, gated behind `expenses.write`.
+- **Monthly totals** — one badge per category for the current month.
+- **Delete** per row behind `expenses.write`, with a confirmation
+  dialog before anything is removed.
+- **Pagination** — server-side, 20 rows per page.
+

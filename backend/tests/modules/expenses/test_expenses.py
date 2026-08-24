@@ -8,6 +8,7 @@ from uuid import uuid4
 
 import pytest
 from fastapi import HTTPException
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth.models import Clinic
@@ -99,3 +100,44 @@ async def test_expenses_are_clinic_scoped(db_session: AsyncSession, test_clinic:
 
     totals = await ExpenseService.monthly_totals_by_category(db_session, test_clinic.id, 2026, 8)
     assert totals == []
+
+
+@pytest.mark.asyncio
+async def test_date_range_filter_over_http(
+    client: AsyncClient, auth_headers: dict, test_clinic: Clinic
+):
+    """HTTP-level regression for the date filters: they used to be typed
+    as str in the router, which 500'd on asyncpg with ``operator does not
+    exist: date >= character varying`` once a range was actually sent."""
+
+    async def _create(category: str, day: str) -> None:
+        res = await client.post(
+            "/api/v1/expenses/",
+            json={"category": category, "amount": "100.00", "expense_date": day},
+            headers=auth_headers,
+        )
+        assert res.status_code == 201, res.text
+
+    await _create("rent", "2026-08-01")
+    await _create("utilities", "2026-08-15")
+    await _create("rent", "2026-09-01")
+
+    async def _list(**params: str) -> list[dict]:
+        res = await client.get("/api/v1/expenses/", params=params, headers=auth_headers)
+        assert res.status_code == 200, res.text
+        return res.json()["data"]
+
+    august = await _list(date_from="2026-08-01", date_to="2026-08-31")
+    assert {e["category"] for e in august} == {"rent", "utilities"}
+
+    # List is ordered by expense_date desc.
+    only_from = await _list(date_from="2026-08-20")
+    assert [e["expense_date"] for e in only_from] == ["2026-09-01"]
+
+    only_to = await _list(date_to="2026-08-10")
+    assert [e["expense_date"] for e in only_to] == ["2026-08-01"]
+
+    combined_with_category = await _list(
+        category="rent", date_from="2026-08-01", date_to="2026-09-30"
+    )
+    assert [e["expense_date"] for e in combined_with_category] == ["2026-09-01", "2026-08-01"]

@@ -7,6 +7,9 @@
     "amount": "Importe",
     "description": "Descripción",
     "filterByCategory": "Filtrar por categoría",
+    "delete": "Eliminar",
+    "deleteTitle": "Eliminar gasto",
+    "deleteMessage": "¿Eliminar este gasto? No se puede deshacer.",
     "categories": {
       "rent": "Alquiler",
       "utilities": "Suministros",

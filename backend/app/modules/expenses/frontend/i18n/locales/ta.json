@@ -7,6 +7,9 @@
     "amount": "தொகை",
     "description": "விவரம்",
     "filterByCategory": "வகை வாரியாக வடிகட்டு",
+    "delete": "நீக்கு",
+    "deleteTitle": "செலவை நீக்கு",
+    "deleteMessage": "இந்தச் செலவை நீக்கவா? இதை முடிவுக்குக் கொண்டுவர முடியாது.",
     "categories": {
       "rent": "வாடகை",
       "utilities": "பயன்பாட்டு கட்டணங்கள்",

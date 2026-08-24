@@ -34,7 +34,7 @@ class MonthlyTotalsArgs(BaseModel):
 
 def _expense_summary(expense) -> dict:
     return {
-        "id": str(expense.id),
+        "id": expense.id,  # native UUID — the registry's jsonify coerces
         "category": expense.category,
         "amount": expense.amount,
         "expense_date": expense.expense_date,
@@ -62,7 +62,7 @@ async def _create_expense(ctx: AgentContext, params: CreateExpenseArgs) -> dict:
         expense_date=params.expense_date,
         description=params.description,
     )
-    expense = await ExpenseService.create_expense(ctx.db, ctx.clinic_id, payload, ctx.user_id)
+    expense = await ExpenseService.create_expense(ctx.db, ctx.clinic_id, payload, None)
     return _expense_summary(expense)
 
 
