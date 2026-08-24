@@ -1,10 +1,5 @@
 ---
 module: staff_tasks
-last_verified_commit: e4146c9b
----
-
----
-module: staff_tasks
 screen: tasks
 route: /tasks
 related_endpoints:
