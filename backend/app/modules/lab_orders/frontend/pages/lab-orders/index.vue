@@ -75,10 +75,17 @@ onMounted(load)
     >
       <template #status-cell="{ row }">
         <USelect
+          v-if="can(PERMISSIONS.labOrders.write)"
           :model-value="row.original.status"
           :items="statuses.map(value => ({ value, label: t(`labOrders.statuses.${value}`) }))"
           @update:model-value="value => updateStatus(row.original.id, value as OrderStatus)"
         />
+        <UBadge
+          v-else
+          variant="subtle"
+        >
+          {{ t(`labOrders.statuses.${row.original.status}`) }}
+        </UBadge>
       </template>
     </UTable>
 

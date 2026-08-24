@@ -52,6 +52,17 @@ async def test_create_list_and_receive_lab_order(
     assert updated.status == "received"
     assert updated.received_date == expected_receipt
 
+    # A repeated PATCH with status=received must not overwrite the
+    # original receipt date (stamping happens only on the transition).
+    original_receipt = date(2026, 8, 1)
+    await LabOrderService.update_order(
+        db_session, test_clinic.id, order.id, LabOrderUpdate(received_date=original_receipt)
+    )
+    re_received = await LabOrderService.update_order(
+        db_session, test_clinic.id, order.id, LabOrderUpdate(status="received")
+    )
+    assert re_received.received_date == original_receipt
+
 
 @pytest.mark.asyncio
 async def test_lab_order_lookup_is_clinic_scoped(

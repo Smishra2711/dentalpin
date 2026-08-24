@@ -17,7 +17,7 @@ last_verified_commit: c9c20493
 
 ## Tenancy
 
-Every read, create/update validation, delete, enrichment query, and agent tool is scoped by the caller's `clinic_id`.
+Every read, create/update validation, enrichment query, and agent tool is scoped by the caller's `clinic_id`. Orders are never hard-deleted — cancellation is a status change.
 
 ## Frontend
 

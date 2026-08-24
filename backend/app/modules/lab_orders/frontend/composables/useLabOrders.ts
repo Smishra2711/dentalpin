@@ -69,8 +69,5 @@ export function useLabOrders() {
   async function update(id: string, payload: LabOrderUpdatePayload): Promise<ApiOk<LabOrder>> {
     return await api.patch<ApiOk<LabOrder>>(`/api/v1/lab_orders/${id}`, payload)
   }
-  async function remove(id: string): Promise<void> {
-    await api.del(`/api/v1/lab_orders/${id}`)
-  }
-  return { list, create, update, remove }
+  return { list, create, update }
 }

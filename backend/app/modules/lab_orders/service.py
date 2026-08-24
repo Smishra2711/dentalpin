@@ -183,7 +183,13 @@ class LabOrderService:
             await LabOrderService._assert_contact(db, clinic_id, payload.lab_contact_id)
         old_status = order.status
         data = payload.model_dump(exclude_unset=True)
-        if data.get("status") == "received" and "received_date" not in data:
+        # Stamp only on the transition *into* received — a repeated PATCH
+        # with status=received must not overwrite the original receipt date.
+        if (
+            data.get("status") == "received"
+            and "received_date" not in data
+            and old_status != "received"
+        ):
             data["received_date"] = date.today()
         for field, value in data.items():
             setattr(order, field, value)
@@ -207,9 +213,3 @@ class LabOrderService:
         await db.commit()
         await db.refresh(order)
         return order
-
-    @staticmethod
-    async def delete_order(db: AsyncSession, clinic_id: UUID, order_id: UUID) -> None:
-        order = await LabOrderService.get_order(db, clinic_id, order_id)
-        await db.delete(order)
-        await db.commit()

@@ -72,13 +72,3 @@ async def update_lab_order(
     order = await LabOrderService.update_order(db, ctx.clinic_id, order_id, payload)
     enriched = await LabOrderService.get_order_response(db, ctx.clinic_id, order.id)
     return ApiResponse(data=LabOrderResponse.model_validate(enriched))
-
-
-@router.delete("/{order_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_lab_order(
-    ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
-    _: Annotated[None, Depends(require_permission("lab_orders.write"))],
-    db: Annotated[AsyncSession, Depends(get_db)],
-    order_id: UUID,
-) -> None:
-    await LabOrderService.delete_order(db, ctx.clinic_id, order_id)

@@ -12,7 +12,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/lab_orders/router.py
   - backend/app/modules/lab_orders/frontend/pages/lab-orders/index.vue
-last_verified_commit: c9c20493
+last_verified_commit: e0af282a
 ---
 
 # Trabajos de laboratorio
@@ -25,4 +25,4 @@ Abra **Nuevo trabajo de laboratorio**, seleccione el paciente y el contacto del 
 
 ## Seguir el estado
 
-Abra **Trabajos de laboratorio** para revisar los pedidos existentes. Use el selector de estado para avanzar por `Enviado`, `En curso`, `Listo`, `Recibido` o `Cancelado`.
+Abra **Trabajos de laboratorio** para revisar los pedidos existentes. Use el selector de estado para avanzar por `Enviado`, `En curso`, `Listo`, `Recibido` o `Cancelado`. Los roles sin permiso de escritura ven el estado como una etiqueta de solo lectura.

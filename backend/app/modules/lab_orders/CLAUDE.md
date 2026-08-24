@@ -22,7 +22,21 @@ Routes are mounted under `/api/v1/lab_orders/`.
 - GET list/detail — read
 - POST create — write, returns 201
 - PATCH update/status — write
-- DELETE — write, returns 204
+
+There is no DELETE: orders are terminated via `status = "cancelled"`
+(patient-linked records are never hard-deleted).
+
+## Tools exposed
+
+All handlers wrap `LabOrderService` and are scoped by `ctx.clinic_id`.
+Summaries return only structured fields (ids, dates, enums) — no
+`notes` / names — so none sets `exposes_free_text`.
+
+| Tool | Category | Permission |
+|------|----------|------------|
+| `list_lab_orders` | READ | `lab_orders.read` |
+| `create_lab_order` | WRITE | `lab_orders.write` |
+| `update_lab_order_status` | WRITE | `lab_orders.write` |
 
 ## Events
 

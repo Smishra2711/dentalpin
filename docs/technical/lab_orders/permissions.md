@@ -8,7 +8,7 @@ last_verified_commit: c9c20493
 | Permission | Gates | Endpoints |
 |---|---|---|
 | `lab_orders.read` | View lab orders | `GET /api/v1/lab_orders/`, `GET /api/v1/lab_orders/{id}` |
-| `lab_orders.write` | Create/update/delete lab orders | `POST`, `PATCH`, `DELETE` under `/api/v1/lab_orders/` |
+| `lab_orders.write` | Create/update lab orders (cancel via status; no hard delete) | `POST`, `PATCH` under `/api/v1/lab_orders/` |
 
 Default role mapping:
 

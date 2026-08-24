@@ -12,7 +12,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/lab_orders/router.py
   - backend/app/modules/lab_orders/frontend/pages/lab-orders/index.vue
-last_verified_commit: c9c20493
+last_verified_commit: e0af282a
 ---
 
 # Lab work orders
@@ -25,4 +25,4 @@ Open **New lab order**, select the patient and laboratory contact, enter the wor
 
 ## Track status
 
-Open **Lab orders** to review existing orders. Use the status selector to move an order through `Sent`, `In progress`, `Ready`, `Received`, or `Cancelled`.
+Open **Lab orders** to review existing orders. Use the status selector to move an order through `Sent`, `In progress`, `Ready`, `Received`, or `Cancelled`. Roles without write access see the status as a read-only label.

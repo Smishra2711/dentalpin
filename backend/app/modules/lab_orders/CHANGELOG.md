@@ -2,8 +2,10 @@
 
 ## 0.1.0 — initial release
 
-- Lab work order CRUD with status tracking (`sent` → `in_progress` →
-  `ready` → `received` / `cancelled`), auto-stamping `received_date`.
+- Lab work order create/read/update with status tracking (`sent` →
+  `in_progress` → `ready` → `received` / `cancelled`), auto-stamping
+  `received_date` on the transition into `received`. No hard delete —
+  cancellation is a status change.
 - Patient + laboratory-contact linkage, clinic-scoped on every query,
   validation and agent tool; display-name enrichment.
 - Prosthodontic fields: impression type, antagonist information and
@@ -13,8 +15,7 @@
 - Agent tools: `list_lab_orders`, `create_lab_order`,
   `update_lab_order_status`.
 - `auto_install=False`, `removable=True`; own Alembic branch with
-  uninstall round-trip, tenant-isolation coverage, HTTP date-free CRUD
-  tests.
+  uninstall round-trip and tenant-isolation service tests.
 - EN/ES/FR/PT/TA locales; technical overview/events/permissions pages;
   bilingual user manual; searchable sidebar entries gated by role.
 
