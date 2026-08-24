@@ -11,6 +11,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.events import event_bus
+from app.core.events.types import EventType
 from app.modules.contacts.models import Contact
 from app.modules.patients.models import Patient
 
@@ -47,13 +48,19 @@ class LabOrderService:
     async def _assert_patient(db: AsyncSession, clinic_id: UUID, patient_id: UUID) -> None:
         stmt = select(Patient.id).where(Patient.id == patient_id, Patient.clinic_id == clinic_id)
         if (await db.execute(stmt)).scalar_one_or_none() is None:
-            raise HTTPException(http_status.HTTP_400_BAD_REQUEST, "patient_id does not match a patient in this clinic")
+            raise HTTPException(
+                http_status.HTTP_400_BAD_REQUEST,
+                "patient_id does not match a patient in this clinic",
+            )
 
     @staticmethod
     async def _assert_contact(db: AsyncSession, clinic_id: UUID, contact_id: UUID) -> None:
         stmt = select(Contact.id).where(Contact.id == contact_id, Contact.clinic_id == clinic_id)
         if (await db.execute(stmt)).scalar_one_or_none() is None:
-            raise HTTPException(http_status.HTTP_400_BAD_REQUEST, "lab_contact_id does not match a contact in this clinic")
+            raise HTTPException(
+                http_status.HTTP_400_BAD_REQUEST,
+                "lab_contact_id does not match a contact in this clinic",
+            )
 
     @staticmethod
     async def _enrich(db: AsyncSession, clinic_id: UUID, orders: list[LabOrder]) -> list[dict]:
@@ -62,16 +69,37 @@ class LabOrderService:
         patient_ids = {order.patient_id for order in orders}
         contact_ids = {order.lab_contact_id for order in orders}
         patients = (
-            (await db.execute(select(Patient).where(Patient.id.in_(patient_ids), Patient.clinic_id == clinic_id)))
-            .scalars().all()
+            (
+                await db.execute(
+                    select(Patient).where(
+                        Patient.id.in_(patient_ids), Patient.clinic_id == clinic_id
+                    )
+                )
+            )
+            .scalars()
+            .all()
         )
         contacts = (
-            (await db.execute(select(Contact).where(Contact.id.in_(contact_ids), Contact.clinic_id == clinic_id)))
-            .scalars().all()
+            (
+                await db.execute(
+                    select(Contact).where(
+                        Contact.id.in_(contact_ids), Contact.clinic_id == clinic_id
+                    )
+                )
+            )
+            .scalars()
+            .all()
         )
         patient_names = {patient.id: patient.full_name for patient in patients}
         contact_names = {contact.id: contact.name for contact in contacts}
-        return [_response_dict(order, patient_names.get(order.patient_id, "—"), contact_names.get(order.lab_contact_id, "—")) for order in orders]
+        return [
+            _response_dict(
+                order,
+                patient_names.get(order.patient_id, "—"),
+                contact_names.get(order.lab_contact_id, "—"),
+            )
+            for order in orders
+        ]
 
     @staticmethod
     async def list_orders(
@@ -91,7 +119,17 @@ class LabOrderService:
         if order_status:
             stmt = stmt.where(LabOrder.status == order_status)
         total = (await db.execute(select(func.count()).select_from(stmt.subquery()))).scalar_one()
-        rows = (await db.execute(stmt.order_by(LabOrder.sent_date.desc()).offset((page - 1) * page_size).limit(page_size))).scalars().all()
+        rows = (
+            (
+                await db.execute(
+                    stmt.order_by(LabOrder.sent_date.desc())
+                    .offset((page - 1) * page_size)
+                    .limit(page_size)
+                )
+            )
+            .scalars()
+            .all()
+        )
         return list(rows), total
 
     @staticmethod
@@ -123,17 +161,23 @@ class LabOrderService:
         return (await LabOrderService._enrich(db, clinic_id, [order]))[0]
 
     @staticmethod
-    async def create_order(db: AsyncSession, clinic_id: UUID, payload: LabOrderCreate, created_by: UUID | None) -> LabOrder:
+    async def create_order(
+        db: AsyncSession, clinic_id: UUID, payload: LabOrderCreate, created_by: UUID | None
+    ) -> LabOrder:
         await LabOrderService._assert_patient(db, clinic_id, payload.patient_id)
         await LabOrderService._assert_contact(db, clinic_id, payload.lab_contact_id)
-        order = LabOrder(clinic_id=clinic_id, created_by=created_by, status="sent", **payload.model_dump())
+        order = LabOrder(
+            clinic_id=clinic_id, created_by=created_by, status="sent", **payload.model_dump()
+        )
         db.add(order)
         await db.commit()
         await db.refresh(order)
         return order
 
     @staticmethod
-    async def update_order(db: AsyncSession, clinic_id: UUID, order_id: UUID, payload: LabOrderUpdate) -> LabOrder:
+    async def update_order(
+        db: AsyncSession, clinic_id: UUID, order_id: UUID, payload: LabOrderUpdate
+    ) -> LabOrder:
         order = await LabOrderService.get_order(db, clinic_id, order_id)
         if payload.lab_contact_id is not None:
             await LabOrderService._assert_contact(db, clinic_id, payload.lab_contact_id)
@@ -143,11 +187,13 @@ class LabOrderService:
             data["received_date"] = date.today()
         for field, value in data.items():
             setattr(order, field, value)
-        await db.commit()
-        await db.refresh(order)
+        await db.flush()
+        # ADR 0019 — publish *inside* the transaction with the publisher's
+        # session so transactional subscribers see the updated row and roll
+        # back with it; the caller (router / agent runtime) owns the commit.
         if old_status != order.status:
             await event_bus.publish(
-                "lab_order.status_changed",
+                EventType.LAB_ORDER_STATUS_CHANGED,
                 {
                     "clinic_id": str(clinic_id),
                     "order_id": str(order.id),
@@ -156,7 +202,10 @@ class LabOrderService:
                     "work_type": order.work_type,
                     "tooth_reference": order.tooth_reference,
                 },
+                db=db,
             )
+        await db.commit()
+        await db.refresh(order)
         return order
 
     @staticmethod

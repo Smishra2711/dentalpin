@@ -2,6 +2,9 @@
   "labOrders": {
     "title": "Lab work orders",
     "add": "New lab order",
+    "patient": "Patient",
+    "lab": "Laboratory",
+    "loading": "Loading…",
     "selectPatient": "Select patient",
     "selectLab": "Select laboratory",
     "workType": "Work type",

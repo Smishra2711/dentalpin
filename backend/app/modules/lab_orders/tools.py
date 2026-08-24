@@ -46,7 +46,12 @@ def _summary(order) -> dict:
 
 async def _list(ctx: AgentContext, params: ListLabOrdersArgs) -> dict:
     orders, total = await LabOrderService.list_orders(
-        ctx.db, ctx.clinic_id, patient_id=params.patient_id, order_status=params.order_status, page=1, page_size=params.limit
+        ctx.db,
+        ctx.clinic_id,
+        patient_id=params.patient_id,
+        order_status=params.order_status,
+        page=1,
+        page_size=params.limit,
     )
     return {"total": total, "lab_orders": [_summary(order) for order in orders]}
 
@@ -61,17 +66,43 @@ async def _create(ctx: AgentContext, params: CreateLabOrderArgs) -> dict:
         expected_date=params.expected_date,
         notes=params.notes,
     )
-    return _summary(await LabOrderService.create_order(ctx.db, ctx.clinic_id, payload, ctx.user_id))
+    # AgentContext carries no user identity — agent-initiated orders are
+    # attributed to no staff row (created_by stays null); the actor trail
+    # lives in agent_audit_logs instead.
+    return _summary(await LabOrderService.create_order(ctx.db, ctx.clinic_id, payload, None))
 
 
 async def _update_status(ctx: AgentContext, params: UpdateLabOrderStatusArgs) -> dict:
-    order = await LabOrderService.update_order(ctx.db, ctx.clinic_id, params.order_id, LabOrderUpdate(status=params.status))
+    order = await LabOrderService.update_order(
+        ctx.db, ctx.clinic_id, params.order_id, LabOrderUpdate(status=params.status)
+    )
     return _summary(order)
 
 
 def get_tools() -> list[Tool]:
     return [
-        Tool("list_lab_orders", "List lab orders for this clinic.", ListLabOrdersArgs, _list, ["lab_orders.read"], ToolCategory.READ),
-        Tool("create_lab_order", "Create a lab work order for this clinic.", CreateLabOrderArgs, _create, ["lab_orders.write"], ToolCategory.WRITE),
-        Tool("update_lab_order_status", "Update a lab order status for this clinic.", UpdateLabOrderStatusArgs, _update_status, ["lab_orders.write"], ToolCategory.WRITE),
+        Tool(
+            "list_lab_orders",
+            "List lab orders for this clinic.",
+            ListLabOrdersArgs,
+            _list,
+            ["lab_orders.read"],
+            ToolCategory.READ,
+        ),
+        Tool(
+            "create_lab_order",
+            "Create a lab work order for this clinic.",
+            CreateLabOrderArgs,
+            _create,
+            ["lab_orders.write"],
+            ToolCategory.WRITE,
+        ),
+        Tool(
+            "update_lab_order_status",
+            "Update a lab order status for this clinic.",
+            UpdateLabOrderStatusArgs,
+            _update_status,
+            ["lab_orders.write"],
+            ToolCategory.WRITE,
+        ),
     ]

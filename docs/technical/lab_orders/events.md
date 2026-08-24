@@ -1,6 +1,6 @@
 ---
 module: lab_orders
-last_verified_commit: 0000000
+last_verified_commit: c9c20493
 ---
 
 # lab_orders — events
@@ -9,7 +9,9 @@ last_verified_commit: 0000000
 
 ### `lab_order.status_changed`
 
-Published after a lab order is committed with a different status. Payload:
+Published when PATCH changes an order's status (the same update
+auto-stamps `received_date` on `received`). Constant:
+`EventType.LAB_ORDER_STATUS_CHANGED`. Payload:
 
 - `clinic_id`
 - `order_id`
@@ -22,4 +24,9 @@ The module ships no subscriber. Optional modules may consume the event without i
 
 ## Transaction model
 
-There are no bundled event handlers in this module, so ADR 0019's transactional-handler contract is not required here. The status-change event is published only after the status update transaction has committed.
+The module ships no event handlers, so it has no handler-side ADR 0019
+obligations. Publisher-side: the status-change event is published
+**inside** the update transaction — after the row flush, before the
+caller's commit — passing the publisher's session (`db=`) so any future
+transactional subscriber sees the updated row and rolls back with it.
+

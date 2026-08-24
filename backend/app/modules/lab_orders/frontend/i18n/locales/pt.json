@@ -2,6 +2,9 @@
   "labOrders": {
     "title": "Trabalhos de laboratório",
     "add": "Novo trabalho",
+    "patient": "Paciente",
+    "lab": "Laboratório",
+    "loading": "A carregar…",
     "selectPatient": "Selecionar paciente",
     "selectLab": "Selecionar laboratório",
     "workType": "Tipo de trabalho",

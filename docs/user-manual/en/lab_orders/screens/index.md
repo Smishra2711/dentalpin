@@ -1,3 +1,20 @@
+---
+module: lab_orders
+screen: index
+route: /lab-orders
+related_endpoints:
+  - GET /api/v1/lab_orders/
+  - GET /api/v1/lab_orders/{order_id}
+  - PATCH /api/v1/lab_orders/{order_id}
+related_permissions:
+  - lab_orders.read
+  - lab_orders.write
+related_paths:
+  - backend/app/modules/lab_orders/router.py
+  - backend/app/modules/lab_orders/frontend/pages/lab-orders/index.vue
+last_verified_commit: c9c20493
+---
+
 # Lab work orders
 
 Use **Lab orders** to send work to an external laboratory and track its status.

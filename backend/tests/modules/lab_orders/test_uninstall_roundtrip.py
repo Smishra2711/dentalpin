@@ -28,7 +28,9 @@ def _dsn() -> str:
 async def _tables() -> set[str]:
     conn = await asyncpg.connect(_dsn())
     try:
-        rows = await conn.fetch("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name != 'alembic_version'")
+        rows = await conn.fetch(
+            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name != 'alembic_version'"
+        )
         return {row["table_name"] for row in rows}
     finally:
         await conn.close()
@@ -40,9 +42,23 @@ def test_lab_orders_uninstall_roundtrip_is_branch_scoped() -> None:
     assert LAB_ORDER_TABLES.issubset(before)
     baseline = before - LAB_ORDER_TABLES
 
-    _alembic("downgrade", "lab_orders@-2")
-    after_down = asyncio.run(_tables())
-    assert LAB_ORDER_TABLES.isdisjoint(after_down)
+    # Walk the branch down one revision at a time until the module's tables
+    # are gone. ``lab_orders@-1`` always resolves against the branch's
+    # *current* head, so this uninstalls completely regardless of how many
+    # ``labo_*`` revisions ship later.
+    # (Do NOT use ``lab_orders@base``: in this repo's merged multi-head
+    # graph it resolves to the whole-graph base and tears down unrelated
+    # chains.)
+    after_down = before
+    for _ in range(10):
+        _alembic("downgrade", "lab_orders@-1")
+        after_down = asyncio.run(_tables())
+        if LAB_ORDER_TABLES.isdisjoint(after_down):
+            break
+    else:
+        raise AssertionError(
+            f"lab_orders tables survived full downgrade: {LAB_ORDER_TABLES & asyncio.run(_tables())}"
+        )
     assert baseline <= after_down
 
     _alembic("upgrade", "lab_orders@head")

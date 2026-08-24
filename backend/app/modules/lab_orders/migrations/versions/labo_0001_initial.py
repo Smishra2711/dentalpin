@@ -7,6 +7,7 @@ patients and contacts migration tips before creating cross-branch FKs.
 from collections.abc import Sequence
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision: str = "labo_0001"

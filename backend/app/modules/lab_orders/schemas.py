@@ -12,10 +12,22 @@ WorkType = Literal[
 OrderStatus = Literal["sent", "in_progress", "ready", "received", "cancelled"]
 ImpressionType = Literal["alginate", "pvs_silicone", "digital_scan", "other"]
 ShadeSelection = Literal[
-    "A1", "A2", "A3", "A3.5", "A4",
-    "B1", "B2", "B3", "B4",
-    "C1", "C2", "C3", "C4",
-    "D2", "D3", "D4",
+    "A1",
+    "A2",
+    "A3",
+    "A3.5",
+    "A4",
+    "B1",
+    "B2",
+    "B3",
+    "B4",
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "D2",
+    "D3",
+    "D4",
 ]
 
 

@@ -1,6 +1,6 @@
 ---
 module: lab_orders
-last_verified_commit: 0000000
+last_verified_commit: c9c20493
 ---
 
 # lab_orders — permissions

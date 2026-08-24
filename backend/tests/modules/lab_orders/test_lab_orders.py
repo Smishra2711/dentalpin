@@ -14,8 +14,12 @@ from app.modules.patients.models import Patient
 
 
 @pytest.mark.asyncio
-async def test_create_list_and_receive_lab_order(db_session: AsyncSession, test_clinic: Clinic, test_patient: Patient):
-    contact = Contact(clinic_id=test_clinic.id, name="Dental Lab", contact_type="lab", is_active=True)
+async def test_create_list_and_receive_lab_order(
+    db_session: AsyncSession, test_clinic: Clinic, test_patient: Patient
+):
+    contact = Contact(
+        clinic_id=test_clinic.id, name="Dental Lab", contact_type="lab", is_active=True
+    )
     db_session.add(contact)
     await db_session.commit()
 
@@ -45,18 +49,29 @@ async def test_create_list_and_receive_lab_order(db_session: AsyncSession, test_
 
 
 @pytest.mark.asyncio
-async def test_lab_order_lookup_is_clinic_scoped(db_session: AsyncSession, test_clinic: Clinic, test_patient: Patient):
-    other_clinic = Clinic(id=uuid4(), name="Other Clinic", tax_id="B88888888", address={}, settings={})
+async def test_lab_order_lookup_is_clinic_scoped(
+    db_session: AsyncSession, test_clinic: Clinic, test_patient: Patient
+):
+    other_clinic = Clinic(
+        id=uuid4(), name="Other Clinic", tax_id="B88888888", address={}, settings={}
+    )
     db_session.add(other_clinic)
     other_patient = Patient(clinic_id=other_clinic.id, first_name="Other", last_name="Patient")
-    other_contact = Contact(clinic_id=other_clinic.id, name="Other Lab", contact_type="lab", is_active=True)
+    other_contact = Contact(
+        clinic_id=other_clinic.id, name="Other Lab", contact_type="lab", is_active=True
+    )
     db_session.add_all([other_patient, other_contact])
     await db_session.commit()
 
     order = await LabOrderService.create_order(
         db_session,
         other_clinic.id,
-        LabOrderCreate(patient_id=other_patient.id, lab_contact_id=other_contact.id, work_type="bridge", sent_date=date(2026, 8, 22)),
+        LabOrderCreate(
+            patient_id=other_patient.id,
+            lab_contact_id=other_contact.id,
+            work_type="bridge",
+            sent_date=date(2026, 8, 22),
+        ),
         None,
     )
     from fastapi import HTTPException
