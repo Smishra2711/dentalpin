@@ -36,7 +36,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/billing/frontend/pages/invoices/[id]/index.vue
   - backend/app/modules/billing/router.py
-last_verified_commit: a13bd29
+last_verified_commit: c9856a3
 ---
 
 # Detalle de factura
@@ -64,7 +64,11 @@ se emite un abono.
   factura nace `paid`.
 - **PDF.** Dos formatos: borrador (vista previa con marca de agua)
   y definitivo (solo desde `issued`). El PDF se genera con
-  WeasyPrint.
+  WeasyPrint. Si una línea usa un tipo de IVA con nota legal (p. ej.
+  la exención española, art. 20.Uno.5º LIVA, sembrada por el preset
+  `es`), la nota se imprime en el bloque de avisos legales. El pie
+  muestra fecha y hora de generación en la zona horaria de la
+  clínica.
 - **Historial.** Cambios de estado y eventos clave en orden
   cronológico.
 - **VeriFactu.** Si el módulo está instalado, al emitir se encola el

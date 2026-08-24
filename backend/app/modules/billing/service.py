@@ -57,6 +57,7 @@ async def vat_legal_notes_for_invoice(
             VatType.clinic_id == clinic_id,
             VatType.id.in_(vat_type_ids),
             VatType.legal_note.is_not(None),
+            VatType.legal_note != "",
         )
         .distinct()
         .order_by(VatType.legal_note)
