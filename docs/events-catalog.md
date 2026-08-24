@@ -92,6 +92,8 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 | `recall.created` | `EventType.RECALL_CREATED` | `recalls` | `recall_reminders` |
 | `recall.due` | `EventType.RECALL_DUE` | — | — |
 | `recall.snoozed` | `EventType.RECALL_SNOOZED` | `recalls` | — |
+| `staff_task.created` | `EventType.STAFF_TASK_CREATED` | `staff_tasks` | — |
+| `staff_task.status_changed` | `EventType.STAFF_TASK_STATUS_CHANGED` | `staff_tasks` | — |
 | `tenant.resolved` | `EventType.TENANT_RESOLVED` | — | — |
 | `treatment.completed` | `EventType.TREATMENT_COMPLETED` | — | — |
 | `treatment_plan.budget_sync_requested` | `EventType.TREATMENT_PLAN_BUDGET_SYNC_REQUESTED` | `treatment_plan` | `budget` |
@@ -735,6 +737,20 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Constant:** `EventType.RECALL_SNOOZED`
 - **Publishers:**
   - `recalls` — `backend/app/modules/recalls/service.py:356`
+- **Subscribers:** —
+
+### `staff_task.created`
+
+- **Constant:** `EventType.STAFF_TASK_CREATED`
+- **Publishers:**
+  - `staff_tasks` — `backend/app/modules/staff_tasks/service.py:48`
+- **Subscribers:** —
+
+### `staff_task.status_changed`
+
+- **Constant:** `EventType.STAFF_TASK_STATUS_CHANGED`
+- **Publishers:**
+  - `staff_tasks` — `backend/app/modules/staff_tasks/service.py:131`
 - **Subscribers:** —
 
 ### `tenant.resolved`

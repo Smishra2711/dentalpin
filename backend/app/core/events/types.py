@@ -254,3 +254,13 @@ class EventType:
     COPILOT_TOOL_INVOKED = "copilot.tool.invoked"
     COPILOT_BUDGET_THRESHOLD_REACHED = "copilot.budget.threshold_reached"
     COPILOT_DIGEST_SENT = "copilot.digest.sent"
+
+    # Staff tasks events (staff_tasks module — staff handoff board,
+    # roadmap #219). STAFF_TASK_CREATED fires on creation;
+    # STAFF_TASK_STATUS_CHANGED on every status transition (open →
+    # claimed → done, or cancelled). Payload: (clinic_id, task_id,
+    # status, priority, assignee_id, due_date). No bundled subscriber;
+    # future modules (notifications / patient_timeline) may subscribe
+    # without importing staff_tasks.
+    STAFF_TASK_CREATED = "staff_task.created"
+    STAFF_TASK_STATUS_CHANGED = "staff_task.status_changed"

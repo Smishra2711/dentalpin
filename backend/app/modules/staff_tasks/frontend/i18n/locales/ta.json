@@ -1,0 +1,29 @@
+{
+  "staffTasks": {
+    "title": "Staff tasks",
+    "add": "New task",
+    "taskTitle": "Task",
+    "details": "Details",
+    "priority": "Priority",
+    "dueDate": "Due date",
+    "status": "Status",
+    "filterByStatus": "Filter by status",
+    "delete": "Delete",
+    "deleteTitle": "Delete task",
+    "deleteMessage": "Delete this task? This cannot be undone.",
+    "statuses": {
+      "open": "Open",
+      "claimed": "Claimed",
+      "done": "Done",
+      "cancelled": "Cancelled"
+    },
+    "priorities": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High"
+    }
+  },
+  "nav": {
+    "staffTasks": "Staff tasks"
+  }
+}

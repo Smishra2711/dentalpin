@@ -158,5 +158,9 @@ export const PERMISSIONS = {
   contacts: {
     read: 'contacts.read',
     write: 'contacts.write'
+  },
+  staffTasks: {
+    read: 'staff_tasks.read',
+    write: 'staff_tasks.write'
   }
 } as const

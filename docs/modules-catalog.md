@@ -34,6 +34,7 @@ Maintained by `backend/scripts/generate_catalogs.py`. CI fails if a manifest cha
 | `recalls` | 0.1.0 | official | patients, agenda | auto | yes | 3 | 4 | 5 | yes |
 | `reports` | 0.1.0 | official | patients, agenda, catalog, budget, billing, payments | auto | no | 3 | 0 | 0 | yes |
 | `schedules` | 0.1.0 | official | agenda | auto | yes | 8 | 0 | 4 | yes |
+| `staff_tasks` | 0.1.0 | community | — | manual | yes | 2 | 2 | 0 | yes |
 | `treatment_plan` | 0.1.0 | official | patients, agenda, odontogram, catalog, budget, media | auto | no | 5 | 13 | 7 | yes |
 | `verifactu` | 0.1.0 | official | billing, catalog | manual | yes | 5 | 1 | 2 | yes |
 | `whatsapp_kapso` | 0.1.0 | community | notifications, patients | manual | yes | 2 | 0 | 0 | yes |
@@ -619,6 +620,25 @@ Clinic + professional operating hours, overrides, availability, and occupancy an
   - `appointment.updated`
   - `clinic.created`
 - **Module CLAUDE.md:** [`backend/app/modules/schedules/CLAUDE.md`](../backend/app/modules/schedules/CLAUDE.md)
+
+### `staff_tasks` — v0.1.0
+
+Staff handoff board — internal tasks and handoffs between team members.
+
+- **Author:** DentalPin Core Team
+- **License:** BSL-1.1
+- **Category:** community
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** —
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `staff_tasks.read`
+  - `staff_tasks.write`
+- **Events emitted:**
+  - `staff_task.created`
+  - `staff_task.status_changed`
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/staff_tasks/CLAUDE.md`](../backend/app/modules/staff_tasks/CLAUDE.md)
 
 ### `treatment_plan` — v0.1.0
 

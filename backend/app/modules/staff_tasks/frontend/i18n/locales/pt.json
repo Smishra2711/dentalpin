@@ -1,0 +1,29 @@
+{
+  "staffTasks": {
+    "title": "Tarefas da equipe",
+    "add": "Nova tarefa",
+    "taskTitle": "Tarefa",
+    "details": "Detalhes",
+    "priority": "Prioridade",
+    "dueDate": "Prazo",
+    "status": "Estado",
+    "filterByStatus": "Filtrar por estado",
+    "delete": "Excluir",
+    "deleteTitle": "Excluir tarefa",
+    "deleteMessage": "Excluir esta tarefa? Esta ação não pode ser desfeita.",
+    "statuses": {
+      "open": "Aberta",
+      "claimed": "Assumida",
+      "done": "Concluída",
+      "cancelled": "Cancelada"
+    },
+    "priorities": {
+      "low": "Baixa",
+      "normal": "Normal",
+      "high": "Alta"
+    }
+  },
+  "nav": {
+    "staffTasks": "Tarefas da equipe"
+  }
+}

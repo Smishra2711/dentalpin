@@ -1,0 +1,29 @@
+{
+  "staffTasks": {
+    "title": "Tareas del equipo",
+    "add": "Nueva tarea",
+    "taskTitle": "Tarea",
+    "details": "Detalles",
+    "priority": "Prioridad",
+    "dueDate": "Fecha límite",
+    "status": "Estado",
+    "filterByStatus": "Filtrar por estado",
+    "delete": "Eliminar",
+    "deleteTitle": "Eliminar tarea",
+    "deleteMessage": "¿Eliminar esta tarea? No se puede deshacer.",
+    "statuses": {
+      "open": "Abierta",
+      "claimed": "Reclamada",
+      "done": "Hecha",
+      "cancelled": "Cancelada"
+    },
+    "priorities": {
+      "low": "Baja",
+      "normal": "Normal",
+      "high": "Alta"
+    }
+  },
+  "nav": {
+    "staffTasks": "Tareas del equipo"
+  }
+}
