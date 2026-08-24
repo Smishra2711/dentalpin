@@ -55,6 +55,12 @@ None.
 - **VAT types are versioned** — when changing a VAT rate, create a new
   version rather than mutating in place. Historical invoices must
   reproduce their original VAT.
+- **`VatType.legal_note`** — statutory clause the invoice PDF prints
+  when a line uses the type (e.g. the Spanish dental exemption,
+  art. 20.Uno.5º LIVA — seeded by the `es` preset, backfilled by
+  `cat_0004`). Clinic-owned even on system types (editable alongside
+  `is_default`, #237 precedent). Billing reads it via
+  `vat_legal_notes_for_invoice` (#204).
 - **Pricing rules live in `pricing.py`** — keep service code thin and
   delegate calculations there.
 - **Seed data** is shipped via `seed.py` and idempotent — re-running it

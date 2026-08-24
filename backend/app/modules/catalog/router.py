@@ -223,8 +223,9 @@ async def update_vat_type(
         raise HTTPException(status_code=404, detail="VAT type not found")
 
     if vat_type.is_system:
-        # System VAT types can only have is_default changed
-        allowed_updates = {"is_default"}
+        # System VAT types: rate/names stay locked, but the default flag
+        # and the invoice legal note are clinic-owned (#237 precedent).
+        allowed_updates = {"is_default", "legal_note"}
         update_data = {
             k: v for k, v in data.model_dump(exclude_unset=True).items() if k in allowed_updates
         }
