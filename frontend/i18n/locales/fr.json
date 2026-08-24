@@ -828,6 +828,7 @@
     "cancelled": "Annulé",
     "noShow": "Absence",
     "no_show": "Absence",
+    "actionsMenu": "Actions du rendez-vous",
     "transitions": {
       "confirmed": "Marquer comme confirmé",
       "checked_in": "Enregistrer l'arrivée",
