@@ -366,6 +366,7 @@ Clinic-wide medication list with dose/unit/form, seeded with a 56-item dental st
 - **Events emitted:** —
 - **Events consumed:**
   - `clinic.created`
+- **Module CLAUDE.md:** [`backend/app/modules/medication_catalog/CLAUDE.md`](../backend/app/modules/medication_catalog/CLAUDE.md)
 
 ### `migration_import` — v0.1.0
 
