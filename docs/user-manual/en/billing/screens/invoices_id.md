@@ -30,7 +30,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/billing/frontend/pages/invoices/[id]/index.vue
   - backend/app/modules/billing/router.py
-last_verified_commit: a13bd29
+last_verified_commit: c9856a3
 ---
 
 # Invoice detail
@@ -57,7 +57,11 @@ or issue a credit note.
   an invoice from a quote that was already collected (deposit) makes
   the invoice born `paid`.
 - **PDF.** Two formats: draft (watermarked preview) and final (only
-  for `issued`). PDF generation uses WeasyPrint.
+  for `issued`). PDF generation uses WeasyPrint. When a line uses a
+  VAT type carrying a statutory note (e.g. the Spanish exemption,
+  art. 20.Uno.5º LIVA, seeded by the `es` preset), the note prints in
+  the legal-notices block. The footer shows the generation date and
+  time in the clinic's timezone.
 - **History.** Status changes and key events in chronological order.
 - **VeriFactu.** When the module is installed, issuing the invoice
   queues the AEAT submission. State (`pending`, `sent`, `rejected`)

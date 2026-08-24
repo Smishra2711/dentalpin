@@ -17,6 +17,9 @@
     "patients": "Patienten",
     "appointments": "Terminkalender",
     "recalls": "Recalls",
+    "expenses": "Ausgaben",
+    "labOrdersForm": "Neuer Laborauftrag",
+    "labOrdersStatus": "Laboraufträge",
     "treatmentPlans": "Behandlungspläne",
     "budgets": "Kostenvoranschläge",
     "invoices": "Rechnungen",
@@ -825,6 +828,7 @@
     "cancelled": "Abgesagt",
     "noShow": "Nicht erschienen",
     "no_show": "Nicht erschienen",
+    "actionsMenu": "Terminaktionen",
     "transitions": {
       "confirmed": "Als bestätigt markieren",
       "checked_in": "Ankunft vermerken",

@@ -5,6 +5,7 @@
 - i18n(#131/#275): `_resolve_label` falls back to any non-empty catalog
   name after `es→en→fr→pt→ta` (items created under core-only locales
   like de/hu).
+- fix(#203): the patient-feed filter bar showed "Administrativa" twice — patient-level and appointment-level administrative notes have identical labels. The six note types now collapse into five filter chips (the Administrativa chip toggles both administrative types); the API call and NoteCard badges are unchanged.
 
 - fix(#184): type-check clean — `sourceBadgeColor()` returns `UiColor` (plan notes use `neutral`, the design-system role, instead of `secondary`).
 - i18n: add Tamil locale (`ta.json`); add Tamil translations to seed

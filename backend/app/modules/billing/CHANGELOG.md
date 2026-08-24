@@ -6,6 +6,8 @@
   back to any non-empty translation after `es→en→fr→pt→ta`, so items
   created under a core-only locale (de, hu, and future ones) never
   degrade to "Unknown treatment".
+- fix(#204): invoice PDF polish — the footer prints the real generation datetime in the clinic's timezone (`date.today()` through `%H:%M` always read "00:00"); the per-line VAT rate uses the same locale-aware formatting as the amounts (`0%`/`8,5%`, never `0.0%`); and the PDF endpoints prepend the lines' `VatType.legal_note` statutory clauses (e.g. the Spanish dental exemption, art. 20.Uno.5º LIVA) to the legal-notices block via `vat_legal_notes_for_invoice`.
+- fix(#203): the back link on invoice detail/new rendered the raw key `actions.back` when arriving from the patient page — the key never existed in any locale; use `common.back` ("Volver").
 
 - fix(#181): from-budget wizard — the per-row discount caption follows the quantity being invoiced and unselected rows show the quote's net price (after global discount). Invoice detail exposes `treatment_plan` (read-time lookup through the budget module, no FK) and links to the plan. Patient billing summary exposes `total_discount`.
 - fix(#175): voiding or deleting a draft invoice, editing/removing one of its lines, or issuing a credit note now releases the quote lines it consumed. `BudgetItem.invoiced_quantity` is recomputed from the live invoice lines (`resync_invoiced_quantities`) instead of incremented on create; `create_from_budget` takes the budget row lock so two wizards can't over-invoice the same line.

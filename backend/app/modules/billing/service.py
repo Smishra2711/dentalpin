@@ -34,6 +34,37 @@ _INVOICE_SORT_ALLOW = {
 }
 _INVOICE_SORT_DEFAULT = "created_at:desc"
 
+# --- VAT legal notes for the invoice PDF -----------------------------------
+
+
+async def vat_legal_notes_for_invoice(
+    db: AsyncSession, clinic_id: UUID, invoice: Invoice
+) -> list[str]:
+    """Distinct ``VatType.legal_note`` texts for the invoice's lines.
+
+    Statutory clauses the PDF must print — e.g. the Spanish dental
+    exemption (art. 20.Uno.5º LIVA) carried by the exempt VAT type
+    (#204). ``catalog`` is in ``manifest.depends``.
+    """
+    from app.modules.catalog.models import VatType
+
+    vat_type_ids = {item.vat_type_id for item in invoice.items if item.vat_type_id}
+    if not vat_type_ids:
+        return []
+    rows = await db.execute(
+        select(VatType.legal_note)
+        .where(
+            VatType.clinic_id == clinic_id,
+            VatType.id.in_(vat_type_ids),
+            VatType.legal_note.is_not(None),
+            VatType.legal_note != "",
+        )
+        .distinct()
+        .order_by(VatType.legal_note)
+    )
+    return [row[0] for row in rows.all()]
+
+
 # --- Invoice ↔ Payment computed summary -----------------------------------
 
 

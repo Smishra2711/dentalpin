@@ -15,6 +15,7 @@ from app.modules.budget.service import lookup_linked_plan
 from app.modules.payments.schemas import PaymentResponse
 
 from .hooks import BillingHookRegistry
+from .models import Invoice
 from .schemas import (
     BillingPartyUpdate,
     BillingSettingsResponse,
@@ -49,6 +50,7 @@ from .service import (
     InvoiceService,
     compute_paid_summaries_for_invoices,
     compute_paid_summary,
+    vat_legal_notes_for_invoice,
 )
 from .workflow import InvoiceWorkflowError, InvoiceWorkflowService
 
@@ -993,6 +995,26 @@ async def get_invoice_history(
 # ============================================================================
 
 
+async def _merge_vat_legal_notes(
+    db: AsyncSession,
+    clinic_id: UUID,
+    invoice: Invoice,
+    extra_pdf_data: dict | None,
+) -> dict | None:
+    """Prepend the lines' VAT statutory clauses to the legal-notices block.
+
+    E.g. the Spanish dental exemption (art. 20.Uno.5º LIVA) carried by
+    the exempt VAT type (#204). Hook-supplied notices keep their spot
+    after the VAT clauses.
+    """
+    notes = await vat_legal_notes_for_invoice(db, clinic_id, invoice)
+    if not notes:
+        return extra_pdf_data
+    merged = dict(extra_pdf_data or {})
+    merged["legal_notices"] = [*notes, *(merged.get("legal_notices") or [])]
+    return merged
+
+
 @router.get("/invoices/{invoice_id}/pdf")
 async def download_invoice_pdf(
     invoice_id: UUID,
@@ -1021,6 +1043,7 @@ async def download_invoice_pdf(
     # — it only forwards the resulting dict to the PDF service.
     hook = BillingHookRegistry.get_for_clinic(clinic) if clinic else None
     extra_pdf_data = hook.enhance_pdf_data({}, invoice) if hook else None
+    extra_pdf_data = await _merge_vat_legal_notes(db, ctx.clinic_id, invoice, extra_pdf_data)
 
     total_paid, balance_due = await compute_paid_summary(db, ctx.clinic_id, invoice.id)
     pdf_bytes = await InvoicePDFService.generate_pdf(
@@ -1071,6 +1094,7 @@ async def preview_invoice_pdf(
 
     hook = BillingHookRegistry.get_for_clinic(clinic) if clinic else None
     extra_pdf_data = hook.enhance_pdf_data({}, invoice) if hook else None
+    extra_pdf_data = await _merge_vat_legal_notes(db, ctx.clinic_id, invoice, extra_pdf_data)
 
     total_paid, balance_due = await compute_paid_summary(db, ctx.clinic_id, invoice.id)
     pdf_bytes = await InvoicePDFService.generate_pdf(
