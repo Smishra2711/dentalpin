@@ -99,6 +99,9 @@ def make_handler(event_type_value: str):
                     break
                 except ValueError:
                     continue
+        # Patient-only events (e.g. patient.created) carry no separate
+        # entity id — the row is about the patient itself.
+        source_entity_id = source_entity_id or patient_id
 
         db.add(
             ActivityJournalEntry(

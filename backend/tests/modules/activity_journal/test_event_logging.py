@@ -60,7 +60,11 @@ async def test_publish_commit_persists_row(db_session: AsyncSession, test_clinic
 async def test_publisher_rollback_discards_row(db_session: AsyncSession, test_clinic: Clinic):
     await event_bus.publish(
         EventType.RECALL_CREATED,
-        {"clinic_id": str(test_clinic.id), "recall_id": str(uuid4())},
+        {
+            "clinic_id": str(test_clinic.id),
+            "recall_id": str(uuid4()),
+            "patient_id": str(uuid4()),
+        },
         db=db_session,
     )
     await db_session.rollback()
@@ -91,7 +95,10 @@ async def test_occurred_at_and_actor_attribution(db_session: AsyncSession, test_
             "clinic_id": str(test_clinic.id),
             "appointment_id": str(uuid4()),
             "actor_id": str(uuid4()),
-            "start_time": "2026-08-20T09:30:00+00:00",
+            # ``start_time`` on this payload is a *future* visit time and is
+            # deliberately NOT used as the journal timestamp; an explicit
+            # occurred_at wins, else the handler stamps now().
+            "occurred_at": "2026-08-20T09:30:00+00:00",
         },
         db=db_session,
     )
