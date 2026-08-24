@@ -163,7 +163,10 @@ def test_medical_reference_uninstall_roundtrip_is_branch_scoped() -> None:
     )
     baseline_non_medical_reference = before - MEDICAL_REFERENCE_TABLES
 
-    _alembic("downgrade", "medical_reference@-1")
+    # ``@base`` = the bottom of the module's branch (mr_0001's parent) —
+    # a full uninstall. ``@-1`` would stop one revision short of the tip
+    # and leave the original lookup tables behind.
+    _alembic("downgrade", "medical_reference@base")
 
     after_down = _list_tables()
     assert MEDICAL_REFERENCE_TABLES.isdisjoint(after_down), (
