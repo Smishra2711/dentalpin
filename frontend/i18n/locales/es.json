@@ -17,6 +17,8 @@
     "patients": "Pacientes",
     "appointments": "Agenda",
     "recalls": "Recordatorios",
+    "labOrdersForm": "Nuevo trabajo de laboratorio",
+    "labOrdersStatus": "Trabajos de laboratorio",
     "treatmentPlans": "Planes de tratamiento",
     "budgets": "Presupuestos",
     "invoices": "Facturas",

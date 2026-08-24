@@ -34,9 +34,9 @@ class UpdateLabOrderStatusArgs(BaseModel):
 
 def _summary(order) -> dict:
     return {
-        "id": str(order.id),
-        "patient_id": str(order.patient_id),
-        "lab_contact_id": str(order.lab_contact_id),
+        "id": order.id,  # native UUID — the registry's jsonify coerces
+        "patient_id": order.patient_id,
+        "lab_contact_id": order.lab_contact_id,
         "work_type": order.work_type,
         "status": order.status,
         "sent_date": order.sent_date,

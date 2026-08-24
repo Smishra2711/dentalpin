@@ -9,6 +9,10 @@ const { can } = usePermissions()
 const api = useLabOrders()
 const loading = ref(false)
 const orders = ref<Awaited<ReturnType<typeof api.list>>['data']>([])
+const total = ref(0)
+const page = ref(1)
+const PAGE_SIZE = 20
+const totalPages = computed(() => Math.max(1, Math.ceil(total.value / PAGE_SIZE)))
 const statuses: OrderStatus[] = ['sent', 'in_progress', 'ready', 'received', 'cancelled']
 
 if (!can(PERMISSIONS.labOrders.read)) await navigateTo('/')
@@ -16,11 +20,17 @@ if (!can(PERMISSIONS.labOrders.read)) await navigateTo('/')
 async function load() {
   loading.value = true
   try {
-    const response = await api.list({ page: 1, page_size: 100 })
+    const response = await api.list({ page: page.value, page_size: PAGE_SIZE })
     orders.value = response.data
+    total.value = response.total
   } finally {
     loading.value = false
   }
+}
+
+function onPage(p: number) {
+  page.value = p
+  load()
 }
 
 async function updateStatus(id: string, status: OrderStatus) {
@@ -71,5 +81,13 @@ onMounted(load)
         />
       </template>
     </UTable>
+
+    <PaginationBar
+      :page="page"
+      :total-pages="totalPages"
+      :total="total"
+      :page-size="PAGE_SIZE"
+      @update:page="onPage"
+    />
   </div>
 </template>

@@ -17,6 +17,8 @@
     "patients": "Patients",
     "appointments": "Schedule",
     "recalls": "Recalls",
+    "labOrdersForm": "New lab order",
+    "labOrdersStatus": "Lab orders",
     "treatmentPlans": "Treatment Plans",
     "budgets": "Quotes",
     "invoices": "Invoices",
