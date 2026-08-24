@@ -17,5 +17,5 @@ UI.
 
 ## Screens
 
-- [Expense list](./screens/expenses.md): category filter, expense
+- [Expense list](./screens/index.md): category filter, expense
   creation, monthly per-category totals and delete with confirmation.

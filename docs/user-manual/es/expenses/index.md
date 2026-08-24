@@ -17,6 +17,6 @@ administración de módulos.
 
 ## Pantallas
 
-- [Lista de gastos](./screens/expenses.md): filtro por categoría, alta
+- [Lista de gastos](./screens/index.md): filtro por categoría, alta
   de gastos, totales mensuales por categoría y borrado con
   confirmación.

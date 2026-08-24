@@ -244,6 +244,7 @@ Fixed/recurring office expense tracking with monthly category totals.
 - **Events emitted:** —
 - **Events consumed:** —
 - **Module CLAUDE.md:** [`backend/app/modules/expenses/CLAUDE.md`](../backend/app/modules/expenses/CLAUDE.md)
+
 ### `india_gst` — v0.1.0
 
 CGST/SGST/IGST GST billing compliance for Indian clinics.

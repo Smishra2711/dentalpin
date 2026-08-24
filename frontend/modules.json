@@ -14,7 +14,7 @@
     "/module_layers/recalls/frontend",
     "/module_layers/reports/frontend",
     "/module_layers/recall_reminders/frontend",
-    "/module_layers/expenses/frontend"
+    "/module_layers/expenses/frontend",
     "/module_layers/schedules/frontend",
     "/module_layers/treatment_plan/frontend",
     "/module_layers/clinical_notes/frontend",
@@ -92,6 +92,8 @@
     {
       "name": "expenses",
       "path": "/module_layers/expenses/frontend"
+    },
+    {
       "name": "payments",
       "path": "/module_layers/payments/frontend"
     }
