@@ -1111,6 +1111,7 @@ class InvoiceService:
                     or names.get("fr")
                     or names.get("pt")
                     or names.get("ta")
+                    or next((v for v in names.values() if v), None)
                     or description
                 )
                 internal_code = budget_item.catalog_item.internal_code
