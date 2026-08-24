@@ -42,7 +42,7 @@ edit history.
 
 ## Screens
 
-- [Activity log](../../user-manual/en/journal/screens/journal.md):
+- [Activity log](../../user-manual/en/activity_journal/screens/journal.md):
   filterable, paginated read-only list with per-row payload viewer.
 
 ## API

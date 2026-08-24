@@ -16,6 +16,7 @@ from fastapi import APIRouter
 from app.core.events.types import EventType
 from app.core.plugins import BaseModule
 
+from .events import build_handlers
 from .models import ActivityJournalEntry
 from .router import router
 
@@ -109,6 +110,4 @@ class ActivityJournalModule(BaseModule):
 
     def get_event_handlers(self) -> dict:
         """Subscribe to every transactionally-published event type."""
-        from .events import build_handlers
-
         return build_handlers(_SUBSCRIBED)
