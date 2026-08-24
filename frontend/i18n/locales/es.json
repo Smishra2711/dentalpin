@@ -846,6 +846,7 @@
     "cancelled": "Cancelada",
     "noShow": "No se presentó",
     "no_show": "No se presentó",
+    "actionsMenu": "Acciones de la cita",
     "transitions": {
       "confirmed": "Marcar como confirmada",
       "checked_in": "Marcar llegada",

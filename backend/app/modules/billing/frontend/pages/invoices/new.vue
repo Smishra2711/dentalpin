@@ -11,7 +11,7 @@ const api = useApi()
 
 // Track if coming from patient page
 const comesFromPatient = computed(() => route.query.from === 'patient' && route.query.patient_id)
-const backLabel = computed(() => comesFromPatient.value ? t('actions.back') : t('invoice.title'))
+const backLabel = computed(() => comesFromPatient.value ? t('common.back') : t('invoice.title'))
 
 // State
 const isLoading = ref(false)

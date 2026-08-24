@@ -34,6 +34,18 @@ const loadingMore = ref(false)
 const hasMore = ref(false)
 const activeFilters = ref<Set<NoteType>>(new Set(allTypes()))
 
+// The six note types collapse into five user-facing chips: patient-level
+// and appointment-level administrative notes share one "Administrativa"
+// chip — their labels are identical, so two chips read as a duplicate
+// (#203). The owner split stays intact in activeFilters / the API call.
+const FILTER_GROUPS: { key: string, types: NoteType[] }[] = [
+  { key: 'administrative', types: ['administrative', 'appointment_administrative'] },
+  { key: 'diagnosis', types: ['diagnosis'] },
+  { key: 'treatment', types: ['treatment'] },
+  { key: 'treatment_plan', types: ['treatment_plan'] },
+  { key: 'appointment_clinical', types: ['appointment_clinical'] }
+]
+
 const composerOpen = ref(false)
 const editingId = ref<string | null>(null)
 const composerBody = ref('')
@@ -93,26 +105,30 @@ function selectAll() {
   refresh()
 }
 
-function toggleFilter(type: NoteType) {
-  // From "all", clicking a type pivots to that single type — fastest path
+function toggleFilter(group: { types: NoteType[] }) {
+  // From "all", clicking a chip pivots to that single group — fastest path
   // for the most common intent ("show me only diagnosis notes").
   if (isAllSelected.value) {
-    activeFilters.value = new Set([type])
-  } else if (activeFilters.value.has(type)) {
-    activeFilters.value.delete(type)
+    activeFilters.value = new Set(group.types)
+  } else if (group.types.every(type => activeFilters.value.has(type))) {
+    for (const type of group.types) activeFilters.value.delete(type)
     if (activeFilters.value.size === 0) {
       activeFilters.value = new Set(allTypes())
     }
   } else {
-    activeFilters.value.add(type)
+    for (const type of group.types) activeFilters.value.add(type)
   }
   activeFilters.value = new Set(activeFilters.value)
   refresh()
 }
 
-function isActive(type: NoteType): boolean {
-  return !isAllSelected.value && activeFilters.value.has(type)
+function isActive(group: { types: NoteType[] }): boolean {
+  return !isAllSelected.value && group.types.every(type => activeFilters.value.has(type))
 }
+
+const activeGroupCount = computed(
+  () => FILTER_GROUPS.filter(g => g.types.every(type => activeFilters.value.has(type))).length
+)
 
 function startNew() {
   editingId.value = null
@@ -209,16 +225,16 @@ watch(patientId, refresh, { immediate: true })
           aria-hidden="true"
         />
         <UButton
-          v-for="type in allTypes()"
-          :key="type"
+          v-for="group in FILTER_GROUPS"
+          :key="group.key"
           size="xs"
-          :variant="isActive(type) ? 'soft' : 'ghost'"
-          :color="metaFor(type).color"
-          :icon="metaFor(type).icon"
-          :aria-pressed="isActive(type)"
-          @click="toggleFilter(type)"
+          :variant="isActive(group) ? 'soft' : 'ghost'"
+          :color="metaFor(group.types[0]!).color"
+          :icon="metaFor(group.types[0]!).icon"
+          :aria-pressed="isActive(group)"
+          @click="toggleFilter(group)"
         >
-          {{ t(metaFor(type).labelKey) }}
+          {{ t(metaFor(group.types[0]!).labelKey) }}
         </UButton>
         <UButton
           v-if="!isAllSelected"
@@ -253,7 +269,7 @@ watch(patientId, refresh, { immediate: true })
         name="i-lucide-filter"
         class="w-3.5 h-3.5"
       />
-      {{ t('clinicalNotes.feed.filterStatus', { n: activeFilters.size, total: allTypes().length }) }}
+      {{ t('clinicalNotes.feed.filterStatus', { n: activeGroupCount, total: FILTER_GROUPS.length }) }}
     </p>
 
     <div v-if="composerOpen">

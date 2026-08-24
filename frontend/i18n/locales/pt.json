@@ -825,6 +825,7 @@
     "cancelled": "Cancelada",
     "noShow": "Faltou",
     "no_show": "Faltou",
+    "actionsMenu": "Ações da consulta",
     "transitions": {
       "confirmed": "Marcar como confirmada",
       "checked_in": "Registar chegada",

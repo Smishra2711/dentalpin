@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(#203): the patient-feed filter bar showed "Administrativa" twice — patient-level and appointment-level administrative notes have identical labels. The six note types now collapse into five filter chips (the Administrativa chip toggles both administrative types); the API call and NoteCard badges are unchanged.
+
 - fix(#184): type-check clean — `sourceBadgeColor()` returns `UiColor` (plan notes use `neutral`, the design-system role, instead of `secondary`).
 - i18n: add Tamil locale (`ta.json`); add Tamil translations to seed
   data; add `body_i18n_key` to template responses so template bodies

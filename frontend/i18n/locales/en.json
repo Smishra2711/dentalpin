@@ -825,6 +825,7 @@
     "cancelled": "Cancelled",
     "noShow": "No show",
     "no_show": "No show",
+    "actionsMenu": "Appointment actions",
     "transitions": {
       "confirmed": "Mark as confirmed",
       "checked_in": "Mark arrival",
