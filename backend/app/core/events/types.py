@@ -254,3 +254,12 @@ class EventType:
     COPILOT_TOOL_INVOKED = "copilot.tool.invoked"
     COPILOT_BUDGET_THRESHOLD_REACHED = "copilot.budget.threshold_reached"
     COPILOT_DIGEST_SENT = "copilot.digest.sent"
+
+    # Lab orders events (lab_orders module — external laboratory work,
+    # roadmap #221). Fired when PATCH changes an order's status (the same
+    # update auto-stamps received_date on ``received``). Payload:
+    # (clinic_id, order_id, patient_id, status, work_type,
+    # tooth_reference). No bundled subscriber; optional modules
+    # (notifications / patient_timeline) may subscribe without importing
+    # lab_orders.
+    LAB_ORDER_STATUS_CHANGED = "lab_order.status_changed"

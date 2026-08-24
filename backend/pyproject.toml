@@ -83,6 +83,7 @@ recall_reminders = "app.modules.recall_reminders:RecallRemindersModule"
 contacts = "app.modules.contacts:ContactsModule"
 integrations = "app.modules.integrations:IntegrationsModule"
 medical_reference = "app.modules.medical_reference:MedicalReferenceModule"
+lab_orders = "app.modules.lab_orders:LabOrdersModule"
 
 [tool.setuptools.packages.find]
 where = ["."]

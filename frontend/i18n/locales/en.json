@@ -18,6 +18,8 @@
     "appointments": "Schedule",
     "recalls": "Recalls",
     "expenses": "Expenses",
+    "labOrdersForm": "New lab order",
+    "labOrdersStatus": "Lab orders",
     "treatmentPlans": "Treatment Plans",
     "budgets": "Quotes",
     "invoices": "Invoices",

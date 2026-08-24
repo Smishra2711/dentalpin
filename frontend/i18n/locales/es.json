@@ -18,6 +18,8 @@
     "appointments": "Agenda",
     "recalls": "Recordatorios",
     "expenses": "Gastos",
+    "labOrdersForm": "Nuevo trabajo de laboratorio",
+    "labOrdersStatus": "Trabajos de laboratorio",
     "treatmentPlans": "Planes de tratamiento",
     "budgets": "Presupuestos",
     "invoices": "Facturas",
