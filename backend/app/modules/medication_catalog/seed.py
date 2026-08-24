@@ -99,12 +99,16 @@ async def seed_medications(db: AsyncSession, clinic_id: UUID) -> dict:
     already exist (case-insensitively). Returns a created/skipped summary.
     """
     existing_rows = (
-        await db.execute(
-            select(MedicationCatalogItem.name).where(
-                MedicationCatalogItem.clinic_id == clinic_id
+        (
+            await db.execute(
+                select(MedicationCatalogItem.name).where(
+                    MedicationCatalogItem.clinic_id == clinic_id
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     # column select yields plain strings
     existing = {(n or "").strip().lower() for n in existing_rows}
 

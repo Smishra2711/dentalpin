@@ -55,7 +55,9 @@ async def test_crud_over_http(client: AsyncClient, auth_headers: dict, test_clin
 
 
 @pytest.mark.asyncio
-async def test_duplicate_name_case_insensitive_409(client: AsyncClient, auth_headers: dict, test_clinic: Clinic):
+async def test_duplicate_name_case_insensitive_409(
+    client: AsyncClient, auth_headers: dict, test_clinic: Clinic
+):
     """Same guarantee as medical_reference renames: 'Amoxicillin' and
     'amoxicillin' cannot coexist; the second create gets a 409 (not a
     raw unique-constraint 500), and renaming another row onto an
@@ -77,7 +79,9 @@ async def test_duplicate_name_case_insensitive_409(client: AsyncClient, auth_hea
 
 
 @pytest.mark.asyncio
-async def test_search_filter_and_pagination_over_http(client: AsyncClient, auth_headers: dict, test_clinic: Clinic):
+async def test_search_filter_and_pagination_over_http(
+    client: AsyncClient, auth_headers: dict, test_clinic: Clinic
+):
     for name in ("Amoxicillin", "Ampicillin", "Ibuprofen"):
         await _create(client, auth_headers, name=name)
 
