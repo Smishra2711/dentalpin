@@ -21,6 +21,7 @@ Maintained by `backend/scripts/generate_catalogs.py`. CI fails if a manifest cha
 | `india_gst` | 0.1.0 | official | billing, catalog | manual | yes | 4 | 0 | 0 | yes |
 | `integrations` | 0.1.0 | official | patients | manual | yes | 4 | 0 | 2 | no |
 | `media` | 0.2.0 | official | patients | auto | no | 4 | 7 | 1 | yes |
+| `medical_reference` | 0.4.0 | community | patients_clinical, patients | manual | yes | 2 | 0 | 0 | yes |
 | `migration_import` | 0.1.0 | official | patients, patients_clinical, clinical_notes, agenda, schedules, recalls, catalog, budget, odontogram, treatment_plan, billing, payments, media | manual | yes | 4 | 5 | 0 | yes |
 | `notifications` | 0.1.0 | official | patients, agenda, budget, billing, catalog | auto | no | 8 | 7 | 6 | yes |
 | `odontogram` | 0.3.0 | official | patients, catalog | auto | no | 4 | 7 | 0 | yes |
@@ -293,6 +294,23 @@ Patient documents, photos, X-rays + polymorphic attachments.
 - **Events consumed:**
   - `patient.archived`
 - **Module CLAUDE.md:** [`backend/app/modules/media/CLAUDE.md`](../backend/app/modules/media/CLAUDE.md)
+
+### `medical_reference` — v0.4.0
+
+Managed allergy/medication/disease/surgery lists with searchable medical-history inputs and interaction/contraindication warnings.
+
+- **Author:** lamanji
+- **License:** BSL-1.1
+- **Category:** community
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `patients_clinical`, `patients`
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `medical_reference.read`
+  - `medical_reference.write`
+- **Events emitted:** —
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/medical_reference/CLAUDE.md`](../backend/app/modules/medical_reference/CLAUDE.md)
 
 ### `migration_import` — v0.1.0
 

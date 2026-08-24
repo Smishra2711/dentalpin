@@ -87,16 +87,27 @@ test.describe('agenda — quick patient create', () => {
     // Persistence: hit the API directly to confirm the patient was
     // actually created (not just optimistic UI). Going through /patients
     // listing would require an additional render race.
+    //
+    // The 201 reaches the client *before* get_db's teardown commit runs
+    // (FastAPI flushes yield-dependency teardown after the response is
+    // sent), so an immediately-following search can legitimately miss the
+    // row for a few milliseconds. Poll briefly instead of failing on the
+    // first attempt.
     const ctx = loggedIn.context()
     const cookies = await ctx.cookies()
     const token = cookies.find(c => c.name === 'access_token')?.value
-    const res = await ctx.request.get(
-      `${API_BASE}/api/v1/patients?search=${encodeURIComponent(lastName)}`,
-      { headers: token ? { Authorization: `Bearer ${token}` } : {} }
-    )
-    expect(res.ok()).toBeTruthy()
-    const body = (await res.json()) as { data: Array<{ first_name: string, last_name: string }> }
-    const match = body.data.find(p => p.first_name === firstName && p.last_name === lastName)
+
+    let match: { first_name: string, last_name: string } | undefined
+    for (let attempt = 0; attempt < 10 && !match; attempt++) {
+      await new Promise(r => setTimeout(r, 200))
+      const res = await ctx.request.get(
+        `${API_BASE}/api/v1/patients?search=${encodeURIComponent(lastName)}`,
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      )
+      expect(res.ok()).toBeTruthy()
+      const body = (await res.json()) as { data: Array<{ first_name: string, last_name: string }> }
+      match = body.data.find(p => p.first_name === firstName && p.last_name === lastName)
+    }
     expect(match, `expected patient ${fullName} to be persisted`).toBeDefined()
   })
 

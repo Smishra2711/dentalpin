@@ -133,6 +133,67 @@ const alcoholOptions = computed(() => [
   { label: t('patients.medicalHistory.alcohol.heavy'), value: 'heavy' }
 ])
 
+// --- Name-input extension points -----------------------------------------
+/**
+ * Each history-table name input is a slot extension point. Optional
+ * modules (e.g. medical_reference) register a searchable combobox into
+ * ``patients_clinical.medical_history.<entity>_name`` from their own
+ * plugin; when nothing is registered the plain UInput fallback renders,
+ * so this form never imports another module's component.
+ *
+ * Slot ctx contract (passed verbatim to registered components):
+ *   kind       — which history entity the field feeds
+ *   value      — current name text (display-only; owners keep state)
+ *   placeholder/disabled — rendering hints
+ *   select()   — commit a picked/created item: name + loose reference_id
+ */
+interface MedicalHistoryNameFieldCtx {
+  kind: 'allergy' | 'medication' | 'disease' | 'surgery'
+  value: string
+  placeholder?: string
+  disabled?: boolean
+  select: (name: string, referenceId: string | null) => void
+}
+
+const { resolve } = useModuleSlots()
+
+function useNameField(
+  slotName: string,
+  kind: MedicalHistoryNameFieldCtx['kind'],
+  target: Ref<{ name?: string, procedure?: string, reference_id?: string | null }>,
+  placeholderKey: string
+) {
+  const hasExtension = computed(() => resolve(slotName, {}).length > 0)
+  const ctx = computed<MedicalHistoryNameFieldCtx>(() => ({
+    kind,
+    value: target.value.name ?? target.value.procedure ?? '',
+    placeholder: t(placeholderKey),
+    disabled: props.readonly,
+    select: (name, referenceId) => {
+      if (kind === 'surgery') {
+        target.value.procedure = name
+      } else {
+        target.value.name = name
+      }
+      target.value.reference_id = referenceId ?? undefined
+    }
+  }))
+  return { hasExtension, ctx }
+}
+
+const allergyNameField = useNameField(
+  'patients_clinical.medical_history.allergy_name', 'allergy', newAllergy, 'patients.medicalHistory.allergyName'
+)
+const medicationNameField = useNameField(
+  'patients_clinical.medical_history.medication_name', 'medication', newMedication, 'patients.medicalHistory.medicationName'
+)
+const diseaseNameField = useNameField(
+  'patients_clinical.medical_history.disease_name', 'disease', newDisease, 'patients.medicalHistory.diseaseName'
+)
+const surgeryNameField = useNameField(
+  'patients_clinical.medical_history.surgery_name', 'surgery', newSurgery, 'patients.medicalHistory.procedure'
+)
+
 function handleSave() {
   emit('save')
 }
@@ -179,7 +240,16 @@ function handleSave() {
             v-if="!readonly"
             class="grid grid-cols-1 md:grid-cols-4 gap-2"
           >
+            <!-- Extension point: optional modules (e.g. medical_reference)
+                 register a searchable combobox here; the plain input below
+                 is the fallback when nothing is registered. -->
+            <ModuleSlot
+              v-if="allergyNameField.hasExtension.value"
+              name="patients_clinical.medical_history.allergy_name"
+              :ctx="allergyNameField.ctx.value"
+            />
             <UInput
+              v-else
               v-model="newAllergy.name"
               :placeholder="t('patients.medicalHistory.allergyName')"
             />
@@ -242,7 +312,14 @@ function handleSave() {
             v-if="!readonly"
             class="grid grid-cols-1 md:grid-cols-4 gap-2"
           >
+            <!-- Extension point: see allergy section -->
+            <ModuleSlot
+              v-if="medicationNameField.hasExtension.value"
+              name="patients_clinical.medical_history.medication_name"
+              :ctx="medicationNameField.ctx.value"
+            />
             <UInput
+              v-else
               v-model="newMedication.name"
               :placeholder="t('patients.medicalHistory.medicationName')"
             />
@@ -305,7 +382,14 @@ function handleSave() {
             v-if="!readonly"
             class="grid grid-cols-1 md:grid-cols-3 gap-2"
           >
+            <!-- Extension point: see allergy section -->
+            <ModuleSlot
+              v-if="diseaseNameField.hasExtension.value"
+              name="patients_clinical.medical_history.disease_name"
+              :ctx="diseaseNameField.ctx.value"
+            />
             <UInput
+              v-else
               v-model="newDisease.name"
               :placeholder="t('patients.medicalHistory.diseaseName')"
             />
@@ -491,7 +575,14 @@ function handleSave() {
             v-if="!readonly"
             class="grid grid-cols-1 md:grid-cols-3 gap-2"
           >
+            <!-- Extension point: see allergy section -->
+            <ModuleSlot
+              v-if="surgeryNameField.hasExtension.value"
+              name="patients_clinical.medical_history.surgery_name"
+              :ctx="surgeryNameField.ctx.value"
+            />
             <UInput
+              v-else
               v-model="newSurgery.procedure"
               :placeholder="t('patients.medicalHistory.procedure')"
             />

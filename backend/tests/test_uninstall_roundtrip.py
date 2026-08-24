@@ -138,6 +138,59 @@ def test_periodontogram_uninstall_roundtrip_is_branch_scoped() -> None:
     )
 
 
+MEDICAL_REFERENCE_TABLES = {
+    "medical_reference_allergy",
+    "medical_reference_medication",
+    "medical_reference_disease",
+    "medical_reference_surgery",
+    "medical_reference_interaction",
+    "medical_reference_contraindication",
+}
+
+
+def test_medical_reference_uninstall_roundtrip_is_branch_scoped() -> None:
+    """install → uninstall → reinstall drops only medical_reference's tables.
+
+    The module is ``removable=True`` with its own Alembic branch rooted on
+    core ``"0001"``, so uninstalling must drop exactly its six tables and
+    leave every other module — including patients_clinical's four history
+    tables that hold the loose (FK-less) ``reference_id`` link — intact.
+    """
+    _alembic("upgrade", "heads")
+    before = _list_tables()
+    assert MEDICAL_REFERENCE_TABLES.issubset(before), (
+        f"expected medical_reference tables at heads; missing: {MEDICAL_REFERENCE_TABLES - before}"
+    )
+    baseline_non_medical_reference = before - MEDICAL_REFERENCE_TABLES
+
+    # Walk the branch down one revision at a time until every module table
+    # is gone. ``medical_reference@-1`` always resolves against the
+    # branch's *current* head, so this uninstalls the module completely
+    # regardless of how many ``mr_*`` revisions ship later.
+    # (Do NOT use ``medical_reference@base`` here: in this repo's merged
+    # multi-head graph it resolves to the whole-graph base and tears down
+    # unrelated chains — tp_0004 even refuses to downgrade.)
+    for _ in range(10):
+        _alembic("downgrade", "medical_reference@-1")
+        after_down = _list_tables()
+        if MEDICAL_REFERENCE_TABLES.isdisjoint(after_down):
+            break
+    else:
+        raise AssertionError(
+            f"medical_reference tables survived full downgrade: {MEDICAL_REFERENCE_TABLES & _list_tables()}"
+        )
+    assert baseline_non_medical_reference <= after_down, (
+        "downgrade leaked into other modules; missing tables: "
+        f"{baseline_non_medical_reference - after_down}"
+    )
+
+    _alembic("upgrade", "medical_reference@head")
+    after_up = _list_tables()
+    assert before <= after_up, (
+        f"reinstall did not restore every table; missing: {before - after_up}"
+    )
+
+
 def test_dump_tables_hard_fails_when_pg_dump_missing(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:

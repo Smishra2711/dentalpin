@@ -16,7 +16,8 @@
     "/module_layers/schedules/frontend",
     "/module_layers/treatment_plan/frontend",
     "/module_layers/clinical_notes/frontend",
-    "/module_layers/payments/frontend"
+    "/module_layers/payments/frontend",
+    "/module_layers/medical_reference/frontend"
   ],
   "modules": [
     {
@@ -86,6 +87,10 @@
     {
       "name": "payments",
       "path": "/module_layers/payments/frontend"
+    },
+    {
+      "name": "medical_reference",
+      "path": "/module_layers/medical_reference/frontend"
     }
   ],
   "version": 1
