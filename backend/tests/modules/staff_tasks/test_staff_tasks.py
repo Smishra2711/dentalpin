@@ -189,8 +189,9 @@ async def test_status_filter_and_transitions_over_http(
     )
     assert illegal.status_code == 422
 
-    # Empty-list filter proves status filtering actually narrows.
-    empty = await client.get(
+    # Status filtering narrows: the done-filter now returns exactly the
+    # task this test drove through claimed -> done.
+    done_list = await client.get(
         "/api/v1/staff_tasks/", params={"task_status": "done"}, headers=auth_headers
     )
-    assert empty.json()["data"] == []
+    assert [t["id"] for t in done_list.json()["data"]] == [task["id"]]
