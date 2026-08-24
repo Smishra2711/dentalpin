@@ -16,9 +16,8 @@
     "/module_layers/schedules/frontend",
     "/module_layers/treatment_plan/frontend",
     "/module_layers/clinical_notes/frontend",
-    "/module_layers/payments/frontend",
     "/module_layers/medical_reference/frontend",
-    "/module_layers/lab_orders/frontend"
+    "/module_layers/payments/frontend"
   ],
   "modules": [
     {
@@ -86,16 +85,12 @@
       "path": "/module_layers/clinical_notes/frontend"
     },
     {
-      "name": "payments",
-      "path": "/module_layers/payments/frontend"
-    },
-    {
       "name": "medical_reference",
       "path": "/module_layers/medical_reference/frontend"
     },
     {
-      "name": "lab_orders",
-      "path": "/module_layers/lab_orders/frontend"
+      "name": "payments",
+      "path": "/module_layers/payments/frontend"
     }
   ],
   "version": 1
