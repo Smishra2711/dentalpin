@@ -82,6 +82,9 @@ def get_tools() -> list[Tool]:
             handler=_list_expenses,
             permissions=["expenses.read"],
             category=ToolCategory.READ,
+            # ``description`` is user-entered free prose (may name employees,
+            # e.g. salaries) — keep it out of the cloud LLM path.
+            exposes_free_text=True,
         ),
         Tool(
             name="create_expense",
@@ -90,6 +93,7 @@ def get_tools() -> list[Tool]:
             handler=_create_expense,
             permissions=["expenses.write"],
             category=ToolCategory.WRITE,
+            exposes_free_text=True,
         ),
         Tool(
             name="expense_monthly_totals",

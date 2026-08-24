@@ -1,5 +1,11 @@
 # Changelog — expenses module
 
+## Unreleased
+
+- Mark `list_expenses` / `create_expense` tools `exposes_free_text=True`:
+  the user-entered `description` is free prose and must stay off the
+  cloud LLM path under redaction.
+
 ## 0.1.0 — initial release
 
 - Fixed/recurring office expense CRUD with clinic scoping, category

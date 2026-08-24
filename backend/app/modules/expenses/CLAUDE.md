@@ -33,6 +33,12 @@ the module admin UI) if e.g. reception should record supplies.
 | `create_expense` | WRITE | `ExpenseService.create_expense` | `expenses.write` |
 | `expense_monthly_totals` | READ | `ExpenseService.monthly_totals_by_category` | `expenses.read` |
 
+`list_expenses` and `create_expense` return the user-entered `description`
+(free prose, may name employees) and are marked `exposes_free_text=True`,
+so they are excluded from the cloud LLM path under redaction.
+`expense_monthly_totals` returns only categories and totals and stays
+cloud-eligible.
+
 ## Events emitted
 
 None.
