@@ -9,7 +9,7 @@ For deeper rationale on any line, follow the link.
 - [ ] Module class subclasses `BaseModule` (`backend/app/core/plugins/base.py`)
 - [ ] `manifest = {...}` set as class attribute (see `Manifest` in `backend/app/core/plugins/manifest.py` for the full schema)
 - [ ] Entry point registered in `backend/pyproject.toml` under `[project.entry-points."dentalpin.modules"]`
-- [ ] `get_models()`, `get_router()`, `get_tools()` implemented (the last is mandatory even if empty — see `BaseModule`)
+- [ ] `get_models()`, `get_router()` implemented (`get_tools()` is optional — `BaseModule` returns `[]`; override only when the module exposes tools, see `docs/technical/creating-modules.md`)
 
 ## Manifest fields
 

@@ -78,8 +78,14 @@ async def list_appointments(
     appointment_status: str | None = Query(default=None, alias="status"),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=100, ge=1, le=500),
+    order: str = Query(default="asc", pattern="^(asc|desc)$"),
 ) -> PaginatedApiResponse[AppointmentResponse]:
-    """List appointments with filters."""
+    """List appointments with filters.
+
+    ``order`` sorts by ``start_time`` — ``desc`` lets "most recent
+    first" consumers (e.g. the patient last-visit card) fetch one page
+    of one instead of paging to the tail.
+    """
     appointments, total = await AppointmentService.list_appointments(
         db,
         ctx.clinic_id,
@@ -91,6 +97,7 @@ async def list_appointments(
         page,
         page_size,
         patient_id=patient_id,
+        order=order,
     )
     return PaginatedApiResponse(
         data=[_localize(AppointmentResponse.model_validate(a), ctx) for a in appointments],

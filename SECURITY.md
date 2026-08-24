@@ -7,7 +7,7 @@ default.
 ## Reporting a vulnerability
 
 Report privately through
-[GitHub Security Advisories](https://github.com/martinezsalmeron/dentalpin/security/advisories/new).
+[GitHub Security Advisories](https://github.com/dentalpin/dentalpin/security/advisories/new).
 Never open a public issue for a vulnerability.
 
 Expect an acknowledgement within 72 hours. We will tell you what we found,

@@ -24,6 +24,7 @@
     "reports": "Informes",
     "settings": "Configuración",
     "catalog": "Catálogo",
+    "contacts": "Contactos",
     "menu": "Menú",
     "openMenu": "Abrir menú",
     "close": "Cerrar",
@@ -380,13 +381,6 @@
         "smokerFreq": "Fumadora · {freq}/día"
       }
     },
-    "visitSummary": {
-      "title": "Resumen de visitas",
-      "lastVisit": "Última visita",
-      "nextAppointment": "Próxima cita",
-      "noLastVisit": "Sin visitas previas",
-      "noNextAppointment": "Sin cita programada"
-    },
     "personalInfo": {
       "title": "Datos personales",
       "ageLabel": "{age} años",
@@ -444,6 +438,8 @@
     "nextAppointment": "Próxima cita",
     "noUpcomingAppointments": "Sin citas programadas",
     "openAppointment": "Abrir cita",
+    "lastVisit": "Última visita",
+    "neverVisited": "Sin visitas previas",
     "reschedule": "Reagendar",
     "balance": "Saldo",
     "collect": "Cobrar",
@@ -812,6 +808,7 @@
     "edit": "Editar cita",
     "today": "Hoy",
     "tomorrow": "Mañana",
+    "yesterday": "Ayer",
     "week": "Semana",
     "prevWeek": "Semana anterior",
     "nextWeek": "Semana siguiente",

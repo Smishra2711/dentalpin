@@ -113,6 +113,12 @@ export const PERMISSIONS = {
     recordsRead: 'verifactu.records.read',
     environmentPromote: 'verifactu.environment.promote'
   },
+  indiaGst: {
+    settingsRead: 'india_gst.settings.read',
+    settingsConfigure: 'india_gst.settings.configure',
+    catalogManage: 'india_gst.catalog.manage',
+    reportsRead: 'india_gst.reports.read'
+  },
   recalls: {
     read: 'recalls.read',
     write: 'recalls.write',
@@ -152,5 +158,8 @@ export const PERMISSIONS = {
   expenses: {
     read: 'expenses.read',
     write: 'expenses.write'
+  contacts: {
+    read: 'contacts.read',
+    write: 'contacts.write'
   }
 } as const

@@ -25,6 +25,7 @@
     "settings": "Definições",
     "defaultClinicName": "Clínica",
     "catalog": "Catálogo",
+    "contacts": "Contactos",
     "menu": "Menu",
     "openMenu": "Abrir menu",
     "close": "Fechar",
@@ -352,13 +353,6 @@
         "smokerFreq": "Fumador · {freq}/dia"
       }
     },
-    "visitSummary": {
-      "title": "Resumo de visitas",
-      "lastVisit": "Última visita",
-      "nextAppointment": "Próxima consulta",
-      "noLastVisit": "Sem visitas anteriores",
-      "noNextAppointment": "Sem consulta agendada"
-    },
     "personalInfo": {
       "title": "Dados pessoais",
       "ageLabel": "{age} anos",
@@ -416,6 +410,8 @@
     "nextAppointment": "Próxima consulta",
     "noUpcomingAppointments": "Sem consultas futuras",
     "openAppointment": "Abrir consulta",
+    "lastVisit": "Última visita",
+    "neverVisited": "Sem visitas anteriores",
     "reschedule": "Reagendar",
     "balance": "Saldo",
     "collect": "Cobrar",
@@ -791,6 +787,7 @@
     "edit": "Editar consulta",
     "today": "Hoje",
     "tomorrow": "Amanhã",
+    "yesterday": "Ontem",
     "week": "Semana",
     "prevWeek": "Semana anterior",
     "nextWeek": "Semana seguinte",

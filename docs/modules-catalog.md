@@ -16,8 +16,11 @@ Maintained by `backend/scripts/generate_catalogs.py`. CI fails if a manifest cha
 | `budget` | 0.1.0 | official | patients, catalog, odontogram | auto | no | 5 | 9 | 3 | yes |
 | `catalog` | 0.1.0 | official | — | auto | no | 3 | 0 | 1 | yes |
 | `clinical_notes` | 0.2.0 | official | patients, odontogram, treatment_plan, media, agenda | auto | no | 2 | 6 | 0 | yes |
+| `contacts` | 0.1.0 | community | — | manual | yes | 2 | 0 | 0 | yes |
 | `copilot` | 0.1.0 | official | — | auto | yes | 5 | 3 | 1 | yes |
 | `expenses` | 0.1.0 | community | — | manual | yes | 2 | 0 | 0 | yes |
+| `india_gst` | 0.1.0 | official | billing, catalog | manual | yes | 4 | 0 | 0 | yes |
+| `integrations` | 0.1.0 | official | patients | manual | yes | 4 | 0 | 2 | no |
 | `media` | 0.2.0 | official | patients | auto | no | 4 | 7 | 1 | yes |
 | `migration_import` | 0.1.0 | official | patients, patients_clinical, clinical_notes, agenda, schedules, recalls, catalog, budget, odontogram, treatment_plan, billing, payments, media | manual | yes | 4 | 5 | 0 | yes |
 | `notifications` | 0.1.0 | official | patients, agenda, budget, billing, catalog | auto | no | 8 | 7 | 6 | yes |
@@ -184,6 +187,23 @@ Polymorphic clinical notes (administrative, diagnosis, treatment, treatment plan
 - **Events consumed:** —
 - **Module CLAUDE.md:** [`backend/app/modules/clinical_notes/CLAUDE.md`](../backend/app/modules/clinical_notes/CLAUDE.md)
 
+### `contacts` — v0.1.0
+
+Directory of external labs, suppliers, and other provider contacts.
+
+- **Author:** lamanji
+- **License:** BSL-1.1
+- **Category:** community
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** —
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `contacts.read`
+  - `contacts.write`
+- **Events emitted:** —
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/contacts/CLAUDE.md`](../backend/app/modules/contacts/CLAUDE.md)
+
 ### `copilot` — v0.1.0
 
 Conversational AI agent over DentalPin, scoped to the caller's permissions.
@@ -224,6 +244,45 @@ Fixed/recurring office expense tracking with monthly category totals.
 - **Events emitted:** —
 - **Events consumed:** —
 - **Module CLAUDE.md:** [`backend/app/modules/expenses/CLAUDE.md`](../backend/app/modules/expenses/CLAUDE.md)
+### `india_gst` — v0.1.0
+
+CGST/SGST/IGST GST billing compliance for Indian clinics.
+
+- **Author:** tresundios
+- **License:** BSL-1.1
+- **Category:** official
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `billing`, `catalog`
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `india_gst.catalog.manage`
+  - `india_gst.reports.read`
+  - `india_gst.settings.configure`
+  - `india_gst.settings.read`
+- **Events emitted:** —
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/india_gst/CLAUDE.md`](../backend/app/modules/india_gst/CLAUDE.md)
+
+### `integrations` — v0.1.0
+
+Webhook subscriptions (REST Hooks) for third-party automations.
+
+- **Author:** DentalPin Core Team
+- **License:** BSL-1.1
+- **Category:** official
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `patients`
+- **Frontend layer:** —
+- **Permissions:**
+  - `integrations.subscriptions.read`
+  - `integrations.subscriptions.write`
+  - `integrations.tokens.read`
+  - `integrations.tokens.write`
+- **Events emitted:** —
+- **Events consumed:**
+  - `appointment.completed`
+  - `patient.created`
+- **Module CLAUDE.md:** [`backend/app/modules/integrations/CLAUDE.md`](../backend/app/modules/integrations/CLAUDE.md)
 
 ### `media` — v0.2.0
 

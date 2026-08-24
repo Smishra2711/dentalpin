@@ -146,7 +146,17 @@ export default defineNuxtConfig({
     lazy: true,
     langDir: 'locales',
     strategy: 'no_prefix',
-    detectBrowserLanguage: false
+    // Persist the chosen locale in a cookie the server can read, so SSR
+    // renders in the user's language. Locale-dependent DOM *attributes*
+    // (placeholder, title, aria-label) are not patched during hydration,
+    // so an English server render used to survive until the next
+    // client-side navigation (#235, #202). First visit without the
+    // cookie falls back to Accept-Language, then to `en`.
+    detectBrowserLanguage: {
+      useCookie: true,
+      cookieKey: 'dentalpin_locale',
+      fallbackLocale: 'en'
+    }
   },
 
   // Pre-bundle every `i-lucide-*` icon referenced in source into the client

@@ -17,6 +17,9 @@ Creates the full clinical narrative for a demo clinic:
 Usage:
     docker-compose exec -T backend python scripts/seed_demo.py              # English
     docker-compose exec -T backend python scripts/seed_demo.py --lang es    # Spanish
+    docker-compose exec -T backend python scripts/seed_demo.py --lang ta    # Tamil, India GST demo
+    docker-compose exec -T backend python scripts/seed_demo.py --lang en --country in
+        # English UI, India GST demo (Chennai clinic, GSTIN, CGST/SGST/IGST invoices)
 
 All users have password: demo1234
 """
@@ -73,6 +76,7 @@ from app.seeds.demo_data import (
     get_clinic_data,
     get_patients_data,
     get_users_data,
+    set_country,
     set_language,
 )
 
@@ -585,6 +589,101 @@ async def seed_invoices(db: AsyncSession, catalog_map: dict, budgets_result: dic
     return data
 
 
+async def seed_india_gst_invoice_breakdown(db: AsyncSession, invoice_ids: list) -> int:
+    """Run the real India GST compliance hook against the seeded invoices.
+
+    ``generate_invoices_data`` only pre-fills ``compliance_data['IN']
+    ['place_of_supply']`` — the CGST/SGST vs IGST split, SAC snapshot, and
+    GST document number are the hook's job. Reusing
+    ``IndiaGstHook.on_invoice_issued`` here (the exact method billing calls
+    when a real invoice is issued) means the seed never duplicates that tax
+    logic. Draft invoices are excluded by the caller — the hook only ever
+    runs at actual issue time.
+    """
+    from app.modules.billing.service import InvoiceService
+    from app.modules.india_gst.hook import IndiaGstHook
+
+    hook = IndiaGstHook()
+    processed = 0
+    for invoice_id in invoice_ids:
+        invoice = await InvoiceService.get_invoice(db, CLINIC_ID, invoice_id)
+        if invoice is None:
+            continue
+        await hook.on_invoice_issued(invoice, db)
+        processed += 1
+    return processed
+
+
+async def seed_india_gst(db: AsyncSession) -> dict:
+    """Create India GST settings, GST 18% VAT type, and SAC defaults.
+
+    Only called when ``LANG == "ta"`` and the ``india_gst`` module is
+    installed. Mirrors what a clinic admin would do via the settings UI:
+
+    1. Create ``IndiaGstSettings`` with a Tamil Nadu GSTIN and
+       ``clinic_state="33"``.
+    2. Get-or-create the ``GST 18%`` VAT type (via the service layer).
+    3. Auto-configure SAC 999312 on every catalog item missing one.
+    4. Re-assign all catalog items from the exempt (0%) VAT type to
+       GST 18% so invoices carry 18% tax and the hook produces a
+       CGST/SGST or IGST split.
+    """
+    from app.modules.catalog.models import TreatmentCatalogItem, VatType
+    from app.modules.india_gst.service import (
+        IndiaGstCatalogService,
+        get_or_create_settings,
+    )
+
+    # 1 — IndiaGstSettings
+    settings = await get_or_create_settings(db, CLINIC_ID)
+    settings.trade_name = "Chennai Dental Care"
+    settings.gstin = "33ABCDE1234F1Z5"
+    settings.registration_type = "regular"
+    settings.clinic_state = "33"
+    settings.show_gstin_on_invoice = True
+    settings.show_sac_on_invoice = True
+    await db.flush()
+    print("  Created India GST settings (GSTIN: 33ABCDE1234F1Z5, TN)")
+
+    # 2 — GST 18% VAT type
+    await IndiaGstCatalogService.ensure_gst_vat_type(db, CLINIC_ID)
+    gst_vat_q = await db.execute(
+        select(VatType).where(
+            VatType.clinic_id == CLINIC_ID,
+            VatType.names.op("->>")("en") == "GST 18%",
+        )
+    )
+    gst_vat = gst_vat_q.scalar_one()
+    print(f"  Created GST 18% VAT type ({gst_vat.id})")
+
+    # 3 — SAC defaults
+    sac_count = await IndiaGstCatalogService.autoconfigure_missing_sac(db, CLINIC_ID)
+    print(f"  Auto-configured SAC 999312 on {sac_count} catalog items")
+
+    # 4 — Re-assign all catalog items to GST 18%
+    items_q = await db.execute(
+        select(TreatmentCatalogItem).where(
+            TreatmentCatalogItem.clinic_id == CLINIC_ID,
+            TreatmentCatalogItem.is_active.is_(True),
+            TreatmentCatalogItem.deleted_at.is_(None),
+            TreatmentCatalogItem.vat_type_id != gst_vat.id,
+        )
+    )
+    reassigned = 0
+    for item in items_q.scalars():
+        item.vat_type_id = gst_vat.id
+        reassigned += 1
+    await db.flush()
+    print(f"  Re-assigned {reassigned} catalog items to GST 18%")
+
+    return {
+        "settings_created": True,
+        "vat_type_id": str(gst_vat.id),
+        "sac_configured": sac_count,
+        "items_reassigned": reassigned,
+    }
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -597,11 +696,12 @@ def parse_args():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python scripts/seed_demo.py              # Default (English)
-  python scripts/seed_demo.py --lang es    # Spanish
-  python scripts/seed_demo.py --lang en    # English (explicit)
-  python scripts/seed_demo.py --lang fr    # French
-  python scripts/seed_demo.py --lang ta    # Tamil
+  python scripts/seed_demo.py                       # Default (English)
+  python scripts/seed_demo.py --lang es              # Spanish
+  python scripts/seed_demo.py --lang en              # English (explicit)
+  python scripts/seed_demo.py --lang fr              # French
+  python scripts/seed_demo.py --lang ta              # Tamil, India GST demo
+  python scripts/seed_demo.py --lang en --country in # English, India GST demo
         """,
     )
     parser.add_argument(
@@ -611,14 +711,33 @@ Examples:
         default="en",
         help="Language for demo data (default: en)",
     )
+    parser.add_argument(
+        "--country",
+        choices=["generic", "in"],
+        default="generic",
+        help=(
+            "Country variant (default: generic). 'in' seeds the India GST "
+            "clinic (Chennai, GSTIN, CGST/SGST/IGST invoices) in the chosen "
+            "--lang; currently only supported with --lang en (--lang ta "
+            "already implies it)."
+        ),
+    )
     return parser.parse_args()
 
 
-async def main(lang: str = "en") -> None:
+async def main(lang: str = "en", country: str = "generic") -> None:
     """Seed the full demo clinical workflow."""
+    if country == "in" and lang not in ("en", "ta"):
+        raise SystemExit(
+            f"--country in is not supported with --lang {lang} yet — use --lang en or --lang ta."
+        )
+
     set_language(lang)
+    set_country(country)
     lang_names = {"en": "English", "es": "Spanish", "fr": "French", "ta": "Tamil"}
     lang_name = lang_names.get(lang, lang)
+    if country == "in" and lang != "ta":
+        lang_name += " (India GST demo)"
 
     print("\n" + "=" * 60)
     print(f"DentalPin Demo Data Seeder ({lang_name})")
@@ -651,6 +770,23 @@ async def main(lang: str = "en") -> None:
             print(f"  Created {catalog_result['items']} catalog items")
             catalog_map = await _load_catalog_map(db)
 
+            # India GST demo data — only when the module is installed and
+            # the demo is India-flagged (Tamil locale, or English + --country
+            # in). Must run after the catalog seed so SAC defaults and VAT
+            # reassignment have items to act on, and before invoices so the
+            # catalog_map reflects the GST 18% VAT type.
+            is_india_demo = lang == "ta" or country == "in"
+            if is_india_demo and await _module_is_installed(db, "india_gst"):
+                print(f"\n[opt] Creating India GST demo data (module installed, {lang_name})...")
+                gst_stats = await seed_india_gst(db)
+                print(
+                    f"  Settings: {'created' if gst_stats['settings_created'] else 'skipped'} | "
+                    f"SAC items: {gst_stats['sac_configured']} | "
+                    f"Reassigned: {gst_stats['items_reassigned']}"
+                )
+                # Reload catalog map so invoice lines pick up GST 18%.
+                catalog_map = await _load_catalog_map(db)
+
             print("\n[5/10] Creating odontogram data...")
             await seed_odontogram(db)
 
@@ -679,7 +815,14 @@ async def main(lang: str = "en") -> None:
 
             print("\n[10/10] Creating invoice series + invoices (derived from budgets)...")
             await seed_invoice_series(db)
-            await seed_invoices(db, catalog_map, budgets_result)
+            invoices_result = await seed_invoices(db, catalog_map, budgets_result)
+
+            if is_india_demo and await _module_is_installed(db, "india_gst"):
+                print("\n[opt] Computing India GST CGST/SGST/IGST breakdown on invoices...")
+                gst_invoice_count = await seed_india_gst_invoice_breakdown(
+                    db, invoices_result["gst_invoices_pending_hook"]
+                )
+                print(f"  GST breakdown applied to {gst_invoice_count} invoice(s)")
 
             # Optional modules — only seed when installed. Looked up by
             # name in ``core_module`` so a future ``dentalpin modules
@@ -756,4 +899,4 @@ async def main(lang: str = "en") -> None:
 
 if __name__ == "__main__":
     args = parse_args()
-    asyncio.run(main(lang=args.lang))
+    asyncio.run(main(lang=args.lang, country=args.country))

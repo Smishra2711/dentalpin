@@ -25,6 +25,7 @@
     "settings": "அமைப்புகள்",
     "defaultClinicName": "மருத்துவமனை",
     "catalog": "பட்டியல்",
+    "contacts": "தொடர்புகள்",
     "menu": "மெனு",
     "openMenu": "மெனுவைத் திற",
     "close": "மூடு",
@@ -352,13 +353,6 @@
         "smokerFreq": "புகைப்பிடிப்பவர் · {freq}/நாள்"
       }
     },
-    "visitSummary": {
-      "title": "வருகை சுருக்கம்",
-      "lastVisit": "கடைசி வருகை",
-      "nextAppointment": "அடுத்த சந்திப்பு",
-      "noLastVisit": "முந்தைய வருகைகள் இல்லை",
-      "noNextAppointment": "சந்திப்பு எதுவும் திட்டமிடப்படவில்லை"
-    },
     "personalInfo": {
       "title": "தனிப்பட்ட தகவல்",
       "ageLabel": "{age} ஆண்டுகள்",
@@ -416,6 +410,8 @@
     "nextAppointment": "அடுத்த சந்திப்பு",
     "noUpcomingAppointments": "வரவிருக்கும் சந்திப்புகள் இல்லை",
     "openAppointment": "சந்திப்பைத் திற",
+    "lastVisit": "கடைசி வருகை",
+    "neverVisited": "இதுவரை வருகை இல்லை",
     "reschedule": "மறு அட்டவணைப்படுத்து",
     "balance": "மீதி",
     "collect": "வசூலி",
@@ -791,6 +787,7 @@
     "edit": "சந்திப்பைத் திருத்து",
     "today": "இன்று",
     "tomorrow": "நாளை",
+    "yesterday": "நேற்று",
     "week": "வாரம்",
     "prevWeek": "முந்தைய வாரம்",
     "nextWeek": "அடுத்த வாரம்",

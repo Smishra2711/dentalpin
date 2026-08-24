@@ -14,7 +14,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/patients/router.py
   - backend/app/modules/patients/frontend/pages/patients/[id].vue
-last_verified_commit: e1d6873
+last_verified_commit: f277b2a
 ---
 
 # Patient detail
@@ -38,6 +38,10 @@ one click reaches the detail.
     treatments. Click → plan detail.
   - **Next appointment** *(agenda)* — day/time/professional.
     Click → appointment.
+  - **Last visit** *(agenda)* — date/time/professional of the most
+    recent completed appointment; "Never visited" for a patient who
+    has not been in the chair yet. Click → appointment (or the agenda
+    with the patient pre-selected when there is none).
   - **Balance** *(payments)* — debt / on-account / paid. Click →
     Administration → Payments.
   - **Diagnoses** *(odontogram)* — untreated findings count.

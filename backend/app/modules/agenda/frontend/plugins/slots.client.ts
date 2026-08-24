@@ -41,4 +41,15 @@ export default defineNuxtPlugin(() => {
     order: 20,
     permission: 'agenda.appointments.read'
   })
+
+  // Last completed visit, right next to the next-appointment card, so
+  // reception can tell a first-timer from a regular at a glance (#182).
+  registerSlot('patient.summary.cards', {
+    id: 'agenda.patient.summary.cards.lastVisit',
+    component: defineAsyncComponent(
+      () => import('../components/summary/LastVisitCard.vue')
+    ),
+    order: 21,
+    permission: 'agenda.appointments.read'
+  })
 })

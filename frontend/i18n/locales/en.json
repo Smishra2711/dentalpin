@@ -25,6 +25,7 @@
     "settings": "Settings",
     "defaultClinicName": "Clinic",
     "catalog": "Catalog",
+    "contacts": "Contacts",
     "menu": "Menu",
     "openMenu": "Open menu",
     "close": "Close",
@@ -352,13 +353,6 @@
         "smokerFreq": "Smoker · {freq}/day"
       }
     },
-    "visitSummary": {
-      "title": "Visit summary",
-      "lastVisit": "Last visit",
-      "nextAppointment": "Next appointment",
-      "noLastVisit": "No previous visits",
-      "noNextAppointment": "No appointment scheduled"
-    },
     "personalInfo": {
       "title": "Personal info",
       "ageLabel": "{age} years",
@@ -416,6 +410,8 @@
     "nextAppointment": "Next appointment",
     "noUpcomingAppointments": "No upcoming appointments",
     "openAppointment": "Open appointment",
+    "lastVisit": "Last visit",
+    "neverVisited": "Never visited",
     "reschedule": "Reschedule",
     "balance": "Balance",
     "collect": "Collect",
@@ -791,6 +787,7 @@
     "edit": "Edit appointment",
     "today": "Today",
     "tomorrow": "Tomorrow",
+    "yesterday": "Yesterday",
     "week": "Week",
     "prevWeek": "Previous week",
     "nextWeek": "Next week",

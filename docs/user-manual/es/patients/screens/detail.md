@@ -14,7 +14,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/patients/router.py
   - backend/app/modules/patients/frontend/pages/patients/[id].vue
-last_verified_commit: e1d6873
+last_verified_commit: f277b2a
 ---
 
 # Ficha del paciente
@@ -37,6 +37,10 @@ también deep-links — un click llega al detalle.
   - **Plan activo** *(treatment_plan)* — nombre, progreso, n/m
     tratamientos. Click → detalle del plan.
   - **Próxima cita** *(agenda)* — día/hora/profesional. Click → cita.
+  - **Última visita** *(agenda)* — fecha/hora/profesional de la última
+    cita completada; «Sin visitas previas» si el paciente nunca ha
+    venido. Click → cita (o la agenda con el paciente preseleccionado
+    si no hay ninguna).
   - **Saldo** *(payments)* — debe / a cuenta / cobrado. Click →
     Administración → Cobros.
   - **Diagnósticos** *(odontogram)* — hallazgos sin tratar. Click →
