@@ -17,6 +17,9 @@
     "patients": "Pacientes",
     "appointments": "Agenda",
     "recalls": "Recordatorios",
+    "expenses": "Gastos",
+    "labOrdersForm": "Nuevo trabajo de laboratorio",
+    "labOrdersStatus": "Trabajos de laboratorio",
     "treatmentPlans": "Planes de tratamiento",
     "budgets": "Presupuestos",
     "invoices": "Facturas",
@@ -846,6 +849,7 @@
     "cancelled": "Cancelada",
     "noShow": "No se presentó",
     "no_show": "No se presentó",
+    "actionsMenu": "Acciones de la cita",
     "transitions": {
       "confirmed": "Marcar como confirmada",
       "checked_in": "Marcar llegada",

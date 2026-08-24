@@ -9,7 +9,12 @@ defineProps<Props>()
 
 <template>
   <header class="mb-6">
-    <div class="flex items-start justify-between gap-4">
+    <!--
+      <sm the actions stack under the title: sharing the row squeezed
+      long titles ("Buenas tardes, Marcos" + date) into a 6-line wrap
+      next to two buttons at 375px (#203).
+    -->
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
       <div class="min-w-0">
         <h1 class="text-display text-default text-pretty">
           {{ title }}

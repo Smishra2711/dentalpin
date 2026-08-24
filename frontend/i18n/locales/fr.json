@@ -17,6 +17,9 @@
     "patients": "Patients",
     "appointments": "Agenda",
     "recalls": "Rappels",
+    "expenses": "Dépenses",
+    "labOrdersForm": "Nouveau travail de laboratoire",
+    "labOrdersStatus": "Travaux de laboratoire",
     "treatmentPlans": "Plans de traitement",
     "budgets": "Devis",
     "invoices": "Factures",
@@ -825,6 +828,7 @@
     "cancelled": "Annulé",
     "noShow": "Absence",
     "no_show": "Absence",
+    "actionsMenu": "Actions du rendez-vous",
     "transitions": {
       "confirmed": "Marquer comme confirmé",
       "checked_in": "Enregistrer l'arrivée",

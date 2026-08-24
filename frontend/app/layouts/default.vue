@@ -382,11 +382,17 @@ function isActive(to: string): boolean {
         Global overlay slot for agent surfaces (the copilot drawer, and
         future voice). Registered components teleport to <body>; nothing
         renders inline here. The layout knows nothing about them.
+        ClientOnly for the same reason as app.banners above: overlay
+        registrations happen in `plugins/*.client.ts`, so the slot is
+        empty during SSR while the client renders the registered
+        components — a per-page hydration mismatch otherwise (#258).
       -->
-      <ModuleSlot
-        name="app.overlays"
-        :ctx="{}"
-      />
+      <ClientOnly>
+        <ModuleSlot
+          name="app.overlays"
+          :ctx="{}"
+        />
+      </ClientOnly>
     </div>
   </div>
 </template>

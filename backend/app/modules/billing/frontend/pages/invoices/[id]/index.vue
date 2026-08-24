@@ -41,7 +41,7 @@ const complianceSlotCtx = computed(() => ({
 
 const invoiceId = computed(() => route.params.id as string)
 const comesFromPatient = computed(() => route.query.from === 'patient' && route.query.patientId)
-const backLabel = computed(() => comesFromPatient.value ? t('actions.back') : t('invoice.title'))
+const backLabel = computed(() => comesFromPatient.value ? t('common.back') : t('invoice.title'))
 
 // Modal states
 const showPaymentModal = ref(false)
