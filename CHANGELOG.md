@@ -11,6 +11,67 @@ frontend as a Nuxt layer under its own Python package.
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-08-24
+
+### Added
+
+- **Eight new optional modules** (all manual-install from the admin UI):
+  - **`expenses`** — fixed office cost tracking with date filters,
+    pagination and per-role grants (#245, thanks @lamanji).
+  - **`lab_orders`** — lab work orders with status tracking; no
+    hard-delete, status transitions gated, `received_date` stamped on
+    the receive transition (#266, thanks @lamanji).
+  - **`medical_reference`** — clinic-managed reference lists for
+    allergies, medications, diseases and surgeries, integrated into the
+    patient clinical history via slots (#216, thanks @lamanji).
+  - **`contacts`** — directory of external labs, suppliers and
+    providers (#214, thanks @lamanji).
+  - **`patient_relationships`** — patient-to-patient family/guardian
+    relationships on the patient summary (#208, thanks @lamanji).
+  - **`recall_reminders`** — notifies patients by email when a recall
+    is created, with a shipped default template (#189, thanks @lamanji).
+  - **`india_gst`** — GST-compliant invoicing for Indian clinics:
+    FY-scoped document numbering, turnover-based e-invoice
+    applicability, CGST/SGST/IGST breakdown, Tamil PDF output and a
+    Tamil Nadu demo fixture (#210, thanks @tresundios).
+  - **`integrations`** — outbound webhook subscriptions with outbox
+    delivery and API tokens; first trigger is `appointment.completed`
+    (#65 Phase 1, PRs #246/#247, thanks @hirad121).
+- **German (`de`) and Hungarian (`hu`) interfaces** — full core app,
+  2418 keys each, dental-domain terminology reviewed against #131/#275.
+  Module-layer keys fall back to English (instead of raw dotted keys)
+  until their translations land; the same fallback softens fr/pt/ta
+  drift (#276, thanks @ZoliQua).
+- **Last-visit smart-card on the patient summary**, fed by a new
+  `order=asc|desc` parameter on `GET /appointments` (#182, #251).
+- **SSR renders the user's language**: the locale persists in a cookie
+  and `Accept-Language` is honoured on first visit (#235, #249).
+
+### Fixed
+
+- **Security: production startup now rejects weak or default
+  `SECRET_KEY` values** (GHSA-hcg9-cm67-2g8f, thanks @hirad121).
+- **Billing/budget consistency batch**: a treatment plan now owns the
+  lines of its linked quote — edits flow one way and conflicting edits
+  get a 409 (#176, #177); quotes show and carry net prices per line
+  with VAT applied on the discounted base (#181); voiding, deleting or
+  crediting an invoice releases the quote lines it consumed (#175); the
+  first invoice is no longer blocked for patients with a DNI but no
+  billing tax id (#206); invoice PDF footer time, VAT formatting and
+  exemption clause corrected (#204); legacy `on_account` allocations
+  backfilled into their budget target (#180).
+- **Catalog**: price, VAT and status of system treatments are editable
+  again (#237), and the treatment modal no longer 422s on mapped
+  treatments by sending legacy `visualization_rules`.
+- **Reports**: "work completed" derives from fully invoiced quotes
+  scoped to the patient (#242); week-glance deltas no longer NaN on
+  string decimals (#201).
+- **Patients**: `last_visit` counts completed appointments only, and
+  the patient list reflects it (#257).
+- **UI polish batch** from a fresh-install E2E run (#203) and overlay
+  module slots wrapped in `ClientOnly` to stop hydration crashes
+  (#258).
+
 ## [2.3.1] - 2026-08-20
 
 ### Fixed
