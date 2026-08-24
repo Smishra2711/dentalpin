@@ -462,7 +462,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.INVOICE_SENT`
 - **Publishers:**
-  - `billing` — `backend/app/modules/billing/router.py:702`
+  - `billing` — `backend/app/modules/billing/router.py:704`
 - **Subscribers:**
   - `notifications`
 
