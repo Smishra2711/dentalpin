@@ -166,5 +166,9 @@ export const PERMISSIONS = {
   contacts: {
     read: 'contacts.read',
     write: 'contacts.write'
+  },
+  medicationCatalog: {
+    read: 'medication_catalog.read',
+    write: 'medication_catalog.write'
   }
 } as const

@@ -1,0 +1,42 @@
+{
+  "medications": {
+    "title": "Catalogue de médicaments",
+    "subtitle": "Liste des médicaments de la clinique, utilisée par les ordonnances et les flux cliniques.",
+    "search": "Rechercher par nom…",
+    "filterByForm": "Filtrer par forme",
+    "filterByStatus": "Tous les statuts",
+    "statusActive": "Actifs uniquement",
+    "name": "Nom",
+    "dose": "Dose",
+    "unit": "Unité",
+    "form": "Forme",
+    "prescription": "Ordonnance requise",
+    "status": "Statut",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "add": "Ajouter un médicament",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "deleteTitle": "Supprimer le médicament",
+    "deleteMessage": "Retirer ce médicament de la liste de la clinique ? Les ordonnances déjà émises conservent leur propre copie.",
+    "seed": "Charger le jeu de départ",
+    "seedDone": "{created} ajoutés, {skipped} déjà présents.",
+    "empty": "Aucun médicament trouvé.",
+    "forms": {
+      "tablet": "Comprimé",
+      "capsule": "Gélule",
+      "syrup": "Sirop",
+      "suspension": "Suspension",
+      "injection": "Injection",
+      "topical": "Local",
+      "drops": "Gouttes",
+      "spray": "Spray",
+      "mouthwash": "Bain de bouche",
+      "gel": "Gel",
+      "cream": "Crème",
+      "paste": "Pâte",
+      "varnish": "Vernis",
+      "other": "Autre"
+    }
+  }
+}

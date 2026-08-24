@@ -84,6 +84,7 @@ contacts = "app.modules.contacts:ContactsModule"
 integrations = "app.modules.integrations:IntegrationsModule"
 medical_reference = "app.modules.medical_reference:MedicalReferenceModule"
 lab_orders = "app.modules.lab_orders:LabOrdersModule"
+medication_catalog = "app.modules.medication_catalog:MedicationCatalogModule"
 
 [tool.setuptools.packages.find]
 where = ["."]
