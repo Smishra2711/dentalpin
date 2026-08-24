@@ -163,14 +163,25 @@ def test_medical_reference_uninstall_roundtrip_is_branch_scoped() -> None:
     )
     baseline_non_medical_reference = before - MEDICAL_REFERENCE_TABLES
 
-    # ``@base`` = the bottom of the module's branch (mr_0001's parent) —
-    # a full uninstall. ``@-1`` would stop one revision short of the tip
-    # and leave the original lookup tables behind.
-    _alembic("downgrade", "medical_reference@base")
-
-    after_down = _list_tables()
-    assert MEDICAL_REFERENCE_TABLES.isdisjoint(after_down), (
-        f"medical_reference tables survived downgrade: {MEDICAL_REFERENCE_TABLES & after_down}"
+    # Walk the branch down one revision at a time until every module table
+    # is gone. ``medical_reference@-1`` always resolves against the
+    # branch's *current* head, so this uninstalls the module completely
+    # regardless of how many ``mr_*`` revisions ship later.
+    # (Do NOT use ``medical_reference@base`` here: in this repo's merged
+    # multi-head graph it resolves to the whole-graph base and tears down
+    # unrelated chains — tp_0004 even refuses to downgrade.)
+    for _ in range(10):
+        _alembic("downgrade", "medical_reference@-1")
+        after_down = _list_tables()
+        if MEDICAL_REFERENCE_TABLES.isdisjoint(after_down):
+            break
+    else:
+        raise AssertionError(
+            f"medical_reference tables survived full downgrade: {MEDICAL_REFERENCE_TABLES & _list_tables()}"
+        )
+    assert baseline_non_medical_reference <= after_down, (
+        "downgrade leaked into other modules; missing tables: "
+        f"{baseline_non_medical_reference - after_down}"
     )
     assert baseline_non_medical_reference <= after_down, (
         "downgrade leaked into other modules; missing tables: "
