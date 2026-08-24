@@ -49,6 +49,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 | `document.uploaded` | `EventType.DOCUMENT_UPLOADED` | `media` | `patient_timeline` |
 | `email.failed` | `EventType.EMAIL_FAILED` | `notifications` | `patient_timeline` |
 | `email.sent` | `EventType.EMAIL_SENT` | `notifications` | `patient_timeline` |
+| `inventory.low_stock` | `EventType.INVENTORY_STOCK_LOW` | `inventory` | — |
 | `invoice.cancelled` | `EventType.INVOICE_CANCELLED` | — | — |
 | `invoice.created` | `EventType.INVOICE_CREATED` | — | — |
 | `invoice.issued` | `EventType.INVOICE_ISSUED` | `billing` | `patient_timeline` |
@@ -56,7 +57,6 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 | `invoice.partial_paid` | `EventType.INVOICE_PARTIAL_PAID` | — | — |
 | `invoice.sent` | `EventType.INVOICE_SENT` | `billing` | `notifications` |
 | `invoice.voided` | `EventType.INVOICE_VOIDED` | — | — |
-| `inventory.low_stock` | `EventType.INVENTORY_STOCK_LOW` | `inventory` | — |
 | `lab_order.status_changed` | `EventType.LAB_ORDER_STATUS_CHANGED` | `lab_orders` | — |
 | `media.attachment_linked` | `EventType.ATTACHMENT_LINKED` | `media` | — |
 | `media.attachment_unlinked` | `EventType.ATTACHMENT_UNLINKED` | `media` | — |
@@ -424,6 +424,13 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Subscribers:**
   - `patient_timeline`
 
+### `inventory.low_stock`
+
+- **Constant:** `EventType.INVENTORY_STOCK_LOW`
+- **Publishers:**
+  - `inventory` — `backend/app/modules/inventory/service.py:154`
+- **Subscribers:** —
+
 ### `invoice.cancelled`
 
 - **Constant:** `EventType.INVOICE_CANCELLED`
@@ -471,13 +478,6 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.INVOICE_VOIDED`
 - **Publishers:** _none in tree — declared but unused_
-- **Subscribers:** —
-
-### `inventory.low_stock`
-
-- **Constant:** `EventType.INVENTORY_STOCK_LOW`
-- **Publishers:**
-  - `inventory` — `backend/app/modules/inventory/service.py:154`
 - **Subscribers:** —
 
 ### `lab_order.status_changed`

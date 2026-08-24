@@ -22,8 +22,8 @@ Maintained by `backend/scripts/generate_catalogs.py`. CI fails if a manifest cha
 | `india_gst` | 0.1.0 | official | billing, catalog | manual | yes | 4 | 0 | 0 | yes |
 | `integrations` | 0.1.0 | official | patients | manual | yes | 4 | 0 | 2 | no |
 | `inventory` | 0.1.0 | community | — | manual | yes | 2 | 1 | 0 | yes |
-
 | `lab_orders` | 0.1.0 | community | patients, contacts | manual | yes | 2 | 1 | 0 | yes |
+| `media` | 0.2.0 | official | patients | auto | no | 4 | 7 | 1 | yes |
 | `medical_reference` | 0.4.0 | community | patients_clinical, patients | manual | yes | 2 | 0 | 0 | yes |
 | `migration_import` | 0.1.0 | official | patients, patients_clinical, clinical_notes, agenda, schedules, recalls, catalog, budget, odontogram, treatment_plan, billing, payments, media | manual | yes | 4 | 5 | 0 | yes |
 | `notifications` | 0.1.0 | official | patients, agenda, budget, billing, catalog | auto | no | 8 | 7 | 6 | yes |
