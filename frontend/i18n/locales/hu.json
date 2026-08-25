@@ -14,6 +14,7 @@
   },
   "nav": {
     "dashboard": "Kezdőlap",
+    "journal": "Tevékenységnapló",
     "staffTasks": "Csapatfeladatok",
     "patients": "Páciensek",
     "appointments": "Időpontnaptár",

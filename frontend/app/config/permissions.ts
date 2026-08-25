@@ -174,5 +174,8 @@ export const PERMISSIONS = {
   inventory: {
     read: 'inventory.read',
     write: 'inventory.write'
+  },
+  activityJournal: {
+    read: 'activity_journal.read'
   }
 } as const

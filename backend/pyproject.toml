@@ -86,6 +86,7 @@ staff_tasks = "app.modules.staff_tasks:StaffTasksModule"
 medical_reference = "app.modules.medical_reference:MedicalReferenceModule"
 inventory = "app.modules.inventory:InventoryModule"
 lab_orders = "app.modules.lab_orders:LabOrdersModule"
+activity_journal = "app.modules.activity_journal:ActivityJournalModule"
 
 [tool.setuptools.packages.find]
 where = ["."]
