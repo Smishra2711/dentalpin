@@ -54,3 +54,24 @@ Two reasons, both hard constraints rather than choices:
 If a future change makes one of the excluded events fully
 transactional, subscribe to it in the same PR that changes the
 publisher(s).
+
+## Actor attribution
+
+`events.py` extracts `actor_id` from the first matching payload key in
+`_ACTOR_KEYS`. Besides the generic `user_id`/`actor_id`/`created_by`,
+the list carries the `*_by` keys the subscribed publishers actually use
+(`changed_by`, `performed_by`, `completed_by`, `refunded_by`,
+`cancelled_by`, `resent_by`, `accepted_by`, `recommended_by`) — each
+verified to hold a **user** id at its publish site (a `users.id` FK or
+`ctx.user_id`). Keys that may point at a non-user entity
+(`professional_id`) are deliberately excluded. When subscribing to a
+new event, check what its payload calls the acting user and extend
+`_ACTOR_KEYS` if needed.
+
+Some payloads carry no user at all (`patient.created/archived`,
+`appointment.scheduled`, `invoice.sent`, `budget.sent`,
+`lab_order.status_changed`, `treatment_plan.treatment_added/removed/
+budget_sync_requested`) — those rows stay unattributed until their
+publishers start including one. All id parsing is fail-soft: a
+malformed id degrades to `NULL` (the verbatim value is still in
+`payload`) rather than aborting the publisher's transaction.
