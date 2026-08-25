@@ -14,6 +14,7 @@
     "deleteMessage": "Remove this link? The treatment will no longer list this item as a consumable.",
     "empty": "No links yet. Use “Link consumable” to map a treatment to an inventory item.",
     "noMatches": "No matches",
-    "perLink": "qty"
+    "duplicate": "This treatment already consumes this item.",
+    "editTitle": "Edit consumable"
   }
 }

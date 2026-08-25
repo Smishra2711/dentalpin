@@ -8,15 +8,21 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+# Mirrors ``TreatmentConsumable.note`` — String(200).
+NOTE_MAX_LENGTH = 200
+
 
 class ConsumableLinkCreate(BaseModel):
     catalog_item_id: UUID
     inventory_item_id: UUID
     quantity: Decimal = Field(gt=0, le=9999)
+    note: str | None = Field(default=None, max_length=NOTE_MAX_LENGTH)
 
 
 class ConsumableLinkUpdate(BaseModel):
     quantity: Decimal = Field(gt=0, le=9999)
+    # Omitting the field leaves the stored note untouched; "" clears it.
+    note: str | None = Field(default=None, max_length=NOTE_MAX_LENGTH)
 
 
 class ConsumableLinkResponse(BaseModel):
@@ -27,6 +33,7 @@ class ConsumableLinkResponse(BaseModel):
     catalog_item_id: UUID
     inventory_item_id: UUID
     quantity: Decimal
+    note: str | None = None
     created_at: datetime
     updated_at: datetime
 

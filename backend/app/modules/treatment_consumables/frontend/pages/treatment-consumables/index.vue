@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { PERMISSIONS } from '~~/app/config/permissions'
+import { errorDetail, errorStatus } from '~~/app/utils/error'
 import {
   useTreatmentConsumables,
   type ConsumableLink,
@@ -11,6 +12,7 @@ definePageMeta({ middleware: ['auth'] })
 
 const { t } = useI18n()
 const { can } = usePermissions()
+const toast = useToast()
 const linksApi = useTreatmentConsumables()
 
 if (!can(PERMISSIONS.treatmentConsumables.read)) {
@@ -18,6 +20,17 @@ if (!can(PERMISSIONS.treatmentConsumables.read)) {
 }
 
 const canWrite = computed(() => can(PERMISSIONS.treatmentConsumables.write))
+
+// "2.00" -> "2", "1.50" -> "1.5" — Numeric(10,2) noise trimmed for display.
+const fmtQty = (v: string) => String(Number(v))
+
+function notifyError(e: unknown) {
+  toast.add({
+    title: t('common.error'),
+    description: errorStatus(e) === 409 ? t('consumables.duplicate') : errorDetail(e),
+    color: 'error'
+  })
+}
 
 // --- History table (server-side pagination) --------------------------------
 const items = ref<ConsumableLink[]>([])
@@ -37,6 +50,8 @@ async function load() {
       page.value = totalPages.value
       await load()
     }
+  } catch (e) {
+    notifyError(e)
   } finally {
     loading.value = false
   }
@@ -52,7 +67,6 @@ onMounted(load)
 // --- Create modal: search-based pickers into both modules -------------------
 const showModal = ref(false)
 const saving = ref(false)
-const searchQ = ref('')
 
 const treatmentQuery = ref('')
 const itemQuery = ref('')
@@ -62,37 +76,65 @@ const selectedTreatment = ref<LinkOptionTreatment | null>(null)
 const selectedItem = ref<LinkOptionItem | null>(null)
 const quantity = ref('1')
 const note = ref('')
-const formError = ref('')
 
-let debounce: ReturnType<typeof setTimeout> | undefined
-async function runPickers() {
-  const res = await linksApi.linkOptions(searchQ.value || treatmentQuery.value || itemQuery.value || undefined)
-  treatmentOptions.value = res.data.treatments
-  itemOptions.value = res.data.items
+// A narrowed query can hide the current pick — keep it listed so the
+// selection stays visible (and revocable) while searching the other side.
+function pinSelected<T extends { id: string }>(options: T[], selected: T | null): T[] {
+  if (!selected || options.some(o => o.id === selected.id)) return options
+  return [selected, ...options]
 }
-watch([treatmentQuery, itemQuery], () => {
-  clearTimeout(debounce)
-  debounce = setTimeout(runPickers, 300)
+const treatmentList = computed(() => pinSelected(treatmentOptions.value, selectedTreatment.value))
+const itemList = computed(() => pinSelected(itemOptions.value, selectedItem.value))
+
+async function searchTreatments() {
+  try {
+    const res = await linksApi.linkOptions(treatmentQuery.value || undefined)
+    treatmentOptions.value = res.data.treatments
+  } catch (e) {
+    notifyError(e)
+  }
+}
+
+async function searchItems() {
+  try {
+    const res = await linksApi.linkOptions(itemQuery.value || undefined)
+    itemOptions.value = res.data.items
+  } catch (e) {
+    notifyError(e)
+  }
+}
+
+let treatmentDebounce: ReturnType<typeof setTimeout> | undefined
+let itemDebounce: ReturnType<typeof setTimeout> | undefined
+watch(treatmentQuery, () => {
+  clearTimeout(treatmentDebounce)
+  treatmentDebounce = setTimeout(searchTreatments, 300)
+})
+watch(itemQuery, () => {
+  clearTimeout(itemDebounce)
+  itemDebounce = setTimeout(searchItems, 300)
 })
 
-function openAdd() {
+async function openAdd() {
   selectedTreatment.value = null
   selectedItem.value = null
-  treatmentOptions.value = []
-  itemOptions.value = []
+  treatmentQuery.value = ''
+  itemQuery.value = ''
   quantity.value = '1'
   note.value = ''
-  formError.value = ''
   showModal.value = true
-  runPickers()
+  // Both halves come from one request while neither side is filtered.
+  try {
+    const res = await linksApi.linkOptions()
+    treatmentOptions.value = res.data.treatments
+    itemOptions.value = res.data.items
+  } catch (e) {
+    notifyError(e)
+  }
 }
 
 async function submit() {
-  formError.value = ''
-  if (!selectedTreatment.value || !selectedItem.value) {
-    formError.value = t('consumables.noMatches')
-    return
-  }
+  if (!selectedTreatment.value || !selectedItem.value) return
   saving.value = true
   try {
     await linksApi.create({
@@ -101,10 +143,42 @@ async function submit() {
       quantity: quantity.value || '1',
       note: note.value || null
     })
+    toast.add({ title: t('common.success'), color: 'success' })
     showModal.value = false
     await load()
-  } catch {
-    formError.value = t('consumables.noMatches')
+  } catch (e) {
+    notifyError(e)
+  } finally {
+    saving.value = false
+  }
+}
+
+// --- Edit modal: quantity + note -------------------------------------------
+const showEdit = ref(false)
+const editing = ref<ConsumableLink | null>(null)
+const editQuantity = ref('1')
+const editNote = ref('')
+
+function openEdit(link: ConsumableLink) {
+  editing.value = link
+  editQuantity.value = fmtQty(link.quantity)
+  editNote.value = link.note || ''
+  showEdit.value = true
+}
+
+async function saveEdit() {
+  if (!editing.value) return
+  saving.value = true
+  try {
+    await linksApi.update(editing.value.id, {
+      quantity: editQuantity.value || '1',
+      note: editNote.value
+    })
+    toast.add({ title: t('common.success'), color: 'success' })
+    showEdit.value = false
+    await load()
+  } catch (e) {
+    notifyError(e)
   } finally {
     saving.value = false
   }
@@ -125,8 +199,11 @@ async function handleDelete() {
   isDeleting.value = true
   try {
     await linksApi.remove(linkToDelete.value.id)
+    toast.add({ title: t('common.success'), color: 'success' })
     showDeleteConfirm.value = false
     await load()
+  } catch (e) {
+    notifyError(e)
   } finally {
     isDeleting.value = false
   }
@@ -179,18 +256,41 @@ const columns = computed(() => [
           size="sm"
           class="tnum"
         >
-          {{ row.original.quantity }}
+          {{ fmtQty(row.original.quantity) }}
         </UBadge>
+        <span
+          v-if="row.original.item_unit"
+          class="text-xs text-subtle ml-1"
+        >{{ row.original.item_unit }}</span>
+      </template>
+      <template #note-cell="{ row }">
+        <span class="text-ui text-subtle">{{ row.original.note || '—' }}</span>
       </template>
       <template #actions-cell="{ row }">
-        <UButton
-          v-if="canWrite"
-          icon="i-lucide-unlink"
-          variant="ghost"
-          color="error"
-          size="xs"
-          :aria-label="t('consumables.delete')"
-          @click="confirmDelete(row.original)"
+        <div class="flex justify-end gap-1">
+          <UButton
+            v-if="canWrite"
+            icon="i-lucide-pencil"
+            variant="ghost"
+            size="xs"
+            :aria-label="t('actions.edit')"
+            @click="openEdit(row.original)"
+          />
+          <UButton
+            v-if="canWrite"
+            icon="i-lucide-unlink"
+            variant="ghost"
+            color="error"
+            size="xs"
+            :aria-label="t('consumables.delete')"
+            @click="confirmDelete(row.original)"
+          />
+        </div>
+      </template>
+      <template #empty>
+        <EmptyState
+          icon="i-lucide-link-2"
+          :title="t('consumables.empty')"
         />
       </template>
     </UTable>
@@ -210,30 +310,30 @@ const columns = computed(() => [
           <h2 class="text-h3 text-default">
             {{ t('consumables.add') }}
           </h2>
-          <UInput
-            v-model="searchQ"
-            :placeholder="t('consumables.searchTreatments')"
-            @update:model-value="treatmentQuery = $event; itemQuery = $event"
-          />
-          <div class="grid grid-cols-2 gap-2">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="space-y-1">
               <p class="text-xs text-subtle">
                 {{ t('consumables.treatment') }}
               </p>
+              <UInput
+                v-model="treatmentQuery"
+                icon="i-lucide-search"
+                :placeholder="t('consumables.searchTreatments')"
+              />
               <div class="max-h-40 overflow-auto rounded border border-default p-1 space-y-1">
                 <button
-                  v-for="tr in treatmentOptions"
+                  v-for="tr in treatmentList"
                   :key="tr.id"
                   type="button"
                   class="w-full text-left px-2 py-1 rounded text-sm hover:bg-elevated"
-                  :class="selectedTreatment?.id === tr.id ? 'bg-primary/10' : ''"
+                  :class="selectedTreatment?.id === tr.id ? 'bg-primary/10 font-medium' : ''"
                   @click="selectedTreatment = tr"
                 >
                   {{ tr.name }}
                 </button>
                 <p
-                  v-if="!treatmentOptions.length"
-                  class="text-sm text-subtle px-2"
+                  v-if="!treatmentList.length"
+                  class="text-sm text-subtle px-2 py-1"
                 >
                   {{ t('consumables.noMatches') }}
                 </p>
@@ -243,40 +343,60 @@ const columns = computed(() => [
               <p class="text-xs text-subtle">
                 {{ t('consumables.item') }}
               </p>
+              <UInput
+                v-model="itemQuery"
+                icon="i-lucide-search"
+                :placeholder="t('consumables.searchItems')"
+              />
               <div class="max-h-40 overflow-auto rounded border border-default p-1 space-y-1">
                 <button
-                  v-for="it in itemOptions"
+                  v-for="it in itemList"
                   :key="it.id"
                   type="button"
                   class="w-full text-left px-2 py-1 rounded text-sm hover:bg-elevated"
-                  :class="selectedItem?.id === it.id ? 'bg-primary/10' : ''"
+                  :class="selectedItem?.id === it.id ? 'bg-primary/10 font-medium' : ''"
                   @click="selectedItem = it"
                 >
                   {{ it.name }}
                 </button>
                 <p
-                  v-if="!itemOptions.length"
-                  class="text-sm text-subtle px-2"
+                  v-if="!itemList.length"
+                  class="text-sm text-subtle px-2 py-1"
                 >
                   {{ t('consumables.noMatches') }}
                 </p>
               </div>
             </div>
           </div>
-          <div class="flex gap-2">
-            <UInput
-              v-model="quantity"
-              type="number"
-              step="0.5"
-              min="0.5"
-              :placeholder="t('consumables.quantity')"
+          <div class="flex flex-wrap gap-2">
+            <UFormField
+              :label="t('consumables.quantity')"
               class="w-32"
-            />
-            <UInput
-              v-model="note"
-              :placeholder="t('consumables.note')"
-              class="flex-1"
-            />
+            >
+              <UInput
+                v-model="quantity"
+                type="number"
+                step="0.5"
+                min="0.5"
+              >
+                <template
+                  v-if="selectedItem?.unit"
+                  #trailing
+                >
+                  <span class="text-xs text-subtle">{{ selectedItem.unit }}</span>
+                </template>
+              </UInput>
+            </UFormField>
+            <UFormField
+              :label="t('consumables.note')"
+              class="flex-1 min-w-48"
+            >
+              <UInput
+                v-model="note"
+                :maxlength="200"
+                class="w-full"
+              />
+            </UFormField>
           </div>
           <div class="flex justify-end gap-2">
             <UButton
@@ -291,6 +411,67 @@ const columns = computed(() => [
               @click="submit"
             >
               {{ t('consumables.add') }}
+            </UButton>
+          </div>
+        </div>
+      </template>
+    </UModal>
+
+    <!-- Edit modal: quantity + note of an existing link -->
+    <UModal v-model:open="showEdit">
+      <template #content>
+        <div class="p-4 space-y-4">
+          <h2 class="text-h3 text-default">
+            {{ t('consumables.editTitle') }}
+          </h2>
+          <p
+            v-if="editing"
+            class="text-ui text-subtle"
+          >
+            {{ editing.treatment_name }} → {{ editing.item_name }}
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <UFormField
+              :label="t('consumables.quantity')"
+              class="w-32"
+            >
+              <UInput
+                v-model="editQuantity"
+                type="number"
+                step="0.5"
+                min="0.5"
+              >
+                <template
+                  v-if="editing?.item_unit"
+                  #trailing
+                >
+                  <span class="text-xs text-subtle">{{ editing.item_unit }}</span>
+                </template>
+              </UInput>
+            </UFormField>
+            <UFormField
+              :label="t('consumables.note')"
+              class="flex-1 min-w-48"
+            >
+              <UInput
+                v-model="editNote"
+                :maxlength="200"
+                class="w-full"
+              />
+            </UFormField>
+          </div>
+          <div class="flex justify-end gap-2">
+            <UButton
+              variant="ghost"
+              @click="showEdit = false"
+            >
+              {{ t('actions.cancel') }}
+            </UButton>
+            <UButton
+              :loading="saving"
+              @click="saveEdit"
+            >
+              {{ t('actions.save') }}
             </UButton>
           </div>
         </div>

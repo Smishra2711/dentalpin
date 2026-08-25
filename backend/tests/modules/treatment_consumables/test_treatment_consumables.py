@@ -64,11 +64,14 @@ async def test_create_update_delete_over_http(
         catalog_item_id=str(treatment.id),
         inventory_item_id=str(item.id),
         quantity="2",
+        note="per session",
     )
     assert code == 201, link
     assert link["treatment_name"] == "Endodoncia"  # resolved from JSONB names
     assert link["item_name"] == "Anesthetic vial"
+    assert link["item_unit"] == "vials"
     assert Decimal(link["quantity"]) == Decimal("2")
+    assert link["note"] == "per session"
 
     # Duplicate pair → 409 (never a raw unique-constraint 500).
     code, _ = await _create(
@@ -80,7 +83,7 @@ async def test_create_update_delete_over_http(
     )
     assert code == 409
 
-    # Update quantity.
+    # Update quantity — an omitted note leaves the stored one untouched.
     res = await client.patch(
         f"/api/v1/treatment_consumables/{link['id']}",
         json={"quantity": "3.5"},
@@ -88,6 +91,31 @@ async def test_create_update_delete_over_http(
     )
     assert res.status_code == 200, res.text
     assert Decimal(res.json()["data"]["quantity"]) == Decimal("3.5")
+    assert res.json()["data"]["note"] == "per session"
+
+    # Editing the note, and clearing it with "".
+    res = await client.patch(
+        f"/api/v1/treatment_consumables/{link['id']}",
+        json={"quantity": "3.5", "note": "only if surgery"},
+        headers=auth_headers,
+    )
+    assert res.json()["data"]["note"] == "only if surgery"
+    res = await client.patch(
+        f"/api/v1/treatment_consumables/{link['id']}",
+        json={"quantity": "3.5", "note": ""},
+        headers=auth_headers,
+    )
+    assert res.json()["data"]["note"] is None
+
+    # The note survives the round-trip through the list endpoint too.
+    res = await client.patch(
+        f"/api/v1/treatment_consumables/{link['id']}",
+        json={"quantity": "3.5", "note": "per session"},
+        headers=auth_headers,
+    )
+    assert res.status_code == 200
+    res = await client.get("/api/v1/treatment_consumables/", headers=auth_headers)
+    assert res.json()["data"][0]["note"] == "per session"
 
     # Filter by treatment.
     res = await client.get(

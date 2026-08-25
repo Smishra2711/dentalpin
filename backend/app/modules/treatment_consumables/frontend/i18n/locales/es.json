@@ -14,6 +14,7 @@
     "deleteMessage": "¿Quitar este vínculo? El tratamiento ya no listará este artículo como consumible.",
     "empty": "Aún no hay vínculos. Usa «Vincular consumible» para asociar un tratamiento con un artículo.",
     "noMatches": "Sin coincidencias",
-    "perLink": "cant"
+    "duplicate": "Este tratamiento ya consume este artículo.",
+    "editTitle": "Editar consumible"
   }
 }

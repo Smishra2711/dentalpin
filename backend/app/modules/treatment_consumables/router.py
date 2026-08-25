@@ -17,7 +17,7 @@ from .schemas import (
     ConsumableLinkUpdate,
     LinkOptionsResponse,
 )
-from .service import TreatmentConsumablesService
+from .service import TreatmentConsumablesService, treatment_display_name
 
 router = APIRouter()
 
@@ -64,18 +64,7 @@ async def link_options(
             treatments=[
                 {
                     "id": t.id,
-                    "name": next(
-                        (
-                            str(v)
-                            for v in (
-                                t.names.get("es"),
-                                t.names.get("en"),
-                                *t.names.values(),
-                            )
-                            if v
-                        ),
-                        t.internal_code or str(t.id),
-                    ),
+                    "name": treatment_display_name(t),
                     "internal_code": t.internal_code,
                 }
                 for t in treatments
@@ -102,6 +91,7 @@ async def create_link(
         payload.catalog_item_id,
         payload.inventory_item_id,
         payload.quantity,
+        note=payload.note,
     )
     detailed = await TreatmentConsumablesService.detailed_links(db, ctx.clinic_id, [link])
     return ApiResponse(data=ConsumableLinkDetailed(**detailed[0]))
@@ -116,7 +106,7 @@ async def update_link(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> ApiResponse[ConsumableLinkDetailed]:
     link = await TreatmentConsumablesService.update_quantity(
-        db, ctx.clinic_id, link_id, payload.quantity
+        db, ctx.clinic_id, link_id, payload.quantity, note=payload.note
     )
     detailed = await TreatmentConsumablesService.detailed_links(db, ctx.clinic_id, [link])
     return ApiResponse(data=ConsumableLinkDetailed(**detailed[0]))

@@ -12,8 +12,8 @@ Routes mounted at `/api/v1/treatment_consumables/`.
 
 - `GET    /treatment_consumables`              — list links (resolved names), filterable by treatment/item, paginated; `treatment_consumables.read`
 - `GET    /treatment_consumables/link-options` — search-based picker data from both modules; `treatment_consumables.read`
-- `POST   /treatment_consumables`              — create link (validates both endpoints in-clinic; 409 on duplicate pair); `.write`
-- `PATCH  /treatment_consumables/{id}`         — update quantity; `.write`
+- `POST   /treatment_consumables`              — create link (validates both endpoints in-clinic; 409 on duplicate pair, raised from the unique constraint so concurrent creates never surface a 500); `.write`
+- `PATCH  /treatment_consumables/{id}`         — update quantity and/or note (omit `note` to keep it, `""` to clear it); `.write`
 - `DELETE /treatment_consumables/{id}`         — unlink; `.write`
 
 ## Dependencies

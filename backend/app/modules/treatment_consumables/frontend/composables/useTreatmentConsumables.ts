@@ -53,13 +53,17 @@ export function useTreatmentConsumables() {
     return await api.post<ApiOk<ConsumableLink>>('/api/v1/treatment_consumables/', payload)
   }
 
-  async function updateQuantity(id: string, quantity: string): Promise<ApiOk<ConsumableLink>> {
-    return await api.patch<ApiOk<ConsumableLink>>(`/api/v1/treatment_consumables/${id}`, { quantity })
+  // `note: ''` clears the stored note; omitting it leaves it untouched.
+  async function update(
+    id: string,
+    payload: { quantity: string, note?: string | null }
+  ): Promise<ApiOk<ConsumableLink>> {
+    return await api.patch<ApiOk<ConsumableLink>>(`/api/v1/treatment_consumables/${id}`, payload)
   }
 
   async function remove(id: string): Promise<void> {
     await api.del(`/api/v1/treatment_consumables/${id}`)
   }
 
-  return { list, linkOptions, create, updateQuantity, remove }
+  return { list, linkOptions, create, update, remove }
 }

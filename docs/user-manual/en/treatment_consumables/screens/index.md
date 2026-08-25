@@ -13,7 +13,7 @@ related_permissions:
   - treatment_consumables.write
 related_paths:
   - backend/app/modules/treatment_consumables/frontend/pages/treatment-consumables/index.vue
-last_verified_commit: 47983b05
+last_verified_commit: 38a49ffe
 ---
 
 # Treatment consumables
@@ -24,13 +24,16 @@ stock is **not** deducted automatically.
 
 ## What you can do
 
-- **Link a consumable**: search for a treatment, search for an
-  inventory item, set the quantity, confirm. Both sides are validated
-  against your clinic; duplicates of the same pair are rejected.
-- **Edit quantity** on any existing link.
+- **Link a consumable**: each side has its own search box — find a
+  treatment, find an inventory item, set the quantity and an optional
+  note ("per session", "only if surgery"), confirm. Both sides are
+  validated against your clinic; linking the same pair twice is
+  rejected with a message.
+- **Edit** the quantity and the note of any existing link.
 - **Unlink** with confirmation.
 - The history table shows every link with resolved names from both
-  modules, newest first, paginated.
+  modules, the quantity with the item's own unit, and the note.
+  Newest first, paginated.
 
 ## Who can use it
 

@@ -14,6 +14,7 @@
     "deleteMessage": "Remover esta ligação? O tratamento deixará de listar este artigo como consumível.",
     "empty": "Ainda não há ligações. Use «Vincular consumível» para associar um tratamento a um artigo.",
     "noMatches": "Sem correspondências",
-    "perLink": "qtd"
+    "duplicate": "Este tratamento já consome este artigo.",
+    "editTitle": "Editar consumível"
   }
 }

@@ -11,6 +11,7 @@ from uuid import UUID
 
 from fastapi import HTTPException, status
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.catalog.models import TreatmentCatalogItem
@@ -18,14 +19,17 @@ from app.modules.inventory.models import InventoryItem
 from app.modules.treatment_consumables.models import TreatmentConsumable
 
 
-def _treatment_display_name(names: dict) -> str:
-    """Catalog names are localized JSONB — prefer es > en > first."""
-    if not names:
-        return "—"
+def treatment_display_name(treatment: TreatmentCatalogItem) -> str:
+    """Catalog names are localized JSONB — prefer es > en > first,
+    falling back to the internal code for a row with no names."""
+    names = treatment.names or {}
     for key in ("es", "en"):
         if names.get(key):
             return str(names[key])
-    return str(next(iter(names.values())))
+    for value in names.values():
+        if value:
+            return str(value)
+    return treatment.internal_code or "—"
 
 
 class TreatmentConsumablesService:
@@ -65,20 +69,6 @@ class TreatmentConsumablesService:
         if link is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Link not found")
         return link
-
-    @staticmethod
-    async def find_link(
-        db: AsyncSession,
-        clinic_id: UUID,
-        catalog_item_id: UUID,
-        inventory_item_id: UUID,
-    ) -> TreatmentConsumable | None:
-        stmt = select(TreatmentConsumable).where(
-            TreatmentConsumable.clinic_id == clinic_id,
-            TreatmentConsumable.catalog_item_id == catalog_item_id,
-            TreatmentConsumable.inventory_item_id == inventory_item_id,
-        )
-        return (await db.execute(stmt)).scalar_one_or_none()
 
     @staticmethod
     async def _validated_pair(
@@ -126,23 +116,25 @@ class TreatmentConsumablesService:
         treatment, item = await TreatmentConsumablesService._validated_pair(
             db, clinic_id, catalog_item_id, inventory_item_id
         )
-        existing = await TreatmentConsumablesService.find_link(
-            db, clinic_id, catalog_item_id, inventory_item_id
-        )
-        if existing is not None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="This treatment already consumes this inventory item",
-            )
         link = TreatmentConsumable(
             clinic_id=clinic_id,
             catalog_item_id=treatment.id,
             inventory_item_id=item.id,
             quantity=quantity,
-            note=note,
+            note=note or None,
         )
         db.add(link)
-        await db.commit()
+        try:
+            await db.commit()
+        except IntegrityError as exc:
+            # uq_treatment_consumables_link. Answered from the constraint
+            # rather than a SELECT-then-INSERT pre-check so two concurrent
+            # creates both get a 409 instead of one raising a raw 500.
+            await db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This treatment already consumes this inventory item",
+            ) from exc
         await db.refresh(link)
         return link
 
@@ -180,13 +172,21 @@ class TreatmentConsumablesService:
         if treatment_ids:
             rows = (
                 await db.execute(
-                    select(TreatmentCatalogItem).where(TreatmentCatalogItem.id.in_(treatment_ids))
+                    select(TreatmentCatalogItem).where(
+                        TreatmentCatalogItem.clinic_id == clinic_id,
+                        TreatmentCatalogItem.id.in_(treatment_ids),
+                    )
                 )
             ).scalars()
             treatments = {t.id: t for t in rows}
         if item_ids:
             rows = (
-                await db.execute(select(InventoryItem).where(InventoryItem.id.in_(item_ids)))
+                await db.execute(
+                    select(InventoryItem).where(
+                        InventoryItem.clinic_id == clinic_id,
+                        InventoryItem.id.in_(item_ids),
+                    )
+                )
             ).scalars()
             items = {i.id: i for i in rows}
 
@@ -204,7 +204,7 @@ class TreatmentConsumablesService:
                     "note": lnk.note,
                     "created_at": lnk.created_at,
                     "updated_at": lnk.updated_at,
-                    "treatment_name": _treatment_display_name(t.names) if t else "—",
+                    "treatment_name": treatment_display_name(t) if t else "—",
                     "treatment_code": t.internal_code if t else None,
                     "item_name": i.name if i else "—",
                     "item_unit": i.unit if i else None,

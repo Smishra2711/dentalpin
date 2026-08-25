@@ -18,6 +18,8 @@ INVENTORY_TABLES = {"inventory_items"}
 # treatment_consumables declares ``depends_on = ("cat_0004", "inv_0001")``
 # in tc_0001 (its junction table FKs inventory_items). Raw Alembic
 # downgrades drag alembic-dependents along with their dependency.
+# The processor's batch-uninstall ordering does not account for this yet
+# (#286); revisit this expectation when that lands.
 DEPENDENT_TABLES = {"treatment_consumables"}
 
 
