@@ -1,25 +1,40 @@
 {
   "layers": [
+    "/module_layers/accounting_export/frontend",
     "/module_layers/agenda/frontend",
     "/module_layers/billing/frontend",
     "/module_layers/budget/frontend",
     "/module_layers/catalog/frontend",
+    "/module_layers/clinical_notes/frontend",
+    "/module_layers/contacts/frontend",
     "/module_layers/copilot/frontend",
+    "/module_layers/expenses/frontend",
+    "/module_layers/india_gst/frontend",
+    "/module_layers/lab_orders/frontend",
     "/module_layers/media/frontend",
+    "/module_layers/medical_reference/frontend",
+    "/module_layers/migration_import/frontend",
     "/module_layers/notifications/frontend",
     "/module_layers/odontogram/frontend",
+    "/module_layers/patient_relationships/frontend",
     "/module_layers/patient_timeline/frontend",
     "/module_layers/patients/frontend",
     "/module_layers/patients_clinical/frontend",
+    "/module_layers/payments/frontend",
+    "/module_layers/periodontogram/frontend",
+    "/module_layers/recall_reminders/frontend",
     "/module_layers/recalls/frontend",
     "/module_layers/reports/frontend",
     "/module_layers/schedules/frontend",
     "/module_layers/treatment_plan/frontend",
-    "/module_layers/clinical_notes/frontend",
-    "/module_layers/medical_reference/frontend",
-    "/module_layers/payments/frontend"
+    "/module_layers/verifactu/frontend",
+    "/module_layers/whatsapp_kapso/frontend"
   ],
   "modules": [
+    {
+      "name": "accounting_export",
+      "path": "/module_layers/accounting_export/frontend"
+    },
     {
       "name": "agenda",
       "path": "/module_layers/agenda/frontend"
@@ -37,12 +52,40 @@
       "path": "/module_layers/catalog/frontend"
     },
     {
+      "name": "clinical_notes",
+      "path": "/module_layers/clinical_notes/frontend"
+    },
+    {
+      "name": "contacts",
+      "path": "/module_layers/contacts/frontend"
+    },
+    {
       "name": "copilot",
       "path": "/module_layers/copilot/frontend"
     },
     {
+      "name": "expenses",
+      "path": "/module_layers/expenses/frontend"
+    },
+    {
+      "name": "india_gst",
+      "path": "/module_layers/india_gst/frontend"
+    },
+    {
+      "name": "lab_orders",
+      "path": "/module_layers/lab_orders/frontend"
+    },
+    {
       "name": "media",
       "path": "/module_layers/media/frontend"
+    },
+    {
+      "name": "medical_reference",
+      "path": "/module_layers/medical_reference/frontend"
+    },
+    {
+      "name": "migration_import",
+      "path": "/module_layers/migration_import/frontend"
     },
     {
       "name": "notifications",
@@ -51,6 +94,10 @@
     {
       "name": "odontogram",
       "path": "/module_layers/odontogram/frontend"
+    },
+    {
+      "name": "patient_relationships",
+      "path": "/module_layers/patient_relationships/frontend"
     },
     {
       "name": "patient_timeline",
@@ -63,6 +110,18 @@
     {
       "name": "patients_clinical",
       "path": "/module_layers/patients_clinical/frontend"
+    },
+    {
+      "name": "payments",
+      "path": "/module_layers/payments/frontend"
+    },
+    {
+      "name": "periodontogram",
+      "path": "/module_layers/periodontogram/frontend"
+    },
+    {
+      "name": "recall_reminders",
+      "path": "/module_layers/recall_reminders/frontend"
     },
     {
       "name": "recalls",
@@ -81,16 +140,12 @@
       "path": "/module_layers/treatment_plan/frontend"
     },
     {
-      "name": "clinical_notes",
-      "path": "/module_layers/clinical_notes/frontend"
+      "name": "verifactu",
+      "path": "/module_layers/verifactu/frontend"
     },
     {
-      "name": "medical_reference",
-      "path": "/module_layers/medical_reference/frontend"
-    },
-    {
-      "name": "payments",
-      "path": "/module_layers/payments/frontend"
+      "name": "whatsapp_kapso",
+      "path": "/module_layers/whatsapp_kapso/frontend"
     }
   ],
   "version": 1
