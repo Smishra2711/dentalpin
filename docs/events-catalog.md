@@ -49,6 +49,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 | `document.uploaded` | `EventType.DOCUMENT_UPLOADED` | `media` | `patient_timeline` |
 | `email.failed` | `EventType.EMAIL_FAILED` | `notifications` | `patient_timeline` |
 | `email.sent` | `EventType.EMAIL_SENT` | `notifications` | `patient_timeline` |
+| `inventory.low_stock` | `EventType.INVENTORY_STOCK_LOW` | `inventory` | — |
 | `invoice.cancelled` | `EventType.INVOICE_CANCELLED` | — | — |
 | `invoice.created` | `EventType.INVOICE_CREATED` | — | — |
 | `invoice.issued` | `EventType.INVOICE_ISSUED` | `billing` | `patient_timeline` |
@@ -422,6 +423,13 @@ Maintained by `backend/scripts/generate_catalogs.py`.
   - `notifications` — `backend/app/modules/notifications/gateway.py:563`
 - **Subscribers:**
   - `patient_timeline`
+
+### `inventory.low_stock`
+
+- **Constant:** `EventType.INVENTORY_STOCK_LOW`
+- **Publishers:**
+  - `inventory` — `backend/app/modules/inventory/service.py:154`
+- **Subscribers:** —
 
 ### `invoice.cancelled`
 
