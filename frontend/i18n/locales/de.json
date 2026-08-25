@@ -14,6 +14,7 @@
   },
   "nav": {
     "dashboard": "Start",
+    "staffTasks": "Team-Aufgaben",
     "patients": "Patienten",
     "appointments": "Terminkalender",
     "recalls": "Recalls",
