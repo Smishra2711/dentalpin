@@ -54,13 +54,16 @@ export async function login(page: Page, role: Role): Promise<void> {
       url: origin
     },
     {
-      // Pin the UI language (demo data is seeded in Spanish). SSR and
-      // hydration then agree from the first paint, so text locators
-      // never race a post-hydration language switch — the race that
-      // blocked prod-build e2e, where lazy locale messages arrive as a
-      // hashed chunk after hydration (#259).
+      // Pin the UI language. SSR and hydration then agree from the
+      // first paint, so text locators never race a post-hydration
+      // language switch — the race that blocked prod-build e2e, where
+      // lazy locale messages arrive as a hashed chunk after hydration
+      // (#259). Pinned to `en` because the suite's locators are
+      // authored against the English chrome (e.g. /New payment/i);
+      // seeded *data* (patient and treatment names) stays Spanish
+      // either way.
       name: 'dentalpin_locale',
-      value: 'es',
+      value: 'en',
       url: origin
     }
   ])

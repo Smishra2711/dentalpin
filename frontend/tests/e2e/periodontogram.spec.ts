@@ -81,22 +81,31 @@ async function navigateToPerioTab(page: Page, patientId: string): Promise<void> 
   // the bottom of the Summary view doesn't match.
   if (!(await page.getByRole('tab', { name: /Periodonto/i }).first()
     .isVisible().catch(() => false))) {
+    // Only click tabs that are not already selected: reka-ui's sliding
+    // indicator sits on top of the active trigger and intercepts the
+    // pointer, so clicking an already-active tab times out on the
+    // production build (dev hydrated late enough to hide this).
+    const clickUnlessActive = async (locator: ReturnType<typeof page.locator>) => {
+      if (!(await locator.isVisible().catch(() => false))) return
+      const selected = await locator.getAttribute('aria-selected').catch(() => null)
+      if (selected !== 'true') {
+        await locator.click({ timeout: 10_000 })
+      }
+    }
+
     const clinicalNavTab = page
       .getByRole('tab', { name: /^Clinical$|^Clínica$/i })
       .first()
-    if (await clinicalNavTab.isVisible().catch(() => false)) {
-      await clinicalNavTab.click()
-    }
+    await clickUnlessActive(clinicalNavTab)
 
     const diagnosisModeBtn = page.locator(
       'button:has-text("Diagnosis"), button:has-text("Diagnóstico")'
     ).filter({ hasNot: page.locator('[aria-label*="filter"]') }).first()
-    if (await diagnosisModeBtn.isVisible().catch(() => false)) {
-      await diagnosisModeBtn.click()
-    }
+    await clickUnlessActive(diagnosisModeBtn)
 
     const perioSubtab = page.getByRole('tab', { name: /Periodonto/i }).first()
-    await perioSubtab.click({ timeout: 10_000 })
+    await expect(perioSubtab).toBeVisible({ timeout: 10_000 })
+    await clickUnlessActive(perioSubtab)
   }
 
   await expect(
