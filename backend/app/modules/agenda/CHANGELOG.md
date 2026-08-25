@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat(#129): `GET /agenda/appointments/{id}.ics` — export one appointment as an RFC 5545 iCalendar file (UTC timestamps, CRLF + 75-octet folding, escaped text values, stable `UID` of `<appointment-uuid>@dentalpin.com`, `text/calendar` attachment). Hand-rolled builder in `ics.py`, no new dependency. Registered before the plain `/{id}` route so the `.ics` suffix isn't swallowed by the UUID param.
+
 - fix(#203): the kanban card menu trigger carried `aria-label="Marcar llegada"` in every column; now the neutral `appointments.actionsMenu` ("Acciones de la cita"), added to all five locales.
 
 - feat: `GET /agenda/appointments` accepts `order=asc|desc` (by `start_time`, default `asc`). `LastVisitCard` now fetches the most recent completed visit with a single `order=desc&page_size=1` request instead of paging to the tail (PR #251 follow-up).
