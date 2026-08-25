@@ -64,6 +64,9 @@ services:
       NITRO_PORT: 3000
       NUXT_PUBLIC_API_BASE_URL: ${API_BASE_URL:-http://localhost:8000}
       NODE_OPTIONS: --max-old-space-size=4096
+      # Set NUXT_DEVTOOLS=false for a stable local e2e run — devtools
+      # full-page reloads abort Playwright navigation (#260).
+      NUXT_DEVTOOLS: ${NUXT_DEVTOOLS:-true}
     ports:
       - "3000:3000"
     depends_on:
