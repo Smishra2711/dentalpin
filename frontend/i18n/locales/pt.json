@@ -14,12 +14,16 @@
   },
   "nav": {
     "dashboard": "Início",
+    "journal": "Registo de atividade",
+    "staffTasks": "Tarefas da equipe",
     "patients": "Pacientes",
     "appointments": "Agenda",
     "recalls": "Reconvocações",
+    "inventory": "Inventário",
     "expenses": "Despesas",
     "labOrdersForm": "Novo trabalho de laboratório",
     "labOrdersStatus": "Trabalhos de laboratório",
+    "staffTasks": "Tarefas da equipe",
     "treatmentPlans": "Planos de tratamento",
     "budgets": "Orçamentos",
     "invoices": "Faturas",
@@ -828,7 +832,6 @@
     "cancelled": "Cancelada",
     "noShow": "Faltou",
     "no_show": "Faltou",
-    "actionsMenu": "Ações da consulta",
     "transitions": {
       "confirmed": "Marcar como confirmada",
       "checked_in": "Registar chegada",
@@ -931,7 +934,8 @@
       "clinicClosed": "Clínica encerrada",
       "professionalOff": "Fora de serviço",
       "onBreak": "Em pausa"
-    }
+    },
+    "actionsMenu": "Ações da consulta"
   },
   "dashboard": {
     "greetings": {

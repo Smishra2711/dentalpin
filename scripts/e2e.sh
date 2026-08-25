@@ -3,6 +3,9 @@
 #
 # Requirements:
 #   - the full stack is up (backend, frontend, db) via `docker compose up -d`
+#     — for a stable run start the frontend with devtools off, or Vite
+#     devtools full-page reloads abort Playwright navigation (#260):
+#       NUXT_DEVTOOLS=false docker compose up -d frontend
 #   - demo data is seeded (./scripts/seed-demo.sh)
 #   - Playwright browsers installed on host:
 #       (cd frontend && npx playwright install chromium)

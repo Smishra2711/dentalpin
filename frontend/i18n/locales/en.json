@@ -14,12 +14,16 @@
   },
   "nav": {
     "dashboard": "Home",
+    "journal": "Activity log",
+    "staffTasks": "Staff tasks",
     "patients": "Patients",
     "appointments": "Schedule",
     "recalls": "Recalls",
+    "inventory": "Inventory",
     "expenses": "Expenses",
     "labOrdersForm": "New lab order",
     "labOrdersStatus": "Lab orders",
+    "staffTasks": "Staff tasks",
     "treatmentPlans": "Treatment Plans",
     "budgets": "Quotes",
     "invoices": "Invoices",
@@ -828,7 +832,6 @@
     "cancelled": "Cancelled",
     "noShow": "No show",
     "no_show": "No show",
-    "actionsMenu": "Appointment actions",
     "transitions": {
       "confirmed": "Mark as confirmed",
       "checked_in": "Mark arrival",
@@ -931,7 +934,8 @@
       "clinicClosed": "Clinic closed",
       "professionalOff": "Off-duty",
       "onBreak": "On break"
-    }
+    },
+    "actionsMenu": "Appointment actions"
   },
   "dashboard": {
     "greetings": {

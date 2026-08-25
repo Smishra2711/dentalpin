@@ -14,12 +14,16 @@
   },
   "nav": {
     "dashboard": "Accueil",
+    "journal": "Journal d'activité",
+    "staffTasks": "Tâches de l'équipe",
     "patients": "Patients",
     "appointments": "Agenda",
     "recalls": "Rappels",
+    "inventory": "Inventaire",
     "expenses": "Dépenses",
     "labOrdersForm": "Nouveau travail de laboratoire",
     "labOrdersStatus": "Travaux de laboratoire",
+    "staffTasks": "Tâches de l'équipe",
     "treatmentPlans": "Plans de traitement",
     "budgets": "Devis",
     "invoices": "Factures",
@@ -828,7 +832,6 @@
     "cancelled": "Annulé",
     "noShow": "Absence",
     "no_show": "Absence",
-    "actionsMenu": "Actions du rendez-vous",
     "transitions": {
       "confirmed": "Marquer comme confirmé",
       "checked_in": "Enregistrer l'arrivée",
@@ -931,7 +934,8 @@
       "clinicClosed": "Clinique fermée",
       "professionalOff": "Absent",
       "onBreak": "En pause"
-    }
+    },
+    "actionsMenu": "Actions du rendez-vous"
   },
   "dashboard": {
     "greetings": {

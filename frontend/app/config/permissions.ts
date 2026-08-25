@@ -167,6 +167,17 @@ export const PERMISSIONS = {
     read: 'contacts.read',
     write: 'contacts.write'
   },
+  staffTasks: {
+    read: 'staff_tasks.read',
+    write: 'staff_tasks.write'
+  },
+  inventory: {
+    read: 'inventory.read',
+    write: 'inventory.write'
+  },
+  activityJournal: {
+    read: 'activity_journal.read'
+  },
   medicationCatalog: {
     read: 'medication_catalog.read',
     write: 'medication_catalog.write'
