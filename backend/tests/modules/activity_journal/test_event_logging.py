@@ -116,3 +116,62 @@ async def test_occurred_at_and_actor_attribution(db_session: AsyncSession, test_
     )
     assert entry.occurred_at == datetime(2026, 8, 20, 9, 30, tzinfo=UTC)
     assert entry.actor_id is not None
+
+
+@pytest.mark.asyncio
+async def test_actor_attribution_from_by_suffixed_keys(
+    db_session: AsyncSession, test_clinic: Clinic
+):
+    """Most publishers carry the acting user under a ``*_by`` key
+    (``changed_by``, ``performed_by``, ...) rather than ``user_id`` —
+    pin that those attribute the row (the whole point of the Actor
+    column)."""
+    actor = uuid4()
+    await event_bus.publish(
+        EventType.APPOINTMENT_CONFIRMED,
+        {
+            "clinic_id": str(test_clinic.id),
+            "appointment_id": str(uuid4()),
+            "changed_by": str(actor),
+        },
+        db=db_session,
+    )
+    entry = (
+        (
+            await db_session.execute(
+                select(ActivityJournalEntry).where(ActivityJournalEntry.clinic_id == test_clinic.id)
+            )
+        )
+        .scalars()
+        .one()
+    )
+    assert entry.actor_id == actor
+
+
+@pytest.mark.asyncio
+async def test_malformed_ids_degrade_to_null_not_crash(
+    db_session: AsyncSession, test_clinic: Clinic
+):
+    """A malformed actor/patient id in a payload must never abort the
+    publisher's transaction — the row is written with NULLs instead."""
+    await event_bus.publish(
+        EventType.PATIENT_CREATED,
+        {
+            "clinic_id": str(test_clinic.id),
+            "patient_id": "not-a-uuid",
+            "user_id": "system",
+        },
+        db=db_session,
+    )
+    entry = (
+        (
+            await db_session.execute(
+                select(ActivityJournalEntry).where(ActivityJournalEntry.clinic_id == test_clinic.id)
+            )
+        )
+        .scalars()
+        .one()
+    )
+    assert entry.actor_id is None
+    assert entry.patient_id is None
+    assert entry.payload["patient_id"] == "not-a-uuid"

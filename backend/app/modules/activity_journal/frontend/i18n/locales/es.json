@@ -13,6 +13,8 @@
     "empty": "Aún no hay actividad registrada.",
     "total": "{total} registros",
     "detailTitle": "Datos del evento",
-    "unattributed": "—"
+    "unattributed": "—",
+    "allEvents": "Todos los eventos",
+    "viewPayload": "Ver detalles"
   }
 }

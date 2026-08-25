@@ -1,6 +1,7 @@
 {
   "layers": [
     "/module_layers/accounting_export/frontend",
+    "/module_layers/activity_journal/frontend",
     "/module_layers/agenda/frontend",
     "/module_layers/billing/frontend",
     "/module_layers/budget/frontend",
@@ -36,6 +37,10 @@
     {
       "name": "accounting_export",
       "path": "/module_layers/accounting_export/frontend"
+    },
+    {
+      "name": "activity_journal",
+      "path": "/module_layers/activity_journal/frontend"
     },
     {
       "name": "agenda",

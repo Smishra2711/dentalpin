@@ -21,6 +21,37 @@ export interface JournalListFilters {
   page_size?: number
 }
 
+// Event types the module subscribes to (see backend __init__.py
+// _SUBSCRIBED) — drives the filter select so admins never have to type
+// raw event strings. Keep in sync when the subscription set grows.
+export const JOURNAL_EVENT_TYPES = [
+  'appointment.scheduled',
+  'appointment.confirmed',
+  'appointment.checked_in',
+  'appointment.in_treatment',
+  'appointment.completed',
+  'appointment.cancelled',
+  'appointment.no_show',
+  'budget.sent',
+  'budget.accepted',
+  'budget.rejected',
+  'budget.cancelled',
+  'budget.renegotiated',
+  'budget.superseded',
+  'invoice.sent',
+  'payment.allocated',
+  'payment.refunded',
+  'patient.created',
+  'patient.archived',
+  'recall.created',
+  'odontogram.treatment.performed',
+  'lab_order.status_changed',
+  'treatment_plan.treatment_added',
+  'treatment_plan.treatment_removed',
+  'treatment_plan.item_session_completed',
+  'treatment_plan.budget_sync_requested'
+] as const
+
 export function useActivityJournal() {
   const api = useApi()
 

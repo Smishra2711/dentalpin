@@ -28,13 +28,39 @@ from .models import ActivityJournalEntry
 logger = logging.getLogger(__name__)
 
 # Payload keys inspected for actor attribution, in priority order. Only
-# unambiguous user ids are honoured — e.g. ``professional_id`` may point
-# at a catalog professional rather than a user, so it is not listed.
-_ACTOR_KEYS = ("user_id", "actor_id", "created_by")
+# keys that hold a *user* id across all subscribed publishers are listed
+# (each ``*_by`` key below is a ``users.id`` FK or ``ctx.user_id`` at its
+# publish site) — e.g. ``professional_id`` may point at a catalog
+# professional rather than a user, so it is not listed.
+_ACTOR_KEYS = (
+    "user_id",
+    "actor_id",
+    "created_by",
+    "changed_by",  # agenda status transitions
+    "performed_by",  # odontogram.treatment.performed
+    "completed_by",  # treatment_plan.item_session_completed
+    "refunded_by",  # payment.refunded
+    "cancelled_by",  # budget.cancelled / budget.renegotiated
+    "resent_by",  # budget.superseded
+    "accepted_by",  # budget.accepted (ctx.user_id at the publish site)
+    "recommended_by",  # recall.created
+)
 
 # Payload keys that identify the row the event is about (after
 # clinic_id/patient_id/actor keys are excluded). First match wins.
 _SOURCE_ID_SUFFIX = "_id"
+
+
+def _uuid_or_none(value) -> UUID | None:
+    """Parse loosely: these handlers run inside the publisher's
+    transaction, so a malformed id must degrade to NULL rather than
+    abort the business operation being audited."""
+    if not value or not str(value).strip():
+        return None
+    try:
+        return UUID(str(value))
+    except ValueError:
+        return None
 
 
 def _source_table(event_type_value: str) -> str:
@@ -59,46 +85,33 @@ def make_handler(event_type_value: str):
     """Build a transactional handler bound to one event type value."""
 
     async def _record(data: dict, db: AsyncSession) -> None:
-        clinic_raw = data.get("clinic_id")
-        if not clinic_raw:
+        clinic_id = _uuid_or_none(data.get("clinic_id"))
+        if clinic_id is None:
             # A journal row without a clinic cannot be scoped or isolated;
             # skip instead of crashing the publisher's business operation.
             logger.warning(
-                "activity_journal: %s payload without clinic_id — skipped",
+                "activity_journal: %s payload without valid clinic_id — skipped",
                 event_type_value,
-            )
-            return
-
-        try:
-            clinic_id = UUID(str(clinic_raw))
-        except ValueError:
-            logger.warning(
-                "activity_journal: %s payload with invalid clinic_id %r",
-                event_type_value,
-                clinic_raw,
             )
             return
 
         actor_id = next(
-            (UUID(str(data[k])) for k in _ACTOR_KEYS if data.get(k) and str(data[k]).strip()),
+            (aid for k in _ACTOR_KEYS if (aid := _uuid_or_none(data.get(k))) is not None),
             None,
         )
 
-        patient_raw = data.get("patient_id")
-        patient_id = UUID(str(patient_raw)) if patient_raw else None
+        patient_id = _uuid_or_none(data.get("patient_id"))
 
-        source_entity_id = None
-        for key, value in data.items():
-            if (
-                key.endswith(_SOURCE_ID_SUFFIX)
+        source_entity_id = next(
+            (
+                sid
+                for key, value in data.items()
+                if key.endswith(_SOURCE_ID_SUFFIX)
                 and key not in ("clinic_id", "patient_id", *_ACTOR_KEYS)
-                and value
-            ):
-                try:
-                    source_entity_id = UUID(str(value))
-                    break
-                except ValueError:
-                    continue
+                and (sid := _uuid_or_none(value)) is not None
+            ),
+            None,
+        )
         # Patient-only events (e.g. patient.created) carry no separate
         # entity id — the row is about the patient itself.
         source_entity_id = source_entity_id or patient_id

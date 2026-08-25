@@ -13,6 +13,8 @@
     "empty": "இன்னும் செயல்பாடு பதிவு செய்யப்படவில்லை.",
     "total": "{total} பதிவுகள்",
     "detailTitle": "நிகழ்வு விவரங்கள்",
-    "unattributed": "—"
+    "unattributed": "—",
+    "allEvents": "அனைத்து நிகழ்வுகள்",
+    "viewPayload": "விவரங்களைக் காண்க"
   }
 }

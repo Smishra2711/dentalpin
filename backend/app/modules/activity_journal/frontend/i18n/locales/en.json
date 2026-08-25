@@ -13,6 +13,8 @@
     "empty": "No activity recorded yet.",
     "total": "{total} entries",
     "detailTitle": "Event payload",
-    "unattributed": "—"
+    "unattributed": "—",
+    "allEvents": "All events",
+    "viewPayload": "View details"
   }
 }
