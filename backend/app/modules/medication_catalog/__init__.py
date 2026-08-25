@@ -44,8 +44,9 @@ class MedicationCatalogModule(BaseModule):
         "frontend": {
             "layer_path": "frontend",
             # No standalone nav entry — the CRUD page lives under
-            # Settings → Clinical (/settings/clinical-medications), same
-            # place as the treatment catalogue.
+            # Settings → Clinical (/settings/clinical/medications, via
+            # the settings registry plugin), same area as the treatment
+            # catalogue.
         },
     }
 

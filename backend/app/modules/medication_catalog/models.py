@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, ForeignKey, String
+from sqlalchemy import Boolean, ForeignKey, Index, String, column, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base, TimestampMixin
@@ -51,10 +51,19 @@ class MedicationCatalogItem(Base, TimestampMixin):
     """
 
     __tablename__ = "medication_catalog_items"
-    # Case-insensitive uniqueness of (clinic, name) is enforced at the DB
-    # level by the functional unique index ``lower(btrim(name))`` created
-    # in mc_0001 — a plain UniqueConstraint here would be case-sensitive
-    # and leave the concurrent-create race open.
+    __table_args__ = (
+        # Case-insensitive uniqueness of (clinic, name) — declared here so
+        # create_all-based tests exercise the same guard the migration
+        # creates (mc_0001). clinic_id MUST be part of it: names are unique
+        # per clinic, not globally. A plain UniqueConstraint would be
+        # case-sensitive and leave the concurrent-create race open.
+        Index(
+            "uq_medication_catalog_clinic_name_ci",
+            "clinic_id",
+            func.lower(func.btrim(column("name", String))),
+            unique=True,
+        ),
+    )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     clinic_id: Mapped[UUID] = mapped_column(ForeignKey("clinics.id"), index=True)

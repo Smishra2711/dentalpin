@@ -37,6 +37,10 @@
       "paste": "Pâte",
       "varnish": "Vernis",
       "other": "Autre"
-    }
+    },
+    "settingsLabel": "Médicaments",
+    "settingsDescription": "Formulaire de la clinique utilisé par les ordonnances (distinct de la liste de référence du dossier patient).",
+    "duplicateName": "Un médicament portant ce nom existe déjà.",
+    "allForms": "Toutes les formes"
   }
 }

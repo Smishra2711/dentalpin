@@ -1,7 +1,7 @@
 ---
 module: medication_catalog
 screen: clinical-medications
-route: /settings/clinical-medications
+route: /settings/clinical/medications
 related_endpoints:
   - GET /api/v1/medication_catalog
   - POST /api/v1/medication_catalog
@@ -12,7 +12,7 @@ related_permissions:
   - medication_catalog.read
   - medication_catalog.write
 related_paths:
-  - backend/app/modules/medication_catalog/frontend/pages/settings/clinical-medications/index.vue
+  - backend/app/modules/medication_catalog/frontend/components/settings/MedicationCatalogSettingsPage.vue
 last_verified_commit: 76b1273a
 ---
 

@@ -37,6 +37,10 @@
       "paste": "Pasta",
       "varnish": "Barniz",
       "other": "Otro"
-    }
+    },
+    "settingsLabel": "Medicamentos",
+    "settingsDescription": "Formulario de la clínica usado por las recetas (distinto de la lista de referencia del historial del paciente).",
+    "duplicateName": "Ya existe un medicamento con este nombre.",
+    "allForms": "Todas las formas"
   }
 }

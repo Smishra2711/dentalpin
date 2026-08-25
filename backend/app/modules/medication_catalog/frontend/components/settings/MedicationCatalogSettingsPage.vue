@@ -6,8 +6,6 @@ import {
   type MedicationForm
 } from '../../../composables/useMedicationCatalog'
 
-definePageMeta({ middleware: ['auth'] })
-
 const { t } = useI18n()
 const { can } = usePermissions()
 const medsApi = useMedicationCatalog()
@@ -22,6 +20,14 @@ const FORMS: MedicationForm[] = [
   'tablet', 'capsule', 'syrup', 'suspension', 'injection', 'topical',
   'drops', 'spray', 'mouthwash', 'gel', 'cream', 'paste', 'varnish', 'other'
 ]
+// Nuxt UI v3's USelect cannot clear a selected '' value (Reka Select
+// gotcha, #277) — model an explicit "all" sentinel and map it to
+// undefined for the API call.
+const filterForm = ref<MedicationForm | 'all'>('all')
+const filterFormOptions = computed(() => [
+  { value: 'all', label: t('medications.allForms') },
+  ...FORMS.map(f => ({ value: f, label: t(`medications.forms.${f}`) }))
+])
 const formOptions = computed(() =>
   FORMS.map(f => ({ value: f, label: t(`medications.forms.${f}`) }))
 )
@@ -35,7 +41,6 @@ const PAGE_SIZE = 20
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / PAGE_SIZE)))
 
 const search = ref('')
-const filterForm = ref<MedicationForm | undefined>(undefined)
 const filterActiveOnly = ref<boolean>(false)
 
 let debounce: ReturnType<typeof setTimeout> | undefined
@@ -52,7 +57,7 @@ async function load() {
   try {
     const res = await medsApi.list({
       q: search.value || undefined,
-      form: filterForm.value,
+      form: filterForm.value === 'all' ? undefined : filterForm.value,
       is_active: filterActiveOnly.value ? true : undefined,
       page: page.value,
       page_size: PAGE_SIZE
@@ -113,7 +118,12 @@ function openEdit(item: MedicationCatalogItem) {
   showModal.value = true
 }
 
+// useApi intentionally rethrows 409s — surface the duplicate-name
+// message in the modal instead of leaving it silently open (#279 review).
+const formError = ref('')
+
 async function submit() {
+  formError.value = ''
   saving.value = true
   try {
     const payload = {
@@ -131,6 +141,10 @@ async function submit() {
     }
     showModal.value = false
     await load()
+  } catch (err: unknown) {
+    // ofetch's FetchError carries the ApiResponse envelope in `.data`.
+    const fetchErr = err as { data?: { message?: string } | undefined }
+    formError.value = fetchErr?.data?.message || t('medications.duplicateName')
   } finally {
     saving.value = false
   }
@@ -235,11 +249,10 @@ const columns = computed(() => [
       />
       <USelect
         v-model="filterForm"
-        :items="[...formOptions]"
-        :placeholder="t('medications.filterByForm')"
+        :items="filterFormOptions"
         class="max-w-48"
       />
-      <UToggle v-model="filterActiveOnly" />
+      <USwitch v-model="filterActiveOnly" />
       <span class="text-ui text-subtle">{{ t('medications.statusActive') }}</span>
     </div>
 
@@ -328,16 +341,23 @@ const columns = computed(() => [
           <USelect
             v-model="form.form"
             :items="[...formOptions]"
-            :placeholder="t('medications.filterByForm')"
+            :placeholder="t('medications.forms.tablet')"
           />
           <div class="flex items-center gap-2">
-            <UToggle v-model="form.requires_prescription" />
+            <USwitch v-model="form.requires_prescription" />
             <span class="text-ui">{{ t('medications.prescription') }}</span>
           </div>
           <div class="flex items-center gap-2">
-            <UToggle v-model="form.is_active" />
+            <USwitch v-model="form.is_active" />
             <span class="text-ui">{{ t('medications.status') }}</span>
           </div>
+          <p
+            v-if="formError"
+            class="text-sm text-error"
+            role="alert"
+          >
+            {{ formError }}
+          </p>
           <div class="flex justify-end gap-2">
             <UButton
               variant="ghost"

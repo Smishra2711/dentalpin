@@ -5,6 +5,7 @@ from __future__ import annotations
 from uuid import uuid4
 
 import pytest
+from fastapi import HTTPException
 from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -129,6 +130,35 @@ async def test_items_are_clinic_scoped(
     )
     res = await client.get(f"/api/v1/medication_catalog/{other_item.id}", headers=auth_headers)
     assert res.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_same_name_allowed_across_clinics(
+    client: AsyncClient,
+    auth_headers: dict,
+    db_session: AsyncSession,
+    test_clinic: Clinic,
+):
+    """Regression: mc_0001 originally indexed lower(btrim(name)) WITHOUT
+    clinic_id, making names unique globally — the second clinic ever
+    created couldn't stock the same drug (and its seed silently failed).
+    Names are unique per clinic only."""
+    from app.modules.medication_catalog.schemas import MedicationCatalogCreate
+    from app.modules.medication_catalog.service import MedicationCatalogService
+
+    other = Clinic(id=uuid4(), name="Clinic B", tax_id="B66666666", address={}, settings={})
+    db_session.add(other)
+    await db_session.commit()
+
+    payload = MedicationCatalogCreate(name="Amoxicillin 500 mg", dose="500", unit="mg")
+    a = await MedicationCatalogService.create_item(db_session, test_clinic.id, payload)
+    b = await MedicationCatalogService.create_item(db_session, other.id, payload)
+    assert a.id != b.id
+
+    # ...but still unique WITHIN each clinic.
+    with pytest.raises(HTTPException) as exc_info:
+        await MedicationCatalogService.create_item(db_session, test_clinic.id, payload)
+    assert exc_info.value.status_code == 409
 
 
 def test_seed_list_has_56_unique_entries():

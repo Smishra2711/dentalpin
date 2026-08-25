@@ -37,6 +37,10 @@
       "paste": "Paste",
       "varnish": "Varnish",
       "other": "Other"
-    }
+    },
+    "settingsLabel": "Medications",
+    "settingsDescription": "Clinic formulary used by prescriptions (distinct from the patient medical-history reference list).",
+    "duplicateName": "A medication with this name already exists.",
+    "allForms": "All forms"
   }
 }

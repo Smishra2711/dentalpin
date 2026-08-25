@@ -2,7 +2,7 @@
 
 Clinic-wide medication list: name, dose, unit, pharmaceutical form and
 prescribable/active status. CRUD lives under **Settings → Clinical**
-(`/settings/clinical-medications`, same area as the treatment
+(`/settings/clinical/medications`, same area as the treatment
 catalogue) — there is no main-sidebar entry.
 
 Seeded with a **56-item dental medication list** (antibiotics,

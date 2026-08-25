@@ -37,6 +37,10 @@
       "paste": "Pasta",
       "varnish": "Verniz",
       "other": "Outro"
-    }
+    },
+    "settingsLabel": "Medicamentos",
+    "settingsDescription": "Formulário da clínica usado pelas receitas (distinto da lista de referência do historial do paciente).",
+    "duplicateName": "Já existe um medicamento com este nome.",
+    "allForms": "Todas as formas"
   }
 }

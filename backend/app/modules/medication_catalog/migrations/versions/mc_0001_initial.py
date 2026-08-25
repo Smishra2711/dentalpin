@@ -47,7 +47,9 @@ def upgrade() -> None:
     op.create_index(
         "uq_medication_catalog_clinic_name_ci",
         "medication_catalog_items",
-        [sa.text("lower(btrim(name))")],
+        # clinic_id MUST be part of the index: names are unique PER CLINIC,
+        # not globally — two clinics can both stock "Amoxicillin 500 mg".
+        ["clinic_id", sa.text("lower(btrim(name))")],
         unique=True,
     )
 
