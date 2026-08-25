@@ -75,10 +75,14 @@ class StaffTaskService:
         count_stmt = select(func.count()).select_from(stmt.subquery())
         total = (await db.execute(count_stmt)).scalar_one()
 
-        # Open work first (by due date), then newest.
+        # Open work first (by due date), then newest; id as final tiebreaker
+        # so pagination is stable.
         stmt = (
             stmt.order_by(
-                StaffTask.completed_at.is_not(None), StaffTask.due_date.asc().nulls_last()
+                StaffTask.completed_at.is_not(None),
+                StaffTask.due_date.asc().nulls_last(),
+                StaffTask.created_at.desc(),
+                StaffTask.id,
             )
             .offset((page - 1) * page_size)
             .limit(page_size)
@@ -117,6 +121,9 @@ class StaffTaskService:
                 # Claiming an unassigned task assigns the claimer. Agent
                 # actors carry no user identity — the field stays null.
                 data["assignee_id"] = actor_id
+            if new_status == "open" and "assignee_id" not in data:
+                # Un-claiming / re-opening puts the task back up for grabs.
+                data["assignee_id"] = None
             if new_status == "done":
                 data["completed_at"] = datetime.now(UTC)
         elif new_status == task.status:

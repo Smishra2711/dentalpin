@@ -9,6 +9,7 @@ export interface StaffTask {
   status: TaskStatus
   priority: TaskPriority
   assignee_id?: string | null
+  assignee_name?: string | null
   created_by?: string | null
   due_date?: string | null
   completed_at?: string | null

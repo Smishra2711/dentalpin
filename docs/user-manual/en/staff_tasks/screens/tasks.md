@@ -13,23 +13,29 @@ related_permissions:
 related_paths:
   - backend/app/modules/staff_tasks/router.py
   - backend/app/modules/staff_tasks/frontend/pages/tasks/index.vue
-last_verified_commit: e4146c9b
+last_verified_commit: c536b1f0
 ---
 
 # Staff task board
 
 ## What this screen does
 
-- **Filter** by status (Open / Claimed / Done / Cancelled).
+- **Filter** by status (All / Open / Claimed / Done / Cancelled).
 - **New task** — modal with title, optional details, priority
   (Low / Normal / High) and an optional due date.
-- **Claim and close inline** — each row carries a status selector;
-  claiming an unassigned task assigns you, and marking it **Done**
-  stamps the completion time.
+- **Task details** show as a second line under the title; hover for the
+  full text.
+- **Assigned to** column shows who has each task.
+- **Claim and close inline** — each row's status selector only offers
+  the legal next moves; claiming an unassigned task assigns you, and
+  marking it **Done** stamps the completion time. Re-opening a claimed
+  task puts it back up for grabs.
+- **Overdue** open tasks show their due date in red.
 - **Delete** with a confirmation dialog.
 - **Pagination** — server-side, 20 rows per page.
 
 ## Statuses
 
-`Open → Claimed → Done`, with `Cancelled` as an escape hatch. An illegal
-move returns `422`.
+`Open → Claimed → Done`, with `Cancelled` as an escape hatch. `Done` is
+terminal (the selector becomes a badge). An illegal move returns `422`
+and shows an error toast.

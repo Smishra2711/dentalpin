@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from sqlalchemy import Date, DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base, TimestampMixin
+
+if TYPE_CHECKING:
+    from app.core.auth.models import User
 
 
 class StaffTask(Base, TimestampMixin):
@@ -35,3 +39,14 @@ class StaffTask(Base, TimestampMixin):
 
     due_date: Mapped[date | None] = mapped_column(Date)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    # Eager so list/get/refresh never lazy-load in async context; users is
+    # a core table, so this is not a cross-module dependency.
+    assignee: Mapped[User | None] = relationship("User", foreign_keys=[assignee_id], lazy="joined")
+
+    @property
+    def assignee_name(self) -> str | None:
+        """Display name for the board — who has the task."""
+        if self.assignee is None:
+            return None
+        return f"{self.assignee.first_name} {self.assignee.last_name}".strip() or None

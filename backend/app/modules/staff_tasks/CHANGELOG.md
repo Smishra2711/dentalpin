@@ -16,6 +16,11 @@
 - `auto_install=False`, `removable=True`; own Alembic branch with
   uninstall round-trip, tenant-isolation coverage and HTTP-level
   filter/transition tests.
+- Board UX: task details shown under the title, "Assigned to" column
+  (`assignee_name` in responses), status selector limited to legal
+  transitions, clearable status filter, locale-formatted due dates with
+  overdue highlight, and error toasts on failed actions. Re-opening a
+  claimed task clears the assignee.
 - Whole-team read+write by default (collaboration infrastructure);
-  EN/ES/FR/PT/TA locales; technical overview/events/permissions pages;
-  bilingual user manual.
+  EN/ES/FR/DE/HU/PT/TA locales; technical overview/events/permissions
+  pages; bilingual user manual.

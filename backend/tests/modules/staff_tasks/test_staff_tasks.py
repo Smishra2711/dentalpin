@@ -74,6 +74,26 @@ async def test_create_claim_done_lifecycle(db_session: AsyncSession, test_clinic
 
 
 @pytest.mark.asyncio
+async def test_unclaim_clears_assignee(db_session: AsyncSession, test_clinic: Clinic):
+    actor = await _make_user(db_session, "unclaim@staff-tasks.test")
+    task = await StaffTaskService.create_task(
+        db_session, test_clinic.id, StaffTaskCreate(title="Restock gloves"), created_by=None
+    )
+    claimed = await StaffTaskService.update_task(
+        db_session, test_clinic.id, task.id, StaffTaskUpdate(status="claimed"), actor_id=actor.id
+    )
+    # assignee_name resolves through the eager-loaded relationship.
+    assert claimed.assignee_name == "Test Staff"
+
+    reopened = await StaffTaskService.update_task(
+        db_session, test_clinic.id, task.id, StaffTaskUpdate(status="open"), actor_id=actor.id
+    )
+    # Re-opening puts the task back up for grabs.
+    assert reopened.assignee_id is None
+    assert reopened.assignee_name is None
+
+
+@pytest.mark.asyncio
 async def test_status_filter_isolation_and_delete(db_session: AsyncSession, test_clinic: Clinic):
     assignee = await _make_user(db_session, "assignee@staff-tasks.test")
     open_task = await StaffTaskService.create_task(

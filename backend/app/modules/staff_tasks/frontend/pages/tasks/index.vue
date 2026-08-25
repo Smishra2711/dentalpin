@@ -9,8 +9,9 @@ import {
 
 definePageMeta({ middleware: ['auth'] })
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { can } = usePermissions()
+const toast = useToast()
 const tasksApi = useStaffTasks()
 
 if (!can(PERMISSIONS.staffTasks.read)) await navigateTo('/')
@@ -28,13 +29,14 @@ const page = ref(1)
 const PAGE_SIZE = 20
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / PAGE_SIZE)))
 
-const filterStatus = ref<TaskStatus | undefined>(undefined)
+// 'all' sentinel keeps the filter clearable (USelect has no empty state).
+const filterStatus = ref<TaskStatus | 'all'>('all')
 
 async function load() {
   loading.value = true
   try {
     const res = await tasksApi.list({
-      task_status: filterStatus.value,
+      task_status: filterStatus.value === 'all' ? undefined : filterStatus.value,
       page: page.value,
       page_size: PAGE_SIZE
     })
@@ -71,8 +73,37 @@ function statusColor(status: TaskStatus): BadgeColor {
   }
 }
 
+// Mirror of the server-side state machine — the select only offers
+// legal moves (the backend still validates and returns 422).
+const NEXT_STATUSES: Record<TaskStatus, TaskStatus[]> = {
+  open: ['claimed', 'done', 'cancelled'],
+  claimed: ['done', 'cancelled', 'open'],
+  done: [],
+  cancelled: ['open']
+}
+
+function statusItems(current: TaskStatus) {
+  return [current, ...NEXT_STATUSES[current]].map(value => ({
+    value,
+    label: t(`staffTasks.statuses.${value}`)
+  }))
+}
+
+function formatDate(iso: string | null | undefined): string {
+  return iso ? new Date(iso).toLocaleDateString(locale.value) : '—'
+}
+
+function isOverdue(task: StaffTask): boolean {
+  if (!task.due_date || task.status === 'done' || task.status === 'cancelled') return false
+  return task.due_date < new Date().toISOString().slice(0, 10)
+}
+
 async function updateStatus(id: string, status: TaskStatus) {
-  await tasksApi.update(id, { status })
+  try {
+    await tasksApi.update(id, { status })
+  } catch {
+    toast.add({ title: t('common.error'), description: t('staffTasks.updateFailed'), color: 'error' })
+  }
   await load()
 }
 
@@ -101,6 +132,8 @@ async function submit() {
     showModal.value = false
     form.value = { title: '', details: '', priority: 'normal', due_date: '' }
     await load()
+  } catch {
+    toast.add({ title: t('common.error'), description: t('staffTasks.saveFailed'), color: 'error' })
   } finally {
     saving.value = false
   }
@@ -123,14 +156,17 @@ async function handleDelete() {
     await tasksApi.remove(itemToDelete.value.id)
     showDeleteConfirm.value = false
     await load()
+  } catch {
+    toast.add({ title: t('common.error'), description: t('staffTasks.deleteFailed'), color: 'error' })
   } finally {
     isDeleting.value = false
   }
 }
 
 const columns = computed(() => [
-  { accessorKey: 'title', header: t('staffTasks.title') },
+  { accessorKey: 'title', header: t('staffTasks.taskTitle') },
   { accessorKey: 'priority', header: t('staffTasks.priority') },
+  { accessorKey: 'assignee_name', header: t('staffTasks.assignee') },
   { accessorKey: 'due_date', header: t('staffTasks.dueDate') },
   { accessorKey: 'status', header: t('staffTasks.status') },
   { accessorKey: 'actions', header: '' }
@@ -154,7 +190,10 @@ const columns = computed(() => [
 
     <USelect
       v-model="filterStatus"
-      :items="STATUSES.map(value => ({ value, label: t(`staffTasks.statuses.${value}`) }))"
+      :items="[
+        { value: 'all', label: t('staffTasks.all') },
+        ...STATUSES.map(value => ({ value, label: t(`staffTasks.statuses.${value}`) }))
+      ]"
       :placeholder="t('staffTasks.filterByStatus')"
       class="max-w-xs"
     />
@@ -164,6 +203,20 @@ const columns = computed(() => [
       :columns="columns"
       :loading="loading"
     >
+      <template #title-cell="{ row }">
+        <div class="max-w-md">
+          <p class="text-default truncate">
+            {{ row.original.title }}
+          </p>
+          <p
+            v-if="row.original.details"
+            class="text-xs text-subtle line-clamp-2 whitespace-normal"
+            :title="row.original.details"
+          >
+            {{ row.original.details }}
+          </p>
+        </div>
+      </template>
       <template #priority-cell="{ row }">
         <UBadge
           :color="row.original.priority === 'high' ? 'error' : row.original.priority === 'low' ? 'neutral' : 'info'"
@@ -173,11 +226,21 @@ const columns = computed(() => [
           {{ t(`staffTasks.priorities.${row.original.priority}`) }}
         </UBadge>
       </template>
+      <template #assignee_name-cell="{ row }">
+        <span :class="row.original.assignee_name ? 'text-default' : 'text-subtle'">
+          {{ row.original.assignee_name ?? '—' }}
+        </span>
+      </template>
+      <template #due_date-cell="{ row }">
+        <span :class="isOverdue(row.original) ? 'text-error font-medium' : ''">
+          {{ formatDate(row.original.due_date) }}
+        </span>
+      </template>
       <template #status-cell="{ row }">
         <USelect
-          v-if="canWrite"
+          v-if="canWrite && NEXT_STATUSES[row.original.status].length > 0"
           :model-value="row.original.status"
-          :items="STATUSES.map(value => ({ value, label: t(`staffTasks.statuses.${value}`) }))"
+          :items="statusItems(row.original.status)"
           size="xs"
           @update:model-value="value => updateStatus(row.original.id, value as TaskStatus)"
         />
@@ -220,7 +283,7 @@ const columns = computed(() => [
           </h2>
           <UInput
             v-model="form.title"
-            :placeholder="t('staffTasks.title')"
+            :placeholder="t('staffTasks.taskTitle')"
           />
           <UTextarea
             v-model="form.details"

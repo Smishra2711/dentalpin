@@ -766,7 +766,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.STAFF_TASK_STATUS_CHANGED`
 - **Publishers:**
-  - `staff_tasks` — `backend/app/modules/staff_tasks/service.py:131`
+  - `staff_tasks` — `backend/app/modules/staff_tasks/service.py:138`
 - **Subscribers:** —
 
 ### `tenant.resolved`

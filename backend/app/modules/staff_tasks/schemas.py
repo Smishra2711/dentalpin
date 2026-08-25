@@ -39,6 +39,7 @@ class StaffTaskResponse(BaseModel):
     status: TaskStatus
     priority: TaskPriority
     assignee_id: UUID | None
+    assignee_name: str | None = None
     created_by: UUID | None
     due_date: date | None
     completed_at: datetime | None
