@@ -106,6 +106,28 @@ jobs:
                            tests/test_module_docs.py \
                            -v --tb=short
 
+  modules-json-freshness:
+    # frontend/modules.json is generated but committed (it seeds Nuxt
+    # layer precedence for docker/local runs until the backend rewrites
+    # it) and got chronically clobbered by contributors' local install
+    # sets (#264). Same pattern as catalog-freshness: regenerate the
+    # canonical form and fail on diff. Authors fix drift locally with:
+    #   cd frontend && node scripts/modules-json.mjs \
+    #     ../backend/app/modules --prefix /module_layers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check modules.json is fresh
+        working-directory: frontend
+        run: |
+          node scripts/modules-json.mjs "$GITHUB_WORKSPACE/backend/app/modules" --prefix /module_layers
+          git diff --exit-code modules.json || {
+            echo "::error::frontend/modules.json drifted from the canonical generated form."
+            echo "Regenerate with: cd frontend && node scripts/modules-json.mjs ../backend/app/modules --prefix /module_layers"
+            exit 1
+          }
+
   catalog-freshness:
     # Verifies docs/modules-catalog.md and docs/events-catalog.md are
     # in sync with the manifests + EventType enum + event_bus.publish

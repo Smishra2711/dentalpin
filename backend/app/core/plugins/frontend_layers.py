@@ -116,10 +116,16 @@ def collect_layers(modules: list[BaseModule]) -> list[LayerEntry]:
 
 
 def build_payload(entries: list[LayerEntry]) -> dict[str, object]:
+    # Deterministic output: sorted by module name, matching the
+    # alphabetical order the build-time generator
+    # (frontend/scripts/modules-json.mjs) already bakes into prod and CI.
+    # Install order must never leak into layer precedence, and any two
+    # regenerations of the same module set must be byte-identical (#264).
+    ordered = sorted(entries, key=lambda e: e.module_name)
     return {
         "version": MODULES_JSON_SCHEMA_VERSION,
-        "layers": [e.path for e in entries],
-        "modules": [{"name": e.module_name, "path": e.path} for e in entries],
+        "layers": [e.path for e in ordered],
+        "modules": [{"name": e.module_name, "path": e.path} for e in ordered],
     }
 
 

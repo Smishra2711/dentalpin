@@ -100,7 +100,7 @@ docker-compose up
 docker-compose exec backend python -m pytest -v
 cd backend && ruff check . && ruff format --check .
 cd frontend && npm run lint
-cd frontend && npm run typecheck:layers && git checkout modules.json   # vue-tsc over host + all module layers (stop the frontend container first)
+cd frontend && npm run typecheck:layers   # vue-tsc over host + all module layers (stop the frontend container first; modules.json is auto-restored, and CI guards it — see #264)
 
 # Reset DB + reseed demo data (use after tests wipe tables)
 ./scripts/reset-db.sh        # drop, dentalpin db upgrade (core + installed modules)
