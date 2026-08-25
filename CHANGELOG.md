@@ -11,6 +11,16 @@ frontend as a Nuxt layer under its own Python package.
 
 ## [Unreleased]
 
+### Fixed
+
+- Batch uninstall of a dependency pair no longer strands the dependent
+  in `to_remove` (#286): the pending processor now runs removals in
+  reverse topological order (dependents first), after installs and
+  upgrades, so the dependent's backup runs while its tables still
+  exist. `pg_dump`'s "no matching tables were found" is additionally
+  treated as a skipped (empty) backup rather than a failure, so a
+  crash between downgrade and backup can't wedge the record either.
+
 ## [2.4.0] - 2026-08-24
 
 ### Added
