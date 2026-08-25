@@ -46,11 +46,22 @@ export async function login(page: Page, role: Role): Promise<void> {
 
   // Mirror Nuxt's useCookie: default scope is the whole site, plain
   // serialization, not httpOnly (so client JS can read it).
+  const origin = page.url() !== 'about:blank' ? new URL(page.url()).origin : 'http://localhost:3000'
   await ctx.addCookies([
     {
       name: 'access_token',
       value: body.access_token,
-      url: page.url() !== 'about:blank' ? new URL(page.url()).origin : 'http://localhost:3000'
+      url: origin
+    },
+    {
+      // Pin the UI language (demo data is seeded in Spanish). SSR and
+      // hydration then agree from the first paint, so text locators
+      // never race a post-hydration language switch — the race that
+      // blocked prod-build e2e, where lazy locale messages arrive as a
+      // hashed chunk after hydration (#259).
+      name: 'dentalpin_locale',
+      value: 'es',
+      url: origin
     }
   ])
 
