@@ -26,7 +26,7 @@ class InventoryModule(BaseModule):
         "name": "inventory",
         "version": "0.1.0",
         "summary": "Standalone stock list with per-item minimums and low-stock alerts.",
-        "author": "DentalPin Core Team",
+        "author": "lamanji",
         "license": "BSL-1.1",
         "category": "community",
         "depends": [],
@@ -49,7 +49,7 @@ class InventoryModule(BaseModule):
             "navigation": [
                 {
                     "label": "nav.inventory",
-                    "icon": "i-lucide-packages",
+                    "icon": "i-lucide-package",
                     "to": "/inventory",
                     "permission": "inventory.read",
                     "order": 93,

@@ -19,6 +19,9 @@
     "delete": "Delete",
     "deleteTitle": "Delete item",
     "deleteMessage": "Delete this stock item? This cannot be undone.",
+    "allCategories": "All categories",
+    "adjustBy": "Adjust by…",
+    "apply": "Apply",
     "categories": {
       "consumables": "Consumables",
       "equipment": "Equipment",

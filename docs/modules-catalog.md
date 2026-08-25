@@ -292,7 +292,7 @@ Webhook subscriptions (REST Hooks) for third-party automations.
 
 Standalone stock list with per-item minimums and low-stock alerts.
 
-- **Author:** DentalPin Core Team
+- **Author:** lamanji
 - **License:** BSL-1.1
 - **Category:** community
 - **Install policy:** installable=True · auto_install=False · removable=True

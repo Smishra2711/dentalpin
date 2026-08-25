@@ -19,6 +19,9 @@
     "delete": "Excluir",
     "deleteTitle": "Excluir item",
     "deleteMessage": "Excluir este item do inventário? Esta ação não pode ser desfeita.",
+    "allCategories": "Todas as categorias",
+    "adjustBy": "Ajustar em…",
+    "apply": "Aplicar",
     "categories": {
       "consumables": "Consumíveis",
       "equipment": "Equipamento",

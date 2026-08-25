@@ -10,6 +10,8 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth.models import Clinic
+from app.core.events import event_bus
+from app.core.events.types import EventType
 from app.modules.inventory.schemas import (
     InventoryItemCreate,
     InventoryItemUpdate,
@@ -118,6 +120,63 @@ async def test_low_stock_filter(db_session: AsyncSession, test_clinic: Clinic):
     assert all_total == 2
     assert {r.id for r in all_rows} == {low.id, ok.id}
     assert next(r for r in all_rows if r.id == ok.id).is_low_stock is False
+
+
+@pytest.mark.asyncio
+async def test_low_stock_event_fires_only_on_crossing(
+    db_session: AsyncSession, test_clinic: Clinic
+):
+    """``inventory.low_stock`` fires once per not-low → low crossing:
+    on the crossing adjustment, not again while already low, and again
+    only after recovering above the threshold. Creation at/below the
+    threshold counts as a crossing."""
+    captured: list[dict] = []
+
+    async def _spy(data: dict) -> None:
+        captured.append(data)
+
+    event_bus.subscribe(EventType.INVENTORY_STOCK_LOW, _spy)
+    try:
+        item = await InventoryService.create_item(
+            db_session,
+            test_clinic.id,
+            InventoryItemCreate(
+                name="Anesthetic carpules",
+                category="consumables",
+                stock_quantity=Decimal("10"),
+                min_quantity=Decimal("5"),
+            ),
+            created_by=None,
+        )
+        assert captured == []  # created above threshold — no alert
+
+        await InventoryService.adjust_stock(db_session, test_clinic.id, item.id, Decimal("-5"))
+        assert len(captured) == 1  # 10 -> 5 crosses the threshold
+        assert captured[0]["item_id"] == str(item.id)
+        assert captured[0]["clinic_id"] == str(test_clinic.id)
+
+        await InventoryService.adjust_stock(db_session, test_clinic.id, item.id, Decimal("-2"))
+        assert len(captured) == 1  # still low — no re-fire
+
+        await InventoryService.adjust_stock(db_session, test_clinic.id, item.id, Decimal("20"))
+        await InventoryService.adjust_stock(db_session, test_clinic.id, item.id, Decimal("-19"))
+        assert len(captured) == 2  # recovered, then crossed again
+
+        born_low = await InventoryService.create_item(
+            db_session,
+            test_clinic.id,
+            InventoryItemCreate(
+                name="Etch gel",
+                category="consumables",
+                stock_quantity=Decimal("0"),
+                min_quantity=Decimal("3"),
+            ),
+            created_by=None,
+        )
+        assert len(captured) == 3  # already-low creation is a day-one alert
+        assert captured[2]["item_id"] == str(born_low.id)
+    finally:
+        event_bus.unsubscribe(EventType.INVENTORY_STOCK_LOW, _spy)
 
 
 @pytest.mark.asyncio

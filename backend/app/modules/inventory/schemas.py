@@ -33,10 +33,13 @@ class InventoryItemUpdate(BaseModel):
 
 
 class StockAdjustPayload(BaseModel):
-    """Relative stock change. ``delta`` may be negative (consumption)."""
+    """Relative stock change. ``delta`` may be negative (consumption).
+
+    No ``reason`` field yet — there is no movements table to record it
+    against until the inventory core upgrade (#226).
+    """
 
     delta: Decimal
-    reason: str | None = Field(default=None, max_length=500)
 
 
 class InventoryItemResponse(BaseModel):

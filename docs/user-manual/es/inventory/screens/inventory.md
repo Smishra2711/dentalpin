@@ -15,20 +15,23 @@ related_permissions:
 related_paths:
   - backend/app/modules/inventory/router.py
   - backend/app/modules/inventory/frontend/pages/inventory/index.vue
-last_verified_commit: INVENTORY_HEAD
+last_verified_commit: 47983b05
 ---
 
 # Lista de inventario
 
 ## Qué hace esta pantalla
 
-- **Filtrar** por categoría y activar **solo stock bajo**
-  (`stock <= min`).
+- **Filtrar** por categoría (con opción «Todas las categorías» para
+  limpiar el filtro) y activar **solo stock bajo** (`stock <= min`).
 - **Añadir artículo**: modal con nombre, categoría, unidad, stock
   inicial, mínimo y notas opcionales.
 - **Ajustes rápidos +/-** por fila: cada pulsación es un cambio atómico
   en el servidor; un ajuste que llevaría el stock por debajo de cero se
   rechaza con `409`.
+- **Ajuste en cantidad arbitraria**: pulsar la cifra de stock abre un
+  campo para aplicar un delta (+/-) de cualquier tamaño, por la misma
+  vía atómica.
 - **Editar artículo**: abre el mismo modal precargado (asignación
   absoluta de cantidad, p. ej. tras un recuento manual).
 - **Eliminar** con confirmación.

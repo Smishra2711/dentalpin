@@ -15,20 +15,22 @@ related_permissions:
 related_paths:
   - backend/app/modules/inventory/router.py
   - backend/app/modules/inventory/frontend/pages/inventory/index.vue
-last_verified_commit: INVENTORY_HEAD
+last_verified_commit: 47983b05
 ---
 
 # Stock list
 
 ## What this screen does
 
-- **Filter** by category and toggle **low stock only**
-  (`stock <= min`).
+- **Filter** by category (with an "All categories" option to clear the
+  filter) and toggle **low stock only** (`stock <= min`).
 - **Add item** — modal with name, category, unit, initial stock,
   minimum threshold and optional notes.
 - **Quick +/- adjustments** per row — each click is an atomic server-side
   change; an adjustment that would drive stock below zero is rejected
   with `409`.
+- **Arbitrary-size adjustment** — clicking the stock figure opens a
+  field to apply a +/- delta of any size, through the same atomic path.
 - **Edit item** — opens the same modal pre-filled (absolute quantity
   set, e.g. after a manual count).
 - **Delete** with confirmation.
