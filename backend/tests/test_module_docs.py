@@ -21,6 +21,8 @@ defeat the purpose; CI rejects them.
 
 from __future__ import annotations
 
+import importlib.util
+import sys
 from pathlib import Path
 
 import pytest
@@ -28,6 +30,7 @@ import pytest
 from app.core.plugins.loader import discover_modules
 
 MODULES_ROOT = Path(__file__).resolve().parents[1] / "app" / "modules"
+SCRIPTS_ROOT = Path(__file__).resolve().parents[1] / "scripts"
 
 REQUIRED_DOCS = ("CLAUDE.md", "CHANGELOG.md")
 
@@ -69,3 +72,55 @@ def test_every_module_has_doc(discovered_module_names: list[str], doc_name: str)
         f"Modules with sparse {doc_name} (<{threshold} non-blank lines): "
         f"{too_short}. Flesh out the doc — empty stubs defeat the purpose."
     )
+
+
+# ---------------------------------------------------------------------------
+# EN/ES user-manual parity (#128)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(scope="module")
+def docs_coverage():
+    """The check_docs_coverage script, loaded as a module."""
+    path = SCRIPTS_ROOT / "check_docs_coverage.py"
+    spec = importlib.util.spec_from_file_location("check_docs_coverage", path)
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    # dataclasses resolves field types via sys.modules[cls.__module__].
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_locale_parity_flags_one_sided_files(docs_coverage, tmp_path: Path) -> None:
+    """A file present in one locale only is an error naming both paths."""
+    (tmp_path / "en").mkdir()
+    (tmp_path / "es" / "periodontogram" / "screens").mkdir(parents=True)
+    (tmp_path / "en" / "demo.md").write_text("# demo\n")
+    # Slug translated by mistake — identity broken across locales.
+    (tmp_path / "es" / "periodontogram" / "screens" / "periodontograma-view.md").write_text("# v\n")
+
+    findings = docs_coverage.Findings()
+    docs_coverage._check_locale_parity(findings, root=tmp_path)
+
+    assert len(findings.errors) == 2
+    assert any("en/demo.md" in e and "es/demo.md" in e for e in findings.errors)
+    assert any("periodontograma-view.md" in e for e in findings.errors)
+
+
+def test_locale_parity_passes_on_matching_trees(docs_coverage, tmp_path: Path) -> None:
+    for locale in ("en", "es"):
+        (tmp_path / locale / "patients" / "screens").mkdir(parents=True)
+        (tmp_path / locale / "patients" / "screens" / "list.md").write_text("# list\n")
+        (tmp_path / locale / "demo.md").write_text("# demo\n")
+
+    findings = docs_coverage.Findings()
+    docs_coverage._check_locale_parity(findings, root=tmp_path)
+    assert findings.errors == []
+
+
+def test_locale_parity_holds_on_the_real_tree(docs_coverage) -> None:
+    """The repo's own EN and ES user-manual trees must not drift (#128)."""
+    findings = docs_coverage.Findings()
+    docs_coverage._check_locale_parity(findings)
+    assert findings.errors == [], "\n".join(findings.errors)

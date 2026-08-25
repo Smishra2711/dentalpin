@@ -55,7 +55,13 @@ export default defineNuxtConfig({
   ],
 
   devtools: {
-    enabled: true
+    // Vite devtools full-page reloads (optimizeDeps discovery and the
+    // devtools client itself) abort Playwright `goto` mid-navigation
+    // (#260). Pre-bundling @vue/devtools-* below is not enough on its
+    // own, so e2e contexts disable devtools with NUXT_DEVTOOLS=false
+    // (CI does; locally: NUXT_DEVTOOLS=false docker compose up -d
+    // frontend). Daily DX stays on by default.
+    enabled: process.env.NUXT_DEVTOOLS !== 'false'
   },
   app: {
     head: {
@@ -140,7 +146,9 @@ export default defineNuxtConfig({
       { code: 'es', name: 'Español', file: 'es.json' },
       { code: 'fr', name: 'Français', file: 'fr.json' },
       { code: 'pt', name: 'Português', file: 'pt.json' },
-      { code: 'ta', name: 'தமிழ்', file: 'ta.json' }
+      { code: 'ta', name: 'தமிழ்', file: 'ta.json' },
+      { code: 'de', name: 'Deutsch', file: 'de.json' },
+      { code: 'hu', name: 'Magyar', file: 'hu.json' }
     ],
     defaultLocale: 'en',
     lazy: true,

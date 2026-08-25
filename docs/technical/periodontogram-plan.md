@@ -121,7 +121,7 @@ docs/
 │   ├── es/periodontogram/
 │   │   ├── index.md
 │   │   └── screens/
-│   │       └── periodontograma-view.md
+│   │       └── periodontogram-view.md
 │   └── en/periodontogram/
 │       ├── index.md
 │       └── screens/
@@ -980,7 +980,7 @@ Cuando se mergee el módulo, se debe crear/actualizar:
 - `backend/app/modules/periodontogram/CHANGELOG.md` (entry `## Unreleased` → `## 0.1.0`).
 - `docs/technical/periodontogram/overview.md`, `events.md`, `permissions.md`.
 - `docs/modules/periodontogram.md`.
-- `docs/user-manual/{en,es}/periodontogram/index.md` + `screens/periodontograma-view.md`.
+- `docs/user-manual/{en,es}/periodontogram/index.md` + `screens/periodontogram-view.md`.
 - `docs/screenshots/periodontogram/*.png`.
 - `docs/modules-catalog.md`, `docs/events-catalog.md`: auto-regenerar con `python backend/scripts/generate_catalogs.py`.
 - Actualizar `backend/app/modules/patients/CLAUDE.md` añadiendo el nuevo slot `patient.diagnosis.subtabs` al listado de slots estables.

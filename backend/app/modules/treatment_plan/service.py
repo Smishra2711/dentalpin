@@ -985,6 +985,7 @@ class TreatmentPlanService:
                     or names.get("fr")
                     or names.get("pt")
                     or names.get("ta")
+                    or next((v for v in names.values() if v), None)
                 )
                 if item.treatment.catalog_item.category:
                     treatment_category_key = item.treatment.catalog_item.category.key

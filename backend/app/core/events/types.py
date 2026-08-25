@@ -255,6 +255,14 @@ class EventType:
     COPILOT_BUDGET_THRESHOLD_REACHED = "copilot.budget.threshold_reached"
     COPILOT_DIGEST_SENT = "copilot.digest.sent"
 
+    # Inventory events (inventory module — stock list with low-stock
+    # alerts, roadmap #220). INVENTORY_STOCK_LOW fires once per not-low →
+    # low crossing (creation at/below threshold counts). Payload:
+    # (clinic_id, item_id, name, category, stock_quantity,
+    # min_quantity). No bundled subscriber; a future notifications or
+    # procurement module may subscribe without importing inventory.
+    INVENTORY_STOCK_LOW = "inventory.low_stock"
+
     # Lab orders events (lab_orders module — external laboratory work,
     # roadmap #221). Fired when PATCH changes an order's status (the same
     # update auto-stamps received_date on ``received``). Payload:
@@ -263,3 +271,13 @@ class EventType:
     # (notifications / patient_timeline) may subscribe without importing
     # lab_orders.
     LAB_ORDER_STATUS_CHANGED = "lab_order.status_changed"
+
+    # Staff tasks events (staff_tasks module — staff handoff board,
+    # roadmap #219). STAFF_TASK_CREATED fires on creation;
+    # STAFF_TASK_STATUS_CHANGED on every status transition (open →
+    # claimed → done, or cancelled). Payload: (clinic_id, task_id,
+    # status, priority, assignee_id, due_date). No bundled subscriber;
+    # future modules (notifications / patient_timeline) may subscribe
+    # without importing staff_tasks.
+    STAFF_TASK_CREATED = "staff_task.created"
+    STAFF_TASK_STATUS_CHANGED = "staff_task.status_changed"
