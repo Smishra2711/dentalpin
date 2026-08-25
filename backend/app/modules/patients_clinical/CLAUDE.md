@@ -19,7 +19,11 @@ Routes mounted at `/api/v1/patients-clinical/`.
 
 ## Events emitted
 
-- `patient.medical_updated` — consumed by `patient_timeline`.
+- Backend: `patient.medical_updated` — consumed by `patient_timeline`.
+- Client (`useDataBus`, ADR 0009): a `patients_clinical` namespace tick
+  is published after every successful medical-history save, so anonymous
+  subscribers (e.g. medical_reference's patient warning chips) refetch
+  without any coupling in either direction.
 
 ## Events consumed
 
