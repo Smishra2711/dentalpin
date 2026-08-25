@@ -4,7 +4,7 @@ import {
   useMedicationCatalog,
   type MedicationCatalogItem,
   type MedicationForm
-} from '../../../composables/useMedicationCatalog'
+} from '../../composables/useMedicationCatalog'
 
 const { t } = useI18n()
 const { can } = usePermissions()

@@ -15,6 +15,7 @@
     "/module_layers/lab_orders/frontend",
     "/module_layers/media/frontend",
     "/module_layers/medical_reference/frontend",
+    "/module_layers/medication_catalog/frontend",
     "/module_layers/migration_import/frontend",
     "/module_layers/notifications/frontend",
     "/module_layers/odontogram/frontend",
@@ -93,6 +94,10 @@
     {
       "name": "medical_reference",
       "path": "/module_layers/medical_reference/frontend"
+    },
+    {
+      "name": "medication_catalog",
+      "path": "/module_layers/medication_catalog/frontend"
     },
     {
       "name": "migration_import",
