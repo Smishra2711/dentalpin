@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -153,6 +153,36 @@ async def create_appointment(
         ) from e
 
     return ApiResponse(data=_localize(AppointmentResponse.model_validate(appointment), ctx))
+
+
+@router.get("/appointments/{appointment_id}.ics")
+async def export_appointment_ics(
+    appointment_id: UUID,
+    ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
+    _: Annotated[None, Depends(require_permission("agenda.appointments.read"))],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> Response:
+    """Export one appointment as an RFC 5545 ``.ics`` file (#129).
+
+    Lets a patient or professional drop the appointment into Google
+    Calendar / Apple Calendar / Outlook. Timestamps go out in UTC.
+    Registered before the plain ``/{appointment_id}`` route: starlette
+    matches routes in order and ``{appointment_id}`` (``[^/]+``) would
+    swallow the ``.ics`` suffix into the UUID and 422.
+    """
+    from .ics import build_appointment_ics
+
+    appointment = await AppointmentService.get_appointment(db, ctx.clinic_id, appointment_id)
+    if not appointment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Appointment not found",
+        )
+    return Response(
+        content=build_appointment_ics(appointment, ctx.clinic),
+        media_type="text/calendar; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="appointment-{appointment.id}.ics"'},
+    )
 
 
 @router.get("/appointments/{appointment_id}", response_model=ApiResponse[AppointmentResponse])

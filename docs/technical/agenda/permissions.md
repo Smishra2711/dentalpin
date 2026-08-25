@@ -1,6 +1,6 @@
 ---
 module: agenda
-last_verified_commit: 0000000
+last_verified_commit: 76b1273
 ---
 
 # Agenda — permissions
@@ -12,7 +12,7 @@ Returned by `AgendaModule.get_permissions()`
 
 | Permission | Allows | Required by |
 |------------|--------|-------------|
-| `agenda.appointments.read` | _Describe what this allows._ | _List the endpoints._ |
+| `agenda.appointments.read` | View appointments and export them. | `GET /agenda/appointments`, `GET /agenda/appointments/{appointment_id}`, `GET /agenda/appointments/{appointment_id}.ics` (RFC 5545 export, #129) |
 | `agenda.appointments.write` | _Describe what this allows._ | _List the endpoints._ |
 | `agenda.cabinets.read` | _Describe what this allows._ | _List the endpoints._ |
 | `agenda.cabinets.write` | _Describe what this allows._ | _List the endpoints._ |
