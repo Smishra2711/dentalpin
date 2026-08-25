@@ -151,8 +151,13 @@ test.describe('periodontogram — admin', () => {
       .first()
     await expect(sondajeRow).toBeVisible({ timeout: 10_000 })
 
+    // fill() focuses the input itself — no separate click. The click's
+    // hit-target check raced the sub-nav's sliding tab indicator on the
+    // production build: until its size CSS vars are measured post-
+    // hydration, the absolutely-positioned indicator briefly intercepts
+    // pointers far outside the tab bar. fill() checks visible/enabled/
+    // editable only, so it is immune.
     const firstSiteInput = sondajeRow.locator('input[type="number"]').first()
-    await firstSiteInput.click()
     await firstSiteInput.fill('5')
     await firstSiteInput.blur()
 
