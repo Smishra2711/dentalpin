@@ -10,6 +10,7 @@
     "/module_layers/copilot/frontend",
     "/module_layers/expenses/frontend",
     "/module_layers/india_gst/frontend",
+    "/module_layers/inventory/frontend",
     "/module_layers/lab_orders/frontend",
     "/module_layers/media/frontend",
     "/module_layers/medical_reference/frontend",
@@ -26,6 +27,7 @@
     "/module_layers/recalls/frontend",
     "/module_layers/reports/frontend",
     "/module_layers/schedules/frontend",
+    "/module_layers/staff_tasks/frontend",
     "/module_layers/treatment_plan/frontend",
     "/module_layers/verifactu/frontend",
     "/module_layers/whatsapp_kapso/frontend"
@@ -70,6 +72,10 @@
     {
       "name": "india_gst",
       "path": "/module_layers/india_gst/frontend"
+    },
+    {
+      "name": "inventory",
+      "path": "/module_layers/inventory/frontend"
     },
     {
       "name": "lab_orders",
@@ -134,6 +140,10 @@
     {
       "name": "schedules",
       "path": "/module_layers/schedules/frontend"
+    },
+    {
+      "name": "staff_tasks",
+      "path": "/module_layers/staff_tasks/frontend"
     },
     {
       "name": "treatment_plan",
