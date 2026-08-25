@@ -103,3 +103,19 @@ def test_read_modules_json_tolerates_malformed(tmp_path: Path) -> None:
     (tmp_path / "modules.json").write_text("not json {")
     payload = read_modules_json(frontend_root=tmp_path)
     assert payload["layers"] == []
+
+
+def test_build_payload_is_deterministic_and_sorted() -> None:
+    """Install order must never leak into layer precedence (#264)."""
+    scrambled = [
+        LayerEntry(module_name="zeta", path="/module_layers/zeta/frontend"),
+        LayerEntry(module_name="alpha", path="/module_layers/alpha/frontend"),
+        LayerEntry(module_name="mid", path="/module_layers/mid/frontend"),
+    ]
+    payload = build_payload(scrambled)
+    assert payload["layers"] == [
+        "/module_layers/alpha/frontend",
+        "/module_layers/mid/frontend",
+        "/module_layers/zeta/frontend",
+    ]
+    assert payload == build_payload(list(reversed(scrambled)))

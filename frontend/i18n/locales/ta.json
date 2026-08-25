@@ -18,9 +18,11 @@
     "patients": "நோயாளிகள்",
     "appointments": "அட்டவணை",
     "recalls": "நினைவூட்டல்கள்",
+    "inventory": "சரக்கு",
     "expenses": "செலவுகள்",
     "labOrdersForm": "புதிய ஆய்வக வேலை",
     "labOrdersStatus": "ஆய்வக வேலைகள்",
+    "staffTasks": "Staff tasks",
     "treatmentPlans": "சிகிச்சை திட்டங்கள்",
     "budgets": "மதிப்பீடுகள்",
     "invoices": "விலைப்பட்டியல்கள்",
@@ -829,7 +831,6 @@
     "cancelled": "ரத்துசெய்யப்பட்டது",
     "noShow": "வரவில்லை",
     "no_show": "வரவில்லை",
-    "actionsMenu": "சந்திப்பு செயல்கள்",
     "transitions": {
       "confirmed": "உறுதிசெய்யப்பட்டதாகக் குறிக்கவும்",
       "checked_in": "வருகையைக் குறிக்கவும்",
@@ -932,7 +933,8 @@
       "clinicClosed": "கிளினிக் மூடப்பட்டுள்ளது",
       "professionalOff": "பணியில் இல்லை",
       "onBreak": "இடைவேளையில்"
-    }
+    },
+    "actionsMenu": "சந்திப்பு செயல்கள்"
   },
   "dashboard": {
     "greetings": {

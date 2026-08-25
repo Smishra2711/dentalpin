@@ -16,7 +16,7 @@ ve a *Admin → Módulos → Periodontograma → Instalar*.
 
 ## Pantallas
 
-- [Vista del periodontograma](./screens/periodontograma-view.md) —
+- [Vista del periodontograma](./screens/periodontogram-view.md) —
   exploración SEPA, captura por celda, banner de índices, slider de
   histórico.
 

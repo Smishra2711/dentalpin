@@ -170,5 +170,9 @@ export const PERMISSIONS = {
   staffTasks: {
     read: 'staff_tasks.read',
     write: 'staff_tasks.write'
+  },
+  inventory: {
+    read: 'inventory.read',
+    write: 'inventory.write'
   }
 } as const
