@@ -20,6 +20,11 @@ Routes mounted at `/api/v1/treatment_consumables/`.
 
 `depends: ["catalog", "inventory"]` — real DB-level FKs into both;
 CI-enforced against the manifest. Reads them (ADR 0002), never writes.
+The migration mirrors this: `tc_0001` declares
+`depends_on = ("cat_0004", "inv_0001")` so a fresh `upgrade heads`
+creates the referenced tables first, and Alembic tears the branch down
+together with `inventory` when its dependency is downgraded
+(migration-graph ordering is separate from module install ordering).
 
 ## Events
 

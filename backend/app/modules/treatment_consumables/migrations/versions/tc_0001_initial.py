@@ -3,7 +3,9 @@
 Own Alembic branch (``treatment_consumables``): no down_revision, never
 touches another module's chain. DB-level FKs into ``catalog`` and
 ``inventory`` tables are intentional (CI-enforced cross-module FKs per
-the depends declaration).
+the depends declaration) — ``depends_on = ("cat_0004", "inv_0001")``
+pins migration-graph ordering so a fresh ``upgrade heads`` creates the
+referenced tables first and dependent teardown is graph-visible.
 """
 
 from __future__ import annotations
@@ -16,7 +18,7 @@ from alembic import op
 revision = "tc_0001"
 down_revision = None
 branch_labels = ("treatment_consumables",)
-depends_on = None
+depends_on = ("cat_0004", "inv_0001")
 
 
 def upgrade() -> None:
