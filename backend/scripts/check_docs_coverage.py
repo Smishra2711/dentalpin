@@ -397,6 +397,38 @@ def _check_module(facts: ModuleFacts, findings: Findings) -> None:
                     )
 
 
+def _check_locale_parity(findings: Findings, root: Path | None = None) -> None:
+    """EN and ES must ship the same .md file set — same relative paths.
+
+    The slug is the identity of a page across locales (CLAUDE.md's
+    "create both en/… and es/…" rule). A file present on one side only
+    is either a missing translation or a slug translated by mistake —
+    both drifts CI never caught before (#128).
+    """
+    root = USER_MANUAL_ROOT if root is None else root
+    files_by_locale: dict[str, set[str]] = {}
+    for locale in LOCALES:
+        loc_root = root / locale
+        files_by_locale[locale] = (
+            {p.relative_to(loc_root).as_posix() for p in loc_root.rglob("*.md")}
+            if loc_root.is_dir()
+            else set()
+        )
+    en_files, es_files = files_by_locale["en"], files_by_locale["es"]
+    for rel in sorted(en_files - es_files):
+        findings.err(
+            f"docs/user-manual/en/{rel}: has no ES counterpart at "
+            f"docs/user-manual/es/{rel} (translate it, or rename a "
+            f"mistranslated slug — slugs must match across locales)."
+        )
+    for rel in sorted(es_files - en_files):
+        findings.err(
+            f"docs/user-manual/es/{rel}: has no EN counterpart at "
+            f"docs/user-manual/en/{rel} (translate it, or rename a "
+            f"mistranslated slug — slugs must match across locales)."
+        )
+
+
 def _check_orphan_screens(modules: list[str], findings: Findings) -> None:
     """Find screen MDs whose module folder doesn't exist."""
     known = set(modules)
@@ -436,6 +468,7 @@ def run(strict: bool) -> int:
         _check_module(facts, findings)
 
     _check_orphan_screens([m.name for m in modules], findings)
+    _check_locale_parity(findings)
 
     if findings.warnings:
         print("Documentation coverage warnings:", file=sys.stderr)
