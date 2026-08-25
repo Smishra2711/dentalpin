@@ -14,10 +14,13 @@
   },
   "nav": {
     "dashboard": "Kezdőlap",
+    "journal": "Tevékenységnapló",
+    "staffTasks": "Csapatfeladatok",
     "patients": "Páciensek",
     "appointments": "Időpontnaptár",
     "recalls": "Visszahívások",
     "expenses": "Kiadások",
+    "inventory": "Készlet",
     "labOrdersForm": "Új laborrendelés",
     "labOrdersStatus": "Laborrendelések",
     "treatmentPlans": "Kezelési tervek",

@@ -14,6 +14,8 @@
   },
   "nav": {
     "dashboard": "Accueil",
+    "journal": "Journal d'activité",
+    "staffTasks": "Tâches de l'équipe",
     "patients": "Patients",
     "appointments": "Agenda",
     "recalls": "Rappels",

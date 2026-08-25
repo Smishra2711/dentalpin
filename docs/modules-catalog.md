@@ -11,6 +11,7 @@ Maintained by `backend/scripts/generate_catalogs.py`. CI fails if a manifest cha
 | Module | Version | Category | Depends | Install | Removable | Permissions | Emits | Consumes | FE layer |
 |--------|---------|----------|---------|---------|-----------|-------------|-------|----------|----------|
 | `accounting_export` | 0.1.0 | official | billing, payments | manual | yes | 2 | 0 | 0 | yes |
+| `activity_journal` | 0.1.0 | community | — | manual | yes | 1 | 0 | 25 | yes |
 | `agenda` | 0.4.0 | official | patients, catalog, odontogram | auto | no | 4 | 11 | 1 | yes |
 | `billing` | 0.1.0 | official | patients, catalog, budget, payments | auto | no | 3 | 3 | 3 | yes |
 | `budget` | 0.1.0 | official | patients, catalog, odontogram | auto | no | 5 | 9 | 3 | yes |
@@ -38,7 +39,7 @@ Maintained by `backend/scripts/generate_catalogs.py`. CI fails if a manifest cha
 | `recalls` | 0.1.0 | official | patients, agenda | auto | yes | 3 | 4 | 5 | yes |
 | `reports` | 0.1.0 | official | patients, agenda, catalog, budget, billing, payments | auto | no | 3 | 0 | 0 | yes |
 | `schedules` | 0.1.0 | official | agenda | auto | yes | 8 | 0 | 4 | yes |
-| `treatment_consumables` | 0.1.0 | community | catalog, inventory | manual | yes | 2 | 0 | 0 | yes |
+| `staff_tasks` | 0.1.0 | community | — | manual | yes | 2 | 2 | 0 | yes |
 | `treatment_plan` | 0.1.0 | official | patients, agenda, odontogram, catalog, budget, media | auto | no | 5 | 13 | 7 | yes |
 | `verifactu` | 0.1.0 | official | billing, catalog | manual | yes | 5 | 1 | 2 | yes |
 | `whatsapp_kapso` | 0.1.0 | community | notifications, patients | manual | yes | 2 | 0 | 0 | yes |
@@ -61,6 +62,47 @@ Export invoices and payments for the accountant (gestoría).
 - **Events emitted:** —
 - **Events consumed:** —
 - **Module CLAUDE.md:** [`backend/app/modules/accounting_export/CLAUDE.md`](../backend/app/modules/accounting_export/CLAUDE.md)
+
+### `activity_journal` — v0.1.0
+
+Append-only staff activity log recorded from module events.
+
+- **Author:** DentalPin Core Team
+- **License:** BSL-1.1
+- **Category:** community
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** —
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `activity_journal.read`
+- **Events emitted:** —
+- **Events consumed:**
+  - `appointment.cancelled`
+  - `appointment.checked_in`
+  - `appointment.completed`
+  - `appointment.confirmed`
+  - `appointment.in_treatment`
+  - `appointment.no_show`
+  - `appointment.scheduled`
+  - `budget.accepted`
+  - `budget.cancelled`
+  - `budget.rejected`
+  - `budget.renegotiated`
+  - `budget.sent`
+  - `budget.superseded`
+  - `invoice.sent`
+  - `lab_order.status_changed`
+  - `odontogram.treatment.performed`
+  - `patient.archived`
+  - `patient.created`
+  - `payment.allocated`
+  - `payment.refunded`
+  - `recall.created`
+  - `treatment_plan.budget_sync_requested`
+  - `treatment_plan.item_session_completed`
+  - `treatment_plan.treatment_added`
+  - `treatment_plan.treatment_removed`
+- **Module CLAUDE.md:** [`backend/app/modules/activity_journal/CLAUDE.md`](../backend/app/modules/activity_journal/CLAUDE.md)
 
 ### `agenda` — v0.4.0
 
@@ -293,7 +335,7 @@ Webhook subscriptions (REST Hooks) for third-party automations.
 
 Standalone stock list with per-item minimums and low-stock alerts.
 
-- **Author:** DentalPin Core Team
+- **Author:** lamanji
 - **License:** BSL-1.1
 - **Category:** community
 - **Install policy:** installable=True · auto_install=False · removable=True
@@ -695,22 +737,24 @@ Clinic + professional operating hours, overrides, availability, and occupancy an
   - `clinic.created`
 - **Module CLAUDE.md:** [`backend/app/modules/schedules/CLAUDE.md`](../backend/app/modules/schedules/CLAUDE.md)
 
-### `treatment_consumables` — v0.1.0
+### `staff_tasks` — v0.1.0
 
-Maps catalog treatments to inventory items with quantity per link.
+Staff handoff board — internal tasks and handoffs between team members.
 
 - **Author:** DentalPin Core Team
 - **License:** BSL-1.1
 - **Category:** community
 - **Install policy:** installable=True · auto_install=False · removable=True
-- **Depends:** `catalog`, `inventory`
+- **Depends:** —
 - **Frontend layer:** `frontend`
 - **Permissions:**
-  - `treatment_consumables.read`
-  - `treatment_consumables.write`
-- **Events emitted:** —
+  - `staff_tasks.read`
+  - `staff_tasks.write`
+- **Events emitted:**
+  - `staff_task.created`
+  - `staff_task.status_changed`
 - **Events consumed:** —
-- **Module CLAUDE.md:** [`backend/app/modules/treatment_consumables/CLAUDE.md`](../backend/app/modules/treatment_consumables/CLAUDE.md)
+- **Module CLAUDE.md:** [`backend/app/modules/staff_tasks/CLAUDE.md`](../backend/app/modules/staff_tasks/CLAUDE.md)
 
 ### `treatment_plan` — v0.1.0
 

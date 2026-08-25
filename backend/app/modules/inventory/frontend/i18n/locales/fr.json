@@ -19,6 +19,9 @@
     "delete": "Supprimer",
     "deleteTitle": "Supprimer l'article",
     "deleteMessage": "Supprimer cet article de l'inventaire ? Cette action est irréversible.",
+    "allCategories": "Toutes les catégories",
+    "adjustBy": "Ajuster de…",
+    "apply": "Appliquer",
     "categories": {
       "consumables": "Consommables",
       "equipment": "Équipement",

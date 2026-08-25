@@ -29,8 +29,6 @@ class CreateItemArgs(BaseModel):
 class AdjustStockArgs(BaseModel):
     item_id: str = Field(min_length=1)
     delta: Decimal
-    # Reason is user/agent-entered prose — accepted for the audit trail but
-    # never returned to the model.
 
 
 def _summary(item) -> dict:

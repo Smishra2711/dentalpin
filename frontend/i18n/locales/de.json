@@ -14,10 +14,13 @@
   },
   "nav": {
     "dashboard": "Start",
+    "journal": "Aktivitätsprotokoll",
+    "staffTasks": "Team-Aufgaben",
     "patients": "Patienten",
     "appointments": "Terminkalender",
     "recalls": "Recalls",
     "expenses": "Ausgaben",
+    "inventory": "Inventar",
     "labOrdersForm": "Neuer Laborauftrag",
     "labOrdersStatus": "Laboraufträge",
     "treatmentPlans": "Behandlungspläne",

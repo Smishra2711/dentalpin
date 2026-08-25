@@ -1,6 +1,6 @@
 ---
 module: inventory
-last_verified_commit: INVENTORY_HEAD
+last_verified_commit: 47983b05
 ---
 
 # inventory — overview
