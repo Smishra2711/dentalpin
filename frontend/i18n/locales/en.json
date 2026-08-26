@@ -1379,6 +1379,8 @@
     "copied": "Copied to clipboard",
     "copy": "Copy",
     "copyFailed": "Could not copy",
+    "download": "Download",
+    "remove": "Remove",
     "default": "Default"
   },
   "cabinet": {

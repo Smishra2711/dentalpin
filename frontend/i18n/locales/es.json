@@ -1379,7 +1379,9 @@
     "copied": "Copiado al portapapeles",
     "copy": "Copiar",
     "copyFailed": "No se pudo copiar",
-    "durationMinutes": "{value} min"
+    "durationMinutes": "{value} min",
+    "download": "Descargar",
+    "remove": "Quitar"
   },
   "cabinet": {
     "toast": {
