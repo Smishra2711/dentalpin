@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat(#131): German (de) locale for the module's frontend layer.
+
 ### Demo fixtures: native Indian patient names for the English variant
 
 - **Added**: `--lang en --country in` now seeds native Indian (Romanized)
