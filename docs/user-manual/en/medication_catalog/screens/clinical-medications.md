@@ -13,7 +13,7 @@ related_permissions:
   - medication_catalog.write
 related_paths:
   - backend/app/modules/medication_catalog/frontend/components/settings/MedicationCatalogSettingsPage.vue
-last_verified_commit: 76b1273a
+last_verified_commit: 615ad10
 ---
 
 # Medication catalog

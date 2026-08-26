@@ -1,5 +1,14 @@
 # Changelog — medication_catalog module
 
+## Unreleased
+
+- Name normalisation now matches the unique index key exactly
+  (`lower(btrim(name))`); a duplicate that differed only in inner
+  whitespace used to escape the 409 and surface as a raw 500.
+- Settings entry is gated on `medication_catalog.read` instead of
+  `write`, so dentists (read-only by manifest) can actually open the
+  list; write actions stay behind `canWrite`.
+
 ## 0.1.0 — initial release
 
 - Clinic-wide medication catalog: name, dose, unit, pharmaceutical

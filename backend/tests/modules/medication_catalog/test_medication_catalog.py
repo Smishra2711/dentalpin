@@ -80,6 +80,22 @@ async def test_duplicate_name_case_insensitive_409(
 
 
 @pytest.mark.asyncio
+async def test_duplicate_with_inner_whitespace_is_409_not_500(
+    client: AsyncClient, auth_headers: dict, test_clinic: Clinic
+):
+    """The service's name normalisation must match the index key
+    (``lower(btrim(name))``) exactly. Collapsing inner whitespace made the
+    409 lookup looser than the index, so a repeated double-spaced name
+    slipped through and blew up as a raw IntegrityError."""
+    payload = {"name": "Ibuprofen  400 mg", "form": "tablet"}
+    res = await client.post("/api/v1/medication_catalog/", json=payload, headers=auth_headers)
+    assert res.status_code == 201, res.text
+
+    res = await client.post("/api/v1/medication_catalog/", json=payload, headers=auth_headers)
+    assert res.status_code == 409, res.text
+
+
+@pytest.mark.asyncio
 async def test_search_filter_and_pagination_over_http(
     client: AsyncClient, auth_headers: dict, test_clinic: Clinic
 ):

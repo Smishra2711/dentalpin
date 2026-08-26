@@ -16,9 +16,11 @@ without duplicating anything.
 
 - Names are unique per clinic **case-insensitively**. The service
   answers 409 on duplicate create/rename (mirroring
-  medical_reference); a functional unique index
-  `lower(btrim(name))` closes the concurrent-create race at the
-  database (the inventory #153 lesson: guard invariants in SQL).
+  medical_reference); a functional unique index over
+  `(clinic_id, lower(btrim(name)))` closes the concurrent-create race
+  at the database (the inventory #153 lesson: guard invariants in SQL).
+  The service's normalisation matches that index key exactly, so a
+  duplicate is always a 409 and never a raw constraint error.
 - Inactive items stay in the list for history; nothing is silently
   mutated.
 

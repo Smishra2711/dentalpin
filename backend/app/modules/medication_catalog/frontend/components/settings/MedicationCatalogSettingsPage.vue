@@ -10,10 +10,10 @@ const { t } = useI18n()
 const { can } = usePermissions()
 const medsApi = useMedicationCatalog()
 
-if (!can(PERMISSIONS.medicationCatalog.read)) {
-  await navigateTo('/')
-}
-
+// No read guard here: the settings registry already hides the entry
+// (and [page].vue renders the locked state) for users without
+// `medication_catalog.read`. A top-level await would also make this an
+// async setup component, which the registry mounts outside Suspense.
 const canWrite = computed(() => can(PERMISSIONS.medicationCatalog.write))
 
 const FORMS: MedicationForm[] = [

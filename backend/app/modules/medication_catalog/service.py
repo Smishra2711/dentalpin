@@ -19,7 +19,13 @@ from .schemas import MedicationCatalogCreate, MedicationCatalogUpdate
 
 
 def _norm(name: str) -> str:
-    return " ".join(name.strip().lower().split())
+    """Must match the DB index key exactly (``lower(btrim(name))``).
+
+    Collapsing inner whitespace here too would make the app check *looser*
+    than the index: "Ibuprofen  400 mg" typed twice passes the 409 lookup
+    and then trips the unique index as a raw 500.
+    """
+    return name.strip().lower()
 
 
 class MedicationCatalogService:
