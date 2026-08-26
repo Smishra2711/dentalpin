@@ -24,7 +24,6 @@
     "expenses": "செலவுகள்",
     "labOrdersForm": "புதிய ஆய்வக வேலை",
     "labOrdersStatus": "ஆய்வக வேலைகள்",
-    "staffTasks": "Staff tasks",
     "treatmentPlans": "சிகிச்சை திட்டங்கள்",
     "budgets": "மதிப்பீடுகள்",
     "invoices": "விலைப்பட்டியல்கள்",
@@ -1355,7 +1354,9 @@
     "yesterday": "நேற்று",
     "copied": "கிளிப்போர்டுக்கு நகலெடுக்கப்பட்டது",
     "copy": "நகலெடு",
-    "copyFailed": "நகலெடுக்க முடியவில்லை"
+    "copyFailed": "நகலெடுக்க முடியவில்லை",
+    "download": "பதிவிறக்கு",
+    "remove": "அகற்று"
   },
   "cabinet": {
     "toast": {

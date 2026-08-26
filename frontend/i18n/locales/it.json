@@ -1354,7 +1354,9 @@
     "yesterday": "Ieri",
     "copied": "Copiato negli appunti",
     "copy": "Copia",
-    "copyFailed": "Impossibile copiare"
+    "copyFailed": "Impossibile copiare",
+    "download": "Scarica",
+    "remove": "Rimuovi"
   },
   "cabinet": {
     "toast": {

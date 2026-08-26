@@ -1354,7 +1354,9 @@
     "yesterday": "Tegnap",
     "copied": "Vágólapra másolva",
     "copy": "Másolás",
-    "copyFailed": "Nem sikerült másolni"
+    "copyFailed": "Nem sikerült másolni",
+    "download": "Letöltés",
+    "remove": "Eltávolítás"
   },
   "cabinet": {
     "toast": {

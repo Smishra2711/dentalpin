@@ -24,7 +24,6 @@
     "expenses": "Expenses",
     "labOrdersForm": "New lab order",
     "labOrdersStatus": "Lab orders",
-    "staffTasks": "Staff tasks",
     "treatmentPlans": "Treatment Plans",
     "budgets": "Quotes",
     "invoices": "Invoices",
@@ -1355,7 +1354,9 @@
     "yesterday": "Yesterday",
     "copied": "Copied to clipboard",
     "copy": "Copy",
-    "copyFailed": "Could not copy"
+    "copyFailed": "Could not copy",
+    "download": "Download",
+    "remove": "Remove"
   },
   "cabinet": {
     "toast": {

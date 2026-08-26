@@ -24,7 +24,6 @@
     "expenses": "Despesas",
     "labOrdersForm": "Novo trabalho de laboratório",
     "labOrdersStatus": "Trabalhos de laboratório",
-    "staffTasks": "Tarefas da equipe",
     "treatmentPlans": "Planos de tratamento",
     "budgets": "Orçamentos",
     "invoices": "Faturas",
@@ -1355,7 +1354,9 @@
     "yesterday": "Ontem",
     "copied": "Copiado para a área de transferência",
     "copy": "Copiar",
-    "copyFailed": "Não foi possível copiar"
+    "copyFailed": "Não foi possível copiar",
+    "download": "Baixar",
+    "remove": "Remover"
   },
   "cabinet": {
     "toast": {
