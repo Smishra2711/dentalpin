@@ -1836,6 +1836,12 @@
     "newBudgetHint": {
       "text": "Ten pacjent ma plan {plan} bez kosztorysu. Wygeneruj kosztorys z planu, aby pozostały powiązane.",
       "cta": "Otwórz plan"
+    },
+    "viewDraftBudget": "Kosztorys {number} (szkic)",
+    "followup": {
+      "subtitle": "Te zaplanowane leczenia z wizyty nie zostały oznaczone jako wykonane:",
+      "markPerformed": "Oznacz jako wykonane",
+      "marked": "Oznaczono jako wykonane: {count}."
     }
   },
   "pipeline": {

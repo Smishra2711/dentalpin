@@ -16,7 +16,7 @@ Returned by `NotificationsModule.get_permissions()`
 | `notifications.templates.write` | _Describe what this allows._ | _List the endpoints._ |
 | `notifications.preferences.read` | _Describe what this allows._ | _List the endpoints._ |
 | `notifications.preferences.write` | _Describe what this allows._ | _List the endpoints._ |
-| `notifications.logs.read` | _Describe what this allows._ | _List the endpoints._ |
+| `notifications.logs.read` | Read message logs, a patient's conversation thread, and which channels are configured for the clinic. | `GET /notifications/conversations/{patient_id}`, `GET /notifications/channels` (#207), plus the log-listing endpoints. |
 | `notifications.send` | _Describe what this allows._ | _List the endpoints._ |
 | `notifications.settings.read` | _Describe what this allows._ | _List the endpoints._ |
 | `notifications.settings.write` | _Describe what this allows._ | _List the endpoints._ |

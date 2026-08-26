@@ -1836,6 +1836,12 @@
     "newBudgetHint": {
       "text": "Dieser Patient hat den Plan {plan} ohne Kostenvoranschlag. Erstellen Sie den Kostenvoranschlag aus dem Plan, damit beide verknüpft bleiben.",
       "cta": "Plan öffnen"
+    },
+    "viewDraftBudget": "Kostenvoranschlag {number} (Entwurf)",
+    "followup": {
+      "subtitle": "Diese geplanten Behandlungen des Termins wurden nicht als durchgeführt markiert:",
+      "markPerformed": "Als durchgeführt markieren",
+      "marked": "Als durchgeführt markiert: {count}."
     }
   },
   "pipeline": {

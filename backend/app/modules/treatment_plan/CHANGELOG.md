@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat(#207): the plan header links to the draft quote while the plan is `pending` (and the confirm toast carries a "view quote" action); *Programar cita* opens the appointment modal with the plan's pending treatments preselected (`?new=1&plan_id=`); a post-appointment follow-up prompt lists linked treatments the visit left unmarked and completes them in one click.
+
 - i18n(#131/#275): treatment names from catalog names fall back to any
   non-empty translation after `es→en→fr→pt→ta` (items created under
   core-only locales like de/hu).

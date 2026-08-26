@@ -298,6 +298,10 @@
       "submit": "Asignar",
       "success": "Cobro asignado al presupuesto",
       "error": "No se pudo reasignar el cobro. Intenta de nuevo."
+    },
+    "followup": {
+      "collect": "Cobrar",
+      "collected": "Pago registrado."
     }
   }
 }

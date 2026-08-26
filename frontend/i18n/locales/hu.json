@@ -1836,6 +1836,12 @@
     "newBudgetHint": {
       "text": "A páciensnek van egy árajánlat nélküli terve ({plan}). Készítse az árajánlatot a tervből, hogy összekapcsolva maradjanak.",
       "cta": "Terv megnyitása"
+    },
+    "viewDraftBudget": "Árajánlat {number} (piszkozat)",
+    "followup": {
+      "subtitle": "A vizit alábbi tervezett kezelései nem lettek elvégzettként megjelölve:",
+      "markPerformed": "Elvégzettként megjelöl",
+      "marked": "Elvégzettként megjelölve: {count}."
     }
   },
   "pipeline": {

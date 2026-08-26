@@ -24,7 +24,6 @@
     "expenses": "Expenses",
     "labOrdersForm": "New lab order",
     "labOrdersStatus": "Lab orders",
-    "staffTasks": "Staff tasks",
     "treatmentPlans": "Treatment Plans",
     "budgets": "Quotes",
     "invoices": "Invoices",
@@ -1837,6 +1836,12 @@
     "newBudgetHint": {
       "text": "This patient has plan {plan} without a quote. Generate the quote from the plan so they stay linked.",
       "cta": "Open plan"
+    },
+    "viewDraftBudget": "Quote {number} (draft)",
+    "followup": {
+      "subtitle": "These planned treatments from the visit weren't marked as performed:",
+      "markPerformed": "Mark as performed",
+      "marked": "Marked as performed: {count}."
     }
   },
   "pipeline": {

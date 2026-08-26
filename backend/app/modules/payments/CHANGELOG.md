@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat(#207): "Collect payment" shortcut in the post-appointment follow-up dialog — opens the shared payment modal for the visit's patient.
+
 - fix(#180): payments recorded before #178 on a budget-linked invoice
   were labeled `on_account` instead of `budget`, so the quote's
   "Budget payments" total missed them even though the invoice was

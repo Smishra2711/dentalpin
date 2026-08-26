@@ -24,7 +24,6 @@
     "expenses": "Dépenses",
     "labOrdersForm": "Nouveau travail de laboratoire",
     "labOrdersStatus": "Travaux de laboratoire",
-    "staffTasks": "Tâches de l'équipe",
     "treatmentPlans": "Plans de traitement",
     "budgets": "Devis",
     "invoices": "Factures",
@@ -1837,6 +1836,12 @@
     "newBudgetHint": {
       "text": "Ce patient a le plan {plan} sans devis. Générez le devis depuis le plan pour qu'ils restent liés.",
       "cta": "Ouvrir le plan"
+    },
+    "viewDraftBudget": "Devis {number} (brouillon)",
+    "followup": {
+      "subtitle": "Ces traitements planifiés de la visite n'ont pas été marqués comme réalisés :",
+      "markPerformed": "Marquer comme réalisés",
+      "marked": "Marqués comme réalisés : {count}."
     }
   },
   "pipeline": {

@@ -1836,6 +1836,12 @@
     "newBudgetHint": {
       "text": "Questo paziente ha il piano {plan} senza preventivo. Genera il preventivo dal piano così restano collegati.",
       "cta": "Apri il piano"
+    },
+    "viewDraftBudget": "Preventivo {number} (bozza)",
+    "followup": {
+      "subtitle": "Questi trattamenti pianificati della visita non sono stati contrassegnati come eseguiti:",
+      "markPerformed": "Contrassegna come eseguiti",
+      "marked": "Contrassegnati come eseguiti: {count}."
     }
   },
   "pipeline": {
