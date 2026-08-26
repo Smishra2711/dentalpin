@@ -21,6 +21,7 @@
     "addSuccess": "Hinzugefügt",
     "addError": "Eintrag konnte nicht hinzugefügt werden",
     "updateError": "Eintrag konnte nicht aktualisiert werden",
+    "deactivate": "Deaktivieren",
     "deactivateError": "Eintrag konnte nicht deaktiviert werden",
     "itemCount": "{count} Einträge",
     "medicationA": "Medikament A",
