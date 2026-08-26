@@ -603,6 +603,7 @@
       "treatmentAdded": "Trattamento aggiunto",
       "treatmentPerformed": "Trattamento segnato come eseguito",
       "treatmentDeleted": "Trattamento eliminato",
+      "deleteConfirm": "Eliminare {name} (dente {tooth})? Questa azione non può essere annullata.",
       "status": {
         "existing": "Esistente",
         "planned": "Pianificato"
@@ -746,6 +747,7 @@
       "noItems": "Nessun trattamento nel piano",
       "markComplete": "Segna come completato",
       "removeItem": "Rimuovi dal piano",
+      "removeItemConfirm": "Rimuovere {name} da questo piano? Questa azione non può essere annullata.",
       "sessions": {
         "progress": "{done}/{total} sedute",
         "markDone": "Segna la seduta come eseguita",
@@ -864,6 +866,7 @@
     "saved": "Appuntamento salvato",
     "updated": "Appuntamento aggiornato",
     "conflict": "Questa fascia oraria è già occupata",
+    "loadError": "Impossibile caricare gli appuntamenti",
     "cancel": "Annulla appuntamento",
     "markCompleted": "Segna come completato",
     "markNoShow": "Assente",
@@ -1458,6 +1461,7 @@
     "items": "Trattamenti",
     "categories": "Categorie",
     "noItems": "Nessun trattamento nel listino",
+    "loadError": "Impossibile caricare il listino prestazioni",
     "searchPlaceholder": "Cerca per codice o nome...",
     "code": "Codice",
     "name": "Nome",
@@ -1987,6 +1991,7 @@
       "downloadSignedPdf": "Scarica il PDF firmato",
       "downloadError": "Impossibile scaricare il PDF firmato.",
       "notSigned": "Per questo preventivo non è ancora stata acquisita una firma.",
+      "loadError": "Impossibile caricare lo stato della firma",
       "method": {
         "drawn": "Firma autografa",
         "clickAccept": "Accettazione con clic",
@@ -2668,6 +2673,7 @@
     "subtitle": "Analisi e statistiche dello studio",
     "viewReports": "Vedi report",
     "noAccess": "Non hai accesso ad alcun report",
+    "loadError": "Impossibile caricare i dati del report",
     "dashboard": {
       "title": "Cruscotto",
       "subtitle": "Il tuo studio a colpo d'occhio",

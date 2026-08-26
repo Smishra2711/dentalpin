@@ -233,6 +233,7 @@
     "reports": {
       "title": "Relatórios de pagamentos",
       "subtitle": "Cobranças, reembolsos, saldos de pacientes e tendências do período.",
+      "loadError": "Não foi possível carregar os relatórios de pagamentos",
       "cardDescription": "Cobrado, reembolsos, saldos de pacientes, antiguidade e tendências.",
       "period": "Período",
       "refresh": "Atualizar",

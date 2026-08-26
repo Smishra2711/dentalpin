@@ -233,6 +233,7 @@
     "reports": {
       "title": "Informe de cobros",
       "subtitle": "Cobros, devoluciones, saldos paciente y tendencias del periodo.",
+      "loadError": "No se pudo cargar el informe de cobros",
       "cardDescription": "Cobros, devoluciones, saldos paciente, antigüedad y tendencias.",
       "period": "Periodo",
       "refresh": "Actualizar",

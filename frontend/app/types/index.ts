@@ -534,10 +534,13 @@ export interface TreatmentCreate {
   source_module?: string
 }
 
-/** PUT /treatments/{id} — header-level edits only. */
+/** PUT /treatments/{id} — header-level edits. `surfaces` replaces the
+ *  surfaces on every tooth of the treatment (single-tooth surface
+ *  treatments like fillings) and triggers a price/duration recompute. */
 export interface TreatmentUpdate {
   status?: TreatmentStatus
   notes?: string
+  surfaces?: Surface[]
 }
 
 /** UI config for the multi-tooth picker (bridges, splints, multiple veneers/crowns). */

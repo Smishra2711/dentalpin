@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(#101): /reports/payments gets the same failed-fetch error banner; an error state is no longer mistakable for an empty period.
+
 - fix(#180): payments recorded before #178 on a budget-linked invoice
   were labeled `on_account` instead of `budget`, so the quote's
   "Budget payments" total missed them even though the invoice was

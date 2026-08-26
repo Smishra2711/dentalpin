@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(#101): removing a plan item asks for confirmation naming the treatment.
+
 - i18n(#131/#275): treatment names from catalog names fall back to any
   non-empty translation after `es→en→fr→pt→ta` (items created under
   core-only locales like de/hu).

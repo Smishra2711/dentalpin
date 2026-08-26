@@ -603,6 +603,7 @@
       "treatmentAdded": "Zabieg dodany",
       "treatmentPerformed": "Zabieg oznaczony jako wykonany",
       "treatmentDeleted": "Zabieg usunięty",
+      "deleteConfirm": "Usunąć {name} (ząb {tooth})? Tej operacji nie można cofnąć.",
       "status": {
         "existing": "Istniejący",
         "planned": "Zaplanowany"
@@ -746,6 +747,7 @@
       "noItems": "Brak zabiegów w planie",
       "markComplete": "Oznacz jako ukończony",
       "removeItem": "Usuń z planu",
+      "removeItemConfirm": "Usunąć {name} z tego planu? Tej operacji nie można cofnąć.",
       "sessions": {
         "progress": "{done}/{total} sesji",
         "markDone": "Oznacz sesję jako wykonaną",
@@ -864,6 +866,7 @@
     "saved": "Wizyta zapisana",
     "updated": "Wizyta zaktualizowana",
     "conflict": "Ten termin jest już zajęty",
+    "loadError": "Nie udało się wczytać wizyt",
     "cancel": "Odwołaj wizytę",
     "markCompleted": "Oznacz jako zakończoną",
     "markNoShow": "Nieobecność",
@@ -1458,6 +1461,7 @@
     "items": "Zabiegi",
     "categories": "Kategorie",
     "noItems": "Brak zabiegów w katalogu",
+    "loadError": "Nie udało się wczytać katalogu zabiegów",
     "searchPlaceholder": "Szukaj po kodzie lub nazwie...",
     "code": "Kod",
     "name": "Nazwa",
@@ -1987,6 +1991,7 @@
       "downloadSignedPdf": "Pobierz podpisany PDF",
       "downloadError": "Nie udało się pobrać podpisanego PDF-a.",
       "notSigned": "Dla tego kosztorysu nie zarejestrowano jeszcze podpisu.",
+      "loadError": "Nie udało się wczytać stanu podpisu",
       "method": {
         "drawn": "Podpis odręczny",
         "clickAccept": "Akceptacja kliknięciem",
@@ -2668,6 +2673,7 @@
     "subtitle": "Analizy i statystyki gabinetu",
     "viewReports": "Zobacz raporty",
     "noAccess": "Nie masz dostępu do żadnych raportów",
+    "loadError": "Nie udało się wczytać danych raportu",
     "dashboard": {
       "title": "Panel",
       "subtitle": "Twój gabinet w skrócie",

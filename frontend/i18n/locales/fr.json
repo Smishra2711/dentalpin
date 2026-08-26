@@ -24,7 +24,6 @@
     "expenses": "Dépenses",
     "labOrdersForm": "Nouveau travail de laboratoire",
     "labOrdersStatus": "Travaux de laboratoire",
-    "staffTasks": "Tâches de l'équipe",
     "treatmentPlans": "Plans de traitement",
     "budgets": "Devis",
     "invoices": "Factures",
@@ -604,6 +603,7 @@
       "treatmentAdded": "Traitement ajouté",
       "treatmentPerformed": "Traitement marqué comme réalisé",
       "treatmentDeleted": "Traitement supprimé",
+      "deleteConfirm": "Supprimer {name} (dent {tooth}) ? Cette action est irréversible.",
       "status": {
         "existing": "Existant",
         "planned": "Planifié"
@@ -747,6 +747,7 @@
       "noItems": "Aucun traitement dans le plan",
       "markComplete": "Marquer comme terminé",
       "removeItem": "Retirer du plan",
+      "removeItemConfirm": "Retirer {name} de ce plan ? Cette action est irréversible.",
       "sessions": {
         "progress": "{done}/{total} séances",
         "markDone": "Marquer la séance comme terminée",
@@ -864,6 +865,7 @@
     "saved": "Rendez-vous enregistré",
     "updated": "Rendez-vous mis à jour",
     "conflict": "Ce créneau est déjà occupé",
+    "loadError": "Impossible de charger les rendez-vous",
     "cancel": "Annuler le rendez-vous",
     "markCompleted": "Marquer comme terminé",
     "markNoShow": "Absence",
@@ -1459,6 +1461,7 @@
     "items": "Traitements",
     "categories": "Catégories",
     "noItems": "Aucun traitement dans le catalogue",
+    "loadError": "Impossible de charger le catalogue de traitements",
     "searchPlaceholder": "Rechercher par code ou nom...",
     "code": "Code",
     "name": "Nom",
@@ -1988,6 +1991,7 @@
       "downloadSignedPdf": "Télécharger le PDF signé",
       "downloadError": "Impossible de télécharger le PDF signé.",
       "notSigned": "Aucune signature n'a encore été capturée pour ce devis.",
+      "loadError": "Impossible de charger l'état de la signature",
       "method": {
         "drawn": "Signature manuscrite",
         "clickAccept": "Clic pour accepter",
@@ -2669,6 +2673,7 @@
     "subtitle": "Analyses et statistiques de la clinique",
     "viewReports": "Voir les rapports",
     "noAccess": "Vous n'avez accès à aucun rapport",
+    "loadError": "Impossible de charger les données du rapport",
     "dashboard": {
       "title": "Tableau de bord",
       "subtitle": "Votre clinique en un coup d'œil",

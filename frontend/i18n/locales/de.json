@@ -603,6 +603,7 @@
       "treatmentAdded": "Behandlung hinzugefügt",
       "treatmentPerformed": "Behandlung als durchgeführt markiert",
       "treatmentDeleted": "Behandlung gelöscht",
+      "deleteConfirm": "{name} (Zahn {tooth}) löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
       "status": {
         "existing": "Vorhanden",
         "planned": "Geplant"
@@ -746,6 +747,7 @@
       "noItems": "Keine Behandlungen im Plan",
       "markComplete": "Als abgeschlossen markieren",
       "removeItem": "Aus dem Plan entfernen",
+      "removeItemConfirm": "{name} aus diesem Plan entfernen? Diese Aktion kann nicht rückgängig gemacht werden.",
       "sessions": {
         "progress": "{done}/{total} Sitzungen",
         "markDone": "Sitzung als erledigt markieren",
@@ -864,6 +866,7 @@
     "saved": "Termin gespeichert",
     "updated": "Termin aktualisiert",
     "conflict": "Dieser Zeitraum ist bereits belegt",
+    "loadError": "Termine konnten nicht geladen werden",
     "cancel": "Termin absagen",
     "markCompleted": "Als abgeschlossen markieren",
     "markNoShow": "Nicht erschienen",
@@ -1458,6 +1461,7 @@
     "items": "Behandlungen",
     "categories": "Kategorien",
     "noItems": "Keine Behandlungen im Katalog",
+    "loadError": "Leistungskatalog konnte nicht geladen werden",
     "searchPlaceholder": "Nach Code oder Name suchen...",
     "code": "Code",
     "name": "Name",
@@ -1987,6 +1991,7 @@
       "downloadSignedPdf": "Unterschriebenes PDF herunterladen",
       "downloadError": "Das unterschriebene PDF konnte nicht heruntergeladen werden.",
       "notSigned": "Für diesen Kostenvoranschlag wurde noch keine Unterschrift erfasst.",
+      "loadError": "Signaturstatus konnte nicht geladen werden",
       "method": {
         "drawn": "Handschriftliche Unterschrift",
         "clickAccept": "Annahme per Klick",
@@ -2668,6 +2673,7 @@
     "subtitle": "Analysen und Statistiken der Praxis",
     "viewReports": "Berichte anzeigen",
     "noAccess": "Sie haben auf keinen Bericht Zugriff",
+    "loadError": "Berichtsdaten konnten nicht geladen werden",
     "dashboard": {
       "title": "Dashboard",
       "subtitle": "Ihre Praxis auf einen Blick",
