@@ -131,6 +131,11 @@ async def test_dump_tables_still_raises_on_other_pg_dump_errors(
 
     monkeypatch.setattr(processor_module, "BACKUP_ROOT", tmp_path)
 
+    async def fake_existing(tables):  # noqa: ANN002
+        return set(tables)  # all exist — pg_dump will be called
+
+    monkeypatch.setattr(processor, "_existing_tables", fake_existing)
+
     def fake_run(args, **kwargs):  # noqa: ANN001, ANN003
         raise subprocess.CalledProcessError(
             1, args, stderr=b"pg_dump: error: connection to server failed\n"
