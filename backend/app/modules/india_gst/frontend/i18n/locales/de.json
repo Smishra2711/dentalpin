@@ -77,6 +77,7 @@
       "registrationUnregistered": "Nicht registriert",
       "registrationExempt": "Befreit",
       "clinicState": "Bundesstaat der Praxis",
+      "gstinStateMismatch": "Die ersten beiden Ziffern der GSTIN sind ein Bundesstaatscode, der nicht zum ausgewählten Bundesstaat der Praxis passt — das kehrt die GST-Einstufung jeder Rechnung als innerstaatlich/zwischenstaatlich um. Prüfen Sie beides.",
       "catalogDefaults": "GST-Standardwerte des Katalogs",
       "allSacConfigured": "Für alle Behandlungen ist ein SAC-Code konfiguriert.",
       "missingSacCount": "{count} Behandlung(en) benötigen einen SAC-Code und Steuersatz.",
