@@ -23,7 +23,6 @@
     "expenses": "Gastos",
     "labOrdersForm": "Nuevo trabajo de laboratorio",
     "labOrdersStatus": "Trabajos de laboratorio",
-    "staffTasks": "Tareas del equipo",
     "treatmentPlans": "Planes de tratamiento",
     "budgets": "Presupuestos",
     "invoices": "Facturas",
@@ -96,7 +95,11 @@
     "derivedSettings": "Zona horaria y moneda",
     "willSeed": "Crearemos por ti el catálogo de tratamientos, los tipos de IVA, la serie de facturas, un gabinete y un horario de lunes a viernes. Todo se puede cambiar después.",
     "willSuggestVerifactu": "Después te sugeriremos activar VeriFactu.",
-    "invalidData": "Revisa los datos: hay algún campo no válido."
+    "invalidData": "Revisa los datos: hay algún campo no válido.",
+    "attendPatientsMyself": "Yo mismo atiendo pacientes",
+    "attendPatientsMyselfHelp": "Te marca como profesional agendable. Podrás cambiarlo después en Equipo.",
+    "addressTitle": "Dirección de la clínica",
+    "addressOptional": "opcional"
   },
   "onboarding": {
     "title": "Puesta en marcha",

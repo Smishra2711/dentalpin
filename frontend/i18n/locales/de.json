@@ -95,7 +95,11 @@
     "derivedSettings": "Zeitzone und Währung",
     "willSeed": "Wir legen den Leistungskatalog, die Steuersätze, einen Rechnungskreis, ein Behandlungszimmer und einen Zeitplan von Montag bis Freitag für Sie an. Alles lässt sich später ändern.",
     "willSuggestVerifactu": "Anschließend schlagen wir vor, VeriFactu zu aktivieren.",
-    "invalidData": "Bitte überprüfen Sie die Daten: ein Feld ist ungültig."
+    "invalidData": "Bitte überprüfen Sie die Daten: ein Feld ist ungültig.",
+    "attendPatientsMyself": "Ich behandle selbst Patienten",
+    "attendPatientsMyselfHelp": "Markiert Sie als buchbare Fachkraft. Das lässt sich später unter Team ändern.",
+    "addressTitle": "Adresse der Praxis",
+    "addressOptional": "optional"
   },
   "onboarding": {
     "title": "Erste Schritte",

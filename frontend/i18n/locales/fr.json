@@ -23,7 +23,6 @@
     "expenses": "Dépenses",
     "labOrdersForm": "Nouveau travail de laboratoire",
     "labOrdersStatus": "Travaux de laboratoire",
-    "staffTasks": "Tâches de l'équipe",
     "treatmentPlans": "Plans de traitement",
     "budgets": "Devis",
     "invoices": "Factures",
@@ -96,7 +95,11 @@
     "derivedSettings": "Fuseau horaire et devise",
     "willSeed": "Nous créerons pour vous le catalogue de soins, les taux de TVA, une série de factures, un cabinet et un horaire du lundi au vendredi. Tout est modifiable ensuite.",
     "willSuggestVerifactu": "Nous vous proposerons ensuite d'activer VeriFactu.",
-    "invalidData": "Vérifiez les données : un champ est invalide."
+    "invalidData": "Vérifiez les données : un champ est invalide.",
+    "attendPatientsMyself": "Je reçois moi-même les patients",
+    "attendPatientsMyselfHelp": "Vous serez marqué comme professionnel réservable. Modifiable plus tard dans Équipe.",
+    "addressTitle": "Adresse de la clinique",
+    "addressOptional": "facultatif"
   },
   "onboarding": {
     "title": "Mise en route",
