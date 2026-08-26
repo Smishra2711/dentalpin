@@ -50,8 +50,8 @@ async def test_update_settings_rejects_checksum_typo(
         headers=auth_headers,
     )
     assert r.status_code == 400
-    assert "check digit" in r.json()["detail"]
-    assert "7" in r.json()["detail"]
+    assert "check digit" in r.json()["message"]
+    assert "7" in r.json()["message"]
 
 
 async def test_settings_flags_gstin_state_mismatch(
