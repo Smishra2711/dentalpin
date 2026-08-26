@@ -1,4 +1,4 @@
-# 0009 — Cross-module client refresh bus (`useDataBus`)
+# 0021 — Cross-module client refresh bus (`useDataBus`)
 
 Date: 2026-08-25 · Status: accepted
 
@@ -55,6 +55,10 @@ not proliferate.
 - First adopters (#274): `patients_clinical` publishes after
   `saveMedicalHistory`; medical_reference's `PatientReferenceFlagsChips`
   subscribes on `patients_clinical` and refetches its warning chips.
+  The data owner subscribes to its own namespace too —
+  `usePatientAlerts` had the same staleness bug in the same header line.
+  Publishing is not a substitute for subscribing: a module that renders
+  its own data into a shared surface is a consumer like any other.
 - New cross-module client couplings must use this bus and document the
   namespace pair in both modules' CLAUDE.md.
 - The bus stays payload-less unless a demonstrated need appears;

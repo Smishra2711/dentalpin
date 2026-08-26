@@ -30,14 +30,21 @@ const dataBus = useDataBus()
 
 async function refetchFlags() {
   const patientId = props.ctx.patient.id
-  flags.value = []
-  if (!patientId) return
+  if (!patientId) {
+    flags.value = []
+    return
+  }
   flags.value = await fetchPatientFlags(patientId)
 }
 
 watch(
   () => props.ctx.patient.id,
-  refetchFlags,
+  (patientId) => {
+    // Clear only when the header switches patient — never on a bus tick,
+    // or the warning would blink out and back in on a slow connection.
+    flags.value = []
+    if (patientId) refetchFlags()
+  },
   { immediate: true }
 )
 dataBus.on('patients_clinical', refetchFlags)
