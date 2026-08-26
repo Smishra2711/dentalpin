@@ -957,7 +957,11 @@
       "professionalOff": "No disponible",
       "onBreak": "Pausa"
     },
-    "actionsMenu": "Acciones de la cita"
+    "actionsMenu": "Acciones de la cita",
+    "sendMessage": "Enviar mensaje",
+    "resendConfirmationVia": "Reenviar confirmación ({channel})",
+    "sendReminderVia": "Enviar recordatorio ({channel})",
+    "sendCancellationVia": "Enviar cancelación ({channel})"
   },
   "dashboard": {
     "greetings": {
@@ -2058,15 +2062,18 @@
       "deleteDescription": "Esta acción no se puede deshacer."
     },
     "send": {
-      "description": "Puedes enviar el presupuesto por email o marcarlo como enviado manualmente (impreso o entregado en mano).",
+      "description": "Puedes enviar el presupuesto por email o WhatsApp, o marcarlo como enviado manualmente (impreso o entregado en mano).",
       "sendByEmail": "Enviar por email",
       "willSendTo": "Se enviará a",
       "noPatientEmail": "El paciente no tiene email registrado",
       "customMessage": "Mensaje personalizado (opcional)",
       "customMessagePlaceholder": "Añade un mensaje para el paciente...",
-      "manualNote": "El presupuesto se marcará como enviado sin enviar ningún email.",
+      "manualNote": "El presupuesto se marcará como enviado sin enviar ningún mensaje.",
       "sendEmail": "Enviar email",
-      "markAsSent": "Marcar como enviado"
+      "markAsSent": "Marcar como enviado",
+      "sendByWhatsapp": "Enviar por WhatsApp",
+      "sendWhatsapp": "Enviar WhatsApp",
+      "willSendToPhone": "Se enviará por WhatsApp a"
     },
     "messages": {
       "created": "Presupuesto creado",
@@ -2084,7 +2091,8 @@
       "itemUpdated": "Tratamiento actualizado",
       "itemRemoved": "Tratamiento eliminado",
       "treatmentStarted": "Tratamiento iniciado",
-      "treatmentCompleted": "Tratamiento completado"
+      "treatmentCompleted": "Tratamiento completado",
+      "sentByWhatsapp": "Presupuesto enviado por WhatsApp"
     },
     "errors": {
       "load": "Error al cargar presupuestos",
@@ -2150,10 +2158,10 @@
     "publicLink": {
       "action": "Compartir enlace",
       "title": "Enlace para el paciente",
-      "help": "Copia este enlace y compártelo con el paciente por WhatsApp, SMS o email. Le pediremos un dato de verificación antes de mostrarle el presupuesto.",
+      "help": "Copia este enlace y compártelo con el paciente por WhatsApp o email. Le pediremos un dato de verificación antes de mostrarle el presupuesto.",
       "copy": "Copiar enlace",
       "copied": "¡Copiado!",
-      "whatsapp": "Enviar por WhatsApp",
+      "whatsapp": "Abrir en WhatsApp",
       "whatsappNoPhone": "El paciente no tiene teléfono en su ficha",
       "whatsappGreeting": "Hola {name}, aquí tienes tu presupuesto:",
       "whatsappGreetingFallback": "Hola, aquí tienes tu presupuesto:",
@@ -2483,19 +2491,23 @@
       "itemAdded": "Tratamiento añadido",
       "itemUpdated": "Tratamiento actualizado",
       "sentByEmail": "Factura enviada por email",
-      "sentManually": "Factura marcada como enviada"
+      "sentManually": "Factura marcada como enviada",
+      "sentByWhatsapp": "Factura enviada por WhatsApp"
     },
     "send": {
       "title": "Enviar factura",
-      "description": "Puedes enviar la factura por email o marcarla como enviada manualmente (impresa o entregada en mano).",
+      "description": "Puedes enviar la factura por email o WhatsApp, o marcarla como enviada manualmente (impresa o entregada en mano).",
       "sendByEmail": "Enviar por email",
       "willSendTo": "Se enviará a",
       "noPatientEmail": "El paciente no tiene email registrado",
       "customMessage": "Mensaje personalizado (opcional)",
       "customMessagePlaceholder": "Añade un mensaje para el paciente...",
-      "manualNote": "La factura se marcará como enviada sin enviar ningún email.",
+      "manualNote": "La factura se marcará como enviada sin enviar ningún mensaje.",
       "sendEmail": "Enviar email",
-      "markAsSent": "Marcar como enviada"
+      "markAsSent": "Marcar como enviada",
+      "sendByWhatsapp": "Enviar por WhatsApp",
+      "sendWhatsapp": "Enviar WhatsApp",
+      "willSendToPhone": "Se enviará por WhatsApp a"
     },
     "errors": {
       "load": "Error al cargar facturas",
@@ -2800,10 +2812,10 @@
     "communications": {
       "language": {
         "cardTitle": "Idioma de comunicaciones",
-        "cardDescription": "Idioma usado en la vista pública del presupuesto, emails y SMS al paciente.",
+        "cardDescription": "Idioma usado en la vista pública del presupuesto, emails y mensajes de WhatsApp al paciente.",
         "title": "Idioma de comunicaciones con el paciente",
         "label": "Idioma",
-        "help": "Se aplica a la vista pública del presupuesto y a las plantillas de email/SMS automáticas. La interfaz interna del personal usa su propio idioma de cuenta.",
+        "help": "Se aplica a la vista pública del presupuesto y a las plantillas automáticas de email/WhatsApp. La interfaz interna del personal usa su propio idioma de cuenta.",
         "save": "Guardar",
         "saved": "Idioma guardado"
       }
@@ -2843,7 +2855,13 @@
       "budget_accepted": "Presupuesto aceptado",
       "budget_accepted_desc": "Email de confirmación cuando se acepta un presupuesto",
       "welcome": "Bienvenida",
-      "welcome_desc": "Email de bienvenida para nuevos pacientes"
+      "welcome_desc": "Email de bienvenida para nuevos pacientes",
+      "invoice_sent": "Envío de factura",
+      "invoice_sent_desc": "Mensaje con la factura cuando se envía al paciente",
+      "budget_reminder": "Recordatorio de presupuesto",
+      "budget_reminder_desc": "Seguimiento de presupuestos sin respuesta (7 y 14 días)",
+      "recall_reminder": "Recordatorio de revisión",
+      "recall_reminder_desc": "Recordatorio para reservar la visita periódica de seguimiento"
     },
     "sendConfirmation": "Enviar confirmación",
     "sendReminder": "Enviar recordatorio",
@@ -2897,6 +2915,27 @@
     "onboarding": {
       "label": "Envío de emails",
       "description": "Configura el remitente para enviar confirmaciones de cita y presupuestos."
+    },
+    "channels": {
+      "cardTitle": "Canales",
+      "cardDescription": "Cómo se comunica la clínica con los pacientes: el canal de los mensajes automáticos y los botones de envío que ve el personal.",
+      "preferredLabel": "Canal preferido",
+      "preferredHelp": "Se usa para los mensajes automáticos (nueva cita, recordatorio, bienvenida…).",
+      "fallbackLabel": "Usar el otro canal como respaldo",
+      "fallbackHelp": "Si el canal preferido no puede enviar, se intenta el otro canal disponible en lugar de omitir el mensaje.",
+      "manualLabel": "Mostrar botón de envío para…",
+      "manualHelp": "Qué botones de envío ve recepción en citas, presupuestos y facturas.",
+      "manualAtLeastOne": "Selecciona al menos un canal.",
+      "email": "Email",
+      "whatsapp": "WhatsApp",
+      "whatsappUnavailableHint": "WhatsApp no está disponible hasta conectar el número de la clínica.",
+      "whatsappConnect": "Conectar WhatsApp (Kapso)",
+      "noEmail": "El paciente no tiene email en su ficha",
+      "noPhone": "El paciente no tiene teléfono en su ficha"
+    },
+    "channelSent": {
+      "email": "Email enviado correctamente",
+      "whatsapp": "Mensaje de WhatsApp enviado correctamente"
     }
   },
   "invoiceSeries": {

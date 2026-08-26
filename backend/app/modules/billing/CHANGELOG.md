@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat(#287): invoice send accepts `send_method=whatsapp` with per-channel recipient validation; the send modal renders channel buttons from the clinic's manual channels.
+
 - i18n(#131/#275): invoice-line descriptions from catalog names now fall
   back to any non-empty translation after `es→en→fr→pt→ta`, so items
   created under a core-only locale (de, hu, and future ones) never

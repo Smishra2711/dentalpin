@@ -935,7 +935,11 @@
       "clinicClosed": "Praxis geschlossen",
       "professionalOff": "Außer Dienst",
       "onBreak": "In Pause"
-    }
+    },
+    "sendMessage": "Nachricht senden",
+    "resendConfirmationVia": "Bestätigung erneut senden ({channel})",
+    "sendReminderVia": "Erinnerung senden ({channel})",
+    "sendCancellationVia": "Absage senden ({channel})"
   },
   "dashboard": {
     "greetings": {
@@ -2035,15 +2039,18 @@
       "deleteDescription": "Diese Aktion kann nicht rückgängig gemacht werden."
     },
     "send": {
-      "description": "Sie können den Kostenvoranschlag per E-Mail senden oder als manuell übergeben markieren (gedruckt oder ausgehändigt).",
+      "description": "Sie können den Kostenvoranschlag per E-Mail oder WhatsApp senden oder als manuell übergeben markieren (gedruckt oder ausgehändigt).",
       "sendByEmail": "Per E-Mail senden",
       "willSendTo": "Wird gesendet an",
       "noPatientEmail": "Der Patient hat keine hinterlegte E-Mail",
       "customMessage": "Persönliche Nachricht (optional)",
       "customMessagePlaceholder": "Nachricht für den Patienten hinzufügen...",
-      "manualNote": "Der Kostenvoranschlag wird als gesendet markiert, ohne eine E-Mail zu verschicken.",
+      "manualNote": "Der Kostenvoranschlag wird als gesendet markiert, ohne eine Nachricht zu verschicken.",
       "sendEmail": "E-Mail senden",
-      "markAsSent": "Als gesendet markieren"
+      "markAsSent": "Als gesendet markieren",
+      "sendByWhatsapp": "Per WhatsApp senden",
+      "sendWhatsapp": "WhatsApp senden",
+      "willSendToPhone": "Wird per WhatsApp gesendet an"
     },
     "messages": {
       "created": "Kostenvoranschlag erstellt",
@@ -2061,7 +2068,8 @@
       "itemUpdated": "Behandlung aktualisiert",
       "itemRemoved": "Behandlung entfernt",
       "treatmentStarted": "Behandlung begonnen",
-      "treatmentCompleted": "Behandlung abgeschlossen"
+      "treatmentCompleted": "Behandlung abgeschlossen",
+      "sentByWhatsapp": "Kostenvoranschlag per WhatsApp gesendet"
     },
     "errors": {
       "load": "Fehler beim Laden der Kostenvoranschläge",
@@ -2127,10 +2135,10 @@
     "publicLink": {
       "action": "Link teilen",
       "title": "Patientenlink",
-      "help": "Kopieren Sie diesen Link und teilen Sie ihn mit dem Patienten per WhatsApp, SMS oder E-Mail. Vor dem Ansehen des Kostenvoranschlags wird eine Verifizierungsangabe abgefragt.",
+      "help": "Kopieren Sie diesen Link und teilen Sie ihn mit dem Patienten per WhatsApp oder E-Mail. Vor dem Ansehen des Kostenvoranschlags wird eine Verifizierungsangabe abgefragt.",
       "copy": "Link kopieren",
       "copied": "Kopiert!",
-      "whatsapp": "Per WhatsApp senden",
+      "whatsapp": "In WhatsApp öffnen",
       "whatsappNoPhone": "Für den Patienten ist keine Telefonnummer hinterlegt",
       "whatsappGreeting": "Hallo {name}, hier ist Ihr Kostenvoranschlag:",
       "whatsappGreetingFallback": "Hallo, hier ist Ihr Kostenvoranschlag:",
@@ -2249,10 +2257,10 @@
     "communications": {
       "language": {
         "cardTitle": "Sprache der Kommunikation",
-        "cardDescription": "Sprache der patientenseitigen Kostenvoranschlags-Ansicht, E-Mails und SMS.",
+        "cardDescription": "Sprache der patientenseitigen Kostenvoranschlags-Ansicht, E-Mails und WhatsApp-Nachrichten.",
         "title": "Sprache der Patientenkommunikation",
         "label": "Sprache",
-        "help": "Gilt für die patientenseitige Kostenvoranschlags-Ansicht und die automatischen E-Mail-/SMS-Vorlagen. Die Team-Oberfläche behält die Sprache des jeweiligen Benutzers.",
+        "help": "Gilt für die patientenseitige Kostenvoranschlags-Ansicht und die automatischen E-Mail-/WhatsApp-Vorlagen. Die Team-Oberfläche behält die Sprache des jeweiligen Benutzers.",
         "save": "Speichern",
         "saved": "Sprache gespeichert"
       }
@@ -2292,7 +2300,13 @@
       "budget_accepted": "Kostenvoranschlag angenommen",
       "budget_accepted_desc": "Bestätigungs-E-Mail bei Annahme eines Kostenvoranschlags",
       "welcome": "Willkommen",
-      "welcome_desc": "Willkommens-E-Mail für neue Patienten"
+      "welcome_desc": "Willkommens-E-Mail für neue Patienten",
+      "invoice_sent": "Rechnungsversand",
+      "invoice_sent_desc": "Nachricht mit der Rechnung, wenn sie an den Patienten gesendet wird",
+      "budget_reminder": "Kostenvoranschlags-Erinnerung",
+      "budget_reminder_desc": "Nachfassen bei unbeantworteten Kostenvoranschlägen (7 und 14 Tage)",
+      "recall_reminder": "Recall-Erinnerung",
+      "recall_reminder_desc": "Erinnerung, den regelmäßigen Kontrolltermin zu buchen"
     },
     "sendConfirmation": "Bestätigung senden",
     "sendReminder": "Erinnerung senden",
@@ -2346,6 +2360,27 @@
     "onboarding": {
       "label": "E-Mail-Versand",
       "description": "Richten Sie den Absender ein, um Terminbestätigungen und Kostenvoranschläge zu mailen."
+    },
+    "channels": {
+      "cardTitle": "Kanäle",
+      "cardDescription": "Wie die Klinik Patienten erreicht: der Kanal für automatische Nachrichten und die Senden-Schaltflächen, die das Team sieht.",
+      "preferredLabel": "Bevorzugter Kanal",
+      "preferredHelp": "Wird für automatische Nachrichten verwendet (neuer Termin, Erinnerung, Willkommen…).",
+      "fallbackLabel": "Auf den anderen Kanal ausweichen",
+      "fallbackHelp": "Kann der bevorzugte Kanal nicht senden, wird der andere verfügbare Kanal versucht, statt die Nachricht zu überspringen.",
+      "manualLabel": "Senden-Schaltfläche anzeigen für…",
+      "manualHelp": "Welche Senden-Schaltflächen der Empfang bei Terminen, Kostenvoranschlägen und Rechnungen sieht.",
+      "manualAtLeastOne": "Wählen Sie mindestens einen Kanal.",
+      "email": "E-Mail",
+      "whatsapp": "WhatsApp",
+      "whatsappUnavailableHint": "WhatsApp ist erst verfügbar, wenn die Nummer der Klinik verbunden ist.",
+      "whatsappConnect": "WhatsApp (Kapso) verbinden",
+      "noEmail": "Für den Patienten ist keine E-Mail hinterlegt",
+      "noPhone": "Für den Patienten ist keine Telefonnummer hinterlegt"
+    },
+    "channelSent": {
+      "email": "E-Mail erfolgreich gesendet",
+      "whatsapp": "WhatsApp-Nachricht erfolgreich gesendet"
     }
   },
   "invoice": {
@@ -2625,19 +2660,23 @@
       "itemAdded": "Position hinzugefügt",
       "itemUpdated": "Position aktualisiert",
       "sentByEmail": "Rechnung per E-Mail gesendet",
-      "sentManually": "Rechnung als gesendet markiert"
+      "sentManually": "Rechnung als gesendet markiert",
+      "sentByWhatsapp": "Rechnung per WhatsApp gesendet"
     },
     "send": {
       "title": "Rechnung senden",
-      "description": "Sie können die Rechnung per E-Mail senden oder als manuell übergeben markieren (gedruckt oder persönlich ausgehändigt).",
+      "description": "Sie können die Rechnung per E-Mail oder WhatsApp senden oder als manuell übergeben markieren (gedruckt oder persönlich ausgehändigt).",
       "sendByEmail": "Per E-Mail senden",
       "willSendTo": "Wird gesendet an",
       "noPatientEmail": "Der Patient hat keine E-Mail-Adresse",
       "customMessage": "Persönliche Nachricht (optional)",
       "customMessagePlaceholder": "Nachricht für den Patienten hinzufügen...",
-      "manualNote": "Die Rechnung wird als gesendet markiert, ohne eine E-Mail zu verschicken.",
+      "manualNote": "Die Rechnung wird als gesendet markiert, ohne eine Nachricht zu verschicken.",
       "sendEmail": "E-Mail senden",
-      "markAsSent": "Als gesendet markieren"
+      "markAsSent": "Als gesendet markieren",
+      "sendByWhatsapp": "Per WhatsApp senden",
+      "sendWhatsapp": "WhatsApp senden",
+      "willSendToPhone": "Wird per WhatsApp gesendet an"
     },
     "errors": {
       "load": "Fehler beim Laden der Rechnungen",

@@ -936,7 +936,11 @@
       "professionalOff": "Off-duty",
       "onBreak": "On break"
     },
-    "actionsMenu": "Appointment actions"
+    "actionsMenu": "Appointment actions",
+    "sendMessage": "Send message",
+    "resendConfirmationVia": "Resend confirmation ({channel})",
+    "sendReminderVia": "Send reminder ({channel})",
+    "sendCancellationVia": "Send cancellation ({channel})"
   },
   "dashboard": {
     "greetings": {
@@ -2036,15 +2040,18 @@
       "deleteDescription": "This action cannot be undone."
     },
     "send": {
-      "description": "You can send the quote by email or mark it as manually sent (printed or handed over).",
+      "description": "You can send the quote by email or WhatsApp, or mark it as manually sent (printed or handed over).",
       "sendByEmail": "Send by email",
       "willSendTo": "Will be sent to",
       "noPatientEmail": "Patient has no registered email",
       "customMessage": "Custom message (optional)",
       "customMessagePlaceholder": "Add a message for the patient...",
-      "manualNote": "The quote will be marked as sent without sending any email.",
+      "manualNote": "The quote will be marked as sent without sending any message.",
       "sendEmail": "Send email",
-      "markAsSent": "Mark as sent"
+      "markAsSent": "Mark as sent",
+      "sendByWhatsapp": "Send by WhatsApp",
+      "sendWhatsapp": "Send WhatsApp",
+      "willSendToPhone": "Will be sent by WhatsApp to"
     },
     "messages": {
       "created": "Quote created",
@@ -2062,7 +2069,8 @@
       "itemUpdated": "Treatment updated",
       "itemRemoved": "Treatment removed",
       "treatmentStarted": "Treatment started",
-      "treatmentCompleted": "Treatment completed"
+      "treatmentCompleted": "Treatment completed",
+      "sentByWhatsapp": "Quote sent by WhatsApp"
     },
     "errors": {
       "load": "Error loading quotes",
@@ -2128,10 +2136,10 @@
     "publicLink": {
       "action": "Share link",
       "title": "Patient link",
-      "help": "Copy this link and share it with the patient via WhatsApp, SMS or email. They will be asked for one verification detail before viewing the quote.",
+      "help": "Copy this link and share it with the patient via WhatsApp or email. They will be asked for one verification detail before viewing the quote.",
       "copy": "Copy link",
       "copied": "Copied!",
-      "whatsapp": "Send via WhatsApp",
+      "whatsapp": "Open in WhatsApp",
       "whatsappNoPhone": "The patient has no phone on file",
       "whatsappGreeting": "Hi {name}, here's your quote:",
       "whatsappGreetingFallback": "Hi, here's your quote:",
@@ -2250,10 +2258,10 @@
     "communications": {
       "language": {
         "cardTitle": "Communications language",
-        "cardDescription": "Language used in the patient-facing quote view, emails and SMS.",
+        "cardDescription": "Language used in the patient-facing quote view, emails and WhatsApp messages.",
         "title": "Patient communications language",
         "label": "Language",
-        "help": "Applies to the patient-facing quote view and the automated email/SMS templates. Staff UI keeps each user's own language preference.",
+        "help": "Applies to the patient-facing quote view and the automated email/WhatsApp templates. Staff UI keeps each user's own language preference.",
         "save": "Save",
         "saved": "Language saved"
       }
@@ -2293,7 +2301,13 @@
       "budget_accepted": "Quote accepted",
       "budget_accepted_desc": "Confirmation email when a quote is accepted",
       "welcome": "Welcome",
-      "welcome_desc": "Welcome email for new patients"
+      "welcome_desc": "Welcome email for new patients",
+      "invoice_sent": "Invoice sending",
+      "invoice_sent_desc": "Message with the invoice when it is sent to the patient",
+      "budget_reminder": "Quote reminder",
+      "budget_reminder_desc": "Follow-up for quotes with no reply (7 and 14 days)",
+      "recall_reminder": "Recall reminder",
+      "recall_reminder_desc": "Reminder to book the periodic follow-up visit"
     },
     "sendConfirmation": "Send confirmation",
     "sendReminder": "Send reminder",
@@ -2347,6 +2361,27 @@
     "onboarding": {
       "label": "Email sending",
       "description": "Set the sender to email appointment confirmations and budgets."
+    },
+    "channels": {
+      "cardTitle": "Channels",
+      "cardDescription": "How the clinic reaches patients: the channel automatic messages use and the Send buttons staff see.",
+      "preferredLabel": "Preferred channel",
+      "preferredHelp": "Used for automatic messages (new booking, reminder, welcome…).",
+      "fallbackLabel": "Fall back to the other channel",
+      "fallbackHelp": "If the preferred channel cannot send, try the other available channel instead of skipping the message.",
+      "manualLabel": "Show a Send button for…",
+      "manualHelp": "Which Send buttons reception sees on appointments, quotes and invoices.",
+      "manualAtLeastOne": "Select at least one channel.",
+      "email": "Email",
+      "whatsapp": "WhatsApp",
+      "whatsappUnavailableHint": "WhatsApp is not available until the clinic's number is connected.",
+      "whatsappConnect": "Connect WhatsApp (Kapso)",
+      "noEmail": "The patient has no email on file",
+      "noPhone": "The patient has no phone on file"
+    },
+    "channelSent": {
+      "email": "Email sent successfully",
+      "whatsapp": "WhatsApp message sent successfully"
     }
   },
   "invoice": {
@@ -2626,19 +2661,23 @@
       "itemAdded": "Item added",
       "itemUpdated": "Item updated",
       "sentByEmail": "Invoice sent by email",
-      "sentManually": "Invoice marked as sent"
+      "sentManually": "Invoice marked as sent",
+      "sentByWhatsapp": "Invoice sent by WhatsApp"
     },
     "send": {
       "title": "Send invoice",
-      "description": "You can send the invoice by email or mark it as sent manually (printed or delivered in person).",
+      "description": "You can send the invoice by email or WhatsApp, or mark it as sent manually (printed or delivered in person).",
       "sendByEmail": "Send by email",
       "willSendTo": "Will be sent to",
       "noPatientEmail": "Patient has no email address",
       "customMessage": "Custom message (optional)",
       "customMessagePlaceholder": "Add a message for the patient...",
-      "manualNote": "The invoice will be marked as sent without sending any email.",
+      "manualNote": "The invoice will be marked as sent without sending any message.",
       "sendEmail": "Send email",
-      "markAsSent": "Mark as sent"
+      "markAsSent": "Mark as sent",
+      "sendByWhatsapp": "Send by WhatsApp",
+      "sendWhatsapp": "Send WhatsApp",
+      "willSendToPhone": "Will be sent by WhatsApp to"
     },
     "errors": {
       "load": "Error loading invoices",

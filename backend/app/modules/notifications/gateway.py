@@ -131,9 +131,7 @@ class NotificationGateway:
             locale = prefs.preferred_locale
 
         # Channel resolution: first viable channel from the ordered list.
-        requested = channels or await NotificationGateway._clinic_channels(
-            db, clinic_id, notification_type
-        )
+        requested = channels or await NotificationGateway._clinic_channels(db, clinic_id)
         resolved = await NotificationGateway._resolve_channel(
             db,
             clinic_id,
@@ -144,6 +142,7 @@ class NotificationGateway:
             requested,
             to_address,
             message_kind,
+            force_send=force_send,
         )
         if resolved is None:
             return await NotificationGateway._skip(
@@ -446,16 +445,24 @@ class NotificationGateway:
         ).scalar_one_or_none()
 
     @staticmethod
-    async def _clinic_channels(
-        db: AsyncSession, clinic_id: UUID, notification_type: str
-    ) -> list[str]:
+    async def _clinic_channels(db: AsyncSession, clinic_id: UUID) -> list[str]:
+        """Clinic-wide auto-send channel order (never per-type).
+
+        ``preferred_channel`` first; when ``fallback_enabled``, the other
+        installed-and-connected channel follows. Never fan-out — the resolver
+        picks the first viable entry.
+        """
         settings = await NotificationService.get_clinic_settings(db, clinic_id)
-        if settings:
-            type_settings = settings.settings.get(notification_type, {})
-            channels = type_settings.get("channels")
-            if channels:
-                return list(channels)
-        return ["email"]  # ponytail: missing config ⇒ email-only, no migration
+        if settings is None:
+            return ["email"]  # ponytail: missing row ⇒ email-only
+        preferred = settings.preferred_channel or "email"
+        order = [preferred]
+        if settings.fallback_enabled:
+            other = "whatsapp" if preferred == "email" else "email"
+            adapter = channel_registry.get_for_channel(other)
+            if adapter is not None and await adapter.supports(db, clinic_id):
+                order.append(other)
+        return order
 
     @staticmethod
     async def _resolve_channel(
@@ -468,6 +475,7 @@ class NotificationGateway:
         requested,
         to_address,
         requested_kind=None,
+        force_send=False,
     ):
         for name in requested:
             try:
@@ -497,9 +505,15 @@ class NotificationGateway:
                     if _session_window_open(prefs):
                         return channel, addr, "session", None
                     continue
-                # Proactive: requires opt-in + an approved Meta template (HSM).
-                if not (prefs and prefs.whatsapp_enabled):
+                # Proactive: opt-out like email — an explicit
+                # whatsapp_enabled=False blocks; a missing prefs row does
+                # not. A manual/force send (staff Send button) may use
+                # WhatsApp without a prior opt-in row; do_not_contact was
+                # already hard-blocked upstream.
+                if not force_send and prefs is not None and not prefs.whatsapp_enabled:
                     continue
+                # An approved Meta template (HSM) is always required for
+                # proactive sends — never fall back to direct text.
                 tmpl = await NotificationService.get_template(
                     db, clinic_id, notification_type, locale, channel="whatsapp"
                 )
@@ -524,9 +538,13 @@ class NotificationGateway:
         triggered_by_user_id,
     ) -> CommunicationMessage:
         logger.info("skip notification %s: %s", notification_type, reason)
+        # Label the skip with the clinic's preferred channel — never a
+        # hardcoded "email" when the attempt would have been WhatsApp.
+        settings = await NotificationService.get_clinic_settings(db, clinic_id)
+        channel = (settings.preferred_channel if settings else None) or "none"
         msg = CommunicationMessage(
             clinic_id=clinic_id,
-            channel="email",
+            channel=channel,
             to_address=to_address or "",
             patient_id=patient_id,
             template_key=notification_type,

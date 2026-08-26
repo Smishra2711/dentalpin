@@ -111,5 +111,6 @@ class NotificationsModule(BaseModule):
             EventType.PATIENT_CREATED: NotificationHandlers.on_patient_created,
             EventType.BUDGET_SENT: NotificationHandlers.on_budget_sent,
             EventType.BUDGET_ACCEPTED: NotificationHandlers.on_budget_accepted,
+            EventType.BUDGET_REMINDER_SENT: NotificationHandlers.on_budget_reminder_sent,
             EventType.INVOICE_SENT: NotificationHandlers.on_invoice_sent,
         }

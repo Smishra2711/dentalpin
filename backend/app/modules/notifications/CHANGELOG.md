@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat(#287): clinic-wide channel configuration — `preferred_channel`, `fallback_enabled`, `manual_channels` on clinic_notification_settings (migration notif_0004) with `available_channels` computed from the adapter registry; the gateway resolves auto-sends as preferred→fallback instead of per-type channel lists; missing preference rows no longer block WhatsApp (opt-out, bug 11); manual `POST /send` accepts `channels` and no longer 400s phone-only WhatsApp sends; every contact guard is email-OR-phone; the broken 7/14-day budget reminder actually sends (new `budget_reminder` handler + templates); skip rows carry the real channel; Settings page grew a Channels card; the type table gained invoice_sent/budget_reminder/recall_reminder.
+
 - fix(#184): type-check clean — per-type settings read/written through typed helpers (`settingsFor()`, generic `updateLocalSetting`) instead of casts; `UModal :ui.width` is `content` in Nuxt UI v4.
 - fix(#183): the six event handlers are transactional (ADR 0019) and no longer fire `asyncio.create_task` at a fresh session. That task raced the request's commit, and lost for `patient.created`: the patient row was invisible, so the **welcome message was never queued**. Each body runs in a savepoint — queueing must not be able to fail the appointment it announces.
 - refactor: `NotificationGateway.enqueue` flushes instead of committing; the session's owner (`get_db`, or the scheduler job) commits.
