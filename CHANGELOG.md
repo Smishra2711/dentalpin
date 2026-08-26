@@ -11,6 +11,18 @@ frontend as a Nuxt layer under its own Python package.
 
 ## [Unreleased]
 
+### Added
+
+- **Polish (`pl`) and Italian (`it`) interfaces** — full core app, 2426
+  keys each, dental-domain terminology reviewed against #144/#132 (pl:
+  *diagram zębowy, kosztorys, terminarz, gabinet, wywiad medyczny*; it:
+  *odontogramma, preventivo, agenda, anamnesi, riunito, studio* — not
+  *clinica*). Polish needs three plural forms, so `i18n.config.ts` gains
+  a `pl` `pluralRules` entry verified CLDR-exact over 0–1000 (incl. the
+  12–14 teen exception: `1 alergia / 2 alergie / 13 alergii / 22
+  alergie`). Module-layer keys fall back to English until their
+  translations land (#285, thanks @ZoliQua).
+
 ### Fixed
 
 - Batch uninstall of a dependency pair no longer strands the dependent
