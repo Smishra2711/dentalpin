@@ -935,7 +935,8 @@
       "clinicClosed": "Praxis geschlossen",
       "professionalOff": "Außer Dienst",
       "onBreak": "In Pause"
-    }
+    },
+    "planAwaitingBudget": "Kostenvoranschlag noch nicht angenommen"
   },
   "dashboard": {
     "greetings": {

@@ -24,7 +24,6 @@
     "expenses": "Despesas",
     "labOrdersForm": "Novo trabalho de laboratório",
     "labOrdersStatus": "Trabalhos de laboratório",
-    "staffTasks": "Tarefas da equipe",
     "treatmentPlans": "Planos de tratamento",
     "budgets": "Orçamentos",
     "invoices": "Faturas",
@@ -936,7 +935,8 @@
       "professionalOff": "Fora de serviço",
       "onBreak": "Em pausa"
     },
-    "actionsMenu": "Ações da consulta"
+    "actionsMenu": "Ações da consulta",
+    "planAwaitingBudget": "Orçamento aguardando aceitação"
   },
   "dashboard": {
     "greetings": {

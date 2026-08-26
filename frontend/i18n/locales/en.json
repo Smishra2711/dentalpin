@@ -24,7 +24,6 @@
     "expenses": "Expenses",
     "labOrdersForm": "New lab order",
     "labOrdersStatus": "Lab orders",
-    "staffTasks": "Staff tasks",
     "treatmentPlans": "Treatment Plans",
     "budgets": "Quotes",
     "invoices": "Invoices",
@@ -936,7 +935,8 @@
       "professionalOff": "Off-duty",
       "onBreak": "On break"
     },
-    "actionsMenu": "Appointment actions"
+    "actionsMenu": "Appointment actions",
+    "planAwaitingBudget": "Quote awaiting acceptance"
   },
   "dashboard": {
     "greetings": {

@@ -935,7 +935,8 @@
       "clinicClosed": "A rendelő zárva",
       "professionalOff": "Nem dolgozik",
       "onBreak": "Szünetel"
-    }
+    },
+    "planAwaitingBudget": "Árajánlat elfogadásra vár"
   },
   "dashboard": {
     "greetings": {

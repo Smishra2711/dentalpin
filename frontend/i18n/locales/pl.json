@@ -935,7 +935,8 @@
       "clinicClosed": "Gabinet zamknięty",
       "professionalOff": "Poza godzinami pracy",
       "onBreak": "Na przerwie"
-    }
+    },
+    "planAwaitingBudget": "Kosztorys oczekuje na akceptację"
   },
   "dashboard": {
     "greetings": {
