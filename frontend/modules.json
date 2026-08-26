@@ -29,6 +29,7 @@
     "/module_layers/reports/frontend",
     "/module_layers/schedules/frontend",
     "/module_layers/staff_tasks/frontend",
+    "/module_layers/treatment_consumables/frontend",
     "/module_layers/treatment_plan/frontend",
     "/module_layers/verifactu/frontend",
     "/module_layers/whatsapp_kapso/frontend"
@@ -149,6 +150,10 @@
     {
       "name": "staff_tasks",
       "path": "/module_layers/staff_tasks/frontend"
+    },
+    {
+      "name": "treatment_consumables",
+      "path": "/module_layers/treatment_consumables/frontend"
     },
     {
       "name": "treatment_plan",
