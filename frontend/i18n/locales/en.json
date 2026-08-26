@@ -958,7 +958,8 @@
       "professionalOff": "Off-duty",
       "onBreak": "On break"
     },
-    "actionsMenu": "Appointment actions"
+    "actionsMenu": "Appointment actions",
+    "planAwaitingBudget": "Quote awaiting acceptance"
   },
   "dashboard": {
     "greetings": {

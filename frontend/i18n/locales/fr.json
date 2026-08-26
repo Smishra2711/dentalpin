@@ -958,7 +958,8 @@
       "professionalOff": "Absent",
       "onBreak": "En pause"
     },
-    "actionsMenu": "Actions du rendez-vous"
+    "actionsMenu": "Actions du rendez-vous",
+    "planAwaitingBudget": "Devis en attente d'acceptation"
   },
   "dashboard": {
     "greetings": {

@@ -958,7 +958,8 @@
       "professionalOff": "No disponible",
       "onBreak": "Pausa"
     },
-    "actionsMenu": "Acciones de la cita"
+    "actionsMenu": "Acciones de la cita",
+    "planAwaitingBudget": "Presupuesto sin aceptar"
   },
   "dashboard": {
     "greetings": {

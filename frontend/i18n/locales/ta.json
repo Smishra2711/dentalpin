@@ -958,7 +958,8 @@
       "professionalOff": "பணியில் இல்லை",
       "onBreak": "இடைவேளையில்"
     },
-    "actionsMenu": "சந்திப்பு செயல்கள்"
+    "actionsMenu": "சந்திப்பு செயல்கள்",
+    "planAwaitingBudget": "மதிப்பீடு ஏற்புக்காகக் காத்திருக்கிறது"
   },
   "dashboard": {
     "greetings": {

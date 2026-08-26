@@ -958,7 +958,8 @@
       "clinicClosed": "Studio chiuso",
       "professionalOff": "Fuori servizio",
       "onBreak": "In pausa"
-    }
+    },
+    "planAwaitingBudget": "Preventivo in attesa di accettazione"
   },
   "dashboard": {
     "greetings": {

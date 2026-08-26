@@ -958,7 +958,8 @@
       "professionalOff": "Fora de serviço",
       "onBreak": "Em pausa"
     },
-    "actionsMenu": "Ações da consulta"
+    "actionsMenu": "Ações da consulta",
+    "planAwaitingBudget": "Orçamento aguardando aceitação"
   },
   "dashboard": {
     "greetings": {
