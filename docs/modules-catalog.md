@@ -11,7 +11,7 @@ Maintained by `backend/scripts/generate_catalogs.py`. CI fails if a manifest cha
 | Module | Version | Category | Depends | Install | Removable | Permissions | Emits | Consumes | FE layer |
 |--------|---------|----------|---------|---------|-----------|-------------|-------|----------|----------|
 | `accounting_export` | 0.1.0 | official | billing, payments | manual | yes | 2 | 0 | 0 | yes |
-| `activity_journal` | 0.1.0 | community | — | manual | yes | 1 | 0 | 25 | yes |
+| `activity_journal` | 0.1.0 | community | — | manual | yes | 1 | 0 | 26 | yes |
 | `agenda` | 0.4.0 | official | patients, catalog, odontogram | auto | no | 4 | 11 | 1 | yes |
 | `billing` | 0.1.0 | official | patients, catalog, budget, payments | auto | no | 3 | 3 | 3 | yes |
 | `budget` | 0.1.0 | official | patients, catalog, odontogram | auto | no | 5 | 9 | 3 | yes |
@@ -19,6 +19,7 @@ Maintained by `backend/scripts/generate_catalogs.py`. CI fails if a manifest cha
 | `clinical_notes` | 0.2.0 | official | patients, odontogram, treatment_plan, media, agenda | auto | no | 2 | 6 | 0 | yes |
 | `contacts` | 0.1.0 | community | — | manual | yes | 2 | 0 | 0 | yes |
 | `copilot` | 0.1.0 | official | — | auto | yes | 5 | 3 | 1 | yes |
+| `documents` | 0.1.0 | official | patients, medication_catalog | manual | yes | 2 | 1 | 0 | yes |
 | `expenses` | 0.1.0 | community | — | manual | yes | 2 | 0 | 0 | yes |
 | `india_gst` | 0.1.0 | official | billing, catalog | manual | yes | 4 | 0 | 0 | yes |
 | `integrations` | 0.1.0 | official | patients | manual | yes | 4 | 0 | 2 | no |
@@ -92,6 +93,7 @@ Append-only staff activity log recorded from module events.
   - `budget.renegotiated`
   - `budget.sent`
   - `budget.superseded`
+  - `document.generated`
   - `invoice.sent`
   - `lab_order.status_changed`
   - `odontogram.treatment.performed`
@@ -275,6 +277,24 @@ Conversational AI agent over DentalPin, scoped to the caller's permissions.
 - **Events consumed:**
   - `appointment.cancelled`
 - **Module CLAUDE.md:** [`backend/app/modules/copilot/CLAUDE.md`](../backend/app/modules/copilot/CLAUDE.md)
+
+### `documents` — v0.1.0
+
+Generates prescriptions, medical certificates, referral letters and radiology requests as branded PDFs with configurable clinic letterhead.
+
+- **Author:** DentalPin Contributors
+- **License:** BSL-1.1
+- **Category:** official
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `patients`, `medication_catalog`
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `documents.documents.read`
+  - `documents.documents.write`
+- **Events emitted:**
+  - `document.generated`
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/documents/CLAUDE.md`](../backend/app/modules/documents/CLAUDE.md)
 
 ### `expenses` — v0.1.0
 

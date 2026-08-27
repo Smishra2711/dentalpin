@@ -215,9 +215,7 @@ open a new one.
 
 ### Prerequisites
 
-- Docker and Docker Compose (4GB RAM is enough for the dev stack; building
-  the production frontend image from `Dockerfile.prod` needs 6GB+ — see the
-  `NODE_OPTIONS` note there)
+- Docker and Docker Compose
 - Python 3.11+ (for local backend development)
 - Node.js 18+ (for local frontend development)
 

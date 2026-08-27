@@ -9,6 +9,7 @@
     "/module_layers/clinical_notes/frontend",
     "/module_layers/contacts/frontend",
     "/module_layers/copilot/frontend",
+    "/module_layers/documents/frontend",
     "/module_layers/expenses/frontend",
     "/module_layers/india_gst/frontend",
     "/module_layers/inventory/frontend",
@@ -71,6 +72,10 @@
     {
       "name": "copilot",
       "path": "/module_layers/copilot/frontend"
+    },
+    {
+      "name": "documents",
+      "path": "/module_layers/documents/frontend"
     },
     {
       "name": "expenses",
