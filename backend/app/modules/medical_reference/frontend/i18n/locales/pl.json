@@ -21,6 +21,7 @@
     "addSuccess": "Dodano",
     "addError": "Nie udało się dodać pozycji",
     "updateError": "Nie udało się zaktualizować pozycji",
+    "deactivate": "Dezaktywuj",
     "deactivateError": "Nie udało się dezaktywować pozycji",
     "itemCount": "Pozycje: {count}",
     "medicationA": "Lek A",

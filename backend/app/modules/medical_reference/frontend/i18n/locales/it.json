@@ -21,6 +21,7 @@
     "addSuccess": "Aggiunta",
     "addError": "Impossibile aggiungere la voce",
     "updateError": "Impossibile aggiornare la voce",
+    "deactivate": "Disattiva",
     "deactivateError": "Impossibile disattivare la voce",
     "itemCount": "{count} voci",
     "medicationA": "Farmaco A",
