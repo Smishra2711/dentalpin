@@ -12,6 +12,7 @@ from app.database import get_db
 
 from .gateway import NotificationGateway
 from .schemas import (
+    ChannelAvailabilityResponse,
     ClinicNotificationSettingsResponse,
     ClinicNotificationSettingsUpdate,
     ConversationMessageResponse,
@@ -581,6 +582,30 @@ async def send_notification(
 # ============================================================================
 # Conversation Endpoints (patient message thread + reply)
 # ============================================================================
+
+
+@router.get(
+    "/channels",
+    response_model=ApiResponse[ChannelAvailabilityResponse],
+)
+async def list_available_channels(
+    ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
+    _: Annotated[None, Depends(require_permission("notifications.logs.read"))],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> ApiResponse[ChannelAvailabilityResponse]:
+    """Channels with a registered adapter that is configured for this clinic.
+
+    Same permission as the conversation thread — the card that gates on
+    this renders for every role that can read the thread.
+    """
+    from .channels import channel_registry
+
+    available: list[str] = []
+    for channel in channel_registry.available_channels():
+        adapter = channel_registry.get_for_channel(channel)
+        if adapter is not None and await adapter.supports(db, ctx.clinic_id):
+            available.append(channel.value)
+    return ApiResponse(data=ChannelAvailabilityResponse(available=available))
 
 
 @router.get(

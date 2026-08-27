@@ -96,7 +96,11 @@
     "derivedSettings": "Zeitzone und Währung",
     "willSeed": "Wir legen den Leistungskatalog, die Steuersätze, einen Rechnungskreis, ein Behandlungszimmer und einen Zeitplan von Montag bis Freitag für Sie an. Alles lässt sich später ändern.",
     "willSuggestVerifactu": "Anschließend schlagen wir vor, VeriFactu zu aktivieren.",
-    "invalidData": "Bitte überprüfen Sie die Daten: ein Feld ist ungültig."
+    "invalidData": "Bitte überprüfen Sie die Daten: ein Feld ist ungültig.",
+    "attendPatientsMyself": "Ich behandle selbst Patienten",
+    "attendPatientsMyselfHelp": "Markiert Sie als buchbare Fachkraft. Das lässt sich später unter Team ändern.",
+    "addressTitle": "Adresse der Praxis",
+    "addressOptional": "optional"
   },
   "onboarding": {
     "title": "Erste Schritte",
@@ -385,6 +389,33 @@
     "onboarding": {
       "label": "Legen Sie Ihren ersten Patienten an",
       "description": "Der schnellste Weg, Patientenakte, Terminkalender und Kostenvoranschläge in Aktion zu sehen."
+    },
+    "editLegalGuardian": "Erziehungsberechtigten bearbeiten",
+    "legalGuardian": {
+      "title": "Erziehungsberechtigte/r",
+      "hasGuardian": "Erziehungsberechtigte/r hinterlegt",
+      "noGuardian": "Kein/e Erziehungsberechtigte/r hinterlegt",
+      "name": "Vollständiger Name",
+      "namePlaceholder": "Name der/des Erziehungsberechtigten",
+      "dni": "Ausweisnummer",
+      "dniPlaceholder": "Ausweisdokument",
+      "relationship": "Beziehung",
+      "relationshipPlaceholder": "Beziehung auswählen",
+      "relationships": {
+        "parent": "Vater/Mutter",
+        "legal_tutor": "Bestellte/r Vormund/in",
+        "grandparent": "Großelternteil",
+        "other": "Sonstige"
+      },
+      "phone": "Telefon",
+      "phonePlaceholder": "Telefon der/des Erziehungsberechtigten",
+      "email": "E-Mail",
+      "emailPlaceholder": "E-Mail der/des Erziehungsberechtigten",
+      "address": "Adresse",
+      "addressPlaceholder": "Adresse der/des Erziehungsberechtigten",
+      "notes": "Notizen",
+      "notesPlaceholder": "Zusätzliche Anmerkungen...",
+      "remove": "Erziehungsberechtigte/n entfernen"
     }
   },
   "patientDetail": {
@@ -606,7 +637,8 @@
       "status": {
         "existing": "Vorhanden",
         "planned": "Geplant"
-      }
+      },
+      "deleteConfirm": "{name} (Zahn {tooth}) löschen? Diese Aktion kann nicht rückgängig gemacht werden."
     },
     "position": {
       "displaced": "Verlagert",
@@ -783,7 +815,8 @@
         "title": "Plan gesperrt",
         "subtitle": "Kostenvoranschlag {number} wurde ausgestellt. Um Behandlungen zu bearbeiten, verwenden Sie „Wieder öffnen“ (falls offen) oder verhandeln Sie den Kostenvoranschlag neu.",
         "viewBudget": "Kostenvoranschlag anzeigen"
-      }
+      },
+      "removeItemConfirm": "{name} aus diesem Plan entfernen? Diese Aktion kann nicht rückgängig gemacht werden."
     },
     "tooth": "Zahn"
   },
@@ -939,7 +972,9 @@
     "sendMessage": "Nachricht senden",
     "resendConfirmationVia": "Bestätigung erneut senden ({channel})",
     "sendReminderVia": "Erinnerung senden ({channel})",
-    "sendCancellationVia": "Absage senden ({channel})"
+    "sendCancellationVia": "Absage senden ({channel})",
+    "loadError": "Termine konnten nicht geladen werden",
+    "planAwaitingBudget": "Kostenvoranschlag noch nicht angenommen"
   },
   "dashboard": {
     "greetings": {
@@ -1358,7 +1393,10 @@
     "yesterday": "Gestern",
     "copied": "In die Zwischenablage kopiert",
     "copy": "Kopieren",
-    "copyFailed": "Kopieren nicht möglich"
+    "copyFailed": "Kopieren nicht möglich",
+    "download": "Herunterladen",
+    "remove": "Entfernen",
+    "default": "Standard"
   },
   "cabinet": {
     "toast": {
@@ -1581,7 +1619,8 @@
     "loadDefaults": "Standardkatalog laden",
     "loadDefaultsHint": "Steuersätze, Kategorien und Referenzbehandlungen für das Land der Praxis. Nur fehlende Einträge werden ergänzt.",
     "defaultsLoaded": "Katalog geladen: {categories} Kategorien, {items} Behandlungen, {vat_types} Steuersätze",
-    "defaultsFailed": "Standardkatalog konnte nicht geladen werden"
+    "defaultsFailed": "Standardkatalog konnte nicht geladen werden",
+    "loadError": "Leistungskatalog konnte nicht geladen werden"
   },
   "placeholders": {
     "selectRole": "Rolle auswählen..."
@@ -1840,6 +1879,12 @@
     "newBudgetHint": {
       "text": "Dieser Patient hat den Plan {plan} ohne Kostenvoranschlag. Erstellen Sie den Kostenvoranschlag aus dem Plan, damit beide verknüpft bleiben.",
       "cta": "Plan öffnen"
+    },
+    "viewDraftBudget": "Kostenvoranschlag {number} (Entwurf)",
+    "followup": {
+      "subtitle": "Diese geplanten Behandlungen des Termins wurden nicht als durchgeführt markiert:",
+      "markPerformed": "Als durchgeführt markieren",
+      "marked": "Als durchgeführt markiert: {count}."
     }
   },
   "pipeline": {
@@ -2003,7 +2048,8 @@
       "representative": "Bevollmächtigter",
       "accept": "Ich akzeptiere die Bedingungen des Kostenvoranschlags",
       "signHere": "Hier unterschreiben",
-      "clear": "Unterschrift löschen"
+      "clear": "Unterschrift löschen",
+      "loadError": "Signaturstatus konnte nicht geladen werden"
     },
     "history": {
       "title": "Änderungsverlauf",
@@ -2661,7 +2707,9 @@
       "itemUpdated": "Position aktualisiert",
       "sentByEmail": "Rechnung per E-Mail gesendet",
       "sentManually": "Rechnung als gesendet markiert",
-      "sentByWhatsapp": "Rechnung per WhatsApp gesendet"
+      "sentByWhatsapp": "Rechnung per WhatsApp gesendet",
+      "creditNoteCreated": "Stornorechnung erstellt",
+      "paymentRecorded": "Zahlung erfasst"
     },
     "send": {
       "title": "Rechnung senden",
@@ -2900,7 +2948,8 @@
         "title": "Keine Daten für diesen Zeitraum",
         "desc": "Versuchen Sie einen größeren Datumsbereich oder entfernen Sie Filter."
       }
-    }
+    },
+    "loadError": "Berichtsdaten konnten nicht geladen werden"
   },
   "invoiceSeries": {
     "title": "Rechnungskreise",

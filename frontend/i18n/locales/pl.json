@@ -96,7 +96,11 @@
     "derivedSettings": "Strefa czasowa i waluta",
     "willSeed": "Utworzymy dla Ciebie katalog zabiegów, stawki VAT, serię faktur, jeden gabinet zabiegowy i grafik od poniedziałku do piątku. Wszystko można później zmienić.",
     "willSuggestVerifactu": "Następnie zaproponujemy włączenie VeriFactu.",
-    "invalidData": "Sprawdź dane: któreś pole jest nieprawidłowe."
+    "invalidData": "Sprawdź dane: któreś pole jest nieprawidłowe.",
+    "attendPatientsMyself": "Sam przyjmuję pacjentów",
+    "attendPatientsMyselfHelp": "Oznacza Cię jako specjalistę z możliwością rezerwacji wizyt. Można to później zmienić w ustawieniach zespołu.",
+    "addressTitle": "Adres gabinetu",
+    "addressOptional": "opcjonalnie"
   },
   "onboarding": {
     "title": "Pierwsze kroki",
@@ -385,6 +389,33 @@
     "onboarding": {
       "label": "Dodaj pierwszego pacjenta",
       "description": "Najszybszy sposób, aby zobaczyć w działaniu dokumentację, terminarz i kosztorysy."
+    },
+    "editLegalGuardian": "Edytuj opiekuna prawnego",
+    "legalGuardian": {
+      "title": "Opiekun prawny",
+      "hasGuardian": "Zarejestrowano opiekuna prawnego",
+      "noGuardian": "Brak zarejestrowanego opiekuna prawnego",
+      "name": "Imię i nazwisko",
+      "namePlaceholder": "Imię i nazwisko opiekuna",
+      "dni": "Numer dokumentu",
+      "dniPlaceholder": "Dokument tożsamości",
+      "relationship": "Pokrewieństwo",
+      "relationshipPlaceholder": "Wybierz pokrewieństwo",
+      "relationships": {
+        "parent": "Rodzic",
+        "legal_tutor": "Wyznaczony opiekun prawny",
+        "grandparent": "Dziadek/Babcia",
+        "other": "Inne"
+      },
+      "phone": "Telefon",
+      "phonePlaceholder": "Telefon opiekuna",
+      "email": "E-mail",
+      "emailPlaceholder": "E-mail opiekuna",
+      "address": "Adres",
+      "addressPlaceholder": "Adres opiekuna",
+      "notes": "Notatki",
+      "notesPlaceholder": "Dodatkowe uwagi...",
+      "remove": "Usuń opiekuna"
     }
   },
   "patientDetail": {
@@ -606,7 +637,8 @@
       "status": {
         "existing": "Istniejący",
         "planned": "Zaplanowany"
-      }
+      },
+      "deleteConfirm": "Usunąć {name} (ząb {tooth})? Tej operacji nie można cofnąć."
     },
     "position": {
       "displaced": "Przemieszczony",
@@ -783,7 +815,8 @@
         "title": "Plan zablokowany",
         "subtitle": "Kosztorys {number} został wystawiony. Aby edytować zabiegi, użyj opcji Otwórz ponownie (jeśli oczekuje) lub renegocjuj kosztorys.",
         "viewBudget": "Zobacz kosztorys"
-      }
+      },
+      "removeItemConfirm": "Usunąć {name} z tego planu? Tej operacji nie można cofnąć."
     },
     "tooth": "Ząb"
   },
@@ -939,7 +972,9 @@
     "sendMessage": "Wyślij wiadomość",
     "resendConfirmationVia": "Wyślij potwierdzenie ponownie ({channel})",
     "sendReminderVia": "Wyślij przypomnienie ({channel})",
-    "sendCancellationVia": "Wyślij powiadomienie o odwołaniu ({channel})"
+    "sendCancellationVia": "Wyślij powiadomienie o odwołaniu ({channel})",
+    "loadError": "Nie udało się wczytać wizyt",
+    "planAwaitingBudget": "Kosztorys oczekuje na akceptację"
   },
   "dashboard": {
     "greetings": {
@@ -1358,7 +1393,10 @@
     "yesterday": "Wczoraj",
     "copied": "Skopiowano do schowka",
     "copy": "Kopiuj",
-    "copyFailed": "Nie udało się skopiować"
+    "copyFailed": "Nie udało się skopiować",
+    "download": "Pobierz",
+    "remove": "Usuń",
+    "default": "Domyślny"
   },
   "cabinet": {
     "toast": {
@@ -1581,7 +1619,8 @@
     "loadDefaults": "Wczytaj domyślny katalog",
     "loadDefaultsHint": "Stawki VAT, kategorie i referencyjne zabiegi dla kraju gabinetu. Dodawane są tylko brakujące pozycje.",
     "defaultsLoaded": "Katalog wczytany: {categories} kategorii, {items} zabiegów, {vat_types} stawek VAT",
-    "defaultsFailed": "Nie udało się wczytać domyślnego katalogu"
+    "defaultsFailed": "Nie udało się wczytać domyślnego katalogu",
+    "loadError": "Nie udało się wczytać katalogu zabiegów"
   },
   "placeholders": {
     "selectRole": "Wybierz rolę..."
@@ -1840,6 +1879,12 @@
     "newBudgetHint": {
       "text": "Ten pacjent ma plan {plan} bez kosztorysu. Wygeneruj kosztorys z planu, aby pozostały powiązane.",
       "cta": "Otwórz plan"
+    },
+    "viewDraftBudget": "Kosztorys {number} (szkic)",
+    "followup": {
+      "subtitle": "Te zaplanowane leczenia z wizyty nie zostały oznaczone jako wykonane:",
+      "markPerformed": "Oznacz jako wykonane",
+      "marked": "Oznaczono jako wykonane: {count}."
     }
   },
   "pipeline": {
@@ -2003,7 +2048,8 @@
       "representative": "Pełnomocnik",
       "accept": "Akceptuję warunki kosztorysu",
       "signHere": "Podpisz tutaj",
-      "clear": "Wyczyść podpis"
+      "clear": "Wyczyść podpis",
+      "loadError": "Nie udało się wczytać stanu podpisu"
     },
     "history": {
       "title": "Historia zmian",
@@ -2661,7 +2707,9 @@
       "itemUpdated": "Pozycja zaktualizowana",
       "sentByEmail": "Faktura wysłana e-mailem",
       "sentManually": "Faktura oznaczona jako wysłana",
-      "sentByWhatsapp": "Faktura wysłana przez WhatsApp"
+      "sentByWhatsapp": "Faktura wysłana przez WhatsApp",
+      "creditNoteCreated": "Utworzono fakturę korygującą",
+      "paymentRecorded": "Płatność zarejestrowana"
     },
     "send": {
       "title": "Wyślij fakturę",
@@ -2900,7 +2948,8 @@
         "title": "Brak danych dla tego okresu",
         "desc": "Spróbuj szerszego zakresu dat lub usuń filtry."
       }
-    }
+    },
+    "loadError": "Nie udało się wczytać danych raportu"
   },
   "invoiceSeries": {
     "title": "Serie faktur",

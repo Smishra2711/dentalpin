@@ -134,17 +134,18 @@ async function handleSubmit(payload: {
 }) {
   saving.value = true
   try {
-    if (editingId.value) {
-      await updateNote(editingId.value, payload.body)
-    } else {
-      await createNote({
-        note_type: 'treatment_plan',
-        owner_type: 'plan',
-        owner_id: props.planId,
-        body: payload.body,
-        attachment_document_ids: payload.attachmentDocumentIds
-      })
-    }
+    // The composable toasts on failure and returns null — keep the
+    // composer open with the draft intact so the user can retry.
+    const saved = editingId.value
+      ? await updateNote(editingId.value, payload.body)
+      : await createNote({
+          note_type: 'treatment_plan',
+          owner_type: 'plan',
+          owner_id: props.planId,
+          body: payload.body,
+          attachment_document_ids: payload.attachmentDocumentIds
+        })
+    if (!saved) return
     composerOpen.value = false
     editingId.value = null
     composerBody.value = ''
@@ -157,6 +158,9 @@ async function handleSubmit(payload: {
 
 async function handleDelete(entry: ClinicalNoteEntry) {
   if (!entry.note_id) return
+  // Destructive, no undo endpoint — same confirm the other note surfaces use.
+  const confirmed = window.confirm(t('clinicalNotes.confirms.delete'))
+  if (!confirmed) return
   const ok = await deleteNote(entry.note_id)
   if (ok) {
     await refresh()
@@ -428,12 +432,14 @@ watch(() => props.planId, refresh, { immediate: true })
           >
             <UButton
               icon="i-lucide-pencil"
+              :aria-label="t('common.edit')"
               size="xs"
               variant="ghost"
               @click="startEdit(entry)"
             />
             <UButton
               icon="i-lucide-trash-2"
+              :aria-label="t('common.delete')"
               size="xs"
               variant="ghost"
               color="error"

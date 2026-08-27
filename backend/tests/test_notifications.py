@@ -40,6 +40,19 @@ async def whatsapp_channel():
 
 
 @pytest.mark.asyncio
+async def test_available_channels_email_only_by_default(
+    client: AsyncClient, auth_headers: dict, test_clinic
+):
+    """#207: without a configured vendor channel only email is available —
+    the WhatsApp conversation card gates on this list."""
+    response = await client.get("/api/v1/notifications/channels", headers=auth_headers)
+    assert response.status_code == 200, response.text
+    available = response.json()["data"]["available"]
+    assert "email" in available
+    assert "whatsapp" not in available
+
+
+@pytest.mark.asyncio
 async def test_get_clinic_settings(
     client: AsyncClient, auth_headers: dict, db_session: AsyncSession, test_clinic
 ):

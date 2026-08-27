@@ -21,6 +21,8 @@ const props = defineProps<{
   /** Pre-fill the cabinet field (#61, mobile free-slot tap when track = cabinet). */
   initialCabinet?: string | null
   initialPatientId?: string
+  /** Preselect this plan's pending treatments (treatment-plan flow, #207). */
+  initialPlanId?: string
   existingAppointments?: Appointment[]
 }>()
 
@@ -624,6 +626,11 @@ async function handleSave() {
   }
 }
 
+// Cancelling an appointment is destructive (no undo endpoint) — the footer
+// button opens a confirmation first (issue #101). Mirrors the confirm step
+// AppointmentQuickActions already applies to the cancel transition.
+const showCancelConfirm = ref(false)
+
 async function handleCancel() {
   if (!props.appointment) return
 
@@ -646,6 +653,7 @@ async function handleCancel() {
     })
   } finally {
     isSubmitting.value = false
+    showCancelConfirm.value = false
   }
 }
 
@@ -741,6 +749,7 @@ function openPatientFile() {
                 <PlannedTreatmentSelector
                   v-model="selectedTreatments"
                   :patient-id="selectedPatient?.id"
+                  :preselect-plan-id="!appointment ? initialPlanId : undefined"
                 />
               </div>
             </section>
@@ -882,7 +891,7 @@ function openPatientFile() {
                 color="error"
                 icon="i-lucide-x"
                 :loading="isSubmitting"
-                @click="handleCancel"
+                @click="showCancelConfirm = true"
               >
                 {{ t('appointments.cancel') }}
               </UButton>
@@ -948,6 +957,35 @@ function openPatientFile() {
           </div>
         </template>
       </UCard>
+    </template>
+  </UModal>
+
+  <!-- Cancel-appointment confirmation (destructive, no undo endpoint) -->
+  <UModal v-model:open="showCancelConfirm">
+    <template #content>
+      <div class="p-4 space-y-4">
+        <h2 class="text-h3 text-default">
+          {{ t('appointments.cancel') }}
+        </h2>
+        <p class="text-caption text-subtle">
+          {{ t('appointments.confirmCancelMessage') }}
+        </p>
+        <div class="flex justify-end gap-2">
+          <UButton
+            variant="ghost"
+            @click="showCancelConfirm = false"
+          >
+            {{ t('actions.cancel') }}
+          </UButton>
+          <UButton
+            color="error"
+            :loading="isSubmitting"
+            @click="handleCancel"
+          >
+            {{ t('appointments.cancel') }}
+          </UButton>
+        </div>
+      </div>
     </template>
   </UModal>
 </template>

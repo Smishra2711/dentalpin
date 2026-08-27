@@ -24,7 +24,6 @@
     "expenses": "Dépenses",
     "labOrdersForm": "Nouveau travail de laboratoire",
     "labOrdersStatus": "Travaux de laboratoire",
-    "staffTasks": "Tâches de l'équipe",
     "treatmentPlans": "Plans de traitement",
     "budgets": "Devis",
     "invoices": "Factures",
@@ -97,7 +96,11 @@
     "derivedSettings": "Fuseau horaire et devise",
     "willSeed": "Nous créerons pour vous le catalogue de soins, les taux de TVA, une série de factures, un cabinet et un horaire du lundi au vendredi. Tout est modifiable ensuite.",
     "willSuggestVerifactu": "Nous vous proposerons ensuite d'activer VeriFactu.",
-    "invalidData": "Vérifiez les données : un champ est invalide."
+    "invalidData": "Vérifiez les données : un champ est invalide.",
+    "attendPatientsMyself": "Je reçois moi-même les patients",
+    "attendPatientsMyselfHelp": "Vous serez marqué comme professionnel réservable. Modifiable plus tard dans Équipe.",
+    "addressTitle": "Adresse de la clinique",
+    "addressOptional": "facultatif"
   },
   "onboarding": {
     "title": "Mise en route",
@@ -386,6 +389,33 @@
     "onboarding": {
       "label": "Créez votre premier patient",
       "description": "Le moyen le plus rapide de voir le dossier, l'agenda et les devis en action."
+    },
+    "editLegalGuardian": "Modifier le tuteur légal",
+    "legalGuardian": {
+      "title": "Tuteur légal",
+      "hasGuardian": "Tuteur légal enregistré",
+      "noGuardian": "Aucun tuteur légal enregistré",
+      "name": "Nom complet",
+      "namePlaceholder": "Nom du tuteur",
+      "dni": "Numéro d'identité",
+      "dniPlaceholder": "Document d'identité",
+      "relationship": "Lien",
+      "relationshipPlaceholder": "Sélectionner le lien",
+      "relationships": {
+        "parent": "Père/Mère",
+        "legal_tutor": "Tuteur légal désigné",
+        "grandparent": "Grand-parent",
+        "other": "Autre"
+      },
+      "phone": "Téléphone",
+      "phonePlaceholder": "Téléphone du tuteur",
+      "email": "Email",
+      "emailPlaceholder": "Email du tuteur",
+      "address": "Adresse",
+      "addressPlaceholder": "Adresse du tuteur",
+      "notes": "Notes",
+      "notesPlaceholder": "Remarques supplémentaires...",
+      "remove": "Supprimer le tuteur"
     }
   },
   "patientDetail": {
@@ -607,7 +637,8 @@
       "status": {
         "existing": "Existant",
         "planned": "Planifié"
-      }
+      },
+      "deleteConfirm": "Supprimer {name} (dent {tooth}) ? Cette action est irréversible."
     },
     "position": {
       "displaced": "Déplacée",
@@ -784,7 +815,8 @@
         "title": "Plan verrouillé",
         "subtitle": "Le devis {number} a été émis. Pour modifier les traitements, utilisez Rouvrir (si en attente) ou Renégocier le devis.",
         "viewBudget": "Voir le devis"
-      }
+      },
+      "removeItemConfirm": "Retirer {name} de ce plan ? Cette action est irréversible."
     },
     "tooth": "Dent"
   },
@@ -940,7 +972,9 @@
     "sendMessage": "Envoyer un message",
     "resendConfirmationVia": "Renvoyer la confirmation ({channel})",
     "sendReminderVia": "Envoyer un rappel ({channel})",
-    "sendCancellationVia": "Envoyer l'annulation ({channel})"
+    "sendCancellationVia": "Envoyer l'annulation ({channel})",
+    "loadError": "Impossible de charger les rendez-vous",
+    "planAwaitingBudget": "Devis en attente d'acceptation"
   },
   "dashboard": {
     "greetings": {
@@ -1359,7 +1393,10 @@
     "yesterday": "Hier",
     "copied": "Copié dans le presse-papiers",
     "copy": "Copier",
-    "copyFailed": "Impossible de copier"
+    "copyFailed": "Impossible de copier",
+    "download": "Télécharger",
+    "remove": "Retirer",
+    "default": "Par défaut"
   },
   "cabinet": {
     "toast": {
@@ -1582,7 +1619,8 @@
     "loadDefaults": "Charger le catalogue par défaut",
     "loadDefaultsHint": "Types de TVA, catégories et traitements de référence selon le pays de la clinique. Seules les lignes manquantes sont ajoutées.",
     "defaultsLoaded": "Catalogue chargé : {categories} catégories, {items} traitements, {vat_types} types de TVA",
-    "defaultsFailed": "Impossible de charger le catalogue par défaut"
+    "defaultsFailed": "Impossible de charger le catalogue par défaut",
+    "loadError": "Impossible de charger le catalogue de traitements"
   },
   "placeholders": {
     "selectRole": "Sélectionner un rôle..."
@@ -1841,6 +1879,12 @@
     "newBudgetHint": {
       "text": "Ce patient a le plan {plan} sans devis. Générez le devis depuis le plan pour qu'ils restent liés.",
       "cta": "Ouvrir le plan"
+    },
+    "viewDraftBudget": "Devis {number} (brouillon)",
+    "followup": {
+      "subtitle": "Ces traitements planifiés de la visite n'ont pas été marqués comme réalisés :",
+      "markPerformed": "Marquer comme réalisés",
+      "marked": "Marqués comme réalisés : {count}."
     }
   },
   "pipeline": {
@@ -2004,7 +2048,8 @@
       "representative": "Représentant",
       "accept": "J'accepte les termes du devis",
       "signHere": "Signez ici",
-      "clear": "Effacer la signature"
+      "clear": "Effacer la signature",
+      "loadError": "Impossible de charger l'état de la signature"
     },
     "history": {
       "title": "Historique des modifications",
@@ -2662,7 +2707,9 @@
       "itemUpdated": "Ligne mise à jour",
       "sentByEmail": "Facture envoyée par email",
       "sentManually": "Facture marquée comme envoyée",
-      "sentByWhatsapp": "Facture envoyée par WhatsApp"
+      "sentByWhatsapp": "Facture envoyée par WhatsApp",
+      "creditNoteCreated": "Facture rectificative créée",
+      "paymentRecorded": "Paiement enregistré"
     },
     "send": {
       "title": "Envoyer la facture",
@@ -2901,7 +2948,8 @@
         "title": "Aucune donnée pour cette période",
         "desc": "Essayez une plage de dates plus large ou supprimez les filtres."
       }
-    }
+    },
+    "loadError": "Impossible de charger les données du rapport"
   },
   "invoiceSeries": {
     "title": "Séries de facturation",

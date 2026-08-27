@@ -96,7 +96,11 @@
     "derivedSettings": "Fuso orario e valuta",
     "willSeed": "Creeremo per te il listino prestazioni, le aliquote IVA, una serie di fatturazione, un riunito e un orario dal lunedì al venerdì. Tutto è modificabile in seguito.",
     "willSuggestVerifactu": "In seguito ti proporremo di attivare VeriFactu.",
-    "invalidData": "Controlla i dati: un campo non è valido."
+    "invalidData": "Controlla i dati: un campo non è valido.",
+    "attendPatientsMyself": "Visito personalmente i pazienti",
+    "attendPatientsMyselfHelp": "Ti contrassegna come professionista prenotabile. Potrai cambiarlo in seguito nelle impostazioni del team.",
+    "addressTitle": "Indirizzo dello studio",
+    "addressOptional": "facoltativo"
   },
   "onboarding": {
     "title": "Primi passi",
@@ -385,6 +389,33 @@
     "onboarding": {
       "label": "Crea il tuo primo paziente",
       "description": "Il modo più rapido per vedere in azione cartella, agenda e preventivi."
+    },
+    "editLegalGuardian": "Modifica tutore legale",
+    "legalGuardian": {
+      "title": "Tutore legale",
+      "hasGuardian": "Tutore legale registrato",
+      "noGuardian": "Nessun tutore legale registrato",
+      "name": "Nome completo",
+      "namePlaceholder": "Nome del tutore",
+      "dni": "Numero di documento",
+      "dniPlaceholder": "Documento d'identità",
+      "relationship": "Relazione",
+      "relationshipPlaceholder": "Seleziona la relazione",
+      "relationships": {
+        "parent": "Padre/Madre",
+        "legal_tutor": "Tutore legale designato",
+        "grandparent": "Nonno/a",
+        "other": "Altro"
+      },
+      "phone": "Telefono",
+      "phonePlaceholder": "Telefono del tutore",
+      "email": "Email",
+      "emailPlaceholder": "Email del tutore",
+      "address": "Indirizzo",
+      "addressPlaceholder": "Indirizzo del tutore",
+      "notes": "Note",
+      "notesPlaceholder": "Osservazioni aggiuntive...",
+      "remove": "Rimuovi tutore"
     }
   },
   "patientDetail": {
@@ -606,7 +637,8 @@
       "status": {
         "existing": "Esistente",
         "planned": "Pianificato"
-      }
+      },
+      "deleteConfirm": "Eliminare {name} (dente {tooth})? Questa azione non può essere annullata."
     },
     "position": {
       "displaced": "Dislocato",
@@ -783,7 +815,8 @@
         "title": "Piano bloccato",
         "subtitle": "Il preventivo {number} è stato emesso. Per modificare i trattamenti usa Riapri (se in sospeso) o rinegozia il preventivo.",
         "viewBudget": "Vedi preventivo"
-      }
+      },
+      "removeItemConfirm": "Rimuovere {name} da questo piano? Questa azione non può essere annullata."
     },
     "tooth": "Dente"
   },
@@ -939,7 +972,9 @@
     "sendMessage": "Invia messaggio",
     "resendConfirmationVia": "Reinvia conferma ({channel})",
     "sendReminderVia": "Invia promemoria ({channel})",
-    "sendCancellationVia": "Invia avviso di annullamento ({channel})"
+    "sendCancellationVia": "Invia avviso di annullamento ({channel})",
+    "loadError": "Impossibile caricare gli appuntamenti",
+    "planAwaitingBudget": "Preventivo in attesa di accettazione"
   },
   "dashboard": {
     "greetings": {
@@ -1358,7 +1393,10 @@
     "yesterday": "Ieri",
     "copied": "Copiato negli appunti",
     "copy": "Copia",
-    "copyFailed": "Impossibile copiare"
+    "copyFailed": "Impossibile copiare",
+    "download": "Scarica",
+    "remove": "Rimuovi",
+    "default": "Predefinito"
   },
   "cabinet": {
     "toast": {
@@ -1581,7 +1619,8 @@
     "loadDefaults": "Carica listino predefinito",
     "loadDefaultsHint": "Aliquote IVA, categorie e trattamenti di riferimento per il paese dello studio. Vengono aggiunte solo le righe mancanti.",
     "defaultsLoaded": "Listino caricato: {categories} categorie, {items} trattamenti, {vat_types} aliquote IVA",
-    "defaultsFailed": "Impossibile caricare il listino predefinito"
+    "defaultsFailed": "Impossibile caricare il listino predefinito",
+    "loadError": "Impossibile caricare il listino prestazioni"
   },
   "placeholders": {
     "selectRole": "Seleziona ruolo..."
@@ -1840,6 +1879,12 @@
     "newBudgetHint": {
       "text": "Questo paziente ha il piano {plan} senza preventivo. Genera il preventivo dal piano così restano collegati.",
       "cta": "Apri il piano"
+    },
+    "viewDraftBudget": "Preventivo {number} (bozza)",
+    "followup": {
+      "subtitle": "Questi trattamenti pianificati della visita non sono stati contrassegnati come eseguiti:",
+      "markPerformed": "Contrassegna come eseguiti",
+      "marked": "Contrassegnati come eseguiti: {count}."
     }
   },
   "pipeline": {
@@ -2003,7 +2048,8 @@
       "representative": "Rappresentante",
       "accept": "Accetto le condizioni del preventivo",
       "signHere": "Firma qui",
-      "clear": "Cancella firma"
+      "clear": "Cancella firma",
+      "loadError": "Impossibile caricare lo stato della firma"
     },
     "history": {
       "title": "Cronologia modifiche",
@@ -2661,7 +2707,9 @@
       "itemUpdated": "Voce aggiornata",
       "sentByEmail": "Fattura inviata via e-mail",
       "sentManually": "Fattura contrassegnata come inviata",
-      "sentByWhatsapp": "Fattura inviata via WhatsApp"
+      "sentByWhatsapp": "Fattura inviata via WhatsApp",
+      "creditNoteCreated": "Nota di credito creata",
+      "paymentRecorded": "Pagamento registrato"
     },
     "send": {
       "title": "Invia fattura",
@@ -2900,7 +2948,8 @@
         "title": "Nessun dato per questo periodo",
         "desc": "Prova un intervallo di date più ampio o rimuovi i filtri."
       }
-    }
+    },
+    "loadError": "Impossibile caricare i dati del report"
   },
   "invoiceSeries": {
     "title": "Serie di fatturazione",

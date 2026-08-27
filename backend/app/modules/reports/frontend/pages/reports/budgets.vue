@@ -15,7 +15,9 @@ const {
   fetchBudgetsByTreatment,
   fetchBudgetsByStatus,
   formatCurrency,
-  getBudgetStatusLabel
+  getBudgetStatusLabel,
+  fetchFailed,
+  resetFetchFailed
 } = useReports()
 
 // State
@@ -89,6 +91,7 @@ watch(selectedRange, (range) => {
 // Load all report data
 async function loadReports() {
   isLoading.value = true
+  resetFetchFailed()
 
   try {
     const [summaryData, professionalsData, treatmentsData, statusData] = await Promise.all([
@@ -150,6 +153,7 @@ function goBack() {
           variant="ghost"
           color="neutral"
           icon="i-lucide-arrow-left"
+          :aria-label="t('common.back')"
           @click="goBack"
         />
         <div>
@@ -208,6 +212,21 @@ function goBack() {
         class="h-8 w-8 animate-spin text-primary-accent"
       />
     </div>
+
+    <!-- Load error — never render 0 € / empty charts for a failed read (issue #101). -->
+    <UAlert
+      v-else-if="fetchFailed"
+      icon="i-lucide-triangle-alert"
+      color="error"
+      variant="subtle"
+      :title="t('reports.loadError')"
+      :actions="[{
+        label: t('common.retry'),
+        color: 'error',
+        variant: 'soft',
+        onClick: () => loadReports()
+      }]"
+    />
 
     <template v-else>
       <!-- Summary Cards -->

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- feat(#131): German (de) locale for the module's frontend layer.
+
+- feat(#144, #132): Polish (pl) and Italian (it) locales for the module's frontend layer.
 - Renamed the module `patient_admin` → `patient_relationships` (the old
   name was too generic for what it does). Nothing had shipped, so this
   is a clean rename, no compat aliases: module/branch/entry-point name,

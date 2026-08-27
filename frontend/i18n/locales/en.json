@@ -24,7 +24,6 @@
     "expenses": "Expenses",
     "labOrdersForm": "New lab order",
     "labOrdersStatus": "Lab orders",
-    "staffTasks": "Staff tasks",
     "treatmentPlans": "Treatment Plans",
     "budgets": "Quotes",
     "invoices": "Invoices",
@@ -97,7 +96,11 @@
     "derivedSettings": "Timezone and currency",
     "willSeed": "We'll create the treatment catalog, VAT types, an invoice series, one room and a Monday–Friday schedule for you. Everything can be changed later.",
     "willSuggestVerifactu": "We'll suggest enabling VeriFactu afterwards.",
-    "invalidData": "Please review the data: some field is invalid."
+    "invalidData": "Please review the data: some field is invalid.",
+    "attendPatientsMyself": "I attend patients myself",
+    "attendPatientsMyselfHelp": "Marks you as a bookable professional. You can change this later in Team settings.",
+    "addressTitle": "Clinic address",
+    "addressOptional": "optional"
   },
   "onboarding": {
     "title": "Getting started",
@@ -386,6 +389,33 @@
     "onboarding": {
       "label": "Create your first patient",
       "description": "The quickest way to see the record, agenda and budgets in action."
+    },
+    "editLegalGuardian": "Edit legal guardian",
+    "legalGuardian": {
+      "title": "Legal Guardian",
+      "hasGuardian": "Has a registered legal guardian",
+      "noGuardian": "No legal guardian registered",
+      "name": "Full name",
+      "namePlaceholder": "Guardian's name",
+      "dni": "ID number",
+      "dniPlaceholder": "Identity document",
+      "relationship": "Relationship",
+      "relationshipPlaceholder": "Select relationship",
+      "relationships": {
+        "parent": "Parent",
+        "legal_tutor": "Appointed legal guardian",
+        "grandparent": "Grandparent",
+        "other": "Other"
+      },
+      "phone": "Phone",
+      "phonePlaceholder": "Guardian's phone",
+      "email": "Email",
+      "emailPlaceholder": "Guardian's email",
+      "address": "Address",
+      "addressPlaceholder": "Guardian's address",
+      "notes": "Notes",
+      "notesPlaceholder": "Additional remarks...",
+      "remove": "Remove guardian"
     }
   },
   "patientDetail": {
@@ -607,7 +637,8 @@
       "status": {
         "existing": "Existing",
         "planned": "Planned"
-      }
+      },
+      "deleteConfirm": "Delete {name} (tooth {tooth})? This cannot be undone."
     },
     "position": {
       "displaced": "Displaced",
@@ -784,7 +815,8 @@
         "title": "Plan locked",
         "subtitle": "Quote {number} has been issued. To edit treatments, use Reopen (if pending) or Renegotiate the quote.",
         "viewBudget": "View quote"
-      }
+      },
+      "removeItemConfirm": "Remove {name} from this plan? This cannot be undone."
     },
     "tooth": "Tooth"
   },
@@ -940,7 +972,9 @@
     "sendMessage": "Send message",
     "resendConfirmationVia": "Resend confirmation ({channel})",
     "sendReminderVia": "Send reminder ({channel})",
-    "sendCancellationVia": "Send cancellation ({channel})"
+    "sendCancellationVia": "Send cancellation ({channel})",
+    "loadError": "Couldn't load appointments",
+    "planAwaitingBudget": "Quote awaiting acceptance"
   },
   "dashboard": {
     "greetings": {
@@ -1359,7 +1393,10 @@
     "yesterday": "Yesterday",
     "copied": "Copied to clipboard",
     "copy": "Copy",
-    "copyFailed": "Could not copy"
+    "copyFailed": "Could not copy",
+    "download": "Download",
+    "remove": "Remove",
+    "default": "Default"
   },
   "cabinet": {
     "toast": {
@@ -1582,7 +1619,8 @@
     "loadDefaults": "Load default catalog",
     "loadDefaultsHint": "VAT types, categories and reference treatments for the clinic country. Only missing rows are added.",
     "defaultsLoaded": "Catalog loaded: {categories} categories, {items} treatments, {vat_types} VAT types",
-    "defaultsFailed": "Could not load the default catalog"
+    "defaultsFailed": "Could not load the default catalog",
+    "loadError": "Couldn't load the treatment catalog"
   },
   "placeholders": {
     "selectRole": "Select role..."
@@ -1841,6 +1879,12 @@
     "newBudgetHint": {
       "text": "This patient has plan {plan} without a quote. Generate the quote from the plan so they stay linked.",
       "cta": "Open plan"
+    },
+    "viewDraftBudget": "Quote {number} (draft)",
+    "followup": {
+      "subtitle": "These planned treatments from the visit weren't marked as performed:",
+      "markPerformed": "Mark as performed",
+      "marked": "Marked as performed: {count}."
     }
   },
   "pipeline": {
@@ -2004,7 +2048,8 @@
       "representative": "Representative",
       "accept": "I accept the terms of the quote",
       "signHere": "Sign here",
-      "clear": "Clear signature"
+      "clear": "Clear signature",
+      "loadError": "Couldn't load the signature status"
     },
     "history": {
       "title": "Change history",
@@ -2662,7 +2707,9 @@
       "itemUpdated": "Item updated",
       "sentByEmail": "Invoice sent by email",
       "sentManually": "Invoice marked as sent",
-      "sentByWhatsapp": "Invoice sent by WhatsApp"
+      "sentByWhatsapp": "Invoice sent by WhatsApp",
+      "creditNoteCreated": "Credit note created",
+      "paymentRecorded": "Payment recorded"
     },
     "send": {
       "title": "Send invoice",
@@ -2901,7 +2948,8 @@
         "title": "No data for this period",
         "desc": "Try a wider date range or remove filters."
       }
-    }
+    },
+    "loadError": "Couldn't load report data"
   },
   "invoiceSeries": {
     "title": "Invoice Series",

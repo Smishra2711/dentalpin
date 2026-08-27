@@ -24,7 +24,6 @@
     "expenses": "Despesas",
     "labOrdersForm": "Novo trabalho de laboratório",
     "labOrdersStatus": "Trabalhos de laboratório",
-    "staffTasks": "Tarefas da equipe",
     "treatmentPlans": "Planos de tratamento",
     "budgets": "Orçamentos",
     "invoices": "Faturas",
@@ -97,7 +96,11 @@
     "derivedSettings": "Fuso horário e moeda",
     "willSeed": "Criaremos por si o catálogo de tratamentos, os tipos de IVA, uma série de faturas, um gabinete e um horário de segunda a sexta. Tudo pode ser alterado depois.",
     "willSuggestVerifactu": "Depois sugeriremos ativar o VeriFactu.",
-    "invalidData": "Reveja os dados: algum campo é inválido."
+    "invalidData": "Reveja os dados: algum campo é inválido.",
+    "attendPatientsMyself": "Eu mesmo atendo pacientes",
+    "attendPatientsMyselfHelp": "Marca você como profissional agendável. Pode ser alterado depois em Equipe.",
+    "addressTitle": "Endereço da clínica",
+    "addressOptional": "opcional"
   },
   "onboarding": {
     "title": "Primeiros passos",
@@ -386,6 +389,33 @@
     "onboarding": {
       "label": "Crie o seu primeiro paciente",
       "description": "A forma mais rápida de ver a ficha, a agenda e os orçamentos em ação."
+    },
+    "editLegalGuardian": "Editar responsável legal",
+    "legalGuardian": {
+      "title": "Responsável legal",
+      "hasGuardian": "Tem responsável legal registrado",
+      "noGuardian": "Nenhum responsável legal registrado",
+      "name": "Nome completo",
+      "namePlaceholder": "Nome do responsável",
+      "dni": "Documento de identidade",
+      "dniPlaceholder": "Documento de identidade",
+      "relationship": "Parentesco",
+      "relationshipPlaceholder": "Selecionar parentesco",
+      "relationships": {
+        "parent": "Pai/Mãe",
+        "legal_tutor": "Tutor legal designado",
+        "grandparent": "Avô/Avó",
+        "other": "Outro"
+      },
+      "phone": "Telefone",
+      "phonePlaceholder": "Telefone do responsável",
+      "email": "Email",
+      "emailPlaceholder": "Email do responsável",
+      "address": "Endereço",
+      "addressPlaceholder": "Endereço do responsável",
+      "notes": "Notas",
+      "notesPlaceholder": "Observações adicionais...",
+      "remove": "Remover responsável"
     }
   },
   "patientDetail": {
@@ -607,7 +637,8 @@
       "status": {
         "existing": "Existente",
         "planned": "Planeado"
-      }
+      },
+      "deleteConfirm": "Eliminar {name} (dente {tooth})? Esta ação não pode ser anulada."
     },
     "position": {
       "displaced": "Deslocado",
@@ -784,7 +815,8 @@
         "title": "Plano bloqueado",
         "subtitle": "O orçamento {number} já foi emitido. Para editar os tratamentos, use Reabrir (se estiver pendente) ou Renegociar o orçamento.",
         "viewBudget": "Ver orçamento"
-      }
+      },
+      "removeItemConfirm": "Remover {name} deste plano? Esta ação não pode ser anulada."
     },
     "tooth": "Dente"
   },
@@ -940,7 +972,9 @@
     "sendMessage": "Enviar mensagem",
     "resendConfirmationVia": "Reenviar confirmação ({channel})",
     "sendReminderVia": "Enviar lembrete ({channel})",
-    "sendCancellationVia": "Enviar cancelamento ({channel})"
+    "sendCancellationVia": "Enviar cancelamento ({channel})",
+    "loadError": "Não foi possível carregar as consultas",
+    "planAwaitingBudget": "Orçamento aguardando aceitação"
   },
   "dashboard": {
     "greetings": {
@@ -1359,7 +1393,10 @@
     "yesterday": "Ontem",
     "copied": "Copiado para a área de transferência",
     "copy": "Copiar",
-    "copyFailed": "Não foi possível copiar"
+    "copyFailed": "Não foi possível copiar",
+    "download": "Baixar",
+    "remove": "Remover",
+    "default": "Padrão"
   },
   "cabinet": {
     "toast": {
@@ -1582,7 +1619,8 @@
     "loadDefaults": "Carregar catálogo predefinido",
     "loadDefaultsHint": "Tipos de IVA, categorias e tratamentos de referência segundo o país da clínica. Só se adicionam os que faltam.",
     "defaultsLoaded": "Catálogo carregado: {categories} categorias, {items} tratamentos, {vat_types} tipos de IVA",
-    "defaultsFailed": "Não foi possível carregar o catálogo predefinido"
+    "defaultsFailed": "Não foi possível carregar o catálogo predefinido",
+    "loadError": "Não foi possível carregar o catálogo de tratamentos"
   },
   "placeholders": {
     "selectRole": "Selecionar perfil..."
@@ -1841,6 +1879,12 @@
     "newBudgetHint": {
       "text": "Este paciente tem o plano {plan} sem orçamento. Gere o orçamento a partir do plano para que fiquem ligados.",
       "cta": "Abrir plano"
+    },
+    "viewDraftBudget": "Orçamento {number} (rascunho)",
+    "followup": {
+      "subtitle": "Estes tratamentos do plano ficaram sem marcar como realizados:",
+      "markPerformed": "Marcar como realizados",
+      "marked": "Marcados como realizados: {count}."
     }
   },
   "pipeline": {
@@ -2004,7 +2048,8 @@
       "representative": "Representante",
       "accept": "Aceito as condições do orçamento",
       "signHere": "Assine aqui",
-      "clear": "Limpar assinatura"
+      "clear": "Limpar assinatura",
+      "loadError": "Não foi possível carregar o estado da assinatura"
     },
     "history": {
       "title": "Histórico de alterações",
@@ -2662,7 +2707,9 @@
       "itemUpdated": "Linha atualizada",
       "sentByEmail": "Fatura enviada por email",
       "sentManually": "Fatura marcada como enviada",
-      "sentByWhatsapp": "Fatura enviada por WhatsApp"
+      "sentByWhatsapp": "Fatura enviada por WhatsApp",
+      "creditNoteCreated": "Nota de crédito criada",
+      "paymentRecorded": "Pagamento registrado"
     },
     "send": {
       "title": "Enviar fatura",
@@ -2901,7 +2948,8 @@
         "title": "Sem dados para este período",
         "desc": "Experimente um intervalo de datas mais amplo ou remova os filtros."
       }
-    }
+    },
+    "loadError": "Não foi possível carregar os dados do relatório"
   },
   "invoiceSeries": {
     "title": "Séries de faturação",
