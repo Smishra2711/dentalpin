@@ -188,18 +188,41 @@ async function handleRemoveItem(item: DeepReadonly<BudgetItem>) {
   }
 }
 
-// Workflow actions
-function openSignatureModal(action: 'accept' | 'reject') {
-  signatureAction.value = action
-  isSignatureModalOpen.value = true
-}
-
 // Signature form
 const signatureForm = reactive<SignatureCreate>({
   signed_by_name: '',
   signed_by_email: '',
   relationship_to_patient: 'patient'
 })
+
+// The in-clinic flow is almost always the patient signing for
+// themselves — prefill their name/email instead of starting blank
+// (#207). Clears when the relation changes to guardian/representative
+// and comes back when it returns to 'patient'.
+function applySignerPrefill() {
+  const patient = currentBudget.value?.patient
+  if (!patient || signatureForm.relationship_to_patient !== 'patient') return
+  signatureForm.signed_by_name = [patient.first_name, patient.last_name].filter(Boolean).join(' ')
+  signatureForm.signed_by_email = patient.email ?? ''
+}
+
+watch(() => signatureForm.relationship_to_patient, (relation) => {
+  if (!isSignatureModalOpen.value) return
+  if (relation === 'patient') {
+    applySignerPrefill()
+  } else {
+    signatureForm.signed_by_name = ''
+    signatureForm.signed_by_email = ''
+  }
+})
+
+// Workflow actions
+function openSignatureModal(action: 'accept' | 'reject') {
+  signatureAction.value = action
+  resetSignatureForm()
+  applySignerPrefill()
+  isSignatureModalOpen.value = true
+}
 
 async function handleSignatureSubmit() {
   if (!currentBudget.value || !signatureForm.signed_by_name) return
@@ -815,6 +838,7 @@ function getItemName(item: DeepReadonly<BudgetItem>): string {
                     variant="ghost"
                     color="error"
                     icon="i-lucide-trash-2"
+                    :aria-label="t('common.delete')"
                     size="sm"
                     @click="handleRemoveItem(item)"
                   />
@@ -869,6 +893,7 @@ function getItemName(item: DeepReadonly<BudgetItem>): string {
                 variant="ghost"
                 color="neutral"
                 icon="i-lucide-x"
+                :aria-label="t('common.close')"
                 @click="isSendModalOpen = false"
               />
             </div>
@@ -955,6 +980,7 @@ function getItemName(item: DeepReadonly<BudgetItem>): string {
                 variant="ghost"
                 color="neutral"
                 icon="i-lucide-x"
+                :aria-label="t('common.close')"
                 @click="isSignatureModalOpen = false"
               />
             </div>

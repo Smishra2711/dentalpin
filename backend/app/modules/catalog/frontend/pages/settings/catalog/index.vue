@@ -476,6 +476,7 @@ const categoryOptions = computed(() => [
                     >
                       <UButton
                         icon="i-lucide-pencil"
+                        :aria-label="t('common.edit')"
                         size="xs"
                         variant="ghost"
                         color="neutral"
@@ -484,6 +485,7 @@ const categoryOptions = computed(() => [
                       <UButton
                         v-if="!item.is_system"
                         icon="i-lucide-trash-2"
+                        :aria-label="t('common.delete')"
                         size="xs"
                         variant="ghost"
                         color="error"
@@ -646,6 +648,7 @@ const categoryOptions = computed(() => [
                 >
                   <UButton
                     icon="i-lucide-pencil"
+                    :aria-label="t('common.edit')"
                     size="xs"
                     variant="ghost"
                     color="neutral"
@@ -654,6 +657,7 @@ const categoryOptions = computed(() => [
                   <UButton
                     v-if="!item.is_system"
                     icon="i-lucide-trash-2"
+                    :aria-label="t('common.delete')"
                     size="xs"
                     variant="ghost"
                     color="error"

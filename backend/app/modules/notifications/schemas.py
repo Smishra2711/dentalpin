@@ -185,6 +185,18 @@ class EmailLogResponse(BaseModel):
 # ============================================================================
 
 
+class ChannelAvailabilityResponse(BaseModel):
+    """Channels a clinic can actually converse on right now.
+
+    ``available`` = the adapter is registered AND configured/active for
+    this clinic (``ChannelAdapter.supports``). The patient-summary
+    conversation card gates on this instead of rendering a reply box
+    that can only ever 409.
+    """
+
+    available: list[str]
+
+
 class ConversationMessageResponse(BaseModel):
     """One message in a patient conversation thread (inbound or outbound)."""
 

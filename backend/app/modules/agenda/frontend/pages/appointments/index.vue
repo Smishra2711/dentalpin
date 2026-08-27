@@ -24,6 +24,11 @@ const { isMobile } = useBreakpoint()
 const initialPatientId = ref<string | undefined>(
   typeof route.query.patient_id === 'string' ? route.query.patient_id : undefined
 )
+// Set by the treatment-plan flow: preselect this plan's pending
+// treatments in the create modal (#207).
+const initialPlanId = ref<string | undefined>(
+  typeof route.query.plan_id === 'string' ? route.query.plan_id : undefined
+)
 
 // View mode state
 const viewMode = ref<'week' | 'day' | 'kanban'>('week')
@@ -782,6 +787,7 @@ watch(isMobile, async (mobile) => {
       :initial-professional-id="initialProfessionalId"
       :initial-cabinet="initialCabinet"
       :initial-patient-id="initialPatientId"
+      :initial-plan-id="initialPlanId"
       :existing-appointments="appointments"
       @saved="handleSaved"
       @cancelled="handleCancelled"

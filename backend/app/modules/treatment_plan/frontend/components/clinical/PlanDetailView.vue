@@ -556,6 +556,20 @@ const moreMenuItems = computed<DropdownMenuItem[]>(() => {
           {{ t('treatmentPlans.scheduleAppointment') }}
         </UButton>
 
+        <!-- While pending, the confirm step just created a draft quote —
+             surface it here instead of leaving it only under
+             Administración → Presupuestos (#207). Once the quote is
+             sent, isLocked's banner takes over the link. -->
+        <UButton
+          v-if="plan.status === 'pending' && plan.budget_id && !isLocked"
+          variant="soft"
+          size="sm"
+          icon="i-lucide-file-text"
+          :to="`/budgets/${plan.budget_id}`"
+        >
+          {{ t('treatmentPlans.viewDraftBudget', { number: plan.budget?.budget_number || '' }) }}
+        </UButton>
+
         <!-- Workflow transitions for plans past draft. The big CTA in
              the body owns the draft → pending action so it's not
              duplicated up here. -->

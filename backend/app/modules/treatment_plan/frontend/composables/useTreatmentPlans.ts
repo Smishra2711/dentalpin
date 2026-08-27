@@ -538,7 +538,17 @@ export function useTreatmentPlans() {
       const response = await api.post<ApiResponse<TreatmentPlan>>(
         `/api/v1/treatment_plan/treatment-plans/${planId}/confirm`
       )
-      toast.add({ title: t('treatmentPlans.confirmed'), color: 'success' })
+      // Confirming provisions a draft quote — link straight to it from
+      // the toast so reception doesn't have to dig it out of the
+      // budgets list (#207).
+      const budgetId = response.data?.budget_id
+      toast.add({
+        title: t('treatmentPlans.confirmed'),
+        color: 'success',
+        ...(budgetId
+          ? { actions: [{ label: t('clinical.plans.locked.viewBudget'), onClick: () => { navigateTo(`/budgets/${budgetId}`) } }] }
+          : {})
+      })
       return response.data
     } catch (error) {
       console.error('Error confirming plan:', error)
@@ -623,16 +633,21 @@ export function useTreatmentPlans() {
   }
 
   /**
-   * Fetch pending items for a patient from all active plans.
+   * Fetch pending items for a patient from all schedulable plans.
    * Used in appointment modal to select which treatments to schedule.
+   *
+   * `pending` (plan confirmed, budget not yet accepted) is included on
+   * purpose: an unconfirmed draft is schedulable, so confirming a plan
+   * must not take that away — clinics book the first visit while the
+   * patient is still deciding (#108).
    */
   async function fetchPatientPendingItems(patientId: string): Promise<PlannedTreatmentItem[]> {
     try {
-      // Fetch all active/draft plans for this patient
       const params = new URLSearchParams()
       params.append('patient_id', patientId)
       params.append('status', 'active')
       params.append('status', 'draft')
+      params.append('status', 'pending')
       params.append('page_size', '100')
 
       const response = await api.get<PaginatedResponse<TreatmentPlan>>(

@@ -1,0 +1,35 @@
+{
+  "inventory": {
+    "title": "Inventar",
+    "add": "Artikel hinzufügen",
+    "edit": "Artikel bearbeiten",
+    "item": "Artikel",
+    "category": "Kategorie",
+    "unit": "Einheit",
+    "stock": "Bestand",
+    "minimum": "Mindestbestand",
+    "notes": "Notizen",
+    "status": "Status",
+    "ok": "OK",
+    "low": "Niedrig",
+    "filterByCategory": "Nach Kategorie filtern",
+    "lowStockOnly": "Nur niedriger Bestand",
+    "increment": "Bestand erhöhen",
+    "decrement": "Bestand verringern",
+    "delete": "Löschen",
+    "deleteTitle": "Artikel löschen",
+    "deleteMessage": "Diesen Lagerartikel löschen? Dies kann nicht rückgängig gemacht werden.",
+    "allCategories": "Alle Kategorien",
+    "adjustBy": "Anpassen um…",
+    "apply": "Anwenden",
+    "categories": {
+      "consumables": "Verbrauchsmaterial",
+      "equipment": "Ausstattung",
+      "office": "Büro",
+      "other": "Sonstiges"
+    }
+  },
+  "nav": {
+    "inventory": "Inventar"
+  }
+}

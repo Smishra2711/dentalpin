@@ -5,6 +5,10 @@ const props = defineProps<{
   modelValue?: PlannedTreatmentItem[]
   patientId?: string
   placeholder?: string
+  /** Preselect every pending item of this plan once items load —
+   * the schedule-from-plan flow arrives with the plan already chosen
+   * (#207). Only applies while nothing is selected yet. */
+  preselectPlanId?: string
 }>()
 
 const emit = defineEmits<{
@@ -35,6 +39,15 @@ async function loadPendingItems(patientId: string) {
   isLoading.value = true
   try {
     pendingItems.value = await fetchPatientPendingItems(patientId)
+    if (props.preselectPlanId && selectedItems.value.length === 0) {
+      const planItems = pendingItems.value.filter(
+        item => item.treatment_plan?.id === props.preselectPlanId
+      )
+      if (planItems.length > 0) {
+        selectedItems.value = planItems
+        emit('update:modelValue', selectedItems.value)
+      }
+    }
   } catch {
     pendingItems.value = []
   } finally {
@@ -117,6 +130,13 @@ function getToothInfo(item: PlannedTreatmentItem): string | null {
 function getPlanLabel(item: PlannedTreatmentItem): string | null {
   if (!item.treatment_plan) return null
   return item.treatment_plan.title || item.treatment_plan.plan_number
+}
+
+// A confirmed plan whose budget the patient hasn't accepted yet is
+// schedulable (#108), but the receptionist should see they're booking
+// ahead of the acceptance.
+function isAwaitingBudget(item: PlannedTreatmentItem): boolean {
+  return item.treatment_plan?.status === 'pending'
 }
 
 // Items available for selection (not already selected)
@@ -217,6 +237,15 @@ const hasPendingTreatments = computed(() => {
               >
                 {{ getPlanLabel(item) }}
               </UBadge>
+              <UBadge
+                v-if="isAwaitingBudget(item)"
+                size="xs"
+                color="warning"
+                variant="subtle"
+                icon="i-lucide-hourglass"
+              >
+                {{ t('appointments.planAwaitingBudget') }}
+              </UBadge>
             </div>
           </div>
           <div class="flex items-center gap-2">
@@ -230,6 +259,7 @@ const hasPendingTreatments = computed(() => {
               variant="ghost"
               color="neutral"
               icon="i-lucide-x"
+              :aria-label="t('common.remove')"
               size="xs"
               @click="removeItem(item.id)"
             />
@@ -264,6 +294,7 @@ const hasPendingTreatments = computed(() => {
             variant="ghost"
             color="neutral"
             icon="i-lucide-x"
+            :aria-label="t('common.close')"
             size="xs"
             @click="showSelector = false"
           />
@@ -313,6 +344,15 @@ const hasPendingTreatments = computed(() => {
                     variant="subtle"
                   >
                     {{ getPlanLabel(item) }}
+                  </UBadge>
+                  <UBadge
+                    v-if="isAwaitingBudget(item)"
+                    size="xs"
+                    color="warning"
+                    variant="subtle"
+                    icon="i-lucide-hourglass"
+                  >
+                    {{ t('appointments.planAwaitingBudget') }}
                   </UBadge>
                 </div>
               </div>

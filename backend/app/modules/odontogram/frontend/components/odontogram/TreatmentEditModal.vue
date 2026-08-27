@@ -153,6 +153,7 @@ function handleClose() {
             </div>
             <UButton
               icon="i-lucide-x"
+              :aria-label="t('common.close')"
               color="neutral"
               variant="ghost"
               size="sm"
