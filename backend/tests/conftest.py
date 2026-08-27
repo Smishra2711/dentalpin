@@ -155,6 +155,14 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     """Create an HTTP client for testing."""
 
     async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
+        # NOTE (#188): production hands every request its own session;
+        # this override shares ONE session across a test's requests, so
+        # identity-mapped state (e.g. eager-loaded collections) can go
+        # stale between requests on some local setups. Mimicking
+        # production here (flush+expire per request) breaks ~70 tests
+        # that rely on the shared-state semantics — tests that hit the
+        # staleness instead call ``db_session.expire_all()`` themselves
+        # before re-reading (see test_remove_budget_item).
         yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
