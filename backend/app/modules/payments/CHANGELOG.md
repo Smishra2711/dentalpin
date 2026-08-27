@@ -3,6 +3,7 @@
 ## Unreleased
 
 - feat(#131): German (de) locale for the module's frontend layer.
+- feat(#144, #132): Polish (pl) and Italian (it) locales for the module's frontend layer.
 
 - fix(#180): payments recorded before #178 on a budget-linked invoice
   were labeled `on_account` instead of `budget`, so the quote's
