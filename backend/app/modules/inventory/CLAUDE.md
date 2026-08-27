@@ -1,8 +1,8 @@
 # inventory module
 
 Standalone stock list with per-item minimum quantities and low-stock
-alerts (roadmap #220, base version). Cost tracking, stock movements and
-auto-deduction arrive later (#226).
+alerts (roadmap #220, base version). Cost tracking, cost/movement audit,
+and consumable auto-deduction landed with the core upgrade (#226).
 
 ## Public API
 
@@ -39,8 +39,9 @@ stock levels are operational data (see permissions.md).
 | `list_inventory_items` | READ | `InventoryService.list_items` | `inventory.read` |
 | `create_inventory_item` | WRITE | `InventoryService.create_item` | `inventory.write` |
 | `adjust_inventory_stock` | WRITE | `InventoryService.adjust_stock` | `inventory.write` |
+| `get_stock_movements` | READ | `InventoryService.list_movements` | `inventory.read` |
 
-All three are marked `exposes_free_text=True`: item names/notes are
+All four are marked `exposes_free_text=True`: item names/notes are
 user-entered prose that may name people, so they stay off the cloud LLM
 path under redaction. Tool ids return as native UUIDs for jsonify.
 
