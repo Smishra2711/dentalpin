@@ -104,14 +104,19 @@ def _list_modules() -> list[str]:
 # fails until the allowlist is updated (forcing the cleanup to be
 # explicit). The goal is to drain this set over time, not grow it.
 KNOWN_VIOLATIONS: set[tuple[str, str, str]] = {
-    ("agenda", "service.py", "treatment_plan"),
-    ("agenda", "kanban_service.py", "schedules"),
-    ("billing", "router.py", "reports"),
-    ("patient_timeline", "seed.py", "agenda"),
-    ("patient_timeline", "seed.py", "billing"),
-    ("patient_timeline", "seed.py", "budget"),
-    ("patient_timeline", "seed.py", "odontogram"),
-    ("patient_timeline", "seed.py", "treatment_plan"),
+    # The former patient_timeline/seed.py entries drained by relocating the
+    # demo seed to app/seeds/patient_timeline_demo.py (#309) — host-level
+    # demo seeding is the established home for cross-module fixtures, and
+    # the module's event sources stay runtime-optional by design.
+    #
+    # Both remaining entries are CYCLE-BOUND: the target module already
+    # declares the reverse dependency, and the loader rejects manifest
+    # cycles (topology.py, CircularDependencyError). Draining them means
+    # inverting the code edge (a provider registry the target registers
+    # into, like agenda/planned_work.py did for treatment_plan in #309),
+    # not adding a manifest entry.
+    ("agenda", "kanban_service.py", "schedules"),  # schedules.depends ⊇ {agenda}
+    ("billing", "router.py", "reports"),  # reports.depends ⊇ {billing}
 }
 
 

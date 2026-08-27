@@ -118,7 +118,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.AGENDA_VISIT_NOTE_UPDATED`
 - **Publishers:**
-  - `agenda` — `backend/app/modules/agenda/service.py:869`
+  - `agenda` — `backend/app/modules/agenda/service.py:842`
 - **Subscribers:**
   - `patient_timeline`
 
@@ -126,14 +126,14 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.APPOINTMENT_CABINET_CHANGED`
 - **Publishers:**
-  - `agenda` — `backend/app/modules/agenda/service.py:806`
+  - `agenda` — `backend/app/modules/agenda/service.py:779`
 - **Subscribers:** —
 
 ### `appointment.cancelled`
 
 - **Constant:** `EventType.APPOINTMENT_CANCELLED`
 - **Publishers:**
-  - `agenda` — `backend/app/modules/agenda/service.py:744`
+  - `agenda` — `backend/app/modules/agenda/service.py:717`
 - **Subscribers:**
   - `activity_journal`
   - `copilot`
@@ -146,7 +146,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.APPOINTMENT_CHECKED_IN`
 - **Publishers:**
-  - `agenda` — `backend/app/modules/agenda/service.py:741`
+  - `agenda` — `backend/app/modules/agenda/service.py:714`
 - **Subscribers:**
   - `activity_journal`
   - `patient_timeline`
@@ -155,7 +155,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.APPOINTMENT_COMPLETED`
 - **Publishers:**
-  - `agenda` — `backend/app/modules/agenda/service.py:743`
+  - `agenda` — `backend/app/modules/agenda/service.py:716`
 - **Subscribers:**
   - `activity_journal`
   - `integrations`
@@ -167,7 +167,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.APPOINTMENT_CONFIRMED`
 - **Publishers:**
-  - `agenda` — `backend/app/modules/agenda/service.py:740`
+  - `agenda` — `backend/app/modules/agenda/service.py:713`
 - **Subscribers:**
   - `activity_journal`
   - `patient_timeline`
@@ -176,7 +176,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.APPOINTMENT_IN_TREATMENT`
 - **Publishers:**
-  - `agenda` — `backend/app/modules/agenda/service.py:742`
+  - `agenda` — `backend/app/modules/agenda/service.py:715`
 - **Subscribers:**
   - `activity_journal`
   - `patient_timeline`
@@ -185,7 +185,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.APPOINTMENT_NO_SHOW`
 - **Publishers:**
-  - `agenda` — `backend/app/modules/agenda/service.py:745`
+  - `agenda` — `backend/app/modules/agenda/service.py:718`
 - **Subscribers:**
   - `activity_journal`
   - `patient_timeline`
@@ -194,7 +194,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.APPOINTMENT_SCHEDULED`
 - **Publishers:**
-  - `agenda` — `backend/app/modules/agenda/service.py:508`
+  - `agenda` — `backend/app/modules/agenda/service.py:483`
 - **Subscribers:**
   - `activity_journal`
   - `notifications`
@@ -206,14 +206,14 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.APPOINTMENT_STATUS_CHANGED`
 - **Publishers:**
-  - `agenda` — `backend/app/modules/agenda/service.py:735`
+  - `agenda` — `backend/app/modules/agenda/service.py:708`
 - **Subscribers:** —
 
 ### `appointment.updated`
 
 - **Constant:** `EventType.APPOINTMENT_UPDATED`
 - **Publishers:**
-  - `agenda` — `backend/app/modules/agenda/service.py:636`
+  - `agenda` — `backend/app/modules/agenda/service.py:609`
 - **Subscribers:**
   - `schedules`
 

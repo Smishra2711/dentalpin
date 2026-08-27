@@ -10,7 +10,19 @@ surface (appointments CRUD, transitions, cabinet assignments, kanban).
 
 ## Dependencies
 
-`manifest.depends = ["patients", "catalog"]`.
+`manifest.depends = ["patients", "catalog", "odontogram"]`.
+
+**Planned-work contract (#309).** Booking against treatment-plan items
+is a two-way product dependency, but ``treatment_plan`` already
+declares ``agenda`` and the manifest graph must stay acyclic — so this
+module NEVER imports treatment_plan. It owns the
+``PlannedWorkProvider`` protocol + registry in ``planned_work.py``;
+``treatment_plan`` registers its implementation at import time
+(``agenda_provider.py``). Loader options, booking validation and the
+catalog-item snapshot all go through the registry. The
+``appointment_treatments.planned_treatment_item_id`` FK remains
+documented debt in ``tests/test_module_fk_isolation.py`` — legalizing
+it needs a column-ownership move, not a manifest entry.
 
 ## Permissions
 
