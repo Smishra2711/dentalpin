@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat(#287): `send_method` accepts `whatsapp` (router/workflow/tools; legacy `send_email` kept); the send modal offers a button per configured manual channel; the public-link wa.me button is secondary ('Open in WhatsApp'); the reminder cron's clinics query no longer references the never-created `clinics.deleted_at` column (it raised on every tick).
+
 - fix(#101): a failed signature fetch no longer renders as 'not signed' — fetchSignature only nulls on a real 404 and the card shows an error state with Retry.
 
 - feat(#207): the in-clinic accept/reject signature modal prefills "Signed by" with the patient's name and email while the relation is *patient*; changing the relation clears it.

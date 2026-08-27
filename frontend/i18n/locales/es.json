@@ -630,11 +630,11 @@
       "treatmentAdded": "Tratamiento añadido",
       "treatmentPerformed": "Tratamiento marcado como realizado",
       "treatmentDeleted": "Tratamiento eliminado",
-      "deleteConfirm": "¿Eliminar {name} (diente {tooth})? Esta acción no se puede deshacer.",
       "status": {
         "existing": "Existente",
         "planned": "Planificado"
-      }
+      },
+      "deleteConfirm": "¿Eliminar {name} (diente {tooth})? Esta acción no se puede deshacer."
     },
     "position": {
       "displaced": "Desplazado",
@@ -774,7 +774,6 @@
       "noItems": "Sin tratamientos en el plan",
       "markComplete": "Marcar como completado",
       "removeItem": "Eliminar del plan",
-      "removeItemConfirm": "¿Quitar {name} de este plan? Esta acción no se puede deshacer.",
       "sessions": {
         "progress": "{done}/{total} sesiones",
         "markDone": "Marcar sesión realizada",
@@ -812,7 +811,8 @@
         "title": "Plan bloqueado",
         "subtitle": "Presupuesto {number} emitido. Para editar tratamientos, usa Reabrir (si está pendiente) o Renegociar el presupuesto.",
         "viewBudget": "Ver presupuesto"
-      }
+      },
+      "removeItemConfirm": "¿Quitar {name} de este plan? Esta acción no se puede deshacer."
     },
     "tooth": "Diente"
   },
@@ -892,7 +892,6 @@
     "saved": "Cita guardada",
     "updated": "Cita actualizada",
     "conflict": "Este horario ya está ocupado",
-    "loadError": "No se pudieron cargar las citas",
     "cancel": "Cancelar cita",
     "markCompleted": "Marcar como atendida",
     "markNoShow": "No se presentó",
@@ -966,6 +965,11 @@
       "onBreak": "Pausa"
     },
     "actionsMenu": "Acciones de la cita",
+    "sendMessage": "Enviar mensaje",
+    "resendConfirmationVia": "Reenviar confirmación ({channel})",
+    "sendReminderVia": "Enviar recordatorio ({channel})",
+    "sendCancellationVia": "Enviar cancelación ({channel})",
+    "loadError": "No se pudieron cargar las citas",
     "planAwaitingBudget": "Presupuesto sin aceptar"
   },
   "dashboard": {
@@ -1492,7 +1496,6 @@
     "items": "Tratamientos",
     "categories": "Categorías",
     "noItems": "No hay tratamientos en el catálogo",
-    "loadError": "No se pudo cargar el catálogo de tratamientos",
     "searchPlaceholder": "Buscar por código o nombre...",
     "code": "Código",
     "name": "Nombre",
@@ -1612,7 +1615,8 @@
     "loadDefaults": "Cargar catálogo por defecto",
     "loadDefaultsHint": "Tipos de IVA, categorías y tratamientos de referencia según el país de la clínica. Se añaden solo los que faltan.",
     "defaultsLoaded": "Catálogo cargado: {categories} categorías, {items} tratamientos, {vat_types} tipos de IVA",
-    "defaultsFailed": "No se pudo cargar el catálogo por defecto"
+    "defaultsFailed": "No se pudo cargar el catálogo por defecto",
+    "loadError": "No se pudo cargar el catálogo de tratamientos"
   },
   "placeholders": {
     "selectRole": "Seleccionar rol..."
@@ -2028,7 +2032,6 @@
       "downloadSignedPdf": "Descargar PDF firmado",
       "downloadError": "No se pudo descargar el PDF firmado.",
       "notSigned": "Aún no se ha capturado firma para este presupuesto.",
-      "loadError": "No se pudo cargar el estado de la firma",
       "method": {
         "drawn": "Firma manuscrita",
         "clickAccept": "Aceptación con un clic",
@@ -2041,7 +2044,8 @@
       "representative": "Representante",
       "accept": "Acepto los términos del presupuesto",
       "signHere": "Firma aquí",
-      "clear": "Limpiar firma"
+      "clear": "Limpiar firma",
+      "loadError": "No se pudo cargar el estado de la firma"
     },
     "history": {
       "title": "Historial de cambios",
@@ -2077,15 +2081,18 @@
       "deleteDescription": "Esta acción no se puede deshacer."
     },
     "send": {
-      "description": "Puedes enviar el presupuesto por email o marcarlo como enviado manualmente (impreso o entregado en mano).",
+      "description": "Puedes enviar el presupuesto por email o WhatsApp, o marcarlo como enviado manualmente (impreso o entregado en mano).",
       "sendByEmail": "Enviar por email",
       "willSendTo": "Se enviará a",
       "noPatientEmail": "El paciente no tiene email registrado",
       "customMessage": "Mensaje personalizado (opcional)",
       "customMessagePlaceholder": "Añade un mensaje para el paciente...",
-      "manualNote": "El presupuesto se marcará como enviado sin enviar ningún email.",
+      "manualNote": "El presupuesto se marcará como enviado sin enviar ningún mensaje.",
       "sendEmail": "Enviar email",
-      "markAsSent": "Marcar como enviado"
+      "markAsSent": "Marcar como enviado",
+      "sendByWhatsapp": "Enviar por WhatsApp",
+      "sendWhatsapp": "Enviar WhatsApp",
+      "willSendToPhone": "Se enviará por WhatsApp a"
     },
     "messages": {
       "created": "Presupuesto creado",
@@ -2103,7 +2110,8 @@
       "itemUpdated": "Tratamiento actualizado",
       "itemRemoved": "Tratamiento eliminado",
       "treatmentStarted": "Tratamiento iniciado",
-      "treatmentCompleted": "Tratamiento completado"
+      "treatmentCompleted": "Tratamiento completado",
+      "sentByWhatsapp": "Presupuesto enviado por WhatsApp"
     },
     "errors": {
       "load": "Error al cargar presupuestos",
@@ -2169,10 +2177,10 @@
     "publicLink": {
       "action": "Compartir enlace",
       "title": "Enlace para el paciente",
-      "help": "Copia este enlace y compártelo con el paciente por WhatsApp, SMS o email. Le pediremos un dato de verificación antes de mostrarle el presupuesto.",
+      "help": "Copia este enlace y compártelo con el paciente por WhatsApp o email. Le pediremos un dato de verificación antes de mostrarle el presupuesto.",
       "copy": "Copiar enlace",
       "copied": "¡Copiado!",
-      "whatsapp": "Enviar por WhatsApp",
+      "whatsapp": "Abrir en WhatsApp",
       "whatsappNoPhone": "El paciente no tiene teléfono en su ficha",
       "whatsappGreeting": "Hola {name}, aquí tienes tu presupuesto:",
       "whatsappGreetingFallback": "Hola, aquí tienes tu presupuesto:",
@@ -2492,19 +2500,23 @@
       "itemAdded": "Tratamiento añadido",
       "itemUpdated": "Tratamiento actualizado",
       "sentByEmail": "Factura enviada por email",
-      "sentManually": "Factura marcada como enviada"
+      "sentManually": "Factura marcada como enviada",
+      "sentByWhatsapp": "Factura enviada por WhatsApp"
     },
     "send": {
       "title": "Enviar factura",
-      "description": "Puedes enviar la factura por email o marcarla como enviada manualmente (impresa o entregada en mano).",
+      "description": "Puedes enviar la factura por email o WhatsApp, o marcarla como enviada manualmente (impresa o entregada en mano).",
       "sendByEmail": "Enviar por email",
       "willSendTo": "Se enviará a",
       "noPatientEmail": "El paciente no tiene email registrado",
       "customMessage": "Mensaje personalizado (opcional)",
       "customMessagePlaceholder": "Añade un mensaje para el paciente...",
-      "manualNote": "La factura se marcará como enviada sin enviar ningún email.",
+      "manualNote": "La factura se marcará como enviada sin enviar ningún mensaje.",
       "sendEmail": "Enviar email",
-      "markAsSent": "Marcar como enviada"
+      "markAsSent": "Marcar como enviada",
+      "sendByWhatsapp": "Enviar por WhatsApp",
+      "sendWhatsapp": "Enviar WhatsApp",
+      "willSendToPhone": "Se enviará por WhatsApp a"
     },
     "errors": {
       "load": "Error al cargar facturas",
@@ -2597,7 +2609,6 @@
     "subtitle": "Análisis y estadísticas de la clínica",
     "viewReports": "Ver informes",
     "noAccess": "No tienes acceso a ningún informe",
-    "loadError": "No se pudieron cargar los datos del informe",
     "dashboard": {
       "title": "Dashboard",
       "subtitle": "Tu clínica de un vistazo",
@@ -2791,16 +2802,17 @@
         "title": "Sin datos en este período",
         "desc": "Prueba un rango más amplio o elimina filtros."
       }
-    }
+    },
+    "loadError": "No se pudieron cargar los datos del informe"
   },
   "notifications": {
     "communications": {
       "language": {
         "cardTitle": "Idioma de comunicaciones",
-        "cardDescription": "Idioma usado en la vista pública del presupuesto, emails y SMS al paciente.",
+        "cardDescription": "Idioma usado en la vista pública del presupuesto, emails y mensajes de WhatsApp al paciente.",
         "title": "Idioma de comunicaciones con el paciente",
         "label": "Idioma",
-        "help": "Se aplica a la vista pública del presupuesto y a las plantillas de email/SMS automáticas. La interfaz interna del personal usa su propio idioma de cuenta.",
+        "help": "Se aplica a la vista pública del presupuesto y a las plantillas automáticas de email/WhatsApp. La interfaz interna del personal usa su propio idioma de cuenta.",
         "save": "Guardar",
         "saved": "Idioma guardado"
       }
@@ -2840,7 +2852,13 @@
       "budget_accepted": "Presupuesto aceptado",
       "budget_accepted_desc": "Email de confirmación cuando se acepta un presupuesto",
       "welcome": "Bienvenida",
-      "welcome_desc": "Email de bienvenida para nuevos pacientes"
+      "welcome_desc": "Email de bienvenida para nuevos pacientes",
+      "invoice_sent": "Envío de factura",
+      "invoice_sent_desc": "Mensaje con la factura cuando se envía al paciente",
+      "budget_reminder": "Recordatorio de presupuesto",
+      "budget_reminder_desc": "Seguimiento de presupuestos sin respuesta (7 y 14 días)",
+      "recall_reminder": "Recordatorio de revisión",
+      "recall_reminder_desc": "Recordatorio para reservar la visita periódica de seguimiento"
     },
     "sendConfirmation": "Enviar confirmación",
     "sendReminder": "Enviar recordatorio",
@@ -2894,6 +2912,27 @@
     "onboarding": {
       "label": "Envío de emails",
       "description": "Configura el remitente para enviar confirmaciones de cita y presupuestos."
+    },
+    "channels": {
+      "cardTitle": "Canales",
+      "cardDescription": "Cómo se comunica la clínica con los pacientes: el canal de los mensajes automáticos y los botones de envío que ve el personal.",
+      "preferredLabel": "Canal preferido",
+      "preferredHelp": "Se usa para los mensajes automáticos (nueva cita, recordatorio, bienvenida…).",
+      "fallbackLabel": "Usar el otro canal como respaldo",
+      "fallbackHelp": "Si el canal preferido no puede enviar, se intenta el otro canal disponible en lugar de omitir el mensaje.",
+      "manualLabel": "Mostrar botón de envío para…",
+      "manualHelp": "Qué botones de envío ve recepción en citas, presupuestos y facturas.",
+      "manualAtLeastOne": "Selecciona al menos un canal.",
+      "email": "Email",
+      "whatsapp": "WhatsApp",
+      "whatsappUnavailableHint": "WhatsApp no está disponible hasta conectar el número de la clínica.",
+      "whatsappConnect": "Conectar WhatsApp (Kapso)",
+      "noEmail": "El paciente no tiene email en su ficha",
+      "noPhone": "El paciente no tiene teléfono en su ficha"
+    },
+    "channelSent": {
+      "email": "Email enviado correctamente",
+      "whatsapp": "Mensaje de WhatsApp enviado correctamente"
     }
   },
   "invoiceSeries": {

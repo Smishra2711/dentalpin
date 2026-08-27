@@ -630,11 +630,11 @@
       "treatmentAdded": "Kezelés hozzáadva",
       "treatmentPerformed": "Kezelés elvégzettként megjelölve",
       "treatmentDeleted": "Kezelés törölve",
-      "deleteConfirm": "Törli a következőt: {name} ({tooth}. fog)? Ez a művelet nem vonható vissza.",
       "status": {
         "existing": "Meglévő",
         "planned": "Tervezett"
-      }
+      },
+      "deleteConfirm": "Törli a következőt: {name} ({tooth}. fog)? Ez a művelet nem vonható vissza."
     },
     "position": {
       "displaced": "Elmozdult",
@@ -774,7 +774,6 @@
       "noItems": "Nincs kezelés a tervben",
       "markComplete": "Megjelölés befejezettként",
       "removeItem": "Eltávolítás a tervből",
-      "removeItemConfirm": "Eltávolítja a következőt a tervből: {name}? Ez a művelet nem vonható vissza.",
       "sessions": {
         "progress": "{done}/{total} ülés",
         "markDone": "Ülés elvégzettként jelölése",
@@ -812,7 +811,8 @@
         "title": "A terv zárolva",
         "subtitle": "A(z) {number} árajánlat ki lett állítva. A kezelések szerkesztéséhez nyissa újra (ha függőben van), vagy tárgyalja újra az árajánlatot.",
         "viewBudget": "Árajánlat megtekintése"
-      }
+      },
+      "removeItemConfirm": "Eltávolítja a következőt a tervből: {name}? Ez a művelet nem vonható vissza."
     },
     "tooth": "Fog"
   },
@@ -893,7 +893,6 @@
     "saved": "Időpont elmentve",
     "updated": "Időpont frissítve",
     "conflict": "Ez az idősáv már foglalt",
-    "loadError": "Nem sikerült betölteni az időpontokat",
     "cancel": "Időpont lemondása",
     "markCompleted": "Megjelölés befejezettként",
     "markNoShow": "Nem jelent meg",
@@ -966,6 +965,11 @@
       "professionalOff": "Nem dolgozik",
       "onBreak": "Szünetel"
     },
+    "sendMessage": "Üzenet küldése",
+    "resendConfirmationVia": "Visszaigazolás újraküldése ({channel})",
+    "sendReminderVia": "Emlékeztető küldése ({channel})",
+    "sendCancellationVia": "Lemondási értesítő küldése ({channel})",
+    "loadError": "Nem sikerült betölteni az időpontokat",
     "planAwaitingBudget": "Árajánlat elfogadásra vár"
   },
   "dashboard": {
@@ -1492,7 +1496,6 @@
     "items": "Kezelések",
     "categories": "Kategóriák",
     "noItems": "Nincs kezelés a katalógusban",
-    "loadError": "Nem sikerült betölteni a kezeléskatalógust",
     "searchPlaceholder": "Keresés kód vagy név alapján...",
     "code": "Kód",
     "name": "Név",
@@ -1612,7 +1615,8 @@
     "loadDefaults": "Alapkatalógus betöltése",
     "loadDefaultsHint": "Áfakulcsok, kategóriák és referenciakezelések a rendelő országához. Csak a hiányzó sorok kerülnek hozzáadásra.",
     "defaultsLoaded": "Katalógus betöltve: {categories} kategória, {items} kezelés, {vat_types} áfakulcs",
-    "defaultsFailed": "Nem sikerült betölteni az alapkatalógust"
+    "defaultsFailed": "Nem sikerült betölteni az alapkatalógust",
+    "loadError": "Nem sikerült betölteni a kezeléskatalógust"
   },
   "placeholders": {
     "selectRole": "Válasszon szerepkört..."
@@ -2028,7 +2032,6 @@
       "downloadSignedPdf": "Aláírt PDF letöltése",
       "downloadError": "Nem sikerült letölteni az aláírt PDF-et.",
       "notSigned": "Ehhez az árajánlathoz még nem rögzítettek aláírást.",
-      "loadError": "Nem sikerült betölteni az aláírás állapotát",
       "method": {
         "drawn": "Kézzel rajzolt aláírás",
         "clickAccept": "Elfogadás kattintással",
@@ -2041,7 +2044,8 @@
       "representative": "Meghatalmazott",
       "accept": "Elfogadom az árajánlat feltételeit",
       "signHere": "Írjon alá itt",
-      "clear": "Aláírás törlése"
+      "clear": "Aláírás törlése",
+      "loadError": "Nem sikerült betölteni az aláírás állapotát"
     },
     "history": {
       "title": "Változási napló",
@@ -2077,15 +2081,18 @@
       "deleteDescription": "Ez a művelet nem vonható vissza."
     },
     "send": {
-      "description": "Az árajánlatot elküldheti e-mailben, vagy megjelölheti kézzel átadottként (nyomtatva vagy személyesen).",
+      "description": "Az árajánlatot elküldheti e-mailben vagy WhatsAppon, vagy megjelölheti kézzel átadottként (nyomtatva vagy személyesen).",
       "sendByEmail": "Küldés e-mailben",
       "willSendTo": "Címzett",
       "noPatientEmail": "A páciensnek nincs rögzített e-mail-címe",
       "customMessage": "Egyéni üzenet (opcionális)",
       "customMessagePlaceholder": "Üzenet a páciensnek...",
-      "manualNote": "Az árajánlat elküldöttként lesz megjelölve e-mail küldése nélkül.",
+      "manualNote": "Az árajánlat elküldöttként lesz megjelölve üzenet küldése nélkül.",
       "sendEmail": "E-mail küldése",
-      "markAsSent": "Megjelölés elküldöttként"
+      "markAsSent": "Megjelölés elküldöttként",
+      "sendByWhatsapp": "Küldés WhatsAppon",
+      "sendWhatsapp": "WhatsApp küldése",
+      "willSendToPhone": "WhatsAppon erre a számra küldjük"
     },
     "messages": {
       "created": "Árajánlat létrehozva",
@@ -2103,7 +2110,8 @@
       "itemUpdated": "Kezelés frissítve",
       "itemRemoved": "Kezelés eltávolítva",
       "treatmentStarted": "Kezelés megkezdve",
-      "treatmentCompleted": "Kezelés befejezve"
+      "treatmentCompleted": "Kezelés befejezve",
+      "sentByWhatsapp": "Árajánlat WhatsAppon elküldve"
     },
     "errors": {
       "load": "Hiba az árajánlatok betöltésekor",
@@ -2169,10 +2177,10 @@
     "publicLink": {
       "action": "Link megosztása",
       "title": "Páciens link",
-      "help": "Másolja ki és ossza meg a linket a pácienssel WhatsAppon, SMS-ben vagy e-mailben. Az árajánlat megtekintése előtt egy azonosító adatot fogunk kérni tőle.",
+      "help": "Másolja ki és ossza meg a linket a pácienssel WhatsAppon vagy e-mailben. Az árajánlat megtekintése előtt egy azonosító adatot fogunk kérni tőle.",
       "copy": "Link másolása",
       "copied": "Másolva!",
-      "whatsapp": "Küldés WhatsAppon",
+      "whatsapp": "Megnyitás WhatsAppban",
       "whatsappNoPhone": "A páciensnek nincs rögzített telefonszáma",
       "whatsappGreeting": "Szia {name}, itt az árajánlatod:",
       "whatsappGreetingFallback": "Üdvözöljük, itt az árajánlata:",
@@ -2291,10 +2299,10 @@
     "communications": {
       "language": {
         "cardTitle": "Kommunikáció nyelve",
-        "cardDescription": "A páciensnek szóló árajánlat-nézet, az e-mailek és az SMS-ek nyelve.",
+        "cardDescription": "A páciensnek szóló árajánlat-nézet, az e-mailek és a WhatsApp-üzenetek nyelve.",
         "title": "Pácienskommunikáció nyelve",
         "label": "Nyelv",
-        "help": "A páciensnek szóló árajánlat-nézetre és az automatikus e-mail-/SMS-sablonokra vonatkozik. A személyzet felülete minden felhasználó saját nyelvi beállítását követi.",
+        "help": "A páciensnek szóló árajánlat-nézetre és az automatikus e-mail-/WhatsApp-sablonokra vonatkozik. A személyzet felülete minden felhasználó saját nyelvi beállítását követi.",
         "save": "Mentés",
         "saved": "Nyelv elmentve"
       }
@@ -2334,7 +2342,13 @@
       "budget_accepted": "Árajánlat elfogadva",
       "budget_accepted_desc": "Visszaigazoló e-mail árajánlat elfogadásakor",
       "welcome": "Üdvözlés",
-      "welcome_desc": "Üdvözlő e-mail új pácienseknek"
+      "welcome_desc": "Üdvözlő e-mail új pácienseknek",
+      "invoice_sent": "Számla küldése",
+      "invoice_sent_desc": "Üzenet a számlával, amikor elküldik a páciensnek",
+      "budget_reminder": "Árajánlat-emlékeztető",
+      "budget_reminder_desc": "Válasz nélküli árajánlatok utánkövetése (7 és 14 nap)",
+      "recall_reminder": "Visszahívási emlékeztető",
+      "recall_reminder_desc": "Emlékeztető a következő kontrollvizsgálat lefoglalására"
     },
     "sendConfirmation": "Visszaigazolás küldése",
     "sendReminder": "Emlékeztető küldése",
@@ -2388,6 +2402,27 @@
     "onboarding": {
       "label": "E-mail-küldés",
       "description": "Állítsa be a feladót, hogy időpont-visszaigazolásokat és árajánlatokat e-mailezhessen."
+    },
+    "channels": {
+      "cardTitle": "Csatornák",
+      "cardDescription": "Hogyan éri el a rendelő a pácienseket: az automatikus üzenetek csatornája és a személyzetnek megjelenő küldés gombok.",
+      "preferredLabel": "Előnyben részesített csatorna",
+      "preferredHelp": "Az automatikus üzenetekhez használjuk (új foglalás, emlékeztető, üdvözlés…).",
+      "fallbackLabel": "Tartalék csatorna használata",
+      "fallbackHelp": "Ha az előnyben részesített csatornán nem lehet küldeni, a másik elérhető csatornával próbálkozunk az üzenet kihagyása helyett.",
+      "manualLabel": "Küldés gomb megjelenítése ehhez…",
+      "manualHelp": "Milyen küldés gombokat lát a recepció az időpontoknál, árajánlatoknál és számláknál.",
+      "manualAtLeastOne": "Válasszon legalább egy csatornát.",
+      "email": "E-mail",
+      "whatsapp": "WhatsApp",
+      "whatsappUnavailableHint": "A WhatsApp addig nem érhető el, amíg a rendelő száma nincs csatlakoztatva.",
+      "whatsappConnect": "WhatsApp (Kapso) csatlakoztatása",
+      "noEmail": "A páciensnek nincs rögzített e-mail-címe",
+      "noPhone": "A páciensnek nincs rögzített telefonszáma"
+    },
+    "channelSent": {
+      "email": "E-mail sikeresen elküldve",
+      "whatsapp": "WhatsApp-üzenet sikeresen elküldve"
     }
   },
   "invoice": {
@@ -2657,20 +2692,24 @@
       "itemUpdated": "Tétel frissítve",
       "sentByEmail": "Számla e-mailben elküldve",
       "sentManually": "Számla elküldöttként megjelölve",
+      "sentByWhatsapp": "Számla WhatsAppon elküldve",
       "creditNoteCreated": "Helyesbítő számla létrehozva",
       "paymentRecorded": "Befizetés rögzítve"
     },
     "send": {
       "title": "Számla küldése",
-      "description": "A számlát elküldheti e-mailben, vagy megjelölheti kézzel átadottként (nyomtatva vagy személyesen).",
+      "description": "A számlát elküldheti e-mailben vagy WhatsAppon, vagy megjelölheti kézzel átadottként (nyomtatva vagy személyesen).",
       "sendByEmail": "Küldés e-mailben",
       "willSendTo": "Címzett",
       "noPatientEmail": "A páciensnek nincs e-mail-címe",
       "customMessage": "Egyéni üzenet (opcionális)",
       "customMessagePlaceholder": "Üzenet a páciensnek...",
-      "manualNote": "A számla elküldöttként lesz megjelölve e-mail küldése nélkül.",
+      "manualNote": "A számla elküldöttként lesz megjelölve üzenet küldése nélkül.",
       "sendEmail": "E-mail küldése",
-      "markAsSent": "Megjelölés elküldöttként"
+      "markAsSent": "Megjelölés elküldöttként",
+      "sendByWhatsapp": "Küldés WhatsAppon",
+      "sendWhatsapp": "WhatsApp küldése",
+      "willSendToPhone": "WhatsAppon erre a számra küldjük"
     },
     "errors": {
       "load": "Hiba a számlák betöltésekor",
@@ -2700,7 +2739,6 @@
     "subtitle": "A rendelő elemzései és statisztikái",
     "viewReports": "Riportok megtekintése",
     "noAccess": "Egyik riporthoz sincs hozzáférése",
-    "loadError": "Nem sikerült betölteni a riport adatait",
     "dashboard": {
       "title": "Vezérlőpult",
       "subtitle": "A rendelője egy pillantásra",
@@ -2894,7 +2932,8 @@
         "title": "Nincs adat ebben az időszakban",
         "desc": "Próbáljon tágabb dátumtartományt, vagy távolítsa el a szűrőket."
       }
-    }
+    },
+    "loadError": "Nem sikerült betölteni a riport adatait"
   },
   "invoiceSeries": {
     "title": "Számlatömbök",

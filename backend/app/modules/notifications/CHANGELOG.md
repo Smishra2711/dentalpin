@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- feat(#287): clinic-wide channel configuration — `preferred_channel`, `fallback_enabled`, `manual_channels` on clinic_notification_settings (migration notif_0004) with `available_channels` computed from the adapter registry; the gateway resolves auto-sends as preferred→fallback instead of per-type channel lists; missing preference rows no longer block WhatsApp (opt-out, bug 11); manual `POST /send` accepts `channels` and no longer 400s phone-only WhatsApp sends; every contact guard is email-OR-phone; the broken 7/14-day budget reminder actually sends (new `budget_reminder` handler + templates); skip rows carry the real channel; Settings page grew a Channels card; the type table gained invoice_sent/budget_reminder/recall_reminder.
+
+- fix(#287): an explicit `whatsapp_enabled=False` opt-out blocks WhatsApp even under `force_send` — same contract as `email_enabled` (the reminder cron and staff Send buttons pass `force_send` and must not override a recorded opt-out); missing rows still don't block.
+
+- feat(#287): `settings.read` granted to dentist/assistant/receptionist so every manual-send surface can read the clinic channel config and render its channel buttons (write stays admin-only).
+
+
 - feat(#207): `GET /notifications/channels` reports which channels are configured for the clinic (each adapter's `supports`); the patient-summary WhatsApp conversation card hides until the channel is actually available instead of offering a reply box that can only 409.
 
 - feat(#131): German (de) locale for the module's frontend layer.

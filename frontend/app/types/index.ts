@@ -1061,8 +1061,11 @@ export interface BudgetUpdate {
 }
 
 // Workflow
+export type DocumentSendMethod = 'manual' | 'email' | 'whatsapp'
+
 export interface BudgetSendRequest {
   send_email?: boolean
+  send_method?: DocumentSendMethod
   custom_message?: string
 }
 
@@ -1073,11 +1076,6 @@ export interface BudgetAcceptRequest {
 export interface BudgetRejectRequest {
   reason?: string
   signature?: SignatureCreate
-}
-
-export interface BudgetSendRequest {
-  send_email?: boolean
-  custom_message?: string
 }
 
 export interface BudgetCancelRequest {
@@ -1167,16 +1165,29 @@ export interface NotificationTypeSettings {
   channels?: string[]
 }
 
+export type NotificationChannel = 'email' | 'whatsapp'
+
 export interface ClinicNotificationSettings {
   id: string
   clinic_id: string
+  /** Channel used for every auto-send. */
+  preferred_channel: NotificationChannel
+  /** Try the other available channel when the preferred one cannot send. */
+  fallback_enabled: boolean
+  /** Channels the app renders manual Send buttons for. */
+  manual_channels: string[]
+  /** Computed server-side: channels whose adapter supports this clinic. */
+  available_channels: string[]
   settings: Record<string, NotificationTypeSettings>
   created_at: string
   updated_at: string
 }
 
 export interface ClinicNotificationSettingsUpdate {
-  settings: Record<string, Partial<NotificationTypeSettings>>
+  preferred_channel?: NotificationChannel
+  fallback_enabled?: boolean
+  manual_channels?: string[]
+  settings?: Record<string, Partial<NotificationTypeSettings>>
 }
 
 export interface EmailLog {
@@ -1203,6 +1214,8 @@ export interface ManualSendRequest {
   patient_id?: string
   appointment_id?: string
   budget_id?: string
+  /** Explicit channel for a staff Send button, e.g. `['whatsapp']`. */
+  channels?: NotificationChannel[]
   custom_context?: Record<string, unknown>
 }
 
@@ -1727,6 +1740,7 @@ export interface InvoiceIssueRequest {
 
 export interface InvoiceSendRequest {
   send_email: boolean
+  send_method?: DocumentSendMethod
   custom_message?: string
 }
 

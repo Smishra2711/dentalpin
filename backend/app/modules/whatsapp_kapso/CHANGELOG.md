@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- feat(#287): NOTIFICATION_TYPES gains invoice_sent/budget_reminder/recall_reminder (i18n labels); new getting-started rule warns when the clinic prefers WhatsApp but Kapso isn't connected.
+
+
 - feat(#131): German (de) locale for the module's frontend layer.
 
 - feat(#144, #132): Polish (pl) and Italian (it) locales for the module's frontend layer.

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat(#287): the appointment modal's email-only confirmation checkbox and mail dropdown are replaced by channel-aware controls driven by the clinic's manual channels (confirmation/reminder/cancellation per receivable channel).
+
 - fix(#101): a failed appointments fetch renders an error banner with Retry instead of a blank calendar that reads as a free week; the appointment modal's footer cancel now asks for confirmation.
 
 - feat(#207): the appointments page forwards `?plan_id=` to the create modal (`initialPlanId`), which preselects that plan's pending treatments in the treatment selector.
