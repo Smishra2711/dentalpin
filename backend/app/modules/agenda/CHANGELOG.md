@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- refactor(#309): booking no longer imports treatment_plan — planned-item eager loading, validation and catalog snapshotting go through the new `PlannedWorkProvider` registry (`planned_work.py`); the import-allowlist entry is drained. The `planned_treatment_item_id` FK stays documented cycle-bound debt.
+
 - feat(#287): the appointment modal's email-only confirmation checkbox and mail dropdown are replaced by channel-aware controls driven by the clinic's manual channels (confirmation/reminder/cancellation per receivable channel).
 
 - fix(#101): a failed appointments fetch renders an error banner with Retry instead of a blank calendar that reads as a free week; the appointment modal's footer cancel now asks for confirmation.

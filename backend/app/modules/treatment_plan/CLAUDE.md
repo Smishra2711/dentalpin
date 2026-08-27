@@ -95,6 +95,16 @@ Clinical-note created events (`clinical_notes.{administrative,diagnosis,treatmen
 | `budget.superseded`             | `on_budget_superseded`      | repoint `budget_id` to the resent version (only while still pointing at the old one) |
 | `odontogram.treatment.performed` | `on_treatment_performed`   | mark planned item completed when its tooth treatment is performed |
 
+## Agenda planned-work provider
+
+``agenda_provider.py`` implements agenda's ``PlannedWorkProvider``
+protocol (registered at import time in ``__init__.py``, issue #309):
+eager-load options for ``AppointmentTreatment.planned_item``, the
+booking-time validation rules (draft/pending/active plans bookable —
+#108 — items only while ``pending``), and the catalog-item snapshot
+for booking. Keep its validation in sync with the state machine above;
+agenda calls it blind through the registry.
+
 ## Frontend slots consumed
 
 | Slot (host) | Component | Purpose |
