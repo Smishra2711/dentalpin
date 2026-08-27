@@ -96,7 +96,11 @@
     "derivedSettings": "Strefa czasowa i waluta",
     "willSeed": "Utworzymy dla Ciebie katalog zabiegów, stawki VAT, serię faktur, jeden gabinet zabiegowy i grafik od poniedziałku do piątku. Wszystko można później zmienić.",
     "willSuggestVerifactu": "Następnie zaproponujemy włączenie VeriFactu.",
-    "invalidData": "Sprawdź dane: któreś pole jest nieprawidłowe."
+    "invalidData": "Sprawdź dane: któreś pole jest nieprawidłowe.",
+    "attendPatientsMyself": "Sam przyjmuję pacjentów",
+    "attendPatientsMyselfHelp": "Oznacza Cię jako specjalistę z możliwością rezerwacji wizyt. Można to później zmienić w ustawieniach zespołu.",
+    "addressTitle": "Adres gabinetu",
+    "addressOptional": "opcjonalnie"
   },
   "onboarding": {
     "title": "Pierwsze kroki",
