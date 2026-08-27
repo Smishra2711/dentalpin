@@ -298,6 +298,10 @@
       "submit": "Affecter",
       "success": "Paiement affecté au devis",
       "error": "Impossible de réaffecter le paiement. Réessayez."
+    },
+    "followup": {
+      "collect": "Encaisser",
+      "collected": "Paiement enregistré."
     }
   }
 }

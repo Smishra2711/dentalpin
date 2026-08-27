@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat(#207): `GET /notifications/channels` reports which channels are configured for the clinic (each adapter's `supports`); the patient-summary WhatsApp conversation card hides until the channel is actually available instead of offering a reply box that can only 409.
+
 - feat(#131): German (de) locale for the module's frontend layer.
 
 - feat(#144, #132): Polish (pl) and Italian (it) locales for the module's frontend layer.

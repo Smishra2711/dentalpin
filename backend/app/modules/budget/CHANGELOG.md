@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat(#207): the in-clinic accept/reject signature modal prefills "Signed by" with the patient's name and email while the relation is *patient*; changing the relation clears it.
+
 - fix(#203): the back link on budget detail/new rendered the raw key `actions.back` when arriving from the patient page — the key never existed in any locale; use `common.back` ("Volver").
 
 - fix(#181): `_recalculate_totals` prorates the global discount per line (`pricing.allocate_global_discount`) and charges VAT on the discounted base, so the quote's `total_discount`/`total_tax` match the invoice built from it (`total` unchanged). New `pricing.net_line_total` + `items[].net_line_total` on the detail response; quote detail, public page and PDF show the net price with the gross struck through and the global share labelled.

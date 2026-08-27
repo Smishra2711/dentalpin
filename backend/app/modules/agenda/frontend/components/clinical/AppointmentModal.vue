@@ -20,6 +20,8 @@ const props = defineProps<{
   /** Pre-fill the cabinet field (#61, mobile free-slot tap when track = cabinet). */
   initialCabinet?: string | null
   initialPatientId?: string
+  /** Preselect this plan's pending treatments (treatment-plan flow, #207). */
+  initialPlanId?: string
   existingAppointments?: Appointment[]
 }>()
 
@@ -692,6 +694,7 @@ function openPatientFile() {
                 <PlannedTreatmentSelector
                   v-model="selectedTreatments"
                   :patient-id="selectedPatient?.id"
+                  :preselect-plan-id="!appointment ? initialPlanId : undefined"
                 />
               </div>
             </section>

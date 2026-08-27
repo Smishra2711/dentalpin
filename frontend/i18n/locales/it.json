@@ -96,7 +96,11 @@
     "derivedSettings": "Fuso orario e valuta",
     "willSeed": "Creeremo per te il listino prestazioni, le aliquote IVA, una serie di fatturazione, un riunito e un orario dal lunedì al venerdì. Tutto è modificabile in seguito.",
     "willSuggestVerifactu": "In seguito ti proporremo di attivare VeriFactu.",
-    "invalidData": "Controlla i dati: un campo non è valido."
+    "invalidData": "Controlla i dati: un campo non è valido.",
+    "attendPatientsMyself": "Visito personalmente i pazienti",
+    "attendPatientsMyselfHelp": "Ti contrassegna come professionista prenotabile. Potrai cambiarlo in seguito nelle impostazioni del team.",
+    "addressTitle": "Indirizzo dello studio",
+    "addressOptional": "facoltativo"
   },
   "onboarding": {
     "title": "Primi passi",
@@ -1863,6 +1867,12 @@
     "newBudgetHint": {
       "text": "Questo paziente ha il piano {plan} senza preventivo. Genera il preventivo dal piano così restano collegati.",
       "cta": "Apri il piano"
+    },
+    "viewDraftBudget": "Preventivo {number} (bozza)",
+    "followup": {
+      "subtitle": "Questi trattamenti pianificati della visita non sono stati contrassegnati come eseguiti:",
+      "markPerformed": "Contrassegna come eseguiti",
+      "marked": "Contrassegnati come eseguiti: {count}."
     }
   },
   "pipeline": {

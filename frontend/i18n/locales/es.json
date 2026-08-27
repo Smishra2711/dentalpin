@@ -1867,6 +1867,12 @@
     "newBudgetHint": {
       "text": "Este paciente tiene el plan {plan} sin presupuesto. Genera el presupuesto desde el plan para que queden vinculados.",
       "cta": "Ir al plan"
+    },
+    "viewDraftBudget": "Presupuesto {number} (borrador)",
+    "followup": {
+      "subtitle": "Estos tratamientos del plan quedaron sin marcar como realizados:",
+      "markPerformed": "Marcar como realizados",
+      "marked": "Marcados como realizados: {count}."
     }
   },
   "pipeline": {

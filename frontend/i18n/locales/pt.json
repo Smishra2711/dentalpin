@@ -1867,6 +1867,12 @@
     "newBudgetHint": {
       "text": "Este paciente tem o plano {plan} sem orçamento. Gere o orçamento a partir do plano para que fiquem ligados.",
       "cta": "Abrir plano"
+    },
+    "viewDraftBudget": "Orçamento {number} (rascunho)",
+    "followup": {
+      "subtitle": "Estes tratamentos do plano ficaram sem marcar como realizados:",
+      "markPerformed": "Marcar como realizados",
+      "marked": "Marcados como realizados: {count}."
     }
   },
   "pipeline": {

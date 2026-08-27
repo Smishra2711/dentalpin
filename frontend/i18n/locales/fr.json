@@ -1867,6 +1867,12 @@
     "newBudgetHint": {
       "text": "Ce patient a le plan {plan} sans devis. Générez le devis depuis le plan pour qu'ils restent liés.",
       "cta": "Ouvrir le plan"
+    },
+    "viewDraftBudget": "Devis {number} (brouillon)",
+    "followup": {
+      "subtitle": "Ces traitements planifiés de la visite n'ont pas été marqués comme réalisés :",
+      "markPerformed": "Marquer comme réalisés",
+      "marked": "Marqués comme réalisés : {count}."
     }
   },
   "pipeline": {

@@ -298,6 +298,10 @@
       "submit": "Atribuir",
       "success": "Pagamento atribuído ao orçamento",
       "error": "Não foi possível reatribuir o pagamento. Tente novamente."
+    },
+    "followup": {
+      "collect": "Receber pagamento",
+      "collected": "Pagamento registrado."
     }
   }
 }
