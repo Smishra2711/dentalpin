@@ -96,7 +96,11 @@
     "derivedSettings": "Timezone and currency",
     "willSeed": "We'll create the treatment catalog, VAT types, an invoice series, one room and a Monday–Friday schedule for you. Everything can be changed later.",
     "willSuggestVerifactu": "We'll suggest enabling VeriFactu afterwards.",
-    "invalidData": "Please review the data: some field is invalid."
+    "invalidData": "Please review the data: some field is invalid.",
+    "attendPatientsMyself": "I attend patients myself",
+    "attendPatientsMyselfHelp": "Marks you as a bookable professional. You can change this later in Team settings.",
+    "addressTitle": "Clinic address",
+    "addressOptional": "optional"
   },
   "onboarding": {
     "title": "Getting started",

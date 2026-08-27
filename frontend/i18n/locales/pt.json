@@ -96,7 +96,11 @@
     "derivedSettings": "Fuso horário e moeda",
     "willSeed": "Criaremos por si o catálogo de tratamentos, os tipos de IVA, uma série de faturas, um gabinete e um horário de segunda a sexta. Tudo pode ser alterado depois.",
     "willSuggestVerifactu": "Depois sugeriremos ativar o VeriFactu.",
-    "invalidData": "Reveja os dados: algum campo é inválido."
+    "invalidData": "Reveja os dados: algum campo é inválido.",
+    "attendPatientsMyself": "Eu mesmo atendo pacientes",
+    "attendPatientsMyselfHelp": "Marca você como profissional agendável. Pode ser alterado depois em Equipe.",
+    "addressTitle": "Endereço da clínica",
+    "addressOptional": "opcional"
   },
   "onboarding": {
     "title": "Primeiros passos",

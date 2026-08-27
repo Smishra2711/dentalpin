@@ -96,7 +96,11 @@
     "derivedSettings": "Időzóna és pénznem",
     "willSeed": "Létrehozzuk Önnek a kezeléskatalógust, az áfakulcsokat, egy számlatömböt, egy kezelőt és egy hétfőtől péntekig tartó munkarendet. Később minden módosítható.",
     "willSuggestVerifactu": "Ezután javasolni fogjuk a VeriFactu bekapcsolását.",
-    "invalidData": "Kérjük, ellenőrizze az adatokat: valamelyik mező érvénytelen."
+    "invalidData": "Kérjük, ellenőrizze az adatokat: valamelyik mező érvénytelen.",
+    "attendPatientsMyself": "Magam is ellátok pácienseket",
+    "attendPatientsMyselfHelp": "Foglalható szakemberként jelöl meg. Később a Csapat beállításokban módosítható.",
+    "addressTitle": "A rendelő címe",
+    "addressOptional": "nem kötelező"
   },
   "onboarding": {
     "title": "Első lépések",

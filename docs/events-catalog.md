@@ -310,7 +310,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.CLINIC_CREATED`
 - **Publishers:**
-  - `core:core` — `backend/app/core/auth/router.py:189`
+  - `core:core` — `backend/app/core/auth/router.py:206`
 - **Subscribers:**
   - `agenda`
   - `billing`
