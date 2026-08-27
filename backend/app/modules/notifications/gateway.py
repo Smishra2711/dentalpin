@@ -142,7 +142,6 @@ class NotificationGateway:
             requested,
             to_address,
             message_kind,
-            force_send=force_send,
         )
         if resolved is None:
             return await NotificationGateway._skip(
@@ -475,7 +474,6 @@ class NotificationGateway:
         requested,
         to_address,
         requested_kind=None,
-        force_send=False,
     ):
         for name in requested:
             try:
@@ -506,11 +504,11 @@ class NotificationGateway:
                         return channel, addr, "session", None
                     continue
                 # Proactive: opt-out like email — an explicit
-                # whatsapp_enabled=False blocks; a missing prefs row does
-                # not. A manual/force send (staff Send button) may use
-                # WhatsApp without a prior opt-in row; do_not_contact was
-                # already hard-blocked upstream.
-                if not force_send and prefs is not None and not prefs.whatsapp_enabled:
+                # whatsapp_enabled=False blocks (even force_send, exactly
+                # like email_enabled above: the reminder cron and staff
+                # Send buttons pass force_send, and neither may override
+                # a recorded opt-out); a missing prefs row does not block.
+                if prefs is not None and not prefs.whatsapp_enabled:
                     continue
                 # An approved Meta template (HSM) is always required for
                 # proactive sends — never fall back to direct text.

@@ -573,10 +573,6 @@
       "categories": {
         "common": "Frequenti",
         "restorative": "Conservativa",
-        "diagnostic": "Diagnostica",
-        "orthodontic": "Ortodonzia",
-        "periodontic": "Parodontologia",
-        "position": "Posizione",
         "other": "Altro",
         "diagnostico": "Diagnostica",
         "restauradora": "Conservativa",
@@ -2476,11 +2472,9 @@
     "issueDate": "Data di emissione",
     "subtotal": "Subtotale",
     "discount": "Sconto",
-    "totalDiscount": "Sconto totale",
     "tax": "Imposta",
     "total": "Totale",
     "paid": "Pagato",
-    "totalPaid": "Totale incassato",
     "balance": "Saldo",
     "balanceDue": "Saldo dovuto",
     "overdue": "Scaduta",
@@ -2517,7 +2511,6 @@
     },
     "tooth": "Dente",
     "vat": "IVA",
-    "currency": "Valuta",
     "internalNotes": "Note interne",
     "internalNotesPlaceholder": "Note visibili solo allo staff...",
     "publicNotes": "Note pubbliche",
@@ -2569,7 +2562,6 @@
     },
     "payments": {
       "title": "Pagamenti",
-      "record": "Registra pagamento",
       "void": "Storna pagamento",
       "amount": "Importo",
       "method": "Metodo di pagamento",
@@ -2577,7 +2569,6 @@
       "reference": "Riferimento",
       "notes": "Note",
       "noPayments": "Nessun pagamento registrato",
-      "recorded": "Pagamento registrato",
       "voided": "Pagamento stornato",
       "voidReason": "Motivo dello storno",
       "voidReasonPlaceholder": "Motivo dello storno di questo pagamento...",
@@ -2596,10 +2587,7 @@
       "reason": "Motivo",
       "reasonPlaceholder": "Motivo della nota di credito...",
       "selectItems": "Seleziona le voci da rettificare",
-      "fullCreditNote": "Nota di credito totale (tutte le voci)",
-      "partialCreditNote": "Nota di credito parziale (voci selezionate)",
-      "originalInvoice": "Fattura originale",
-      "created": "Nota di credito creata"
+      "originalInvoice": "Fattura originale"
     },
     "history": {
       "title": "Storico",
@@ -2629,10 +2617,7 @@
       "type": "Tipo",
       "currentNumber": "Numero attuale",
       "resetYearly": "Azzera ogni anno",
-      "default": "Predefinita",
-      "active": "Attiva",
-      "invoice": "Fattura",
-      "credit_note": "Nota di credito"
+      "default": "Predefinita"
     },
     "filters": {
       "allStatuses": "Stato",
@@ -2739,7 +2724,6 @@
       "send": "Errore nell'invio della fattura",
       "creditNoteReasonRequired": "Il motivo della nota di credito è obbligatorio",
       "notFound": "Fattura non trovata",
-      "onlyDraft": "Solo le fatture in bozza sono modificabili",
       "canOnlyDeleteDraft": "Solo le fatture in bozza sono eliminabili",
       "patientRequired": "Il paziente è obbligatorio",
       "itemsRequired": "È richiesta almeno una voce",

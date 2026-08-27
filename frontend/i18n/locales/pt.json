@@ -573,10 +573,6 @@
       "categories": {
         "common": "Comuns",
         "restorative": "Dentisteria",
-        "diagnostic": "Diagnóstico",
-        "orthodontic": "Ortodontia",
-        "periodontic": "Periodontologia",
-        "position": "Posição",
         "other": "Outros",
         "diagnostico": "Diagnóstico",
         "restauradora": "Dentisteria",
@@ -2476,11 +2472,9 @@
     "issueDate": "Data de emissão",
     "subtotal": "Subtotal",
     "discount": "Desconto",
-    "totalDiscount": "Desconto total",
     "tax": "Imposto",
     "total": "Total",
     "paid": "Pago",
-    "totalPaid": "Total pago",
     "balance": "Saldo",
     "balanceDue": "Saldo em dívida",
     "overdue": "Em atraso",
@@ -2517,7 +2511,6 @@
     },
     "tooth": "Dente",
     "vat": "IVA",
-    "currency": "Moeda",
     "internalNotes": "Notas internas",
     "internalNotesPlaceholder": "Notas visíveis apenas para a equipa...",
     "publicNotes": "Notas públicas",
@@ -2569,7 +2562,6 @@
     },
     "payments": {
       "title": "Pagamentos",
-      "record": "Registar pagamento",
       "void": "Anular pagamento",
       "amount": "Montante",
       "method": "Método de pagamento",
@@ -2577,7 +2569,6 @@
       "reference": "Referência",
       "notes": "Notas",
       "noPayments": "Nenhum pagamento registado",
-      "recorded": "Pagamento registado",
       "voided": "Pagamento anulado",
       "voidReason": "Motivo da anulação",
       "voidReasonPlaceholder": "Motivo para anular este pagamento...",
@@ -2596,10 +2587,7 @@
       "reason": "Motivo",
       "reasonPlaceholder": "Motivo da nota de crédito...",
       "selectItems": "Selecionar as linhas a retificar",
-      "fullCreditNote": "Nota de crédito total (todas as linhas)",
-      "partialCreditNote": "Nota de crédito parcial (linhas selecionadas)",
-      "originalInvoice": "Fatura original",
-      "created": "Nota de crédito criada"
+      "originalInvoice": "Fatura original"
     },
     "history": {
       "title": "Histórico",
@@ -2629,10 +2617,7 @@
       "type": "Tipo",
       "currentNumber": "Número atual",
       "resetYearly": "Reiniciar anualmente",
-      "default": "Predefinida",
-      "active": "Ativa",
-      "invoice": "Fatura",
-      "credit_note": "Nota de crédito"
+      "default": "Predefinida"
     },
     "filters": {
       "allStatuses": "Estado",
@@ -2739,7 +2724,6 @@
       "send": "Erro ao enviar a fatura",
       "creditNoteReasonRequired": "O motivo da nota de crédito é obrigatório",
       "notFound": "Fatura não encontrada",
-      "onlyDraft": "Só é possível editar faturas em rascunho",
       "canOnlyDeleteDraft": "Só é possível eliminar faturas em rascunho",
       "patientRequired": "O paciente é obrigatório",
       "itemsRequired": "É necessária pelo menos uma linha",

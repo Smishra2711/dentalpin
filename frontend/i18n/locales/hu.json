@@ -573,10 +573,6 @@
       "categories": {
         "common": "Gyakori",
         "restorative": "Konzerváló",
-        "diagnostic": "Diagnosztika",
-        "orthodontic": "Fogszabályozás",
-        "periodontic": "Parodontológia",
-        "position": "Helyzet",
         "other": "Egyéb",
         "diagnostico": "Diagnosztika",
         "restauradora": "Konzerváló",
@@ -2476,11 +2472,9 @@
     "issueDate": "Kiállítás dátuma",
     "subtotal": "Részösszeg",
     "discount": "Kedvezmény",
-    "totalDiscount": "Összes kedvezmény",
     "tax": "Adó",
     "total": "Összesen",
     "paid": "Fizetve",
-    "totalPaid": "Összesen befizetve",
     "balance": "Egyenleg",
     "balanceDue": "Fizetendő egyenleg",
     "overdue": "Lejárt",
@@ -2517,7 +2511,6 @@
     },
     "tooth": "Fog",
     "vat": "Áfa",
-    "currency": "Pénznem",
     "internalNotes": "Belső jegyzetek",
     "internalNotesPlaceholder": "Csak a személyzet számára látható jegyzetek...",
     "publicNotes": "Nyilvános megjegyzések",
@@ -2569,7 +2562,6 @@
     },
     "payments": {
       "title": "Befizetések",
-      "record": "Befizetés rögzítése",
       "void": "Befizetés érvénytelenítése",
       "amount": "Összeg",
       "method": "Fizetési mód",
@@ -2577,7 +2569,6 @@
       "reference": "Hivatkozás",
       "notes": "Megjegyzések",
       "noPayments": "Nincs rögzített befizetés",
-      "recorded": "Befizetés rögzítve",
       "voided": "Befizetés érvénytelenítve",
       "voidReason": "Érvénytelenítés oka",
       "voidReasonPlaceholder": "A befizetés érvénytelenítésének oka...",
@@ -2596,10 +2587,7 @@
       "reason": "Ok",
       "reasonPlaceholder": "A jóváíró számla oka...",
       "selectItems": "Válassza ki a helyesbítendő tételeket",
-      "fullCreditNote": "Teljes jóváíró számla (minden tétel)",
-      "partialCreditNote": "Részleges jóváíró számla (kijelölt tételek)",
-      "originalInvoice": "Eredeti számla",
-      "created": "Jóváíró számla létrehozva"
+      "originalInvoice": "Eredeti számla"
     },
     "history": {
       "title": "Előzmények",
@@ -2629,10 +2617,7 @@
       "type": "Típus",
       "currentNumber": "Aktuális sorszám",
       "resetYearly": "Évente újrakezdődik",
-      "default": "Alapértelmezett",
-      "active": "Aktív",
-      "invoice": "Számla",
-      "credit_note": "Jóváíró számla"
+      "default": "Alapértelmezett"
     },
     "filters": {
       "allStatuses": "Állapot",
@@ -2739,7 +2724,6 @@
       "send": "Hiba a számla küldésekor",
       "creditNoteReasonRequired": "A jóváírás okának megadása kötelező",
       "notFound": "A számla nem található",
-      "onlyDraft": "Csak piszkozat állapotú számla szerkeszthető",
       "canOnlyDeleteDraft": "Csak piszkozat állapotú számla törölhető",
       "patientRequired": "A páciens megadása kötelező",
       "itemsRequired": "Legalább egy tétel szükséges",

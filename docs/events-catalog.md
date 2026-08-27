@@ -429,14 +429,14 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.EMAIL_FAILED`
 - **Publishers:**
-  - `notifications` — `backend/app/modules/notifications/gateway.py:583`
+  - `notifications` — `backend/app/modules/notifications/gateway.py:581`
 - **Subscribers:** —
 
 ### `email.sent`
 
 - **Constant:** `EventType.EMAIL_SENT`
 - **Publishers:**
-  - `notifications` — `backend/app/modules/notifications/gateway.py:581`
+  - `notifications` — `backend/app/modules/notifications/gateway.py:579`
 - **Subscribers:** —
 
 ### `inventory.low_stock`
@@ -580,14 +580,14 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.NOTIFICATION_DELIVERED`
 - **Publishers:**
-  - `notifications` — `backend/app/modules/notifications/gateway.py:325`
+  - `notifications` — `backend/app/modules/notifications/gateway.py:324`
 - **Subscribers:** —
 
 ### `notification.failed`
 
 - **Constant:** `EventType.NOTIFICATION_FAILED`
 - **Publishers:**
-  - `notifications` — `backend/app/modules/notifications/gateway.py:295`
+  - `notifications` — `backend/app/modules/notifications/gateway.py:294`
 - **Subscribers:**
   - `patient_timeline`
 
@@ -595,14 +595,14 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.NOTIFICATION_QUEUED`
 - **Publishers:**
-  - `notifications` — `backend/app/modules/notifications/gateway.py:194`
+  - `notifications` — `backend/app/modules/notifications/gateway.py:193`
 - **Subscribers:** —
 
 ### `notification.reply_received`
 
 - **Constant:** `EventType.NOTIFICATION_REPLY_RECEIVED`
 - **Publishers:**
-  - `notifications` — `backend/app/modules/notifications/gateway.py:385`
+  - `notifications` — `backend/app/modules/notifications/gateway.py:384`
 - **Subscribers:**
   - `patient_timeline`
 
@@ -610,7 +610,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.NOTIFICATION_SENT`
 - **Publishers:**
-  - `notifications` — `backend/app/modules/notifications/gateway.py:282`
+  - `notifications` — `backend/app/modules/notifications/gateway.py:281`
 - **Subscribers:**
   - `patient_timeline`
 

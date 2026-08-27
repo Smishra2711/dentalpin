@@ -573,10 +573,6 @@
       "categories": {
         "common": "Häufig",
         "restorative": "Restaurativ",
-        "diagnostic": "Diagnostik",
-        "orthodontic": "Kieferorthopädie",
-        "periodontic": "Parodontologie",
-        "position": "Stellung",
         "other": "Sonstige",
         "diagnostico": "Diagnostik",
         "restauradora": "Restaurativ",
@@ -2476,11 +2472,9 @@
     "issueDate": "Ausstellungsdatum",
     "subtotal": "Zwischensumme",
     "discount": "Rabatt",
-    "totalDiscount": "Gesamtrabatt",
     "tax": "Steuer",
     "total": "Gesamt",
     "paid": "Bezahlt",
-    "totalPaid": "Gesamt bezahlt",
     "balance": "Saldo",
     "balanceDue": "Offener Betrag",
     "overdue": "Überfällig",
@@ -2517,7 +2511,6 @@
     },
     "tooth": "Zahn",
     "vat": "MwSt.",
-    "currency": "Währung",
     "internalNotes": "Interne Notizen",
     "internalNotesPlaceholder": "Nur für das Team sichtbare Notizen...",
     "publicNotes": "Öffentliche Notizen",
@@ -2569,7 +2562,6 @@
     },
     "payments": {
       "title": "Zahlungen",
-      "record": "Zahlung erfassen",
       "void": "Zahlung annullieren",
       "amount": "Betrag",
       "method": "Zahlungsart",
@@ -2577,7 +2569,6 @@
       "reference": "Referenz",
       "notes": "Notizen",
       "noPayments": "Keine Zahlungen erfasst",
-      "recorded": "Zahlung erfasst",
       "voided": "Zahlung annulliert",
       "voidReason": "Annullierungsgrund",
       "voidReasonPlaceholder": "Grund für die Annullierung dieser Zahlung...",
@@ -2596,10 +2587,7 @@
       "reason": "Grund",
       "reasonPlaceholder": "Grund für die Stornorechnung...",
       "selectItems": "Zu korrigierende Positionen auswählen",
-      "fullCreditNote": "Vollständige Stornorechnung (alle Positionen)",
-      "partialCreditNote": "Teilweise Stornorechnung (ausgewählte Positionen)",
-      "originalInvoice": "Ursprüngliche Rechnung",
-      "created": "Stornorechnung erstellt"
+      "originalInvoice": "Ursprüngliche Rechnung"
     },
     "history": {
       "title": "Verlauf",
@@ -2629,10 +2617,7 @@
       "type": "Typ",
       "currentNumber": "Aktuelle Nummer",
       "resetYearly": "Jährlich zurücksetzen",
-      "default": "Standard",
-      "active": "Aktiv",
-      "invoice": "Rechnung",
-      "credit_note": "Stornorechnung"
+      "default": "Standard"
     },
     "filters": {
       "allStatuses": "Status",
@@ -2739,7 +2724,6 @@
       "send": "Fehler beim Senden der Rechnung",
       "creditNoteReasonRequired": "Der Grund der Stornorechnung ist erforderlich",
       "notFound": "Rechnung nicht gefunden",
-      "onlyDraft": "Nur Rechnungsentwürfe können bearbeitet werden",
       "canOnlyDeleteDraft": "Nur Rechnungsentwürfe können gelöscht werden",
       "patientRequired": "Ein Patient ist erforderlich",
       "itemsRequired": "Mindestens eine Position ist erforderlich",

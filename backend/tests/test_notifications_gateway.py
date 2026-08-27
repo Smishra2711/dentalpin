@@ -559,3 +559,35 @@ async def test_force_send_whatsapp_needs_no_opt_in_but_still_needs_hsm(
     assert msg.status == "queued"
     assert msg.channel == "whatsapp"
     assert msg.to_address == test_patient.phone
+
+
+@pytest.mark.asyncio
+async def test_explicit_whatsapp_opt_out_blocks_even_force_send(
+    db_session, test_patient, whatsapp_adapter
+):
+    """A recorded whatsapp_enabled=False blocks force sends too — the
+    reminder cron and the staff Send buttons both pass force_send, and
+    neither may override an explicit opt-out (same contract as
+    email_enabled)."""
+    await _channel_settings(db_session, test_patient.clinic_id, preferred="whatsapp")
+    await _approved_hsm(db_session, test_patient.clinic_id)
+    db_session.add(
+        NotificationPreference(
+            clinic_id=test_patient.clinic_id,
+            patient_id=test_patient.id,
+            whatsapp_enabled=False,
+        )
+    )
+    await db_session.commit()
+
+    msg = await NotificationGateway.enqueue(
+        db_session,
+        test_patient.clinic_id,
+        "appointment_confirmation",
+        context={},
+        patient_id=test_patient.id,
+        channels=["whatsapp"],
+        force_send=True,
+    )
+    assert msg.status == "skipped"
+    assert msg.error_message == "no_viable_channel"
