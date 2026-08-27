@@ -34,7 +34,8 @@ export function useAttachments() {
     try {
       const response = await api.post<ApiResponse<MediaAttachment>>(
         '/api/v1/media/attachments',
-        payload
+        payload,
+        { errorToast: false }
       )
       return response.data
     } catch (error) {
@@ -50,7 +51,7 @@ export function useAttachments() {
 
   async function unlink(attachmentId: string): Promise<boolean> {
     try {
-      await api.del(`/api/v1/media/attachments/${attachmentId}`)
+      await api.del(`/api/v1/media/attachments/${attachmentId}`, { errorToast: false })
       return true
     } catch (error) {
       console.error('Error unlinking attachment:', error)

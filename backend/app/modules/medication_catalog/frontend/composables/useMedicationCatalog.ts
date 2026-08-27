@@ -62,12 +62,14 @@ export function useMedicationCatalog() {
     return await api.get<ApiPaged<MedicationCatalogItem>>(url)
   }
 
+  // 409 on duplicate names is an expected branch — the settings page
+  // renders it as an inline form error, so suppress the auto-toast.
   async function create(payload: MedicationCreatePayload): Promise<ApiOk<MedicationCatalogItem>> {
-    return await api.post<ApiOk<MedicationCatalogItem>>('/api/v1/medication_catalog/', payload)
+    return await api.post<ApiOk<MedicationCatalogItem>>('/api/v1/medication_catalog/', payload, { errorToast: false })
   }
 
   async function update(id: string, payload: MedicationUpdatePayload): Promise<ApiOk<MedicationCatalogItem>> {
-    return await api.patch<ApiOk<MedicationCatalogItem>>(`/api/v1/medication_catalog/${id}`, payload)
+    return await api.patch<ApiOk<MedicationCatalogItem>>(`/api/v1/medication_catalog/${id}`, payload, { errorToast: false })
   }
 
   async function remove(id: string): Promise<void> {

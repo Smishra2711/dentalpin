@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
+
 - fix: `last_visit` (list sort and `get_recent_patients`) counts **completed** appointments only, matching the patient-summary last-visit card's definition — a future booking or a cancellation no longer ranks a patient as recently seen (PR #251 review follow-up).
 - chore: delete the orphaned `VisitSummaryCard.vue` (never mounted; superseded by the agenda-owned `NextAppointmentCard` + `LastVisitCard` on `patient.summary.cards`, #182) and its now-unused `patients.visitSummary.*` i18n keys in all five locales.
 

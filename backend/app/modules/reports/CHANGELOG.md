@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
+
 - fix(#101): report dashboards render an error banner with Retry on fetch failure instead of 0 € / empty charts (shared fetch-failed flag across the 24 fetchers + dashboard snapshot).
 
 - fix(#242): patient billing KPI "Trabajo completado" is no longer permanently 0. The `completed` budget status was removed in 2026-04, so `get_patient_summary` now derives `work_completed` from **fully invoiced** accepted quotes (every line's `invoiced_quantity` ≥ `quantity`), and `work_in_progress` becomes the complement (accepted, not yet fully invoiced) so the two KPIs partition the accepted total.

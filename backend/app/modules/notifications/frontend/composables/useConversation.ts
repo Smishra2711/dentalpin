@@ -39,9 +39,12 @@ export function useConversation(patientId: string) {
   async function reply(body: string, channel = 'whatsapp') {
     sending.value = true
     try {
+      // 409 outside the 24h WhatsApp window is an expected branch — the
+      // caller (ConversationThread) presents it, so no auto-toast here.
       const res = await api.post<ApiResponse<ConversationMessage>>(
         `${BASE}/${patientId}/reply`,
-        { channel, body }
+        { channel, body },
+        { errorToast: false }
       )
       messages.value.push(res.data)
       return true

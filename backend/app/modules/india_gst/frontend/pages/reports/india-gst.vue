@@ -50,8 +50,8 @@ async function load() {
   isLoading.value = true
   try {
     const [summaryRes, txRes] = await Promise.all([
-      api.get<{ data: Summary }>('/api/v1/india_gst/reports/summary'),
-      api.get<{ data: TransactionRow[] }>('/api/v1/india_gst/reports/transactions')
+      api.get<{ data: Summary }>('/api/v1/india_gst/reports/summary', { errorToast: false }),
+      api.get<{ data: TransactionRow[] }>('/api/v1/india_gst/reports/transactions', { errorToast: false })
     ])
     summary.value = summaryRes.data
     transactions.value = txRes.data

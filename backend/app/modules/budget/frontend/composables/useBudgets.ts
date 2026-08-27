@@ -112,7 +112,9 @@ export function useBudgets() {
 
     try {
       const response = await api.get<ApiResponse<BudgetDetail>>(
-        `/api/v1/budget/budgets/${id}`
+        `/api/v1/budget/budgets/${id}`,
+        // Callers present the failure (toast + redirect) on the null return.
+        { errorToast: false }
       )
       currentBudget.value = response.data
       return response.data
@@ -143,7 +145,9 @@ export function useBudgets() {
   async function createBudget(data: BudgetCreate): Promise<BudgetDetail> {
     const response = await api.post<ApiResponse<BudgetDetail>>(
       '/api/v1/budget/budgets',
-      data
+      data,
+      // Callers toast via errorMessage() — keep single-toast behaviour.
+      { errorToast: false }
     )
     budgets.value = [toListItem(response.data), ...budgets.value]
     currentBudget.value = response.data
@@ -153,7 +157,8 @@ export function useBudgets() {
   async function updateBudget(id: string, data: BudgetUpdate): Promise<BudgetDetail> {
     const response = await api.put<ApiResponse<BudgetDetail>>(
       `/api/v1/budget/budgets/${id}`,
-      data
+      data,
+      { errorToast: false }
     )
 
     // Update local state
@@ -175,7 +180,7 @@ export function useBudgets() {
   }
 
   async function deleteBudget(id: string): Promise<void> {
-    await api.del(`/api/v1/budget/budgets/${id}`)
+    await api.del(`/api/v1/budget/budgets/${id}`, { errorToast: false })
 
     // Remove from local state
     budgets.value = budgets.value.filter(b => b.id !== id)
@@ -191,7 +196,8 @@ export function useBudgets() {
   async function addItem(budgetId: string, data: BudgetItemCreate): Promise<BudgetItem> {
     const response = await api.post<ApiResponse<BudgetItem>>(
       `/api/v1/budget/budgets/${budgetId}/items`,
-      data
+      data,
+      { errorToast: false }
     )
 
     // Refetch current budget to get updated totals
@@ -221,7 +227,7 @@ export function useBudgets() {
   }
 
   async function removeItem(budgetId: string, itemId: string): Promise<void> {
-    await api.del(`/api/v1/budget/budgets/${budgetId}/items/${itemId}`)
+    await api.del(`/api/v1/budget/budgets/${budgetId}/items/${itemId}`, { errorToast: false })
 
     // Refetch current budget to get updated totals
     if (currentBudget.value?.id === budgetId) {
@@ -236,7 +242,8 @@ export function useBudgets() {
   async function sendBudget(id: string, data: BudgetSendRequest = {}): Promise<Budget> {
     const response = await api.post<ApiResponse<Budget>>(
       `/api/v1/budget/budgets/${id}/send`,
-      data
+      data,
+      { errorToast: false }
     )
 
     // Update local state
@@ -248,7 +255,8 @@ export function useBudgets() {
   async function acceptBudget(id: string, data: BudgetAcceptRequest): Promise<Budget> {
     const response = await api.post<ApiResponse<Budget>>(
       `/api/v1/budget/budgets/${id}/accept`,
-      data
+      data,
+      { errorToast: false }
     )
 
     // Update local state
@@ -260,7 +268,8 @@ export function useBudgets() {
   async function rejectBudget(id: string, data: BudgetRejectRequest = {}): Promise<Budget> {
     const response = await api.post<ApiResponse<Budget>>(
       `/api/v1/budget/budgets/${id}/reject`,
-      data
+      data,
+      { errorToast: false }
     )
 
     // Update local state
@@ -272,7 +281,8 @@ export function useBudgets() {
   async function cancelBudget(id: string, data: BudgetCancelRequest = {}): Promise<Budget> {
     const response = await api.post<ApiResponse<Budget>>(
       `/api/v1/budget/budgets/${id}/cancel`,
-      data
+      data,
+      { errorToast: false }
     )
 
     // Update local state
@@ -284,7 +294,8 @@ export function useBudgets() {
   async function duplicateBudget(id: string): Promise<BudgetDetail> {
     const response = await api.post<ApiResponse<BudgetDetail>>(
       `/api/v1/budget/budgets/${id}/duplicate`,
-      {}
+      {},
+      { errorToast: false }
     )
     budgets.value = [toListItem(response.data), ...budgets.value]
     return response.data
@@ -293,7 +304,8 @@ export function useBudgets() {
   async function resendBudget(id: string): Promise<BudgetDetail> {
     const response = await api.post<ApiResponse<BudgetDetail>>(
       `/api/v1/budget/budgets/${id}/resend`,
-      {}
+      {},
+      { errorToast: false }
     )
     budgets.value = [toListItem(response.data), ...budgets.value]
     return response.data
@@ -385,7 +397,10 @@ export function useBudgets() {
   async function fetchSignature(id: string): Promise<BudgetSignatureMeta | null> {
     try {
       const response = await api.get<ApiResponse<BudgetSignatureMeta>>(
-        `/api/v1/budget/budgets/${id}/signature`
+        `/api/v1/budget/budgets/${id}/signature`,
+        // Probe-style read: 404 means "not signed"; other failures render
+        // as the signature card's loadError state, never a toast.
+        { errorToast: false }
       )
       return response.data
     } catch (e: unknown) {

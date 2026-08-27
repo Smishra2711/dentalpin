@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ModuleInfo, ModuleOperationLogEntry } from '~/types'
 import type { UiColor } from '~/config/severity'
+import { errorMessage } from '~/utils/error'
 
 interface Props {
   open: boolean
@@ -29,8 +30,7 @@ async function fetchLog() {
   try {
     logEntries.value = await operations(props.module.name, 20)
   } catch (err: unknown) {
-    const e = err as { data?: { detail?: string }, message?: string }
-    logError.value = e?.data?.detail ?? e?.message ?? t('common.error')
+    logError.value = errorMessage(err, t('common.error'))
     logEntries.value = []
   } finally {
     loadingLog.value = false

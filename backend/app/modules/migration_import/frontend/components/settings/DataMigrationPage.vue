@@ -127,7 +127,9 @@ async function startUpload() {
   try {
     const formData = new FormData()
     formData.append('file', file.value)
-    const res = await api.post<{ data: ImportJob }>('/api/v1/migration_import/jobs', formData)
+    // Failures here (and in the nested validate/preview calls) render
+    // into the `uploadError` inline alert — no auto-toast.
+    const res = await api.post<{ data: ImportJob }>('/api/v1/migration_import/jobs', formData, { errorToast: false })
     job.value = res.data
     await runValidate()
   } catch (err: unknown) {
@@ -141,7 +143,9 @@ async function runValidate() {
   if (!job.value) return
   const res = await api.post<{ data: ImportJob }>(
     `/api/v1/migration_import/jobs/${job.value.id}/validate`,
-    { passphrase: passphrase.value || null }
+    { passphrase: passphrase.value || null },
+    // Bad passphrase / corrupt file → surfaced via `uploadError`.
+    { errorToast: false }
   )
   job.value = res.data
   if (job.value.status === 'validated') await loadPreview()
@@ -151,7 +155,9 @@ async function loadPreview() {
   if (!job.value) return
   const res = await api.post<{ data: PreviewResponse }>(
     `/api/v1/migration_import/jobs/${job.value.id}/preview`,
-    { passphrase: passphrase.value || null }
+    { passphrase: passphrase.value || null },
+    // Reached only via startUpload's try — surfaced via `uploadError`.
+    { errorToast: false }
   )
   preview.value = res.data
   job.value = res.data.job
@@ -177,7 +183,9 @@ async function buildProposals() {
   try {
     const res = await api.post<{ data: ProposalSummary }>(
       `/api/v1/migration_import/jobs/${job.value.id}/proposals`,
-      { passphrase: passphrase.value || null }
+      { passphrase: passphrase.value || null },
+      // Failure renders into the `proposalsError` inline alert.
+      { errorToast: false }
     )
     proposalSummary.value = res.data
     await loadProposals()

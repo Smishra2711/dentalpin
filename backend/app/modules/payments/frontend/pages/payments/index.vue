@@ -64,7 +64,8 @@ async function fetcher(q: {
   if (q.filters.date_to) params.set('date_to', q.filters.date_to)
   if (q.sort) params.set('sort', q.sort)
 
-  const response = await api.get<PaginatedResponse<PaymentRecord>>(`/api/v1/payments?${params.toString()}`)
+  // useListQuery surfaces failures via the `error` banner.
+  const response = await api.get<PaginatedResponse<PaymentRecord>>(`/api/v1/payments?${params.toString()}`, { errorToast: false })
   // Client-side multi-method filter (until backend accepts list).
   let data = response.data
   if (q.filters.method.length > 1) {
@@ -221,186 +222,149 @@ function formatDate(s: string | undefined): string {
 </script>
 
 <template>
-  <DataListLayout
-    :title="t('payments.list.title')"
-    :subtitle="t('payments.list.subtitle')"
-    :loading="isLoading"
-    :empty="!payments.length"
-    :error="error"
-    :page="page"
-    :page-size="pageSize"
-    :total="total"
-    :total-pages="totalPages"
-    @update:page="(v) => (page = v)"
-  >
-    <template #actions>
-      <UButton
-        v-if="can(PERMISSIONS.payments.recordWrite)"
-        color="primary"
-        icon="i-lucide-plus"
-        @click="showCreate = true"
-      >
-        {{ t('payments.list.new') }}
-      </UButton>
-    </template>
-
-    <template #toolbar>
-      <FilterBar
-        :active-count="activeFilterCount"
-        @reset="resetFilters"
-      >
-        <template #search>
-          <SearchBar
-            :model-value="filters.q"
-            :placeholder="t('payments.list.searchPlaceholder')"
-            max-width="max-w-sm"
-            @update:model-value="(v) => setFilter('q', v)"
-          />
-        </template>
-
-        <FilterChipMulti
-          :model-value="filters.method"
-          :items="methodItems"
-          :label="t('payments.list.filter.method')"
-          icon="i-lucide-credit-card"
-          @update:model-value="(v) => setFilter('method', v)"
-        />
-
-        <FilterDateRange v-model="dateRange" />
-
-        <FilterEntityPicker
-          :model-value="filters.patient_id"
-          :label="t('payments.list.filter.patient')"
-          icon="i-lucide-user"
-          :fetcher="patientFetcher"
-          :resolve="patientResolver"
-          @update:model-value="(v) => setFilter('patient_id', v)"
-        />
-
-        <FilterToggle
-          :model-value="filters.has_refunds"
-          :label="t('payments.list.filter.hasRefunds')"
-          icon="i-lucide-rotate-ccw"
-          @update:model-value="(v) => setFilter('has_refunds', Boolean(v))"
-        />
-
-        <FilterToggle
-          :model-value="filters.has_unallocated"
-          :label="t('payments.list.filter.hasUnallocated')"
-          icon="i-lucide-piggy-bank"
-          @update:model-value="(v) => setFilter('has_unallocated', Boolean(v))"
-        />
-
-        <template #right>
-          <SortMenu
-            :model-value="sort"
-            :options="sortOptions"
-            @update:model-value="(v) => (sort = v)"
-          />
-        </template>
-      </FilterBar>
-    </template>
-
-    <template #empty>
-      <EmptyState
-        icon="i-lucide-wallet"
-        :title="t('payments.list.empty')"
-      >
-        <template
-          v-if="!activeFilterCount && !filters.q && can(PERMISSIONS.payments.recordWrite)"
-          #actions
+  <div>
+    <DataListLayout
+      :title="t('payments.list.title')"
+      :subtitle="t('payments.list.subtitle')"
+      :loading="isLoading"
+      :empty="!payments.length"
+      :error="error"
+      :page="page"
+      :page-size="pageSize"
+      :total="total"
+      :total-pages="totalPages"
+      @update:page="(v) => (page = v)"
+    >
+      <template #actions>
+        <UButton
+          v-if="can(PERMISSIONS.payments.recordWrite)"
+          color="primary"
+          icon="i-lucide-plus"
+          @click="showCreate = true"
         >
-          <UButton
-            color="primary"
-            icon="i-lucide-plus"
-            @click="showCreate = true"
-          >
-            {{ t('payments.list.new') }}
-          </UButton>
-        </template>
-      </EmptyState>
-    </template>
+          {{ t('payments.list.new') }}
+        </UButton>
+      </template>
 
-    <template #rows>
-      <DataListItem
-        v-for="p in payments"
-        :key="p.id"
-      >
-        <template #row>
-          <div class="shrink-0">
-            <UAvatar
-              :alt="p.patient?.first_name ?? '?'"
-              size="sm"
+      <template #toolbar>
+        <FilterBar
+          :active-count="activeFilterCount"
+          @reset="resetFilters"
+        >
+          <template #search>
+            <SearchBar
+              :model-value="filters.q"
+              :placeholder="t('payments.list.searchPlaceholder')"
+              max-width="max-w-sm"
+              @update:model-value="(v) => setFilter('q', v)"
             />
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="text-ui text-default flex items-center gap-2 flex-wrap">
-              {{ patientName(p.patient) }}
-            </div>
-            <div class="text-caption text-subtle flex items-center gap-2 flex-wrap">
-              <span>{{ formatDate(p.payment_date) }}</span>
-              <span class="inline-flex items-center gap-1">
-                <UIcon
-                  :name="methodIcon(p.method)"
-                  class="w-3.5 h-3.5"
-                />
-                {{ t(`payments.methods.${p.method}`) }}
-              </span>
-              <span
-                v-if="p.reference"
-                class="truncate max-w-[160px]"
-                :title="p.reference"
-              >· {{ p.reference }}</span>
-            </div>
-          </div>
-          <div class="shrink-0 hidden sm:flex flex-col items-end gap-0.5 max-w-[200px]">
-            <span
-              v-for="a in allocationBreakdown(p)"
-              :key="a.label"
-              class="text-caption text-subtle tnum"
-            >
-              {{ a.amount }} <span class="opacity-60">· {{ a.label }}</span>
-            </span>
-          </div>
-          <div class="shrink-0 text-right min-w-[100px]">
-            <Money
-              :value="p.amount"
-              strong
-            />
-            <div
-              v-if="Number(p.refunded_total) > 0"
-              class="text-caption text-danger tnum"
-            >
-              − {{ formatCurrency(p.refunded_total) }}
-            </div>
-          </div>
-          <UButton
-            v-if="can(PERMISSIONS.payments.recordRefund) && Number(p.net_amount) > 0"
-            variant="soft"
-            color="warning"
-            size="xs"
-            icon="i-lucide-rotate-ccw"
-            :aria-label="t('payments.detail.refund')"
-            :title="t('payments.detail.refund')"
-            @click="openRefund(p)"
+          </template>
+
+          <FilterChipMulti
+            :model-value="filters.method"
+            :items="methodItems"
+            :label="t('payments.list.filter.method')"
+            icon="i-lucide-credit-card"
+            @update:model-value="(v) => setFilter('method', v)"
           />
-        </template>
 
-        <template #card>
-          <div class="flex items-center justify-between gap-2">
-            <div class="min-w-0 flex-1">
-              <div class="font-medium text-default truncate">
+          <FilterDateRange v-model="dateRange" />
+
+          <FilterEntityPicker
+            :model-value="filters.patient_id"
+            :label="t('payments.list.filter.patient')"
+            icon="i-lucide-user"
+            :fetcher="patientFetcher"
+            :resolve="patientResolver"
+            @update:model-value="(v) => setFilter('patient_id', v)"
+          />
+
+          <FilterToggle
+            :model-value="filters.has_refunds"
+            :label="t('payments.list.filter.hasRefunds')"
+            icon="i-lucide-rotate-ccw"
+            @update:model-value="(v) => setFilter('has_refunds', Boolean(v))"
+          />
+
+          <FilterToggle
+            :model-value="filters.has_unallocated"
+            :label="t('payments.list.filter.hasUnallocated')"
+            icon="i-lucide-piggy-bank"
+            @update:model-value="(v) => setFilter('has_unallocated', Boolean(v))"
+          />
+
+          <template #right>
+            <SortMenu
+              :model-value="sort"
+              :options="sortOptions"
+              @update:model-value="(v) => (sort = v)"
+            />
+          </template>
+        </FilterBar>
+      </template>
+
+      <template #empty>
+        <EmptyState
+          icon="i-lucide-wallet"
+          :title="t('payments.list.empty')"
+        >
+          <template
+            v-if="!activeFilterCount && !filters.q && can(PERMISSIONS.payments.recordWrite)"
+            #actions
+          >
+            <UButton
+              color="primary"
+              icon="i-lucide-plus"
+              @click="showCreate = true"
+            >
+              {{ t('payments.list.new') }}
+            </UButton>
+          </template>
+        </EmptyState>
+      </template>
+
+      <template #rows>
+        <DataListItem
+          v-for="p in payments"
+          :key="p.id"
+        >
+          <template #row>
+            <div class="shrink-0">
+              <UAvatar
+                :alt="p.patient?.first_name ?? '?'"
+                size="sm"
+              />
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-ui text-default flex items-center gap-2 flex-wrap">
                 {{ patientName(p.patient) }}
               </div>
-              <div class="text-caption text-subtle truncate flex items-center gap-1">
-                <UIcon
-                  :name="methodIcon(p.method)"
-                  class="w-3.5 h-3.5"
-                />
-                {{ formatDate(p.payment_date) }} · {{ t(`payments.methods.${p.method}`) }}
+              <div class="text-caption text-subtle flex items-center gap-2 flex-wrap">
+                <span>{{ formatDate(p.payment_date) }}</span>
+                <span class="inline-flex items-center gap-1">
+                  <UIcon
+                    :name="methodIcon(p.method)"
+                    class="w-3.5 h-3.5"
+                  />
+                  {{ t(`payments.methods.${p.method}`) }}
+                </span>
+                <span
+                  v-if="p.reference"
+                  class="truncate max-w-[160px]"
+                  :title="p.reference"
+                >· {{ p.reference }}</span>
               </div>
             </div>
-            <div class="text-right shrink-0">
+            <div class="shrink-0 hidden sm:flex flex-col items-end gap-0.5 max-w-[200px]">
+              <span
+                v-for="a in allocationBreakdown(p)"
+                :key="a.label"
+                class="text-caption text-subtle tnum"
+              >
+                {{ a.amount }} <span class="opacity-60">· {{ a.label }}</span>
+              </span>
+            </div>
+            <div class="shrink-0 text-right min-w-[100px]">
               <Money
                 :value="p.amount"
                 strong
@@ -412,51 +376,90 @@ function formatDate(s: string | undefined): string {
                 − {{ formatCurrency(p.refunded_total) }}
               </div>
             </div>
-          </div>
-          <div
-            v-if="allocationBreakdown(p).length"
-            class="flex flex-wrap gap-1"
-          >
-            <UBadge
-              v-for="a in allocationBreakdown(p)"
-              :key="a.label"
-              color="neutral"
-              variant="subtle"
-              size="xs"
-            >
-              {{ a.amount }} · {{ a.label }}
-            </UBadge>
-          </div>
-          <div
-            v-if="can(PERMISSIONS.payments.recordRefund) && Number(p.net_amount) > 0"
-            class="flex justify-end"
-          >
             <UButton
+              v-if="can(PERMISSIONS.payments.recordRefund) && Number(p.net_amount) > 0"
               variant="soft"
               color="warning"
               size="xs"
               icon="i-lucide-rotate-ccw"
+              :aria-label="t('payments.detail.refund')"
+              :title="t('payments.detail.refund')"
               @click="openRefund(p)"
+            />
+          </template>
+
+          <template #card>
+            <div class="flex items-center justify-between gap-2">
+              <div class="min-w-0 flex-1">
+                <div class="font-medium text-default truncate">
+                  {{ patientName(p.patient) }}
+                </div>
+                <div class="text-caption text-subtle truncate flex items-center gap-1">
+                  <UIcon
+                    :name="methodIcon(p.method)"
+                    class="w-3.5 h-3.5"
+                  />
+                  {{ formatDate(p.payment_date) }} · {{ t(`payments.methods.${p.method}`) }}
+                </div>
+              </div>
+              <div class="text-right shrink-0">
+                <Money
+                  :value="p.amount"
+                  strong
+                />
+                <div
+                  v-if="Number(p.refunded_total) > 0"
+                  class="text-caption text-danger tnum"
+                >
+                  − {{ formatCurrency(p.refunded_total) }}
+                </div>
+              </div>
+            </div>
+            <div
+              v-if="allocationBreakdown(p).length"
+              class="flex flex-wrap gap-1"
             >
-              {{ t('payments.detail.refund') }}
-            </UButton>
-          </div>
-        </template>
-      </DataListItem>
-    </template>
-  </DataListLayout>
+              <UBadge
+                v-for="a in allocationBreakdown(p)"
+                :key="a.label"
+                color="neutral"
+                variant="subtle"
+                size="xs"
+              >
+                {{ a.amount }} · {{ a.label }}
+              </UBadge>
+            </div>
+            <div
+              v-if="can(PERMISSIONS.payments.recordRefund) && Number(p.net_amount) > 0"
+              class="flex justify-end"
+            >
+              <UButton
+                variant="soft"
+                color="warning"
+                size="xs"
+                icon="i-lucide-rotate-ccw"
+                @click="openRefund(p)"
+              >
+                {{ t('payments.detail.refund') }}
+              </UButton>
+            </div>
+          </template>
+        </DataListItem>
+      </template>
+    </DataListLayout>
 
-  <PaymentCreateModal
-    v-model:open="showCreate"
-    @created="handleCreated"
-  />
+    <PaymentCreateModal
+      v-model:open="showCreate"
+      @created="handleCreated"
+    />
 
-  <RefundConfirmModal
-    v-if="refundTarget"
-    v-model:open="showRefund"
-    :payment-id="refundTarget.id"
-    :default-amount="refundTarget.net_amount"
-    :default-method="refundTarget.method"
-    @refunded="handleRefunded"
-  />
+    <RefundConfirmModal
+      v-if="refundTarget"
+      v-model:open="showRefund"
+      :payment-id="refundTarget.id"
+      :default-amount="refundTarget.net_amount"
+      :default-method="refundTarget.method"
+      @refunded="handleRefunded"
+    />
+  </div>
 </template>

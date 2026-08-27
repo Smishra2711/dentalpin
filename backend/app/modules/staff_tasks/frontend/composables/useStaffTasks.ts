@@ -58,16 +58,18 @@ export function useStaffTasks() {
     return await api.get<ApiPaged<StaffTask>>(url)
   }
 
+  // The tasks page toasts its own message in the catch for these three
+  // (422 on an illegal status transition is an expected branch there).
   async function create(payload: StaffTaskCreatePayload): Promise<ApiOk<StaffTask>> {
-    return await api.post<ApiOk<StaffTask>>('/api/v1/staff_tasks/', payload)
+    return await api.post<ApiOk<StaffTask>>('/api/v1/staff_tasks/', payload, { errorToast: false })
   }
 
   async function update(id: string, payload: StaffTaskUpdatePayload): Promise<ApiOk<StaffTask>> {
-    return await api.patch<ApiOk<StaffTask>>(`/api/v1/staff_tasks/${id}`, payload)
+    return await api.patch<ApiOk<StaffTask>>(`/api/v1/staff_tasks/${id}`, payload, { errorToast: false })
   }
 
   async function remove(id: string): Promise<void> {
-    await api.del(`/api/v1/staff_tasks/${id}`)
+    await api.del(`/api/v1/staff_tasks/${id}`, { errorToast: false })
   }
 
   return { list, create, update, remove }

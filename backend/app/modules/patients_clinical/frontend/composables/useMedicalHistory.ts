@@ -67,7 +67,9 @@ export function useMedicalHistory(patientId: Ref<string | undefined>) {
     try {
       const response = await api.put<ApiResponse<MedicalHistory>>(
         `/api/v1/patients_clinical/patients/${patientId.value}/medical-history`,
-        medicalHistory.value
+        medicalHistory.value,
+        // The catch below toasts its own save-error message.
+        { errorToast: false }
       )
       medicalHistory.value = response.data
       // Cross-module refresh signal (#274): announce on the host data bus

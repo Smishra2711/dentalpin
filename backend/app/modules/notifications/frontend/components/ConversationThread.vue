@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useConversation } from '../composables/useConversation'
+import { errorDetail } from '~~/app/utils/error'
 
 const props = defineProps<{ ctx: { patient: { id: string } } }>()
 const { t } = useI18n()
@@ -33,10 +34,9 @@ async function onSend() {
     await conv.reply(draft.value.trim())
     draft.value = ''
   } catch (e: unknown) {
-    const detail = (e as { data?: { detail?: string } })?.data?.detail
     toast.add({
       title: t('notifications.conversation.replyError'),
-      description: detail ?? t('notifications.conversation.windowClosed'),
+      description: errorDetail(e) ?? t('notifications.conversation.windowClosed'),
       color: 'error'
     })
   }

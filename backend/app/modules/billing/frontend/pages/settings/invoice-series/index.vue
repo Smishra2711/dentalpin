@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { InvoiceSeries, InvoiceSeriesCreate, InvoiceSeriesUpdate, SeriesResetRequest } from '~~/app/types'
+import { errorMessage } from '~~/app/utils/error'
 
 const { t } = useI18n()
 const { isAdmin } = usePermissions()
@@ -106,8 +107,7 @@ async function handleCreate() {
     toast.add({ title: t('invoiceSeries.created'), color: 'success' })
     await loadSeries()
   } catch (e: unknown) {
-    const error = e as { data?: { message?: string } }
-    toast.add({ title: error.data?.message || t('common.error'), color: 'error' })
+    toast.add({ title: errorMessage(e, t('common.error')), color: 'error' })
   } finally {
     isCreating.value = false
   }
@@ -144,8 +144,7 @@ async function handleUpdate() {
     toast.add({ title: t('invoiceSeries.saved'), color: 'success' })
     await loadSeries()
   } catch (e: unknown) {
-    const error = e as { data?: { message?: string } }
-    toast.add({ title: error.data?.message || t('common.error'), color: 'error' })
+    toast.add({ title: errorMessage(e, t('common.error')), color: 'error' })
   } finally {
     isEditing.value = false
   }
@@ -172,8 +171,7 @@ async function handleReset() {
     toast.add({ title: t('invoiceSeries.resetSuccess'), color: 'success' })
     await loadSeries()
   } catch (e: unknown) {
-    const error = e as { data?: { message?: string } }
-    toast.add({ title: error.data?.message || t('common.error'), color: 'error' })
+    toast.add({ title: errorMessage(e, t('common.error')), color: 'error' })
   } finally {
     isResetting.value = false
   }

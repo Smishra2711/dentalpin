@@ -39,10 +39,12 @@ onMounted(async () => {
   try {
     const [budgetData, vatResponse, paymentSummary] = await Promise.all([
       fetchBudget(budgetId),
-      api.get<{ data: VatType[] }>('/api/v1/catalog/vat-types'),
+      // The surrounding catch toasts + navigates away on any failure.
+      api.get<{ data: VatType[] }>('/api/v1/catalog/vat-types', { errorToast: false }),
       api.post<ApiResponse<{ summaries: Record<string, { payment_status: string }> }>>(
         '/api/v1/payments/summary/by-budgets',
-        { budget_ids: [budgetId] }
+        { budget_ids: [budgetId] },
+        { errorToast: false }
       )
     ])
 
@@ -51,7 +53,7 @@ onMounted(async () => {
     budgetFullyPaid.value = paymentSummary.data.summaries[budgetId]?.payment_status === 'paid'
     if (budgetFullyPaid.value) form.value.payment_term_days = 0
     if (budgetData?.patient) {
-      patient.value = (await api.get<ApiResponse<Patient>>(`/api/v1/patients/${budgetData.patient.id}`)).data
+      patient.value = (await api.get<ApiResponse<Patient>>(`/api/v1/patients/${budgetData.patient.id}`, { errorToast: false })).data
     }
 
     // Pre-select all items that have available quantity

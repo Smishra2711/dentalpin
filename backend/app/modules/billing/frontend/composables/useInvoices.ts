@@ -88,7 +88,9 @@ export function useInvoices() {
   async function createSeries(data: InvoiceSeriesCreate): Promise<InvoiceSeries> {
     const response = await api.post<ApiResponse<InvoiceSeries>>(
       '/api/v1/billing/series',
-      data
+      data,
+      // Caller (invoice-series settings page) toasts the failure itself.
+      { errorToast: false }
     )
     return response.data
   }
@@ -96,7 +98,8 @@ export function useInvoices() {
   async function updateSeries(id: string, data: InvoiceSeriesUpdate): Promise<InvoiceSeries> {
     const response = await api.put<ApiResponse<InvoiceSeries>>(
       `/api/v1/billing/series/${id}`,
-      data
+      data,
+      { errorToast: false }
     )
     return response.data
   }
@@ -104,7 +107,8 @@ export function useInvoices() {
   async function resetSeriesCounter(id: string, data: SeriesResetRequest): Promise<InvoiceSeries> {
     const response = await api.post<ApiResponse<InvoiceSeries>>(
       `/api/v1/billing/series/${id}/reset`,
-      data
+      data,
+      { errorToast: false }
     )
     return response.data
   }
@@ -139,7 +143,9 @@ export function useInvoices() {
       }
 
       const response = await api.get<PaginatedResponse<InvoiceListItem>>(
-        `/api/v1/billing/invoices?${searchParams.toString()}`
+        `/api/v1/billing/invoices?${searchParams.toString()}`,
+        // List page renders the `error` state via DataListLayout.
+        { errorToast: false }
       )
 
       invoices.value = response.data
@@ -192,7 +198,9 @@ export function useInvoices() {
   async function createInvoice(data: InvoiceCreate): Promise<Invoice> {
     const response = await api.post<ApiResponse<Invoice>>(
       '/api/v1/billing/invoices',
-      data
+      data,
+      // Callers toast via errorMessage() — keep single-toast behaviour.
+      { errorToast: false }
     )
     invoices.value = [toListItem(response.data), ...invoices.value]
     return response.data
@@ -201,7 +209,8 @@ export function useInvoices() {
   async function createFromBudget(budgetId: string, data: InvoiceFromBudgetCreate): Promise<Invoice> {
     const response = await api.post<ApiResponse<Invoice>>(
       `/api/v1/billing/invoices/from-budget/${budgetId}`,
-      data
+      data,
+      { errorToast: false }
     )
     invoices.value = [toListItem(response.data), ...invoices.value]
     return response.data
@@ -210,7 +219,8 @@ export function useInvoices() {
   async function updateInvoice(id: string, data: InvoiceUpdate): Promise<Invoice> {
     const response = await api.put<ApiResponse<Invoice>>(
       `/api/v1/billing/invoices/${id}`,
-      data
+      data,
+      { errorToast: false }
     )
 
     // Update local state
@@ -242,7 +252,9 @@ export function useInvoices() {
   ): Promise<Invoice> {
     const response = await api.patch<ApiResponse<Invoice>>(
       `/api/v1/billing/invoices/${id}/billing-party`,
-      data
+      data,
+      // Verifactu slot presents 409 (concurrent edit) and other errors.
+      { errorToast: false }
     )
     if (currentInvoice.value?.id === id) {
       currentInvoice.value = { ...currentInvoice.value, ...response.data }
@@ -251,7 +263,7 @@ export function useInvoices() {
   }
 
   async function deleteInvoice(id: string): Promise<void> {
-    await api.del(`/api/v1/billing/invoices/${id}`)
+    await api.del(`/api/v1/billing/invoices/${id}`, { errorToast: false })
 
     // Remove from local state
     invoices.value = invoices.value.filter(i => i.id !== id)
@@ -267,7 +279,8 @@ export function useInvoices() {
   async function addItem(invoiceId: string, data: InvoiceItemCreate): Promise<InvoiceItem> {
     const response = await api.post<ApiResponse<InvoiceItem>>(
       `/api/v1/billing/invoices/${invoiceId}/items`,
-      data
+      data,
+      { errorToast: false }
     )
 
     // Refetch current invoice to get updated totals
@@ -285,7 +298,8 @@ export function useInvoices() {
   ): Promise<InvoiceItem> {
     const response = await api.put<ApiResponse<InvoiceItem>>(
       `/api/v1/billing/invoices/${invoiceId}/items/${itemId}`,
-      data
+      data,
+      { errorToast: false }
     )
 
     // Refetch current invoice to get updated totals
@@ -297,7 +311,7 @@ export function useInvoices() {
   }
 
   async function removeItem(invoiceId: string, itemId: string): Promise<void> {
-    await api.del(`/api/v1/billing/invoices/${invoiceId}/items/${itemId}`)
+    await api.del(`/api/v1/billing/invoices/${invoiceId}/items/${itemId}`, { errorToast: false })
 
     // Refetch current invoice to get updated totals
     if (currentInvoice.value?.id === invoiceId) {
@@ -312,7 +326,8 @@ export function useInvoices() {
   async function issueInvoice(id: string, data: InvoiceIssueRequest = {}): Promise<Invoice> {
     const response = await api.post<ApiResponse<Invoice>>(
       `/api/v1/billing/invoices/${id}/issue`,
-      data
+      data,
+      { errorToast: false }
     )
 
     // Update local state
@@ -325,7 +340,8 @@ export function useInvoices() {
     const params = reason ? `?reason=${encodeURIComponent(reason)}` : ''
     const response = await api.post<ApiResponse<Invoice>>(
       `/api/v1/billing/invoices/${id}/void${params}`,
-      {}
+      {},
+      { errorToast: false }
     )
 
     // Update local state
@@ -337,7 +353,8 @@ export function useInvoices() {
   async function sendInvoice(id: string, data: InvoiceSendRequest): Promise<Invoice> {
     const response = await api.post<ApiResponse<Invoice>>(
       `/api/v1/billing/invoices/${id}/send-email`,
-      data
+      data,
+      { errorToast: false }
     )
 
     return response.data
@@ -346,7 +363,8 @@ export function useInvoices() {
   async function createCreditNote(id: string, data: CreditNoteCreate): Promise<Invoice> {
     const response = await api.post<ApiResponse<Invoice>>(
       `/api/v1/billing/invoices/${id}/credit-note`,
-      data
+      data,
+      { errorToast: false }
     )
     invoices.value = [toListItem(response.data), ...invoices.value]
     updateInvoiceStatus(id, 'cancelled')
@@ -376,7 +394,9 @@ export function useInvoices() {
   async function recordPayment(invoiceId: string, data: InvoicePaymentApply): Promise<InvoicePayment> {
     const response = await api.post<ApiResponse<InvoicePayment>>(
       `/api/v1/billing/invoices/${invoiceId}/payments`,
-      data
+      data,
+      // InvoiceCollectModal renders the failure inline in the modal.
+      { errorToast: false }
     )
 
     // Refetch invoice to pick up the recomputed totals + status.

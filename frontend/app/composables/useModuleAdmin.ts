@@ -6,6 +6,7 @@
  * restart, plus status and doctor polling.
  */
 
+import { errorMessage } from '~/utils/error'
 import type {
   ApiResponse,
   ModuleDoctorReport,
@@ -31,16 +32,17 @@ export function useModuleAdmin() {
     loading.value = true
     error.value = null
     try {
+      // Failures render via the page's error alert + the caller's toast.
       const [listResp, statusResp, doctorResp] = await Promise.all([
-        api.get<ApiResponse<ModuleInfo[]>>(MODULES_BASE),
-        api.get<ApiResponse<ModuleStatus>>(`${MODULES_BASE}/-/status`),
-        api.get<ApiResponse<ModuleDoctorReport>>(`${MODULES_BASE}/-/doctor`)
+        api.get<ApiResponse<ModuleInfo[]>>(MODULES_BASE, { errorToast: false }),
+        api.get<ApiResponse<ModuleStatus>>(`${MODULES_BASE}/-/status`, { errorToast: false }),
+        api.get<ApiResponse<ModuleDoctorReport>>(`${MODULES_BASE}/-/doctor`, { errorToast: false })
       ])
       modules.value = listResp.data
       status.value = statusResp.data
       doctor.value = doctorResp.data
     } catch (err: unknown) {
-      error.value = extractMessage(err)
+      error.value = errorMessage(err, 'unknown error')
       throw err
     } finally {
       loading.value = false
@@ -50,7 +52,10 @@ export function useModuleAdmin() {
   async function install(name: string, force = false): Promise<string[]> {
     const qs = force ? '?force=true' : ''
     const response = await api.post<ApiResponse<ModuleOperationResult>>(
-      `${MODULES_BASE}/${encodeURIComponent(name)}/install${qs}`
+      `${MODULES_BASE}/${encodeURIComponent(name)}/install${qs}`,
+      // Confirm modal renders the failure inline (confirmError).
+      null,
+      { errorToast: false }
     )
     await refresh()
     return response.data.scheduled
@@ -59,14 +64,18 @@ export function useModuleAdmin() {
   async function uninstall(name: string, force = false): Promise<void> {
     const qs = force ? '?force=true' : ''
     await api.post<ApiResponse<ModuleOperationResult>>(
-      `${MODULES_BASE}/${encodeURIComponent(name)}/uninstall${qs}`
+      `${MODULES_BASE}/${encodeURIComponent(name)}/uninstall${qs}`,
+      null,
+      { errorToast: false }
     )
     await refresh()
   }
 
   async function upgrade(name: string): Promise<string[]> {
     const response = await api.post<ApiResponse<ModuleOperationResult>>(
-      `${MODULES_BASE}/${encodeURIComponent(name)}/upgrade`
+      `${MODULES_BASE}/${encodeURIComponent(name)}/upgrade`,
+      null,
+      { errorToast: false }
     )
     await refresh()
     return response.data.scheduled
@@ -75,7 +84,7 @@ export function useModuleAdmin() {
   async function restart(): Promise<void> {
     applying.value = true
     try {
-      await api.post<ApiResponse<{ pid: number }>>(`${MODULES_BASE}/-/restart`)
+      await api.post<ApiResponse<{ pid: number }>>(`${MODULES_BASE}/-/restart`, null, { errorToast: false })
     } catch (err: unknown) {
       applying.value = false
       throw err
@@ -94,7 +103,8 @@ export function useModuleAdmin() {
 
     while (Date.now() - started < timeoutMs) {
       try {
-        const resp = await api.get<ApiResponse<ModuleStatus>>(`${MODULES_BASE}/-/status`)
+        // Expected to fail while the backend restarts — never toast.
+        const resp = await api.get<ApiResponse<ModuleStatus>>(`${MODULES_BASE}/-/status`, { errorToast: false })
         lastError = null
         if (resp.data.pending.length === 0) {
           status.value = resp.data
@@ -117,7 +127,9 @@ export function useModuleAdmin() {
 
   async function operations(name: string, limit = 20): Promise<ModuleOperationLogEntry[]> {
     const resp = await api.get<ApiResponse<ModuleOperationLogEntry[]>>(
-      `${MODULES_BASE}/${encodeURIComponent(name)}/-/operations?limit=${limit}`
+      `${MODULES_BASE}/${encodeURIComponent(name)}/-/operations?limit=${limit}`,
+      // Detail modal renders the failure inline (logError).
+      { errorToast: false }
     )
     return resp.data
   }
@@ -141,9 +153,4 @@ export function useModuleAdmin() {
 
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-function extractMessage(err: unknown): string {
-  const e = err as { data?: { detail?: string, message?: string }, message?: string }
-  return e?.data?.detail || e?.data?.message || e?.message || 'unknown error'
 }

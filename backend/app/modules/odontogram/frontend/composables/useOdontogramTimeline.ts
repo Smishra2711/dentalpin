@@ -73,7 +73,8 @@ export function useOdontogramTimeline() {
     loading.value = true
     try {
       const response = await api.get<ApiResponse<OdontogramData>>(
-        `/api/v1/odontogram/patients/${patientId}/odontogram/at?date=${date}`
+        `/api/v1/odontogram/patients/${patientId}/odontogram/at?date=${date}`,
+        { errorToast: false }
       )
       historicalTeeth.value = response.data.teeth
       historicalTreatments.value = response.data.treatments || []

@@ -44,7 +44,9 @@ export default defineNuxtPlugin(() => {
       const state = useKapsoOnboardingState()
       try {
         const res = await api.get<{ data: { preferred_channel?: string, available_channels?: string[] } }>(
-          '/api/v1/notifications/settings'
+          '/api/v1/notifications/settings',
+          // Background onboarding probe — must never toast on failure.
+          { errorToast: false }
         )
         const d = res.data
         state.value = {

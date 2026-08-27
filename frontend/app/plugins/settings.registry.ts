@@ -183,8 +183,10 @@ export default defineNuxtPlugin(() => {
       const state = useState<{ loaded: boolean, professionals: number, others: number }>(
         'onboarding:team', () => ({ loaded: false, professionals: 0, others: 0 })
       )
+      // Background onboarding probe — never toast from here.
       const res = await api.get<{ data: Array<{ is_active: boolean, is_professional: boolean }> }>(
-        '/api/v1/auth/users'
+        '/api/v1/auth/users',
+        { errorToast: false }
       )
       const list = res.data.filter(u => u.is_active)
       state.value = {
@@ -216,7 +218,8 @@ export default defineNuxtPlugin(() => {
     load: async (api) => {
       const active = useActiveModulesState()
       if (active.value) return
-      const res = await api.get<ApiResponse<ActiveModule[]>>('/api/v1/modules/-/active')
+      // Background onboarding probe — never toast from here.
+      const res = await api.get<ApiResponse<ActiveModule[]>>('/api/v1/modules/-/active', { errorToast: false })
       active.value = res.data
     },
     when: () => {

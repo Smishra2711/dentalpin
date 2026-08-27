@@ -16,6 +16,7 @@
  * modules' APIs directly.
  */
 import type { PatientExtended, ApiResponse } from '~~/app/types'
+import { errorMessage } from '~~/app/utils/error'
 import { PERMISSIONS } from '~~/app/config/permissions'
 
 const { t } = useI18n()
@@ -203,7 +204,8 @@ async function archivePatient() {
   isSubmitting.value = true
 
   try {
-    await api.del(`/api/v1/patients/${patientId}`)
+    // Failures are toasted by the catch below — keep single-toast.
+    await api.del(`/api/v1/patients/${patientId}`, { errorToast: false })
 
     toast.add({
       title: t('common.success'),
@@ -213,11 +215,9 @@ async function archivePatient() {
 
     await router.push('/patients')
   } catch (error: unknown) {
-    const fetchError = error as { statusCode?: number, data?: { message?: string } }
-
     toast.add({
       title: t('common.error'),
-      description: fetchError.data?.message || t('common.serverError'),
+      description: errorMessage(error, t('common.serverError')),
       color: 'error'
     })
   } finally {

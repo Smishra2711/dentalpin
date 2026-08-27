@@ -167,11 +167,13 @@ export const useVerifactu = () => {
       return r.data
     },
     async updateProducer(body: ProducerInfoUpdate) {
-      const r = await api.put<ApiResponse<VerifactuSettings>>('/api/v1/verifactu/producer', body)
+      // Callers render the failure inline on the producer page.
+      const r = await api.put<ApiResponse<VerifactuSettings>>('/api/v1/verifactu/producer', body, { errorToast: false })
       return r.data
     },
     async revokeDeclaration() {
-      const r = await api.del<ApiResponse<VerifactuSettings>>('/api/v1/verifactu/producer/declaracion')
+      // Caller renders the failure inline on the producer page.
+      const r = await api.del<ApiResponse<VerifactuSettings>>('/api/v1/verifactu/producer/declaracion', { errorToast: false })
       return r.data
     },
     async getActiveCertificate() {
@@ -186,7 +188,8 @@ export const useVerifactu = () => {
       const fd = new FormData()
       fd.append('file', file)
       fd.append('password', password)
-      const r = await api.post<ApiResponse<VerifactuCertificate>>('/api/v1/verifactu/certificate', fd)
+      // Caller renders the failure inline on the certificate page.
+      const r = await api.post<ApiResponse<VerifactuCertificate>>('/api/v1/verifactu/certificate', fd, { errorToast: false })
       return r.data
     },
     async listRecords(params: { page?: number, page_size?: number, state?: string, tipo_factura?: string, invoice_id?: string } = {}) {
@@ -214,8 +217,11 @@ export const useVerifactu = () => {
     },
     async retryRecord(id: string, opts: { regenerate?: boolean } = {}) {
       const qs = opts.regenerate === false ? '?regenerate=false' : ''
+      // Callers toast the AEAT/queue failure themselves (errorMessage).
       const r = await api.post<ApiResponse<VerifactuRecord>>(
-        `/api/v1/verifactu/queue/${id}/retry${qs}`
+        `/api/v1/verifactu/queue/${id}/retry${qs}`,
+        undefined,
+        { errorToast: false }
       )
       return r.data
     },
@@ -255,9 +261,11 @@ export const useVerifactu = () => {
       vat_type_id: string,
       body: { classification: string | null, exemption_cause?: string | null, notes?: string | null }
     ) {
+      // Caller toasts the failure itself (errorMessage).
       const r = await api.put<ApiResponse<VatClassificationItem>>(
         `/api/v1/verifactu/vat-mapping/${vat_type_id}`,
-        body
+        body,
+        { errorToast: false }
       )
       return r.data
     }

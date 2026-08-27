@@ -96,7 +96,9 @@ export function usePeriodontogramSession() {
     _schedule(`tooth:${toothNumber}`, patch as Record<string, unknown>, async (payload) => {
       await api.patch<ApiResponse<PerioTooth>>(
         `/api/v1/periodontogram/snapshots/${snapshotId}/teeth/${toothNumber}`,
-        payload
+        payload,
+        // Failures surface via the `lastError` toast watcher in the chart.
+        { errorToast: false }
       )
     })
   }
@@ -113,7 +115,9 @@ export function usePeriodontogramSession() {
       async (payload) => {
         await api.patch<ApiResponse<PerioSite>>(
           `/api/v1/periodontogram/snapshots/${snapshotId}/teeth/${toothNumber}/sites/${siteCode}`,
-          payload
+          payload,
+          // Failures surface via the `lastError` toast watcher in the chart.
+          { errorToast: false }
         )
       }
     )
@@ -145,13 +149,17 @@ export function usePeriodontogramSession() {
           const toothNumber = Number(key.slice('tooth:'.length))
           await api.patch(
             `/api/v1/periodontogram/snapshots/${snapshotId}/teeth/${toothNumber}`,
-            payload
+            payload,
+            // Caller toasts from the boolean result — keep single-toast.
+            { errorToast: false }
           )
         } else if (key.startsWith('site:')) {
           const [, toothStr, siteCode] = key.split(':')
           await api.patch(
             `/api/v1/periodontogram/snapshots/${snapshotId}/teeth/${toothStr}/sites/${siteCode}`,
-            payload
+            payload,
+            // Caller toasts from the boolean result — keep single-toast.
+            { errorToast: false }
           )
         }
       } catch {

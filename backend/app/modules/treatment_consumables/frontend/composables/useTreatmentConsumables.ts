@@ -35,13 +35,16 @@ export function useTreatmentConsumables() {
       if (v === undefined || v === null || v === '') continue
       qs.append(k, String(v))
     }
+    // Every caller (the treatment-consumables page) catches and toasts via
+    // its own `notifyError` (including the 409-duplicate copy) — suppress
+    // useApi's auto-toast to stay single-toast.
     const url = `/api/v1/treatment_consumables/${qs.toString() ? `?${qs.toString()}` : ''}`
-    return await api.get<ApiPaged<ConsumableLink>>(url)
+    return await api.get<ApiPaged<ConsumableLink>>(url, { errorToast: false })
   }
 
   async function linkOptions(q?: string): Promise<ApiOk<LinkOptions>> {
     const url = `/api/v1/treatment_consumables/link-options${q ? `?q=${encodeURIComponent(q)}` : ''}`
-    return await api.get<ApiOk<LinkOptions>>(url)
+    return await api.get<ApiOk<LinkOptions>>(url, { errorToast: false })
   }
 
   async function create(payload: {
@@ -50,7 +53,7 @@ export function useTreatmentConsumables() {
     quantity: string
     note?: string | null
   }): Promise<ApiOk<ConsumableLink>> {
-    return await api.post<ApiOk<ConsumableLink>>('/api/v1/treatment_consumables/', payload)
+    return await api.post<ApiOk<ConsumableLink>>('/api/v1/treatment_consumables/', payload, { errorToast: false })
   }
 
   // `note: ''` clears the stored note; omitting it leaves it untouched.
@@ -58,11 +61,11 @@ export function useTreatmentConsumables() {
     id: string,
     payload: { quantity: string, note?: string | null }
   ): Promise<ApiOk<ConsumableLink>> {
-    return await api.patch<ApiOk<ConsumableLink>>(`/api/v1/treatment_consumables/${id}`, payload)
+    return await api.patch<ApiOk<ConsumableLink>>(`/api/v1/treatment_consumables/${id}`, payload, { errorToast: false })
   }
 
   async function remove(id: string): Promise<void> {
-    await api.del(`/api/v1/treatment_consumables/${id}`)
+    await api.del(`/api/v1/treatment_consumables/${id}`, { errorToast: false })
   }
 
   return { list, linkOptions, create, update, remove }

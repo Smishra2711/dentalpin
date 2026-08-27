@@ -39,7 +39,10 @@ describe('usePeriodontogramSession — pending buffer survives failures', () => 
     expect(patchMock).toHaveBeenCalledTimes(1)
     expect(patchMock).toHaveBeenCalledWith(
       `/api/v1/periodontogram/snapshots/${SNAPSHOT_ID}/teeth/16/sites/MB`,
-      { probing_depth_mm: 5 }
+      { probing_depth_mm: 5 },
+      // The chart presents failures itself (lastError watcher / flush
+      // result) — useApi's 400/409/422 auto-toast is suppressed (#101).
+      { errorToast: false }
     )
     expect(session.dirty.value).toBe(false)
   })
@@ -63,7 +66,8 @@ describe('usePeriodontogramSession — pending buffer survives failures', () => 
     expect(patchMock).toHaveBeenCalledTimes(2)
     expect(patchMock).toHaveBeenLastCalledWith(
       `/api/v1/periodontogram/snapshots/${SNAPSHOT_ID}/teeth/16/sites/MB`,
-      { probing_depth_mm: 5 }
+      { probing_depth_mm: 5 },
+      { errorToast: false }
     )
     expect(session.dirty.value).toBe(false)
   })
@@ -83,7 +87,8 @@ describe('usePeriodontogramSession — pending buffer survives failures', () => 
     expect(flushed).toBe(true)
     expect(patchMock).toHaveBeenLastCalledWith(
       `/api/v1/periodontogram/snapshots/${SNAPSHOT_ID}/teeth/16/sites/MB`,
-      { probing_depth_mm: 5, bleeding_on_probing: true }
+      { probing_depth_mm: 5, bleeding_on_probing: true },
+      { errorToast: false }
     )
   })
 
@@ -106,7 +111,8 @@ describe('usePeriodontogramSession — pending buffer survives failures', () => 
     expect(flushed).toBe(true)
     expect(patchMock).toHaveBeenLastCalledWith(
       `/api/v1/periodontogram/snapshots/${SNAPSHOT_ID}/teeth/31`,
-      { mobility: 2 }
+      { mobility: 2 },
+      { errorToast: false }
     )
     expect(session.dirty.value).toBe(false)
   })

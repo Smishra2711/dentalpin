@@ -39,7 +39,8 @@ export function useProfessionalHours() {
   }
 
   async function updateHours(userId: string, days: WeekdayShifts[]): Promise<ProfessionalHours> {
-    const res = await api.put<ApiResponse<ProfessionalHours>>(`/api/v1/schedules/professionals/${userId}/hours`, { days })
+    // Callers catch and toast the failure themselves.
+    const res = await api.put<ApiResponse<ProfessionalHours>>(`/api/v1/schedules/professionals/${userId}/hours`, { days }, { errorToast: false })
     return res.data
   }
 
@@ -55,12 +56,14 @@ export function useProfessionalHours() {
   }
 
   async function createOverride(userId: string, payload: ProfessionalOverridePayload): Promise<ProfessionalOverride> {
-    const res = await api.post<ApiResponse<ProfessionalOverride>>(`/api/v1/schedules/professionals/${userId}/overrides`, payload)
+    // Callers catch and toast the failure themselves.
+    const res = await api.post<ApiResponse<ProfessionalOverride>>(`/api/v1/schedules/professionals/${userId}/overrides`, payload, { errorToast: false })
     return res.data
   }
 
   async function updateOverride(userId: string, id: string, payload: ProfessionalOverridePayload): Promise<ProfessionalOverride> {
-    const res = await api.put<ApiResponse<ProfessionalOverride>>(`/api/v1/schedules/professionals/${userId}/overrides/${id}`, payload)
+    // Callers catch and toast the failure themselves.
+    const res = await api.put<ApiResponse<ProfessionalOverride>>(`/api/v1/schedules/professionals/${userId}/overrides/${id}`, payload, { errorToast: false })
     return res.data
   }
 

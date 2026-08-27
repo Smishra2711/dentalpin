@@ -46,6 +46,8 @@ export interface InventoryListFilters {
 export function useInventory() {
   const api = useApi()
 
+  // Every caller (pages/inventory/index.vue) catches and toasts via its
+  // own `notifyError` — suppress useApi's auto-toast to stay single-toast.
   async function list(filters: InventoryListFilters = {}): Promise<ApiPaged<InventoryItem>> {
     const qs = new URLSearchParams()
     for (const [k, v] of Object.entries(filters)) {
@@ -53,23 +55,24 @@ export function useInventory() {
       qs.append(k, String(v))
     }
     const url = `/api/v1/inventory/${qs.toString() ? `?${qs.toString()}` : ''}`
-    return await api.get<ApiPaged<InventoryItem>>(url)
+    return await api.get<ApiPaged<InventoryItem>>(url, { errorToast: false })
   }
 
   async function create(payload: InventoryItemCreatePayload): Promise<ApiOk<InventoryItem>> {
-    return await api.post<ApiOk<InventoryItem>>('/api/v1/inventory/', payload)
+    return await api.post<ApiOk<InventoryItem>>('/api/v1/inventory/', payload, { errorToast: false })
   }
 
   async function update(id: string, payload: InventoryItemUpdatePayload): Promise<ApiOk<InventoryItem>> {
-    return await api.patch<ApiOk<InventoryItem>>(`/api/v1/inventory/${id}`, payload)
+    return await api.patch<ApiOk<InventoryItem>>(`/api/v1/inventory/${id}`, payload, { errorToast: false })
   }
 
   async function adjust(id: string, delta: number): Promise<ApiOk<InventoryItem>> {
-    return await api.post<ApiOk<InventoryItem>>(`/api/v1/inventory/${id}/adjust`, { delta })
+    // 409 (stock would go negative) is an expected branch the page toasts.
+    return await api.post<ApiOk<InventoryItem>>(`/api/v1/inventory/${id}/adjust`, { delta }, { errorToast: false })
   }
 
   async function remove(id: string): Promise<void> {
-    await api.del(`/api/v1/inventory/${id}`)
+    await api.del(`/api/v1/inventory/${id}`, { errorToast: false })
   }
 
   return { list, create, update, adjust, remove }

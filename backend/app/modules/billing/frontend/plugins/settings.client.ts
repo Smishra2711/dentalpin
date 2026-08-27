@@ -21,7 +21,8 @@ export default defineNuxtPlugin(() => {
     severity: 'warning',
     load: async (api) => {
       const state = useSeriesOnboardingState()
-      const res = await api.get<{ data: unknown[] }>('/api/v1/billing/series')
+      // Background onboarding probe — never toast from here.
+      const res = await api.get<{ data: unknown[] }>('/api/v1/billing/series', { errorToast: false })
       state.value = { loaded: true, count: res.data.length }
     },
     when: () => {

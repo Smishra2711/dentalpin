@@ -54,7 +54,7 @@ function promptOf(n: Nudge): string {
 async function dismiss(n: Nudge) {
   nudges.value = nudges.value.filter(x => x.id !== n.id)
   try {
-    await api.post(`/api/v1/copilot/nudges/${n.id}/dismiss`, {})
+    await api.post(`/api/v1/copilot/nudges/${n.id}/dismiss`, {}, { errorToast: false })
   } catch {
     // optimistic; a failed dismiss just reappears on next load
   }

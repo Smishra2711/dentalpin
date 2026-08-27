@@ -121,10 +121,9 @@ async function saveOverride() {
     overrides.value = await fetchOverrides()
     showOverrideModal.value = false
   } catch (err: unknown) {
-    const fetchError = err as { data?: { message?: string } }
     toast.add({
       title: t('common.error'),
-      description: fetchError.data?.message ?? '',
+      description: errorDetail(err),
       color: 'error'
     })
   }

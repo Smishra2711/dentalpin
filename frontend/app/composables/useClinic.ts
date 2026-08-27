@@ -50,7 +50,8 @@ export function useClinic() {
 
   async function updateClinic(data: ClinicUpdate): Promise<Clinic | null> {
     try {
-      const response = await api.put<ApiResponse<Clinic>>('/api/v1/auth/clinics', data)
+      // The catch below toasts the failure itself.
+      const response = await api.put<ApiResponse<Clinic>>('/api/v1/auth/clinics', data, { errorToast: false })
       currentClinic.value = response.data
       toast.add({
         title: t('common.success'),
@@ -89,7 +90,7 @@ export function useClinic() {
 
   async function createCabinet(data: CabinetCreate): Promise<Cabinet | null> {
     try {
-      const response = await api.post<ApiResponse<Cabinet>>('/api/v1/agenda/cabinets', data)
+      const response = await api.post<ApiResponse<Cabinet>>('/api/v1/agenda/cabinets', data, { errorToast: false })
       patchCabinets(list => [...list, response.data])
       toast.add({
         title: t('common.success'),
@@ -113,7 +114,7 @@ export function useClinic() {
       list.map(c => c.id === cabinetId ? { ...c, ...data } as Cabinet : c)
     )
     try {
-      const response = await api.put<ApiResponse<Cabinet>>(`/api/v1/agenda/cabinets/${cabinetId}`, data)
+      const response = await api.put<ApiResponse<Cabinet>>(`/api/v1/agenda/cabinets/${cabinetId}`, data, { errorToast: false })
       patchCabinets(list => list.map(c => c.id === cabinetId ? response.data : c))
       toast.add({
         title: t('common.success'),
@@ -138,7 +139,7 @@ export function useClinic() {
   async function deleteCabinet(cabinetId: string): Promise<boolean> {
     const rollback = patchCabinets(list => list.filter(c => c.id !== cabinetId))
     try {
-      await api.del(`/api/v1/agenda/cabinets/${cabinetId}`)
+      await api.del(`/api/v1/agenda/cabinets/${cabinetId}`, { errorToast: false })
       toast.add({
         title: t('common.success'),
         description: t('cabinet.toast.deleted'),

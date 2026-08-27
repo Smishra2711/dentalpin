@@ -46,7 +46,8 @@ export function useClinicHours() {
   }
 
   async function updateHours(payload: { timezone?: string, days: WeekdayShifts[] }): Promise<ClinicHours> {
-    const res = await api.put<ApiResponse<ClinicHours>>('/api/v1/schedules/clinic-hours', payload)
+    // Callers catch and toast the failure themselves.
+    const res = await api.put<ApiResponse<ClinicHours>>('/api/v1/schedules/clinic-hours', payload, { errorToast: false })
     return res.data
   }
 
@@ -62,12 +63,14 @@ export function useClinicHours() {
   }
 
   async function createOverride(payload: ClinicOverridePayload): Promise<ClinicOverride> {
-    const res = await api.post<ApiResponse<ClinicOverride>>('/api/v1/schedules/clinic-overrides', payload)
+    // Callers catch and toast the failure themselves.
+    const res = await api.post<ApiResponse<ClinicOverride>>('/api/v1/schedules/clinic-overrides', payload, { errorToast: false })
     return res.data
   }
 
   async function updateOverride(id: string, payload: ClinicOverridePayload): Promise<ClinicOverride> {
-    const res = await api.put<ApiResponse<ClinicOverride>>(`/api/v1/schedules/clinic-overrides/${id}`, payload)
+    // Callers catch and toast the failure themselves.
+    const res = await api.put<ApiResponse<ClinicOverride>>(`/api/v1/schedules/clinic-overrides/${id}`, payload, { errorToast: false })
     return res.data
   }
 

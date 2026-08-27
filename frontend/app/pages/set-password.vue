@@ -37,7 +37,8 @@ async function onSubmit() {
     const res = await api.post<{ access_token: string, refresh_token: string }>(
       '/api/v1/auth/set-password',
       { token: token.value, password: password.value },
-      { skipAuth: true }
+      // The catch renders errorMessage inline on the form.
+      { skipAuth: true, errorToast: false }
     )
     await auth.applyTokens(res.access_token, res.refresh_token)
     toast.add({ title: t('setup.success'), color: 'success' })

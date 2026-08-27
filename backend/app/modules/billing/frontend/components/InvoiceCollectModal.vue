@@ -8,6 +8,7 @@
  */
 
 import type { InvoicePayment, PaymentMethod } from '~~/app/types'
+import { errorMessage } from '~~/app/utils/error'
 
 const props = withDefaults(defineProps<{
   open: boolean
@@ -69,8 +70,7 @@ async function handleSubmit(payload: {
     emit('recorded', recorded)
     emit('update:open', false)
   } catch (e: unknown) {
-    const err = e as { data?: { message?: string, detail?: string } }
-    errorMsg.value = err?.data?.message || err?.data?.detail || t('invoice.errors.recordPayment')
+    errorMsg.value = errorMessage(e, t('invoice.errors.recordPayment'))
   } finally {
     isSubmitting.value = false
   }
