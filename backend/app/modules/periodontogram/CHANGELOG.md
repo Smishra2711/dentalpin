@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(#101): flushPending no longer swallows failures — failed payloads return to the pending buffer, closing the exam aborts with an explanation, and retrying re-flushes.
+
 - feat(#131): German (de) locale for the module's frontend layer.
 - feat(#144, #132): Polish (pl) and Italian (it) locales for the module's frontend layer.
 

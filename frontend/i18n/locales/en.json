@@ -630,6 +630,7 @@
       "treatmentAdded": "Treatment added",
       "treatmentPerformed": "Treatment marked as performed",
       "treatmentDeleted": "Treatment deleted",
+      "deleteConfirm": "Delete {name} (tooth {tooth})? This cannot be undone.",
       "status": {
         "existing": "Existing",
         "planned": "Planned"
@@ -773,6 +774,7 @@
       "noItems": "No treatments in the plan",
       "markComplete": "Mark as completed",
       "removeItem": "Remove from plan",
+      "removeItemConfirm": "Remove {name} from this plan? This cannot be undone.",
       "sessions": {
         "progress": "{done}/{total} sessions",
         "markDone": "Mark session done",
@@ -890,6 +892,7 @@
     "saved": "Appointment saved",
     "updated": "Appointment updated",
     "conflict": "This time slot is already taken",
+    "loadError": "Couldn't load appointments",
     "cancel": "Cancel appointment",
     "markCompleted": "Mark as completed",
     "markNoShow": "No show",
@@ -1489,6 +1492,7 @@
     "items": "Treatments",
     "categories": "Categories",
     "noItems": "No treatments in catalog",
+    "loadError": "Couldn't load the treatment catalog",
     "searchPlaceholder": "Search by code or name...",
     "code": "Code",
     "name": "Name",
@@ -2024,6 +2028,7 @@
       "downloadSignedPdf": "Download signed PDF",
       "downloadError": "Could not download the signed PDF.",
       "notSigned": "No signature has been captured for this quote yet.",
+      "loadError": "Couldn't load the signature status",
       "method": {
         "drawn": "Hand-drawn signature",
         "clickAccept": "Click-to-accept",
@@ -2695,6 +2700,7 @@
     "subtitle": "Clinic analytics and statistics",
     "viewReports": "View reports",
     "noAccess": "You don't have access to any reports",
+    "loadError": "Couldn't load report data",
     "dashboard": {
       "title": "Dashboard",
       "subtitle": "Your clinic at a glance",

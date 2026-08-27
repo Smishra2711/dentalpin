@@ -630,6 +630,7 @@
       "treatmentAdded": "Tratamento adicionado",
       "treatmentPerformed": "Tratamento marcado como realizado",
       "treatmentDeleted": "Tratamento eliminado",
+      "deleteConfirm": "Eliminar {name} (dente {tooth})? Esta ação não pode ser anulada.",
       "status": {
         "existing": "Existente",
         "planned": "Planeado"
@@ -773,6 +774,7 @@
       "noItems": "Sem tratamentos no plano",
       "markComplete": "Marcar como concluído",
       "removeItem": "Remover do plano",
+      "removeItemConfirm": "Remover {name} deste plano? Esta ação não pode ser anulada.",
       "sessions": {
         "progress": "{done}/{total} sessões",
         "markDone": "Marcar sessão como realizada",
@@ -890,6 +892,7 @@
     "saved": "Consulta guardada",
     "updated": "Consulta atualizada",
     "conflict": "Este horário já está ocupado",
+    "loadError": "Não foi possível carregar as consultas",
     "cancel": "Cancelar consulta",
     "markCompleted": "Marcar como concluída",
     "markNoShow": "Faltou",
@@ -1489,6 +1492,7 @@
     "items": "Tratamentos",
     "categories": "Categorias",
     "noItems": "Sem tratamentos no catálogo",
+    "loadError": "Não foi possível carregar o catálogo de tratamentos",
     "searchPlaceholder": "Procurar por código ou nome...",
     "code": "Código",
     "name": "Nome",
@@ -2024,6 +2028,7 @@
       "downloadSignedPdf": "Descarregar PDF assinado",
       "downloadError": "Não foi possível descarregar o PDF assinado.",
       "notSigned": "Ainda não foi recolhida qualquer assinatura para este orçamento.",
+      "loadError": "Não foi possível carregar o estado da assinatura",
       "method": {
         "drawn": "Assinatura manuscrita",
         "clickAccept": "Aceitação por clique",
@@ -2695,6 +2700,7 @@
     "subtitle": "Análises e estatísticas da clínica",
     "viewReports": "Ver relatórios",
     "noAccess": "Não tem acesso a nenhum relatório",
+    "loadError": "Não foi possível carregar os dados do relatório",
     "dashboard": {
       "title": "Painel",
       "subtitle": "A sua clínica num relance",

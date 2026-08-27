@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- fix(#101): cancel and mark-done confirm before closing a recall (no undo endpoint exists); cancel gets destructive styling.
+
+
 - feat(#131): German (de) locale for the module's frontend layer.
 - feat(#144, #132): Polish (pl) and Italian (it) locales for the module's frontend layer.
 - fix(#184): type-check clean — the new-category reason ref is typed to the `reasons` union.

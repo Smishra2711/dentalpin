@@ -16,7 +16,7 @@ const toast = useToast()
 const route = useRoute()
 const router = useRouter()
 const clinic = useClinic()
-const { appointments, isLoading, fetchAppointments, updateAppointment } = useAppointments()
+const { appointments, isLoading, error: loadError, fetchAppointments, updateAppointment } = useAppointments()
 const { professionals, fetchProfessionals, getProfessionalColor } = useProfessionals()
 const { isMobile } = useBreakpoint()
 
@@ -695,9 +695,26 @@ watch(isMobile, async (mobile) => {
 
     <!-- Calendar -->
     <div class="flex-1 min-h-0 min-w-0">
+      <!-- Load error — never render a blank calendar that reads as a
+           free week (issue #101). The banner replaces the grid until a
+           retry succeeds. -->
+      <UAlert
+        v-if="loadError && !isLoading"
+        icon="i-lucide-triangle-alert"
+        color="error"
+        variant="subtle"
+        :title="t('appointments.loadError')"
+        :actions="[{
+          label: t('common.retry'),
+          color: 'error',
+          variant: 'soft',
+          onClick: () => reloadActiveView()
+        }]"
+      />
+
       <!-- Mobile day view (replaces all desktop views on <md) -->
       <AppointmentMobileDayView
-        v-if="isMobile"
+        v-else-if="isMobile"
         :appointments="filteredAppointments"
         :professionals="professionalsWithColors"
         :cabinets="clinic.cabinets.value"

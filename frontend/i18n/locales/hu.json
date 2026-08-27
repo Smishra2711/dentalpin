@@ -630,6 +630,7 @@
       "treatmentAdded": "Kezelés hozzáadva",
       "treatmentPerformed": "Kezelés elvégzettként megjelölve",
       "treatmentDeleted": "Kezelés törölve",
+      "deleteConfirm": "Törli a következőt: {name} ({tooth}. fog)? Ez a művelet nem vonható vissza.",
       "status": {
         "existing": "Meglévő",
         "planned": "Tervezett"
@@ -773,6 +774,7 @@
       "noItems": "Nincs kezelés a tervben",
       "markComplete": "Megjelölés befejezettként",
       "removeItem": "Eltávolítás a tervből",
+      "removeItemConfirm": "Eltávolítja a következőt a tervből: {name}? Ez a művelet nem vonható vissza.",
       "sessions": {
         "progress": "{done}/{total} ülés",
         "markDone": "Ülés elvégzettként jelölése",
@@ -891,6 +893,7 @@
     "saved": "Időpont elmentve",
     "updated": "Időpont frissítve",
     "conflict": "Ez az idősáv már foglalt",
+    "loadError": "Nem sikerült betölteni az időpontokat",
     "cancel": "Időpont lemondása",
     "markCompleted": "Megjelölés befejezettként",
     "markNoShow": "Nem jelent meg",
@@ -1489,6 +1492,7 @@
     "items": "Kezelések",
     "categories": "Kategóriák",
     "noItems": "Nincs kezelés a katalógusban",
+    "loadError": "Nem sikerült betölteni a kezeléskatalógust",
     "searchPlaceholder": "Keresés kód vagy név alapján...",
     "code": "Kód",
     "name": "Név",
@@ -2024,6 +2028,7 @@
       "downloadSignedPdf": "Aláírt PDF letöltése",
       "downloadError": "Nem sikerült letölteni az aláírt PDF-et.",
       "notSigned": "Ehhez az árajánlathoz még nem rögzítettek aláírást.",
+      "loadError": "Nem sikerült betölteni az aláírás állapotát",
       "method": {
         "drawn": "Kézzel rajzolt aláírás",
         "clickAccept": "Elfogadás kattintással",
@@ -2695,6 +2700,7 @@
     "subtitle": "A rendelő elemzései és statisztikái",
     "viewReports": "Riportok megtekintése",
     "noAccess": "Egyik riporthoz sincs hozzáférése",
+    "loadError": "Nem sikerült betölteni a riport adatait",
     "dashboard": {
       "title": "Vezérlőpult",
       "subtitle": "A rendelője egy pillantásra",

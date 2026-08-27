@@ -630,6 +630,7 @@
       "treatmentAdded": "Tratamiento añadido",
       "treatmentPerformed": "Tratamiento marcado como realizado",
       "treatmentDeleted": "Tratamiento eliminado",
+      "deleteConfirm": "¿Eliminar {name} (diente {tooth})? Esta acción no se puede deshacer.",
       "status": {
         "existing": "Existente",
         "planned": "Planificado"
@@ -773,6 +774,7 @@
       "noItems": "Sin tratamientos en el plan",
       "markComplete": "Marcar como completado",
       "removeItem": "Eliminar del plan",
+      "removeItemConfirm": "¿Quitar {name} de este plan? Esta acción no se puede deshacer.",
       "sessions": {
         "progress": "{done}/{total} sesiones",
         "markDone": "Marcar sesión realizada",
@@ -890,6 +892,7 @@
     "saved": "Cita guardada",
     "updated": "Cita actualizada",
     "conflict": "Este horario ya está ocupado",
+    "loadError": "No se pudieron cargar las citas",
     "cancel": "Cancelar cita",
     "markCompleted": "Marcar como atendida",
     "markNoShow": "No se presentó",
@@ -1489,6 +1492,7 @@
     "items": "Tratamientos",
     "categories": "Categorías",
     "noItems": "No hay tratamientos en el catálogo",
+    "loadError": "No se pudo cargar el catálogo de tratamientos",
     "searchPlaceholder": "Buscar por código o nombre...",
     "code": "Código",
     "name": "Nombre",
@@ -2024,6 +2028,7 @@
       "downloadSignedPdf": "Descargar PDF firmado",
       "downloadError": "No se pudo descargar el PDF firmado.",
       "notSigned": "Aún no se ha capturado firma para este presupuesto.",
+      "loadError": "No se pudo cargar el estado de la firma",
       "method": {
         "drawn": "Firma manuscrita",
         "clickAccept": "Aceptación con un clic",
@@ -2592,6 +2597,7 @@
     "subtitle": "Análisis y estadísticas de la clínica",
     "viewReports": "Ver informes",
     "noAccess": "No tienes acceso a ningún informe",
+    "loadError": "No se pudieron cargar los datos del informe",
     "dashboard": {
       "title": "Dashboard",
       "subtitle": "Tu clínica de un vistazo",

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(#101): a failed signature fetch no longer renders as 'not signed' — fetchSignature only nulls on a real 404 and the card shows an error state with Retry.
+
 - feat(#207): the in-clinic accept/reject signature modal prefills "Signed by" with the patient's name and email while the relation is *patient*; changing the relation clears it.
 
 - fix(#203): the back link on budget detail/new rendered the raw key `actions.back` when arriving from the patient page — the key never existed in any locale; use `common.back` ("Volver").

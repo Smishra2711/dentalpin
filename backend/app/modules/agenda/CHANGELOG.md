@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(#101): a failed appointments fetch renders an error banner with Retry instead of a blank calendar that reads as a free week; the appointment modal's footer cancel now asks for confirmation.
+
 - feat(#207): the appointments page forwards `?plan_id=` to the create modal (`initialPlanId`), which preselects that plan's pending treatments in the treatment selector.
 
 - fix(#108): `validate_planned_items` accepts items from `pending` plans (plan confirmed, quote not yet accepted). It only ever allowed `active`+`draft`, so once the appointment selector started offering `pending` plans the booking failed on save with `Treatment item ... belongs to pending plan`. Terminal plans (`completed`/`closed`) stay rejected, and completion is still gated on `active` — booking ahead of the acceptance is allowed, invoicing against it is not. First test coverage for this gate (`tests/test_appointment_planned_items.py`).

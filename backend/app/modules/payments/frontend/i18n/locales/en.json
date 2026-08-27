@@ -233,6 +233,7 @@
     "reports": {
       "title": "Payment reports",
       "subtitle": "Collections, refunds, patient balances and trends for the period.",
+      "loadError": "Couldn't load payment reports",
       "cardDescription": "Collected, refunds, patient balances, aging and trends.",
       "period": "Period",
       "refresh": "Refresh",
