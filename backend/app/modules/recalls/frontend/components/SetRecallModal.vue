@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import type { RecallReason, RecallPriority, Recall } from '../composables/useRecalls'
+import { errorDetail } from '~~/app/utils/error'
 
 interface Props {
   open: boolean
@@ -133,7 +134,7 @@ async function save() {
   } catch (err: unknown) {
     toast.add({
       title: t('common.error'),
-      description: (err as { data?: { detail?: string } })?.data?.detail ?? '',
+      description: errorDetail(err),
       color: 'error'
     })
   } finally {

@@ -72,7 +72,9 @@ async function fetcher(q: {
   if (q.sort) params.set('sort', q.sort)
 
   const response = await api.get<PaginatedResponse<InvoiceListItem>>(
-    `/api/v1/billing/invoices?${params.toString()}`
+    `/api/v1/billing/invoices?${params.toString()}`,
+    // useListQuery surfaces failures via the `error` banner.
+    { errorToast: false }
   )
   return { data: response.data, total: response.total }
 }

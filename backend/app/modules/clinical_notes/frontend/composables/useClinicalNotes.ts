@@ -89,7 +89,8 @@ export function useClinicalNotes() {
     try {
       const response = await api.post<ApiResponse<ClinicalNote>>(
         '/api/v1/clinical_notes/notes',
-        input
+        input,
+        { errorToast: false }
       )
       toast.add({ title: t('clinicalNotes.toasts.saved'), color: 'success' })
       return response.data
@@ -105,7 +106,8 @@ export function useClinicalNotes() {
       const payload: ClinicalNoteUpdate = { body }
       const response = await api.patch<ApiResponse<ClinicalNote>>(
         `/api/v1/clinical_notes/notes/${noteId}`,
-        payload
+        payload,
+        { errorToast: false }
       )
       toast.add({ title: t('clinicalNotes.toasts.saved'), color: 'success' })
       return response.data

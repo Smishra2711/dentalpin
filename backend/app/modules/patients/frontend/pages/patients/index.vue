@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Patient, PatientCreate, PaginatedResponse, ApiResponse } from '~~/app/types'
+import { errorMessage } from '~~/app/utils/error'
 import { PATIENT_STATUS_ROLE, type PatientStatus } from '~~/app/config/severity'
 import { PERMISSIONS } from '~~/app/config/permissions'
 
@@ -217,7 +218,7 @@ async function createPatient() {
       national_id: newPatient.national_id || null,
       date_of_birth: newPatient.date_of_birth || null,
       notes: newPatient.notes || null
-    })
+    }, { errorToast: false })
     toast.add({
       title: t('common.success'),
       description: t('patients.created'),
@@ -228,10 +229,9 @@ async function createPatient() {
     await refresh()
     await router.push(`/patients/${response.data.id}`)
   } catch (e: unknown) {
-    const fetchError = e as { statusCode?: number, data?: { message?: string } }
     toast.add({
       title: t('common.error'),
-      description: fetchError.data?.message || t('common.serverError'),
+      description: errorMessage(e, t('common.serverError')),
       color: 'error'
     })
   } finally {
@@ -246,283 +246,285 @@ function patientCity(p: Patient): string {
 </script>
 
 <template>
-  <DataListLayout
-    :title="t('patients.title')"
-    :loading="isLoading"
-    :empty="!patients.length"
-    :error="error"
-    :page="page"
-    :page-size="pageSize"
-    :total="total"
-    :total-pages="totalPages"
-    @update:page="(v) => (page = v)"
-  >
-    <template #actions>
-      <UButton
-        color="primary"
-        variant="soft"
-        icon="i-lucide-plus"
-        @click="isCreateModalOpen = true"
-      >
-        {{ t('patients.create') }}
-      </UButton>
-    </template>
-
-    <template #toolbar>
-      <FilterBar
-        :active-count="activeFilterCount"
-        @reset="resetFilters"
-      >
-        <template #search>
-          <SearchBar
-            :model-value="filters.q"
-            :placeholder="t('patients.searchPlaceholder')"
-            max-width="max-w-md"
-            @update:model-value="(v) => setFilter('q', v)"
-          />
-        </template>
-
-        <FilterChipMulti
-          :model-value="filters.status"
-          :items="statusItems"
-          :label="t('patients.filters.status')"
-          icon="i-lucide-circle-dot"
-          @update:model-value="(v) => setFilter('status', v)"
-        />
-
-        <FilterToggle
-          :model-value="filters.do_not_contact"
-          :label="t('patients.filters.doNotContactOnly')"
-          :label-false="t('patients.filters.doNotContactOnlyContactable')"
-          icon="i-lucide-bell-off"
-          tristate
-          @update:model-value="(v) => setFilter('do_not_contact', v)"
-        />
-
-        <ModuleSlot
-          name="patients.list.filter"
-          :ctx="debtFilterCtx()"
-        />
-
-        <template #right>
-          <SortMenu
-            :model-value="sort"
-            :options="sortOptions"
-            @update:model-value="(v) => (sort = v)"
-          />
-        </template>
-      </FilterBar>
-    </template>
-
-    <template #empty>
-      <EmptyState
-        icon="i-lucide-users"
-        :title="activeFilterCount || filters.q ? t('patients.noResults') : t('patients.empty')"
-        :description="activeFilterCount || filters.q ? undefined : t('dashboard.welcomeMessage')"
-      >
-        <template
-          v-if="!activeFilterCount && !filters.q"
-          #actions
+  <div>
+    <DataListLayout
+      :title="t('patients.title')"
+      :loading="isLoading"
+      :empty="!patients.length"
+      :error="error"
+      :page="page"
+      :page-size="pageSize"
+      :total="total"
+      :total-pages="totalPages"
+      @update:page="(v) => (page = v)"
+    >
+      <template #actions>
+        <UButton
+          color="primary"
+          variant="soft"
+          icon="i-lucide-plus"
+          @click="isCreateModalOpen = true"
         >
-          <UButton
-            color="primary"
-            variant="soft"
-            icon="i-lucide-plus"
-            @click="isCreateModalOpen = true"
-          >
-            {{ t('patients.emptyAction') }}
-          </UButton>
-        </template>
-      </EmptyState>
-    </template>
+          {{ t('patients.create') }}
+        </UButton>
+      </template>
 
-    <template #rows>
-      <DataListItem
-        v-for="patient in patients"
-        :key="patient.id"
-        :to="`/patients/${patient.id}`"
-      >
-        <template #row>
-          <UAvatar
-            :alt="patient.first_name"
-            size="sm"
+      <template #toolbar>
+        <FilterBar
+          :active-count="activeFilterCount"
+          @reset="resetFilters"
+        >
+          <template #search>
+            <SearchBar
+              :model-value="filters.q"
+              :placeholder="t('patients.searchPlaceholder')"
+              max-width="max-w-md"
+              @update:model-value="(v) => setFilter('q', v)"
+            />
+          </template>
+
+          <FilterChipMulti
+            :model-value="filters.status"
+            :items="statusItems"
+            :label="t('patients.filters.status')"
+            icon="i-lucide-circle-dot"
+            @update:model-value="(v) => setFilter('status', v)"
           />
-          <div class="flex-1 min-w-0">
-            <div class="text-ui text-default truncate flex items-center gap-2">
-              {{ patient.last_name }}, {{ patient.first_name }}
-              <UIcon
-                v-if="patient.do_not_contact"
-                name="i-lucide-bell-off"
-                class="w-3.5 h-3.5 text-warning shrink-0"
-                :title="t('patients.doNotContact.label')"
-              />
-            </div>
-            <div class="text-caption text-subtle truncate">
-              <span v-if="patientCity(patient)">{{ patientCity(patient) }} · </span>{{ patient.phone || patient.email || '—' }}
-            </div>
-          </div>
-          <div class="shrink-0 flex items-center gap-3 ml-auto">
-            <ModuleSlot
-              name="patients.list.row.financial"
-              :ctx="{ patient_id: patient.id, summary: debtSummaries[patient.id] ?? null }"
-            />
-            <StatusBadge
-              :role="PATIENT_STATUS_ROLE[patient.status as PatientStatus] || 'neutral'"
-              :label="t(`patients.status.${patient.status}`)"
-            />
-            <UIcon
-              name="i-lucide-chevron-right"
-              class="text-subtle"
-            />
-          </div>
-        </template>
 
-        <template #card>
-          <div class="flex items-center gap-3">
+          <FilterToggle
+            :model-value="filters.do_not_contact"
+            :label="t('patients.filters.doNotContactOnly')"
+            :label-false="t('patients.filters.doNotContactOnlyContactable')"
+            icon="i-lucide-bell-off"
+            tristate
+            @update:model-value="(v) => setFilter('do_not_contact', v)"
+          />
+
+          <ModuleSlot
+            name="patients.list.filter"
+            :ctx="debtFilterCtx()"
+          />
+
+          <template #right>
+            <SortMenu
+              :model-value="sort"
+              :options="sortOptions"
+              @update:model-value="(v) => (sort = v)"
+            />
+          </template>
+        </FilterBar>
+      </template>
+
+      <template #empty>
+        <EmptyState
+          icon="i-lucide-users"
+          :title="activeFilterCount || filters.q ? t('patients.noResults') : t('patients.empty')"
+          :description="activeFilterCount || filters.q ? undefined : t('dashboard.welcomeMessage')"
+        >
+          <template
+            v-if="!activeFilterCount && !filters.q"
+            #actions
+          >
+            <UButton
+              color="primary"
+              variant="soft"
+              icon="i-lucide-plus"
+              @click="isCreateModalOpen = true"
+            >
+              {{ t('patients.emptyAction') }}
+            </UButton>
+          </template>
+        </EmptyState>
+      </template>
+
+      <template #rows>
+        <DataListItem
+          v-for="patient in patients"
+          :key="patient.id"
+          :to="`/patients/${patient.id}`"
+        >
+          <template #row>
             <UAvatar
               :alt="patient.first_name"
-              size="md"
+              size="sm"
             />
             <div class="flex-1 min-w-0">
-              <div class="font-medium text-default truncate flex items-center gap-2">
+              <div class="text-ui text-default truncate flex items-center gap-2">
                 {{ patient.last_name }}, {{ patient.first_name }}
                 <UIcon
                   v-if="patient.do_not_contact"
                   name="i-lucide-bell-off"
                   class="w-3.5 h-3.5 text-warning shrink-0"
+                  :title="t('patients.doNotContact.label')"
                 />
               </div>
               <div class="text-caption text-subtle truncate">
-                {{ patient.phone || patient.email || '—' }}
+                <span v-if="patientCity(patient)">{{ patientCity(patient) }} · </span>{{ patient.phone || patient.email || '—' }}
               </div>
             </div>
-            <StatusBadge
-              :role="PATIENT_STATUS_ROLE[patient.status as PatientStatus] || 'neutral'"
-              :label="t(`patients.status.${patient.status}`)"
-              class="shrink-0"
-            />
-          </div>
-          <div class="flex items-center justify-between gap-2">
-            <span class="text-caption text-subtle truncate">
-              {{ patientCity(patient) || '—' }}
-            </span>
-            <ModuleSlot
-              name="patients.list.row.financial"
-              :ctx="{ patient_id: patient.id, summary: debtSummaries[patient.id] ?? null }"
-            />
-          </div>
-        </template>
-      </DataListItem>
-    </template>
-  </DataListLayout>
+            <div class="shrink-0 flex items-center gap-3 ml-auto">
+              <ModuleSlot
+                name="patients.list.row.financial"
+                :ctx="{ patient_id: patient.id, summary: debtSummaries[patient.id] ?? null }"
+              />
+              <StatusBadge
+                :role="PATIENT_STATUS_ROLE[patient.status as PatientStatus] || 'neutral'"
+                :label="t(`patients.status.${patient.status}`)"
+              />
+              <UIcon
+                name="i-lucide-chevron-right"
+                class="text-subtle"
+              />
+            </div>
+          </template>
 
-  <UModal v-model:open="isCreateModalOpen">
-    <template #content>
-      <UCard>
-        <template #header>
-          <div class="flex items-center justify-between">
-            <h2 class="text-h1 text-default">
-              {{ t('patients.create') }}
-            </h2>
-            <UButton
-              variant="ghost"
-              color="neutral"
-              icon="i-lucide-x"
-              :aria-label="t('common.close', 'Cerrar')"
-              @click="isCreateModalOpen = false"
-            />
-          </div>
-        </template>
+          <template #card>
+            <div class="flex items-center gap-3">
+              <UAvatar
+                :alt="patient.first_name"
+                size="md"
+              />
+              <div class="flex-1 min-w-0">
+                <div class="font-medium text-default truncate flex items-center gap-2">
+                  {{ patient.last_name }}, {{ patient.first_name }}
+                  <UIcon
+                    v-if="patient.do_not_contact"
+                    name="i-lucide-bell-off"
+                    class="w-3.5 h-3.5 text-warning shrink-0"
+                  />
+                </div>
+                <div class="text-caption text-subtle truncate">
+                  {{ patient.phone || patient.email || '—' }}
+                </div>
+              </div>
+              <StatusBadge
+                :role="PATIENT_STATUS_ROLE[patient.status as PatientStatus] || 'neutral'"
+                :label="t(`patients.status.${patient.status}`)"
+                class="shrink-0"
+              />
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-caption text-subtle truncate">
+                {{ patientCity(patient) || '—' }}
+              </span>
+              <ModuleSlot
+                name="patients.list.row.financial"
+                :ctx="{ patient_id: patient.id, summary: debtSummaries[patient.id] ?? null }"
+              />
+            </div>
+          </template>
+        </DataListItem>
+      </template>
+    </DataListLayout>
 
-        <form
-          class="space-y-4"
-          @submit.prevent="createPatient"
-        >
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <UFormField
-              :label="t('patients.firstName')"
-              required
-            >
-              <UInput
-                v-model="newPatient.first_name"
-                :placeholder="t('patients.firstName')"
+    <UModal v-model:open="isCreateModalOpen">
+      <template #content>
+        <UCard>
+          <template #header>
+            <div class="flex items-center justify-between">
+              <h2 class="text-h1 text-default">
+                {{ t('patients.create') }}
+              </h2>
+              <UButton
+                variant="ghost"
+                color="neutral"
+                icon="i-lucide-x"
+                :aria-label="t('common.close', 'Cerrar')"
+                @click="isCreateModalOpen = false"
+              />
+            </div>
+          </template>
+
+          <form
+            class="space-y-4"
+            @submit.prevent="createPatient"
+          >
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <UFormField
+                :label="t('patients.firstName')"
                 required
-              />
-            </UFormField>
-            <UFormField
-              :label="t('patients.lastName')"
-              required
-            >
-              <UInput
-                v-model="newPatient.last_name"
-                :placeholder="t('patients.lastName')"
+              >
+                <UInput
+                  v-model="newPatient.first_name"
+                  :placeholder="t('patients.firstName')"
+                  required
+                />
+              </UFormField>
+              <UFormField
+                :label="t('patients.lastName')"
                 required
-              />
-            </UFormField>
-          </div>
+              >
+                <UInput
+                  v-model="newPatient.last_name"
+                  :placeholder="t('patients.lastName')"
+                  required
+                />
+              </UFormField>
+            </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <UFormField :label="t('patients.phone')">
-              <UInput
-                v-model="newPatient.phone"
-                :placeholder="t('patients.phone')"
-                type="tel"
-              />
-            </UFormField>
-            <UFormField :label="t('patients.email')">
-              <UInput
-                v-model="newPatient.email"
-                :placeholder="t('patients.email')"
-                type="email"
-              />
-            </UFormField>
-          </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <UFormField :label="t('patients.phone')">
+                <UInput
+                  v-model="newPatient.phone"
+                  :placeholder="t('patients.phone')"
+                  type="tel"
+                />
+              </UFormField>
+              <UFormField :label="t('patients.email')">
+                <UInput
+                  v-model="newPatient.email"
+                  :placeholder="t('patients.email')"
+                  type="email"
+                />
+              </UFormField>
+            </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <UFormField :label="t('patients.nationalId')">
-              <UInput
-                v-model="newPatient.national_id"
-                placeholder="12345678A"
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <UFormField :label="t('patients.nationalId')">
+                <UInput
+                  v-model="newPatient.national_id"
+                  placeholder="12345678A"
+                />
+              </UFormField>
+              <UFormField :label="t('patients.dateOfBirth')">
+                <UInput
+                  v-model="newPatient.date_of_birth"
+                  type="date"
+                />
+              </UFormField>
+            </div>
+
+            <UFormField :label="t('patients.notes')">
+              <UTextarea
+                v-model="newPatient.notes"
+                :placeholder="t('patients.notes')"
+                :rows="3"
               />
             </UFormField>
-            <UFormField :label="t('patients.dateOfBirth')">
-              <UInput
-                v-model="newPatient.date_of_birth"
-                type="date"
-              />
-            </UFormField>
-          </div>
+          </form>
 
-          <UFormField :label="t('patients.notes')">
-            <UTextarea
-              v-model="newPatient.notes"
-              :placeholder="t('patients.notes')"
-              :rows="3"
-            />
-          </UFormField>
-        </form>
-
-        <template #footer>
-          <div class="flex justify-end gap-3">
-            <UButton
-              variant="outline"
-              color="neutral"
-              @click="isCreateModalOpen = false"
-            >
-              {{ t('common.cancel') }}
-            </UButton>
-            <UButton
-              color="primary"
-              variant="solid"
-              :loading="isSubmitting"
-              :disabled="!newPatient.first_name || !newPatient.last_name"
-              @click="createPatient"
-            >
-              {{ t('common.save') }}
-            </UButton>
-          </div>
-        </template>
-      </UCard>
-    </template>
-  </UModal>
+          <template #footer>
+            <div class="flex justify-end gap-3">
+              <UButton
+                variant="outline"
+                color="neutral"
+                @click="isCreateModalOpen = false"
+              >
+                {{ t('common.cancel') }}
+              </UButton>
+              <UButton
+                color="primary"
+                variant="solid"
+                :loading="isSubmitting"
+                :disabled="!newPatient.first_name || !newPatient.last_name"
+                @click="createPatient"
+              >
+                {{ t('common.save') }}
+              </UButton>
+            </div>
+          </template>
+        </UCard>
+      </template>
+    </UModal>
+  </div>
 </template>

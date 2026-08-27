@@ -606,7 +606,7 @@ async function handleSave() {
     emit('saved', savedAppointment)
     emit('update:open', false)
   } catch (error: unknown) {
-    const fetchError = error as { statusCode?: number, data?: { message?: string, detail?: string } }
+    const fetchError = error as { statusCode?: number }
 
     if (fetchError.statusCode === 409) {
       toast.add({
@@ -617,7 +617,7 @@ async function handleSave() {
     } else {
       toast.add({
         title: t('common.error'),
-        description: fetchError.data?.detail || fetchError.data?.message || t('common.serverError'),
+        description: errorMessage(error, t('common.serverError')),
         color: 'error'
       })
     }

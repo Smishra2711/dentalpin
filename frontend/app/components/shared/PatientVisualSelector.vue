@@ -162,7 +162,8 @@ watch(() => form.phone, (val) => {
       })
       const response = await api.get<PaginatedResponse<Patient>>(
         `/api/v1/patients?${params.toString()}`,
-        { signal: ctrl.signal }
+        // Background duplicate probe — never toast from here.
+        { signal: ctrl.signal, errorToast: false }
       )
       if (ctrl.signal.aborted) return
       const match = response.data.find(
@@ -199,7 +200,8 @@ async function submitCreate() {
     const response = await api.post<ApiResponse<Patient>>(
       '/api/v1/patients',
       payload,
-      { signal: ctrl.signal }
+      // The catch renders createError inline in the form.
+      { signal: ctrl.signal, errorToast: false }
     )
     if (ctrl.signal.aborted) return
     const created = response.data

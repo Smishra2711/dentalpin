@@ -1,4 +1,5 @@
 import type { ApiResponse, PaginatedResponse } from '~/types'
+import { errorDetail } from '~/utils/error'
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
@@ -18,6 +19,14 @@ interface UseApiOptions {
   // Optional AbortSignal so callers can cancel in-flight requests
   // (debounced lookups, component unmount, etc.).
   signal?: AbortSignal
+  // 400/409/422 toast the backend's own message by default before
+  // rethrowing (#101 — an uncaught rethrow used to be a silent
+  // failure). Callers that surface the error themselves (their own
+  // toast, inline form error, modal copy) pass ``errorToast: false``
+  // to keep single-toast behaviour. 404 never auto-toasts: it is
+  // routinely semantic ("not signed", probe-style reads) and its
+  // handling belongs to the caller.
+  errorToast?: boolean
 }
 
 function _withQuery(path: string, query?: UseApiOptions['query']): string {
@@ -46,7 +55,7 @@ export function useApi() {
     path: string,
     options: UseApiOptions = {}
   ): Promise<T> {
-    const { skipAuth, method, body, headers: optionHeaders, signal, query } = options
+    const { skipAuth, method, body, headers: optionHeaders, signal, query, errorToast = true } = options
 
     const headers: Record<string, string> = {
       ...(optionHeaders || {})
@@ -107,16 +116,33 @@ export function useApi() {
       }
 
       if (fetchError.statusCode === 404) {
+        // Semantic more often than exceptional (probe-reads, "not
+        // signed", lookups) — never auto-toast; the caller owns it.
         throw error
       }
 
-      if (fetchError.statusCode === 409) {
-        // Conflict - let the caller handle it
+      if (
+        errorToast
+        && (fetchError.statusCode === 400
+          || fetchError.statusCode === 409
+          || fetchError.statusCode === 422)
+      ) {
+        // Surface the backend's own message so a rethrow nobody catches
+        // is no longer silent (#101). Callers that present the error
+        // themselves suppress this with ``errorToast: false``.
+        toast.add({
+          title: t('common.error'),
+          description: errorDetail(error) ?? t('common.serverError'),
+          color: 'error'
+        })
         throw error
       }
 
-      if (fetchError.statusCode === 422) {
-        // Validation error - let the caller handle it
+      if (
+        fetchError.statusCode === 400
+        || fetchError.statusCode === 409
+        || fetchError.statusCode === 422
+      ) {
         throw error
       }
 

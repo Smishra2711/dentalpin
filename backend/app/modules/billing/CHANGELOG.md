@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
+
 - feat(#287): invoice send accepts `send_method=whatsapp` with per-channel recipient validation; the send modal renders channel buttons from the clinic's manual channels.
 
 - fix(#127): every icon-only button in the module's frontend has an i18n-sourced `aria-label` (screen readers announced them as just "button").

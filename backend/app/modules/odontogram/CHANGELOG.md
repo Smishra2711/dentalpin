@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
+
 - fix(#101): treatment delete asks for confirmation (names the treatment and tooth); the edit modal stays open with the user's edits when a save fails, and surface edits are actually included in the update payload (they were silently dropped).
 
 - feat: global treatments from unmapped catalog items are creatable —

@@ -96,7 +96,7 @@ async function save() {
       digest_enabled: settings.value.digest_enabled,
       digest_hour: settings.value.digest_hour,
       digest_recipient_user_ids: settings.value.digest_recipient_user_ids
-    })
+    }, { errorToast: false })
     settings.value = res.data
     toast.add({ title: t('copilot.settings.saved'), color: 'success' })
   } catch (e) {

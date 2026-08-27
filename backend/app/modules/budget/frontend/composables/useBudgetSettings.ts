@@ -1,4 +1,5 @@
 import type { ApiResponse } from '~~/app/types'
+import { errorMessage } from '~~/app/utils/error'
 
 export interface BudgetSettings {
   budget_expiry_days: number
@@ -35,14 +36,16 @@ export function useBudgetSettings() {
     try {
       const response = await api.patch<ApiResponse<BudgetSettings>>(
         '/api/v1/auth/clinic/settings/budget',
-        payload
+        payload,
+        // This catch toasts the failure itself.
+        { errorToast: false }
       )
       settings.value = response.data
       toast.add({ title: t('budget.settings.saved'), color: 'success' })
       return true
     } catch (error) {
       console.error('Error saving budget settings:', error)
-      toast.add({ title: t('errors.updateFailed'), color: 'error' })
+      toast.add({ title: errorMessage(error, t('errors.updateFailed')), color: 'error' })
       return false
     } finally {
       saving.value = false

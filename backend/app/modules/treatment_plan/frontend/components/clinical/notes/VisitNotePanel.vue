@@ -43,7 +43,8 @@ async function save() {
     const next = body.value.trim()
     await api.patch(
       `/api/v1/agenda/appointment-treatments/${props.appointmentTreatmentId}`,
-      { notes: next }
+      { notes: next },
+      { errorToast: false }
     )
     toast.add({ title: t('treatmentPlans.visitNote.saved'), color: 'success' })
     emit('saved', next)

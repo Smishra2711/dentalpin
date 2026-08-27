@@ -76,8 +76,10 @@ export function useOdontogramData() {
     error.value = null
 
     try {
+      // OdontogramChart renders `error` as its load-error alert.
       const response = await api.get<ApiResponse<OdontogramData>>(
-        `/api/v1/odontogram/patients/${patientId}/odontogram`
+        `/api/v1/odontogram/patients/${patientId}/odontogram`,
+        { errorToast: false }
       )
       odontogramData.value = response.data
     } catch (err) {
@@ -97,7 +99,8 @@ export function useOdontogramData() {
     try {
       const response = await api.put<ApiResponse<ToothRecord>>(
         `/api/v1/odontogram/patients/${patientId}/teeth/${toothNumber}`,
-        update as Record<string, unknown>
+        update as Record<string, unknown>,
+        { errorToast: false }
       )
 
       // Update local state
@@ -135,7 +138,8 @@ export function useOdontogramData() {
     try {
       const response = await api.patch<ApiResponse<ToothRecord[]>>(
         `/api/v1/odontogram/patients/${patientId}/teeth/bulk`,
-        { updates } as Record<string, unknown>
+        { updates } as Record<string, unknown>,
+        { errorToast: false }
       )
 
       // Update local state

@@ -224,7 +224,8 @@ export function useReports() {
   ): Promise<BillingSummary | null> {
     try {
       const response = await api.get<ApiResponse<BillingSummary>>(
-        `/api/v1/reports/billing/summary?date_from=${dateFrom}&date_to=${dateTo}`
+        `/api/v1/reports/billing/summary?date_from=${dateFrom}&date_to=${dateTo}`,
+        { errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -237,7 +238,8 @@ export function useReports() {
   async function fetchOverdueInvoices(): Promise<OverdueInvoice[]> {
     try {
       const response = await api.get<ApiResponse<OverdueInvoice[]>>(
-        '/api/v1/reports/billing/overdue'
+        '/api/v1/reports/billing/overdue',
+        { errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -253,7 +255,8 @@ export function useReports() {
   ): Promise<PaymentMethodSummary[]> {
     try {
       const response = await api.get<ApiResponse<PaymentMethodSummary[]>>(
-        `/api/v1/reports/billing/by-payment-method?date_from=${dateFrom}&date_to=${dateTo}`
+        `/api/v1/reports/billing/by-payment-method?date_from=${dateFrom}&date_to=${dateTo}`,
+        { errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -269,7 +272,8 @@ export function useReports() {
   ): Promise<ProfessionalBillingSummary[]> {
     try {
       const response = await api.get<ApiResponse<ProfessionalBillingSummary[]>>(
-        `/api/v1/reports/billing/by-professional?date_from=${dateFrom}&date_to=${dateTo}`
+        `/api/v1/reports/billing/by-professional?date_from=${dateFrom}&date_to=${dateTo}`,
+        { errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -285,7 +289,8 @@ export function useReports() {
   ): Promise<VatSummaryItem[]> {
     try {
       const response = await api.get<ApiResponse<VatSummaryItem[]>>(
-        `/api/v1/reports/billing/vat-summary?date_from=${dateFrom}&date_to=${dateTo}`
+        `/api/v1/reports/billing/vat-summary?date_from=${dateFrom}&date_to=${dateTo}`,
+        { errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -298,7 +303,8 @@ export function useReports() {
   async function fetchNumberingGaps(): Promise<NumberingGap[]> {
     try {
       const response = await api.get<ApiResponse<NumberingGap[]>>(
-        '/api/v1/reports/billing/gaps'
+        '/api/v1/reports/billing/gaps',
+        { errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -318,7 +324,8 @@ export function useReports() {
   ): Promise<BudgetSummary | null> {
     try {
       const response = await api.get<ApiResponse<BudgetSummary>>(
-        `/api/v1/reports/budgets/summary?date_from=${dateFrom}&date_to=${dateTo}`
+        `/api/v1/reports/budgets/summary?date_from=${dateFrom}&date_to=${dateTo}`,
+        { errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -334,7 +341,8 @@ export function useReports() {
   ): Promise<BudgetByProfessional[]> {
     try {
       const response = await api.get<ApiResponse<BudgetByProfessional[]>>(
-        `/api/v1/reports/budgets/by-professional?date_from=${dateFrom}&date_to=${dateTo}`
+        `/api/v1/reports/budgets/by-professional?date_from=${dateFrom}&date_to=${dateTo}`,
+        { errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -351,7 +359,8 @@ export function useReports() {
   ): Promise<BudgetByTreatment[]> {
     try {
       const response = await api.get<ApiResponse<BudgetByTreatment[]>>(
-        `/api/v1/reports/budgets/by-treatment?date_from=${dateFrom}&date_to=${dateTo}&limit=${limit}`
+        `/api/v1/reports/budgets/by-treatment?date_from=${dateFrom}&date_to=${dateTo}&limit=${limit}`,
+        { errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -367,7 +376,8 @@ export function useReports() {
   ): Promise<BudgetByStatus[]> {
     try {
       const response = await api.get<ApiResponse<BudgetByStatus[]>>(
-        `/api/v1/reports/budgets/by-status?date_from=${dateFrom}&date_to=${dateTo}`
+        `/api/v1/reports/budgets/by-status?date_from=${dateFrom}&date_to=${dateTo}`,
+        { errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -387,7 +397,8 @@ export function useReports() {
   ): Promise<SchedulingSummary | null> {
     try {
       const response = await api.get<ApiResponse<SchedulingSummary>>(
-        `/api/v1/reports/scheduling/summary?date_from=${dateFrom}&date_to=${dateTo}`
+        `/api/v1/reports/scheduling/summary?date_from=${dateFrom}&date_to=${dateTo}`,
+        { errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -403,7 +414,8 @@ export function useReports() {
   ): Promise<FirstVisitsSummary | null> {
     try {
       const response = await api.get<ApiResponse<FirstVisitsSummary>>(
-        `/api/v1/reports/scheduling/first-visits?date_from=${dateFrom}&date_to=${dateTo}`
+        `/api/v1/reports/scheduling/first-visits?date_from=${dateFrom}&date_to=${dateTo}`,
+        { errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -419,7 +431,8 @@ export function useReports() {
   ): Promise<HoursByProfessional[]> {
     try {
       const response = await api.get<ApiResponse<HoursByProfessional[]>>(
-        `/api/v1/reports/scheduling/by-professional?date_from=${dateFrom}&date_to=${dateTo}`
+        `/api/v1/reports/scheduling/by-professional?date_from=${dateFrom}&date_to=${dateTo}`,
+        { errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -435,7 +448,8 @@ export function useReports() {
   ): Promise<CabinetUtilization[]> {
     try {
       const response = await api.get<ApiResponse<CabinetUtilization[]>>(
-        `/api/v1/reports/scheduling/by-cabinet?date_from=${dateFrom}&date_to=${dateTo}`
+        `/api/v1/reports/scheduling/by-cabinet?date_from=${dateFrom}&date_to=${dateTo}`,
+        { errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -451,7 +465,8 @@ export function useReports() {
   ): Promise<DayOfWeekStats[]> {
     try {
       const response = await api.get<ApiResponse<DayOfWeekStats[]>>(
-        `/api/v1/reports/scheduling/by-day-of-week?date_from=${dateFrom}&date_to=${dateTo}`
+        `/api/v1/reports/scheduling/by-day-of-week?date_from=${dateFrom}&date_to=${dateTo}`,
+        { errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -479,7 +494,8 @@ export function useReports() {
   ): Promise<WaitingTimeStats | null> {
     try {
       const response = await api.get<ApiResponse<WaitingTimeStats>>(
-        `/api/v1/reports/scheduling/waiting-times?${_buildAnalyticsQuery(dateFrom, dateTo, filters)}`
+        `/api/v1/reports/scheduling/waiting-times?${_buildAnalyticsQuery(dateFrom, dateTo, filters)}`,
+        { errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -496,7 +512,8 @@ export function useReports() {
   ): Promise<PunctualityStats | null> {
     try {
       const response = await api.get<ApiResponse<PunctualityStats>>(
-        `/api/v1/reports/scheduling/punctuality?${_buildAnalyticsQuery(dateFrom, dateTo, filters)}`
+        `/api/v1/reports/scheduling/punctuality?${_buildAnalyticsQuery(dateFrom, dateTo, filters)}`,
+        { errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -513,7 +530,8 @@ export function useReports() {
   ): Promise<DurationVarianceStats | null> {
     try {
       const response = await api.get<ApiResponse<DurationVarianceStats>>(
-        `/api/v1/reports/scheduling/duration-variance?${_buildAnalyticsQuery(dateFrom, dateTo, filters)}`
+        `/api/v1/reports/scheduling/duration-variance?${_buildAnalyticsQuery(dateFrom, dateTo, filters)}`,
+        { errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -530,7 +548,8 @@ export function useReports() {
   ): Promise<AppointmentFunnel | null> {
     try {
       const response = await api.get<ApiResponse<AppointmentFunnel>>(
-        `/api/v1/reports/scheduling/funnel?${_buildAnalyticsQuery(dateFrom, dateTo, filters)}`
+        `/api/v1/reports/scheduling/funnel?${_buildAnalyticsQuery(dateFrom, dateTo, filters)}`,
+        { errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -554,7 +573,7 @@ export function useReports() {
     try {
       const response = await api.get<ApiResponse<PaymentsSummaryReport>>(
         `/api/v1/payments/reports/summary?date_from=${dateFrom}&date_to=${dateTo}`,
-        { signal: options?.signal }
+        { signal: options?.signal, errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -574,7 +593,7 @@ export function useReports() {
     try {
       const response = await api.get<ApiResponse<PaymentsTrends>>(
         `/api/v1/payments/reports/trends?date_from=${dateFrom}&date_to=${dateTo}&granularity=${granularity}`,
-        { signal: options?.signal }
+        { signal: options?.signal, errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -593,7 +612,7 @@ export function useReports() {
     try {
       const response = await api.get<ApiResponse<PaymentsMethodBreakdown[]>>(
         `/api/v1/payments/reports/by-method?date_from=${dateFrom}&date_to=${dateTo}`,
-        { signal: options?.signal }
+        { signal: options?.signal, errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -612,7 +631,7 @@ export function useReports() {
     try {
       const response = await api.get<ApiResponse<PaymentsProfessionalBreakdown[]>>(
         `/api/v1/payments/reports/by-professional?date_from=${dateFrom}&date_to=${dateTo}`,
-        { signal: options?.signal }
+        { signal: options?.signal, errorToast: false }
       )
       return response.data
     } catch (e) {
@@ -629,7 +648,7 @@ export function useReports() {
     try {
       const response = await api.get<ApiResponse<PaymentsAgingBuckets>>(
         '/api/v1/payments/reports/aging-receivables',
-        { signal: options?.signal }
+        { signal: options?.signal, errorToast: false }
       )
       return response.data
     } catch (e) {

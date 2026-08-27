@@ -37,7 +37,9 @@ export function usePeriodontogram(patientId: () => string) {
     error.value = null
     try {
       const response = await api.get<ApiResponse<PerioTimelineResponse>>(
-        `/api/v1/periodontogram/patients/${patientId()}/timeline`
+        `/api/v1/periodontogram/patients/${patientId()}/timeline`,
+        // The view renders `error` as an inline alert — no auto-toast.
+        { errorToast: false }
       )
       timeline.value = response.data
     } catch (e) {

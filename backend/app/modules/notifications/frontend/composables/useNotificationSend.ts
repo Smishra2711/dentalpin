@@ -44,7 +44,8 @@ export function useNotificationSend() {
       }
       const response = await api.post<ApiResponse<ManualSendResponse>>(
         '/api/v1/notifications/send',
-        payload
+        payload,
+        { errorToast: false }
       )
       if (response.data.success) {
         toast.add({

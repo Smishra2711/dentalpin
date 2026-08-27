@@ -169,7 +169,8 @@ export function useRecalls() {
   }
 
   async function create(payload: RecallCreatePayload): Promise<ApiOk<Recall>> {
-    return await api.post<ApiOk<Recall>>('/api/v1/recalls/', payload)
+    // Caller (SetRecallModal) catches and toasts the failure itself.
+    return await api.post<ApiOk<Recall>>('/api/v1/recalls/', payload, { errorToast: false })
   }
 
   async function update(id: string, payload: RecallUpdatePayload): Promise<ApiOk<Recall>> {
@@ -177,10 +178,11 @@ export function useRecalls() {
   }
 
   async function snooze(id: string, months: number, note?: string): Promise<ApiOk<Recall>> {
+    // Caller (RecallRow) catches and toasts the failure itself.
     return await api.post<ApiOk<Recall>>(`/api/v1/recalls/${id}/snooze`, {
       months,
       reason_note: note ?? null
-    })
+    }, { errorToast: false })
   }
 
   async function cancel(id: string, note?: string): Promise<ApiOk<Recall>> {
@@ -194,9 +196,11 @@ export function useRecalls() {
   }
 
   async function logAttempt(id: string, payload: AttemptCreatePayload): Promise<ApiOk<RecallContactAttempt>> {
+    // Callers (LogAttemptForm, RecallRow) catch and toast themselves.
     return await api.post<ApiOk<RecallContactAttempt>>(
       `/api/v1/recalls/${id}/attempts`,
-      payload
+      payload,
+      { errorToast: false }
     )
   }
 
@@ -225,7 +229,8 @@ export function useRecalls() {
   }
 
   async function updateSettings(payload: Partial<RecallSettings>): Promise<ApiOk<RecallSettings>> {
-    return await api.put<ApiOk<RecallSettings>>('/api/v1/recalls/settings', payload)
+    // Caller (RecallSettingsPanel) catches and toasts itself.
+    return await api.put<ApiOk<RecallSettings>>('/api/v1/recalls/settings', payload, { errorToast: false })
   }
 
   async function dashboardStats(): Promise<ApiOk<RecallDashboardStats>> {

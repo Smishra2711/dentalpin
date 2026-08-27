@@ -48,7 +48,7 @@ export function useVatTypes() {
     isLoading.value = true
     try {
       const params = includeInactive ? '?include_inactive=true' : ''
-      const response = await api.get<ApiResponse<VatType[]>>(`/api/v1/catalog/vat-types${params}`)
+      const response = await api.get<ApiResponse<VatType[]>>(`/api/v1/catalog/vat-types${params}`, { errorToast: false })
       vatTypes.value = response.data
     } catch (e) {
       toast.add({
@@ -64,7 +64,7 @@ export function useVatTypes() {
   // Create a new VAT type
   async function createVatType(data: VatTypeCreate): Promise<VatType | null> {
     try {
-      const response = await api.post<ApiResponse<VatType>>('/api/v1/catalog/vat-types', data)
+      const response = await api.post<ApiResponse<VatType>>('/api/v1/catalog/vat-types', data, { errorToast: false })
       // If setting as default, update local state
       if (data.is_default) {
         vatTypes.value = vatTypes.value.map(vt => ({ ...vt, is_default: false }))
@@ -89,7 +89,7 @@ export function useVatTypes() {
   // Update a VAT type
   async function updateVatType(id: string, data: VatTypeUpdate): Promise<VatType | null> {
     try {
-      const response = await api.put<ApiResponse<VatType>>(`/api/v1/catalog/vat-types/${id}`, data)
+      const response = await api.put<ApiResponse<VatType>>(`/api/v1/catalog/vat-types/${id}`, data, { errorToast: false })
       // If setting as default, update local state
       if (data.is_default) {
         vatTypes.value = vatTypes.value.map(vt => ({
@@ -121,7 +121,7 @@ export function useVatTypes() {
   // Delete a VAT type (soft delete)
   async function deleteVatType(id: string): Promise<boolean> {
     try {
-      await api.del(`/api/v1/catalog/vat-types/${id}`)
+      await api.del(`/api/v1/catalog/vat-types/${id}`, { errorToast: false })
       // Mark as inactive in local state
       const deleted = vatTypes.value.find(vt => vt.id === id)
       if (deleted) deleted.is_active = false

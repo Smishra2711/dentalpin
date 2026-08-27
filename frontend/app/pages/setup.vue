@@ -94,7 +94,8 @@ const taxIdWarning = computed(() =>
 onMounted(async () => {
   try {
     const res = await api.get<{ data: { countries: CountryPreset[], fallback: CountryPreset } }>(
-      '/api/v1/auth/setup/presets', { skipAuth: true }
+      // Convenience probe: the wizard degrades gracefully — never toast.
+      '/api/v1/auth/setup/presets', { skipAuth: true, errorToast: false }
     )
     presets.value = Object.fromEntries(res.data.countries.map(c => [c.code, c]))
     fallbackPreset.value = res.data.fallback
@@ -207,7 +208,9 @@ async function onSubmit() {
       language: isKnownCountry.value
         ? preset.value?.language
         : (COMM_LANGUAGES.includes(currentLocale.value) ? currentLocale.value : 'en')
-    }, { skipAuth: true })
+      // errorToast off: the catch renders errorMessage inline
+      // (409/422 have dedicated copy).
+    }, { skipAuth: true, errorToast: false })
 
     // ponytail: re-login con las credenciales recién creadas en vez de
     // inyectar los tokens a mano — una request barata y reusa fetchUser.

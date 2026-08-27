@@ -70,7 +70,8 @@ export function useTreatmentPlans() {
       if (options.search) params.append('search', options.search)
 
       const response = await api.get<PaginatedResponse<TreatmentPlan>>(
-        `/api/v1/treatment_plan/treatment-plans?${params}`
+        `/api/v1/treatment_plan/treatment-plans?${params}`,
+        { errorToast: false }
       )
       plans.value = response.data
       total.value = response.total
@@ -97,7 +98,8 @@ export function useTreatmentPlans() {
     loading.value = true
     try {
       const response = await api.get<ApiResponse<TreatmentPlanDetail>>(
-        `/api/v1/treatment_plan/treatment-plans/${planId}`
+        `/api/v1/treatment_plan/treatment-plans/${planId}`,
+        { errorToast: false }
       )
       currentPlan.value = response.data
       return response.data
@@ -119,7 +121,8 @@ export function useTreatmentPlans() {
     try {
       const response = await api.post<ApiResponse<TreatmentPlan>>(
         '/api/v1/treatment_plan/treatment-plans',
-        data
+        data,
+        { errorToast: false }
       )
       toast.add({
         title: t('treatmentPlans.created'),
@@ -144,7 +147,8 @@ export function useTreatmentPlans() {
     try {
       const response = await api.put<ApiResponse<TreatmentPlan>>(
         `/api/v1/treatment_plan/treatment-plans/${planId}`,
-        data
+        data,
+        { errorToast: false }
       )
       if (currentPlan.value?.id === planId) {
         currentPlan.value = { ...currentPlan.value, ...response.data }
@@ -172,7 +176,8 @@ export function useTreatmentPlans() {
     try {
       const response = await api.patch<ApiResponse<TreatmentPlan>>(
         `/api/v1/treatment_plan/treatment-plans/${planId}/status`,
-        data
+        data,
+        { errorToast: false }
       )
       if (currentPlan.value?.id === planId) {
         currentPlan.value = { ...currentPlan.value, ...response.data }
@@ -198,7 +203,7 @@ export function useTreatmentPlans() {
   async function deletePlan(planId: string) {
     loading.value = true
     try {
-      await api.del(`/api/v1/treatment_plan/treatment-plans/${planId}`)
+      await api.del(`/api/v1/treatment_plan/treatment-plans/${planId}`, { errorToast: false })
       plans.value = plans.value.filter(p => p.id !== planId)
       if (currentPlan.value?.id === planId) {
         currentPlan.value = null
@@ -226,7 +231,8 @@ export function useTreatmentPlans() {
     try {
       const response = await api.post<ApiResponse<PlannedTreatmentItem>>(
         `/api/v1/treatment_plan/treatment-plans/${planId}/items`,
-        data
+        data,
+        { errorToast: false }
       )
       if (currentPlan.value?.id === planId) {
         currentPlan.value.items.push(response.data)
@@ -254,7 +260,8 @@ export function useTreatmentPlans() {
     try {
       const response = await api.put<ApiResponse<PlannedTreatmentItem>>(
         `/api/v1/treatment_plan/treatment-plans/${planId}/items/${itemId}`,
-        data
+        data,
+        { errorToast: false }
       )
       if (currentPlan.value?.id === planId) {
         const idx = currentPlan.value.items.findIndex(i => i.id === itemId)
@@ -292,7 +299,8 @@ export function useTreatmentPlans() {
     loading.value = true
     try {
       await api.del(
-        `/api/v1/treatment_plan/treatment-plans/${planId}/items/${itemId}`
+        `/api/v1/treatment_plan/treatment-plans/${planId}/items/${itemId}`,
+        { errorToast: false }
       )
       if (currentPlan.value?.id === planId) {
         currentPlan.value.items = currentPlan.value.items.filter(
@@ -332,7 +340,8 @@ export function useTreatmentPlans() {
     try {
       const response = await api.patch<ApiResponse<TreatmentPlanDetail>>(
         `/api/v1/treatment_plan/treatment-plans/${planId}/items/reorder`,
-        { item_ids: itemIds }
+        { item_ids: itemIds },
+        { errorToast: false }
       )
       currentPlan.value = response.data
       return response.data
@@ -359,7 +368,8 @@ export function useTreatmentPlans() {
     try {
       const response = await api.patch<ApiResponse<PlannedTreatmentItem>>(
         `/api/v1/treatment_plan/treatment-plans/${planId}/items/${itemId}/complete`,
-        data
+        data,
+        { errorToast: false }
       )
       if (currentPlan.value?.id === planId) {
         const idx = currentPlan.value.items.findIndex(i => i.id === itemId)
@@ -394,7 +404,8 @@ export function useTreatmentPlans() {
     try {
       const response = await api.patch<ApiResponse<PlannedTreatmentItem>>(
         `/api/v1/treatment_plan/treatment-plans/${planId}/items/${itemId}/sessions/${sessionId}/complete`,
-        payload
+        payload,
+        { errorToast: false }
       )
       if (currentPlan.value?.id === planId) {
         const idx = currentPlan.value.items.findIndex(i => i.id === itemId)
@@ -423,7 +434,8 @@ export function useTreatmentPlans() {
     try {
       const response = await api.patch<ApiResponse<PlannedTreatmentItem>>(
         `/api/v1/treatment_plan/treatment-plans/${planId}/items/${itemId}/sessions/${sessionId}/cancel`,
-        payload
+        payload,
+        { errorToast: false }
       )
       if (currentPlan.value?.id === planId) {
         const idx = currentPlan.value.items.findIndex(i => i.id === itemId)
@@ -448,7 +460,8 @@ export function useTreatmentPlans() {
     try {
       const response = await api.post<ApiResponse<TreatmentPlan>>(
         `/api/v1/treatment_plan/treatment-plans/${planId}/link-budget`,
-        data
+        data,
+        { errorToast: false }
       )
       if (currentPlan.value?.id === planId) {
         currentPlan.value = { ...currentPlan.value, ...response.data }
@@ -475,7 +488,9 @@ export function useTreatmentPlans() {
     loading.value = true
     try {
       await api.post<ApiResponse<{ synced: boolean }>>(
-        `/api/v1/treatment_plan/treatment-plans/${planId}/sync-budget`
+        `/api/v1/treatment_plan/treatment-plans/${planId}/sync-budget`,
+        undefined,
+        { errorToast: false }
       )
       toast.add({
         title: t('treatmentPlans.budgetSynced'),
@@ -499,7 +514,9 @@ export function useTreatmentPlans() {
     loading.value = true
     try {
       const response = await api.post<ApiResponse<GenerateBudgetResponse>>(
-        `/api/v1/treatment_plan/treatment-plans/${planId}/generate-budget`
+        `/api/v1/treatment_plan/treatment-plans/${planId}/generate-budget`,
+        undefined,
+        { errorToast: false }
       )
       if (currentPlan.value?.id === planId) {
         currentPlan.value.budget_id = response.data.budget_id
@@ -536,7 +553,9 @@ export function useTreatmentPlans() {
     loading.value = true
     try {
       const response = await api.post<ApiResponse<TreatmentPlan>>(
-        `/api/v1/treatment_plan/treatment-plans/${planId}/confirm`
+        `/api/v1/treatment_plan/treatment-plans/${planId}/confirm`,
+        undefined,
+        { errorToast: false }
       )
       // Confirming provisions a draft quote — link straight to it from
       // the toast so reception doesn't have to dig it out of the
@@ -563,7 +582,9 @@ export function useTreatmentPlans() {
     loading.value = true
     try {
       const response = await api.post<ApiResponse<TreatmentPlan>>(
-        `/api/v1/treatment_plan/treatment-plans/${planId}/reopen`
+        `/api/v1/treatment_plan/treatment-plans/${planId}/reopen`,
+        undefined,
+        { errorToast: false }
       )
       toast.add({ title: t('treatmentPlans.reopened'), color: 'success' })
       return response.data
@@ -584,7 +605,8 @@ export function useTreatmentPlans() {
     try {
       const response = await api.post<ApiResponse<TreatmentPlan>>(
         `/api/v1/treatment_plan/treatment-plans/${planId}/close`,
-        payload
+        payload,
+        { errorToast: false }
       )
       toast.add({ title: t('treatmentPlans.closed'), color: 'success' })
       return response.data
@@ -601,7 +623,9 @@ export function useTreatmentPlans() {
     loading.value = true
     try {
       const response = await api.post<ApiResponse<TreatmentPlan>>(
-        `/api/v1/treatment_plan/treatment-plans/${planId}/reactivate`
+        `/api/v1/treatment_plan/treatment-plans/${planId}/reactivate`,
+        undefined,
+        { errorToast: false }
       )
       toast.add({ title: t('treatmentPlans.reactivated'), color: 'success' })
       return response.data
@@ -621,7 +645,8 @@ export function useTreatmentPlans() {
     try {
       await api.post(
         `/api/v1/treatment_plan/treatment-plans/${planId}/contact-log`,
-        payload
+        payload,
+        { errorToast: false }
       )
       toast.add({ title: t('treatmentPlans.contactLogged'), color: 'success' })
       return true

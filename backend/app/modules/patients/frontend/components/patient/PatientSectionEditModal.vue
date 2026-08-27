@@ -8,6 +8,7 @@ import type {
   PatientAddress,
   PatientBillingAddress
 } from '~~/app/types'
+import { errorMessage } from '~~/app/utils/error'
 
 type SectionType = 'demographics' | 'emergency' | 'guardian' | 'billing' | 'medical'
 
@@ -201,14 +202,15 @@ async function handleSave() {
 
     if (method === 'del') {
       try {
-        await api.del(endpoint)
+        await api.del(endpoint, { errorToast: false })
       } catch (e: unknown) {
         // Emergency/guardian may not exist yet — delete 404 is harmless.
         const err = e as { statusCode?: number }
         if (err.statusCode !== 404) throw e
       }
     } else {
-      await api.put(endpoint, updateData as Record<string, unknown>)
+      // Failures are toasted by the catch below — keep single-toast.
+      await api.put(endpoint, updateData as Record<string, unknown>, { errorToast: false })
     }
 
     toast.add({
@@ -222,10 +224,9 @@ async function handleSave() {
     await nextTick()
     emit('save', props.section, (updateData ?? {}) as Record<string, unknown>)
   } catch (error: unknown) {
-    const fetchError = error as { statusCode?: number, data?: { message?: string } }
     toast.add({
       title: t('common.error'),
-      description: fetchError.data?.message || t('common.serverError'),
+      description: errorMessage(error, t('common.serverError')),
       color: 'error'
     })
   } finally {

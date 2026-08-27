@@ -37,7 +37,9 @@ export default defineNuxtPlugin(() => {
     severity: 'info',
     load: async (api) => {
       const state = usePatientsOnboardingState()
-      const res = await api.get<{ total: number }>('/api/v1/patients?page_size=1')
+      // Background onboarding probe (best-effort via allSettled) — must
+      // never toast on failure.
+      const res = await api.get<{ total: number }>('/api/v1/patients?page_size=1', { errorToast: false })
       state.value = { loaded: true, total: res.total }
     },
     when: () => {

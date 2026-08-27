@@ -15,24 +15,7 @@ import type {
   TreatmentCatalogItemCreate,
   TreatmentCatalogItemUpdate
 } from '~~/app/types'
-
-/**
- * Extract the FastAPI error `detail` from a fetch error, so toasts can show
- * the exact server message instead of a generic one. Returns null for
- * network errors or unexpected bodies (caller falls back to generic text).
- */
-function apiErrorDetail(e: unknown): string | null {
-  const detail = (e as { data?: { detail?: unknown } }).data?.detail
-  if (typeof detail === 'string') return detail
-  if (Array.isArray(detail)) {
-    // 422 validation errors: [{loc: ["body", "field"], msg: "..."}]
-    const parts = (detail as Array<{ loc?: unknown[], msg?: string }>)
-      .map(d => [Array.isArray(d.loc) ? d.loc.slice(1).join('.') : '', d.msg].filter(Boolean).join(': '))
-      .filter(Boolean)
-    return parts.length ? parts.join('; ') : null
-  }
-  return null
-}
+import { errorMessage } from '~~/app/utils/error'
 
 export function useCatalog() {
   const api = useApi()
@@ -88,7 +71,8 @@ export function useCatalog() {
     try {
       const response = await api.post<ApiResponse<TreatmentCatalogCategory>>(
         '/api/v1/catalog/categories',
-        data
+        data,
+        { errorToast: false }
       )
 
       toast.add({
@@ -112,7 +96,7 @@ export function useCatalog() {
       } else {
         toast.add({
           title: t('common.error'),
-          description: apiErrorDetail(e) || t('catalog.categoryCreateFailed'),
+          description: errorMessage(e, t('catalog.categoryCreateFailed')),
           color: 'error'
         })
       }
@@ -127,7 +111,8 @@ export function useCatalog() {
     try {
       const response = await api.put<ApiResponse<TreatmentCatalogCategory>>(
         `/api/v1/catalog/categories/${categoryId}`,
-        data
+        data,
+        { errorToast: false }
       )
 
       toast.add({
@@ -151,7 +136,7 @@ export function useCatalog() {
       } else {
         toast.add({
           title: t('common.error'),
-          description: apiErrorDetail(e) || t('catalog.categoryUpdateFailed'),
+          description: errorMessage(e, t('catalog.categoryUpdateFailed')),
           color: 'error'
         })
       }
@@ -161,7 +146,7 @@ export function useCatalog() {
 
   async function deleteCategory(categoryId: string): Promise<boolean> {
     try {
-      await api.del(`/api/v1/catalog/categories/${categoryId}`)
+      await api.del(`/api/v1/catalog/categories/${categoryId}`, { errorToast: false })
 
       toast.add({
         title: t('common.success'),
@@ -184,7 +169,7 @@ export function useCatalog() {
       } else {
         toast.add({
           title: t('common.error'),
-          description: apiErrorDetail(e) || t('catalog.categoryDeleteFailed'),
+          description: errorMessage(e, t('catalog.categoryDeleteFailed')),
           color: 'error'
         })
       }
@@ -255,7 +240,8 @@ export function useCatalog() {
     try {
       const response = await api.post<ApiResponse<TreatmentCatalogItem>>(
         '/api/v1/catalog/items',
-        data
+        data,
+        { errorToast: false }
       )
 
       toast.add({
@@ -285,7 +271,7 @@ export function useCatalog() {
       } else {
         toast.add({
           title: t('common.error'),
-          description: apiErrorDetail(e) || t('catalog.itemCreateFailed'),
+          description: errorMessage(e, t('catalog.itemCreateFailed')),
           color: 'error'
         })
       }
@@ -300,7 +286,8 @@ export function useCatalog() {
     try {
       const response = await api.put<ApiResponse<TreatmentCatalogItem>>(
         `/api/v1/catalog/items/${itemId}`,
-        data
+        data,
+        { errorToast: false }
       )
 
       toast.add({
@@ -314,17 +301,17 @@ export function useCatalog() {
 
       return response.data
     } catch (e: unknown) {
-      const fetchError = e as { statusCode?: number, data?: { message?: string } }
+      const fetchError = e as { statusCode?: number }
       if (fetchError.statusCode === 403) {
         toast.add({
           title: t('common.error'),
-          description: fetchError.data?.message || t('catalog.cannotModifySystemItem'),
+          description: errorMessage(e, t('catalog.cannotModifySystemItem')),
           color: 'error'
         })
       } else {
         toast.add({
           title: t('common.error'),
-          description: apiErrorDetail(e) || t('catalog.itemUpdateFailed'),
+          description: errorMessage(e, t('catalog.itemUpdateFailed')),
           color: 'error'
         })
       }
@@ -334,7 +321,7 @@ export function useCatalog() {
 
   async function deleteItem(itemId: string): Promise<boolean> {
     try {
-      await api.del(`/api/v1/catalog/items/${itemId}`)
+      await api.del(`/api/v1/catalog/items/${itemId}`, { errorToast: false })
 
       toast.add({
         title: t('common.success'),
@@ -357,7 +344,7 @@ export function useCatalog() {
       } else {
         toast.add({
           title: t('common.error'),
-          description: apiErrorDetail(e) || t('catalog.itemDeleteFailed'),
+          description: errorMessage(e, t('catalog.itemDeleteFailed')),
           color: 'error'
         })
       }
@@ -394,7 +381,8 @@ export function useCatalog() {
     try {
       const response = await api.post<ApiResponse<{ categories: number, items: number, vat_types: number }>>(
         '/api/v1/catalog/seed',
-        {}
+        {},
+        { errorToast: false }
       )
       toast.add({
         title: t('common.success'),
@@ -406,7 +394,7 @@ export function useCatalog() {
     } catch (e: unknown) {
       toast.add({
         title: t('common.error'),
-        description: apiErrorDetail(e) || t('catalog.defaultsFailed'),
+        description: errorMessage(e, t('catalog.defaultsFailed')),
         color: 'error'
       })
       return false

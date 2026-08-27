@@ -1,4 +1,5 @@
 import type { ApiResponse } from '~~/app/types'
+import { errorMessage } from '~~/app/utils/error'
 
 export interface PatientRelationship {
   id: string
@@ -44,7 +45,8 @@ export function usePatientRelationships(patientId: Ref<string | undefined>) {
     try {
       const res = await api.post<ApiResponse<PatientRelationship>>(
         `/api/v1/patient_relationships/patients/${patientId.value}/relationships`,
-        data
+        data,
+        { errorToast: false }
       )
       relationships.value.push(res.data)
       toast.add({
@@ -54,10 +56,9 @@ export function usePatientRelationships(patientId: Ref<string | undefined>) {
       })
       return true
     } catch (e: unknown) {
-      const err = e as { data?: { detail?: string } }
       toast.add({
         title: t('common.error'),
-        description: err?.data?.detail || t('patientRelationships.relationships.addError'),
+        description: errorMessage(e, t('patientRelationships.relationships.addError')),
         color: 'error'
       })
       console.error('Failed to add relationship:', e)
@@ -71,7 +72,8 @@ export function usePatientRelationships(patientId: Ref<string | undefined>) {
     if (!patientId.value) return false
     try {
       await api.del(
-        `/api/v1/patient_relationships/patients/${patientId.value}/relationships/${relationshipId}`
+        `/api/v1/patient_relationships/patients/${patientId.value}/relationships/${relationshipId}`,
+        { errorToast: false }
       )
       relationships.value = relationships.value.filter(r => r.id !== relationshipId)
       return true

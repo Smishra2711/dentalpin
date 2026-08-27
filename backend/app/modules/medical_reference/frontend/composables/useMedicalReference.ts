@@ -1,3 +1,5 @@
+import { errorMessage } from '~~/app/utils/error'
+
 interface ApiResponse<T> { data: T }
 
 export type ReferenceKind = 'allergies' | 'medications' | 'diseases' | 'surgeries'
@@ -63,14 +65,13 @@ export function useMedicalReference() {
 
   async function create(kind: ReferenceKind, data: { name: string }): Promise<ReferenceItem | null> {
     try {
-      const res = await api.post<ApiResponse<ReferenceItem>>(`/api/v1/medical_reference/${kind}`, data)
+      const res = await api.post<ApiResponse<ReferenceItem>>(`/api/v1/medical_reference/${kind}`, data, { errorToast: false })
       toast.add({ title: t('common.success'), description: t('medicalReference.addSuccess'), color: 'success' })
       return res.data
     } catch (e: unknown) {
-      const err = e as { data?: { detail?: string } }
       toast.add({
         title: t('common.error'),
-        description: err?.data?.detail || t('medicalReference.addError'),
+        description: errorMessage(e, t('medicalReference.addError')),
         color: 'error'
       })
       console.error(`Failed to create medical_reference/${kind} item:`, e)
@@ -84,7 +85,7 @@ export function useMedicalReference() {
     data: { name?: string, is_active?: boolean }
   ): Promise<ReferenceItem | null> {
     try {
-      const res = await api.put<ApiResponse<ReferenceItem>>(`/api/v1/medical_reference/${kind}/${id}`, data)
+      const res = await api.put<ApiResponse<ReferenceItem>>(`/api/v1/medical_reference/${kind}/${id}`, data, { errorToast: false })
       return res.data
     } catch (e) {
       toast.add({ title: t('common.error'), description: t('medicalReference.updateError'), color: 'error' })
@@ -95,7 +96,7 @@ export function useMedicalReference() {
 
   async function deactivate(kind: ReferenceKind, id: string): Promise<boolean> {
     try {
-      await api.del(`/api/v1/medical_reference/${kind}/${id}`)
+      await api.del(`/api/v1/medical_reference/${kind}/${id}`, { errorToast: false })
       return true
     } catch (e) {
       toast.add({ title: t('common.error'), description: t('medicalReference.deactivateError'), color: 'error' })
@@ -127,15 +128,15 @@ export function useMedicalReference() {
     try {
       const res = await api.post<ApiResponse<ReferenceInteraction>>(
         '/api/v1/medical_reference/interactions',
-        data
+        data,
+        { errorToast: false }
       )
       toast.add({ title: t('common.success'), description: t('medicalReference.addSuccess'), color: 'success' })
       return res.data
     } catch (e: unknown) {
-      const err = e as { data?: { detail?: string } }
       toast.add({
         title: t('common.error'),
-        description: err?.data?.detail || t('medicalReference.addError'),
+        description: errorMessage(e, t('medicalReference.addError')),
         color: 'error'
       })
       console.error('Failed to create interaction:', e)
@@ -145,7 +146,7 @@ export function useMedicalReference() {
 
   async function deactivateInteraction(id: string): Promise<boolean> {
     try {
-      await api.del(`/api/v1/medical_reference/interactions/${id}`)
+      await api.del(`/api/v1/medical_reference/interactions/${id}`, { errorToast: false })
       return true
     } catch (e) {
       toast.add({ title: t('common.error'), description: t('medicalReference.deactivateError'), color: 'error' })
@@ -177,15 +178,15 @@ export function useMedicalReference() {
     try {
       const res = await api.post<ApiResponse<ReferenceContraindication>>(
         '/api/v1/medical_reference/contraindications',
-        data
+        data,
+        { errorToast: false }
       )
       toast.add({ title: t('common.success'), description: t('medicalReference.addSuccess'), color: 'success' })
       return res.data
     } catch (e: unknown) {
-      const err = e as { data?: { detail?: string } }
       toast.add({
         title: t('common.error'),
-        description: err?.data?.detail || t('medicalReference.addError'),
+        description: errorMessage(e, t('medicalReference.addError')),
         color: 'error'
       })
       console.error('Failed to create contraindication:', e)
@@ -195,7 +196,7 @@ export function useMedicalReference() {
 
   async function deactivateContraindication(id: string): Promise<boolean> {
     try {
-      await api.del(`/api/v1/medical_reference/contraindications/${id}`)
+      await api.del(`/api/v1/medical_reference/contraindications/${id}`, { errorToast: false })
       return true
     } catch (e) {
       toast.add({ title: t('common.error'), description: t('medicalReference.deactivateError'), color: 'error' })

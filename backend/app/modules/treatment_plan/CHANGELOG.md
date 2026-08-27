@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
+
 - fix(#101): removing a plan item asks for confirmation naming the treatment.
 
 - feat(#207): the plan header links to the draft quote while the plan is `pending` (and the confirm toast carries a "view quote" action); *Programar cita* opens the appointment modal with the plan's pending treatments preselected (`?new=1&plan_id=`); a post-appointment follow-up prompt lists linked treatments the visit left unmarked and completes them in one click.

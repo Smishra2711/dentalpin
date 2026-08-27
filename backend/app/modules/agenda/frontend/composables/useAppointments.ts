@@ -40,8 +40,10 @@ export function useAppointments() {
         page_size: '500'
       })
 
+      // Callers render `error` as the #101 load-error banner.
       const response = await api.get<PaginatedResponse<Appointment>>(
-        `/api/v1/agenda/appointments?${params.toString()}`
+        `/api/v1/agenda/appointments?${params.toString()}`,
+        { errorToast: false }
       )
 
       appointments.value = response.data
@@ -56,9 +58,11 @@ export function useAppointments() {
   }
 
   async function createAppointment(data: AppointmentCreate): Promise<Appointment> {
+    // Callers catch and present (409 conflict copy, form toasts).
     const response = await api.post<ApiResponse<Appointment>>(
       '/api/v1/agenda/appointments',
-      data
+      data,
+      { errorToast: false }
     )
 
     // Add to local state
@@ -68,9 +72,11 @@ export function useAppointments() {
   }
 
   async function updateAppointment(id: string, data: AppointmentUpdate): Promise<Appointment> {
+    // Callers catch and present (409 conflict copy, form toasts).
     const response = await api.put<ApiResponse<Appointment>>(
       `/api/v1/agenda/appointments/${id}`,
-      data
+      data,
+      { errorToast: false }
     )
 
     // Update local state
@@ -82,7 +88,8 @@ export function useAppointments() {
   }
 
   async function cancelAppointment(id: string): Promise<void> {
-    await api.del(`/api/v1/agenda/appointments/${id}`)
+    // Caller (AppointmentModal) catches and toasts errorMessage.
+    await api.del(`/api/v1/agenda/appointments/${id}`, { errorToast: false })
 
     // Update local state - mark as cancelled
     appointments.value = appointments.value.map(apt =>
@@ -120,9 +127,11 @@ export function useAppointments() {
     }
 
     try {
+      // Callers catch the rethrow and toast the conflict themselves.
       const response = await api.patch<ApiResponse<Appointment>>(
         `/api/v1/agenda/appointments/${id}/cabinet`,
-        { cabinet_id: cabinetId, note: note ?? null }
+        { cabinet_id: cabinetId, note: note ?? null },
+        { errorToast: false }
       )
       appointments.value = appointments.value.map(apt =>
         apt.id === id ? response.data : apt
@@ -160,9 +169,11 @@ export function useAppointments() {
     }
 
     try {
+      // Callers catch the rethrow and toast the failed transition.
       const response = await api.post<ApiResponse<Appointment>>(
         `/api/v1/agenda/appointments/${id}/transitions`,
-        { to_status: to, note: note ?? null }
+        { to_status: to, note: note ?? null },
+        { errorToast: false }
       )
       appointments.value = appointments.value.map(apt =>
         apt.id === id ? response.data : apt

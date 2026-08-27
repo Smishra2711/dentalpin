@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ModuleInfo } from '~/types'
 import { PERMISSIONS } from '~/config/permissions'
+import { errorMessage } from '~/utils/error'
 
 const { t } = useI18n()
 const toast = useToast()
@@ -42,10 +43,9 @@ onMounted(async () => {
   try {
     await admin.refresh()
   } catch (err: unknown) {
-    const e = err as { data?: { detail?: string }, message?: string }
     toast.add({
       title: t('common.error'),
-      description: e?.data?.detail ?? e?.message ?? t('common.networkError'),
+      description: errorMessage(err, t('common.networkError')),
       color: 'error'
     })
   }
@@ -127,8 +127,7 @@ async function onConfirm(force: boolean) {
       showConfirm.value = false
     }
   } catch (err: unknown) {
-    const e = err as { data?: { detail?: string }, message?: string }
-    const detail = e?.data?.detail ?? e?.message ?? t('common.error')
+    const detail = errorMessage(err, t('common.error'))
     confirmError.value = detail
     // If uninstall was blocked by reverse-deps or removable=false, offer force.
     if (
@@ -163,10 +162,9 @@ async function runApply() {
       })
     }
   } catch (err: unknown) {
-    const e = err as { data?: { detail?: string }, message?: string }
-    const msg = e?.message === 'restart-timeout'
+    const msg = (err as { message?: string })?.message === 'restart-timeout'
       ? t('settings.modules.restart.timeout')
-      : (e?.data?.detail ?? e?.message ?? t('settings.modules.restart.failed'))
+      : errorMessage(err, t('settings.modules.restart.failed'))
     toast.add({
       title: t('settings.modules.restart.failed'),
       description: msg,

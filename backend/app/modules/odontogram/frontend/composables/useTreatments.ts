@@ -111,7 +111,8 @@ export function useTreatments() {
       }
       const response = await api.post<ApiResponse<Treatment>>(
         `/api/v1/odontogram/patients/${patientId}/treatments`,
-        body
+        body,
+        { errorToast: false }
       )
       const normalized = normalizeTreatment(response.data)
       treatments.value.push(normalized)
@@ -135,7 +136,8 @@ export function useTreatments() {
       const body = { ...data, status: toBackendStatus(data.status) }
       const response = await api.put<ApiResponse<Treatment>>(
         `/api/v1/odontogram/treatments/${treatmentId}`,
-        body as Record<string, unknown>
+        body as Record<string, unknown>,
+        { errorToast: false }
       )
       const normalized = normalizeTreatment(response.data)
       updateLocalTreatment(normalized)
@@ -154,7 +156,7 @@ export function useTreatments() {
 
   async function deleteTreatment(treatmentId: string): Promise<boolean> {
     try {
-      await api.del(`/api/v1/odontogram/treatments/${treatmentId}`)
+      await api.del(`/api/v1/odontogram/treatments/${treatmentId}`, { errorToast: false })
       removeLocalTreatment(treatmentId)
       toast.add({ title: t('odontogram.treatments.treatmentDeleted'), color: 'success' })
       return true
@@ -176,7 +178,8 @@ export function useTreatments() {
     try {
       const response = await api.patch<ApiResponse<Treatment>>(
         `/api/v1/odontogram/treatments/${treatmentId}/perform`,
-        { notes } as Record<string, unknown>
+        { notes } as Record<string, unknown>,
+        { errorToast: false }
       )
       const normalized = normalizeTreatment(response.data)
       updateLocalTreatment(normalized)

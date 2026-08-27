@@ -1,4 +1,5 @@
 import type { User, UserCreate, UserRole, UserUpdate, PaginatedResponse, ApiResponse } from '~/types'
+import { errorMessage } from '~/utils/error'
 
 export interface ClinicUser {
   id: string
@@ -51,7 +52,8 @@ export function useUsers() {
     error.value = null
 
     try {
-      const response = await api.post<ApiResponse<User>>('/api/v1/auth/users', data)
+      // The catch below toasts a status-specific message itself.
+      const response = await api.post<ApiResponse<User>>('/api/v1/auth/users', data, { errorToast: false })
       toast.add({
         title: t('common.success'),
         description: t('settings.messages.userCreated'),
@@ -70,7 +72,7 @@ export function useUsers() {
           color: 'error'
         })
       } else if (fetchError.statusCode === 422) {
-        error.value = fetchError.data?.message || fetchError.data?.detail || t('settings.errors.invalidData')
+        error.value = errorMessage(e, t('settings.errors.invalidData'))
         toast.add({
           title: t('common.error'),
           description: error.value,
@@ -96,7 +98,7 @@ export function useUsers() {
     error.value = null
 
     try {
-      const response = await api.put<ApiResponse<ClinicUser>>(`/api/v1/auth/users/${userId}`, data)
+      const response = await api.put<ApiResponse<ClinicUser>>(`/api/v1/auth/users/${userId}`, data, { errorToast: false })
       toast.add({
         title: t('common.success'),
         description: t('settings.messages.userUpdated'),
@@ -115,7 +117,7 @@ export function useUsers() {
           color: 'error'
         })
       } else if (fetchError.statusCode === 400) {
-        error.value = fetchError.data?.message || fetchError.data?.detail || t('settings.errors.operationNotAllowed')
+        error.value = errorMessage(e, t('settings.errors.operationNotAllowed'))
         toast.add({
           title: t('common.error'),
           description: error.value,
@@ -148,7 +150,7 @@ export function useUsers() {
     error.value = null
 
     try {
-      await api.del(`/api/v1/auth/users/${userId}`)
+      await api.del(`/api/v1/auth/users/${userId}`, { errorToast: false })
       toast.add({
         title: t('common.success'),
         description: t('settings.messages.userDeleted'),
@@ -160,7 +162,7 @@ export function useUsers() {
     } catch (e: unknown) {
       const fetchError = e as { statusCode?: number, data?: { message?: string, detail?: string } }
       if (fetchError.statusCode === 400) {
-        error.value = fetchError.data?.message || fetchError.data?.detail || t('settings.errors.operationNotAllowed')
+        error.value = errorMessage(e, t('settings.errors.operationNotAllowed'))
         toast.add({
           title: t('common.error'),
           description: error.value,
@@ -192,7 +194,9 @@ export function useUsers() {
   async function createInviteLink(userId: string): Promise<{ url: string, expiresAt: string } | null> {
     try {
       const response = await api.post<ApiResponse<{ token: string, expires_at: string }>>(
-        `/api/v1/auth/users/${userId}/invite-link`
+        `/api/v1/auth/users/${userId}/invite-link`,
+        null,
+        { errorToast: false }
       )
       const url = `${window.location.origin}/set-password?token=${encodeURIComponent(response.data.token)}`
       return { url, expiresAt: response.data.expires_at }

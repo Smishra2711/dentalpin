@@ -92,7 +92,8 @@ export function usePayments() {
 
   async function create(payload: PaymentRecordCreate): Promise<PaymentRecord | null> {
     try {
-      const resp = await api.post<ApiResponse<PaymentRecord>>('/api/v1/payments', payload)
+      // Create/collect modals render the failure inline (errorToast off).
+      const resp = await api.post<ApiResponse<PaymentRecord>>('/api/v1/payments', payload, { errorToast: false })
       return resp.data
     } catch (e) {
       error.value = (e as Error).message
@@ -102,7 +103,7 @@ export function usePayments() {
 
   async function reallocate(id: string, payload: PaymentReallocate): Promise<PaymentRecord | null> {
     try {
-      const resp = await api.post<ApiResponse<PaymentRecord>>(`/api/v1/payments/${id}/reallocate`, payload)
+      const resp = await api.post<ApiResponse<PaymentRecord>>(`/api/v1/payments/${id}/reallocate`, payload, { errorToast: false })
       return resp.data
     } catch (e) {
       error.value = (e as Error).message
@@ -112,7 +113,7 @@ export function usePayments() {
 
   async function refund(id: string, payload: PaymentRefundCreate): Promise<PaymentRefund | null> {
     try {
-      const resp = await api.post<ApiResponse<PaymentRefund>>(`/api/v1/payments/${id}/refunds`, payload)
+      const resp = await api.post<ApiResponse<PaymentRefund>>(`/api/v1/payments/${id}/refunds`, payload, { errorToast: false })
       return resp.data
     } catch (e) {
       error.value = (e as Error).message
@@ -269,7 +270,9 @@ export function usePaymentReports() {
   async function summary(date_from: string, date_to: string): Promise<PaymentsSummary | null> {
     try {
       const resp = await api.get<ApiResponse<PaymentsSummary>>(
-        `/api/v1/payments/reports/summary?date_from=${date_from}&date_to=${date_to}`
+        `/api/v1/payments/reports/summary?date_from=${date_from}&date_to=${date_to}`,
+        // Reports page renders the fetchFailed error state (issue #101).
+        { errorToast: false }
       )
       return resp.data
     } catch {
@@ -281,7 +284,8 @@ export function usePaymentReports() {
   async function byMethod(date_from: string, date_to: string): Promise<MethodBreakdown[]> {
     try {
       const resp = await api.get<ApiResponse<MethodBreakdown[]>>(
-        `/api/v1/payments/reports/by-method?date_from=${date_from}&date_to=${date_to}`
+        `/api/v1/payments/reports/by-method?date_from=${date_from}&date_to=${date_to}`,
+        { errorToast: false }
       )
       return resp.data
     } catch {
@@ -293,7 +297,8 @@ export function usePaymentReports() {
   async function byProfessional(date_from: string, date_to: string): Promise<ProfessionalBreakdown[]> {
     try {
       const resp = await api.get<ApiResponse<ProfessionalBreakdown[]>>(
-        `/api/v1/payments/reports/by-professional?date_from=${date_from}&date_to=${date_to}`
+        `/api/v1/payments/reports/by-professional?date_from=${date_from}&date_to=${date_to}`,
+        { errorToast: false }
       )
       return resp.data
     } catch {
@@ -304,7 +309,7 @@ export function usePaymentReports() {
 
   async function aging(): Promise<AgingBuckets | null> {
     try {
-      const resp = await api.get<ApiResponse<AgingBuckets>>('/api/v1/payments/reports/aging-receivables')
+      const resp = await api.get<ApiResponse<AgingBuckets>>('/api/v1/payments/reports/aging-receivables', { errorToast: false })
       return resp.data
     } catch {
       fetchFailed.value = true
@@ -315,7 +320,8 @@ export function usePaymentReports() {
   async function refunds(date_from: string, date_to: string): Promise<RefundsReport | null> {
     try {
       const resp = await api.get<ApiResponse<RefundsReport>>(
-        `/api/v1/payments/reports/refunds?date_from=${date_from}&date_to=${date_to}`
+        `/api/v1/payments/reports/refunds?date_from=${date_from}&date_to=${date_to}`,
+        { errorToast: false }
       )
       return resp.data
     } catch {
@@ -331,7 +337,8 @@ export function usePaymentReports() {
   ): Promise<PaymentsTrends | null> {
     try {
       const resp = await api.get<ApiResponse<PaymentsTrends>>(
-        `/api/v1/payments/reports/trends?date_from=${date_from}&date_to=${date_to}&granularity=${granularity}`
+        `/api/v1/payments/reports/trends?date_from=${date_from}&date_to=${date_to}&granularity=${granularity}`,
+        { errorToast: false }
       )
       return resp.data
     } catch {

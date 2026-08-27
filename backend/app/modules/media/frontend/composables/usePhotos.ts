@@ -67,7 +67,8 @@ export function usePhotos() {
       params.append('page_size', String(filters.page_size ?? 40))
 
       const response = await api.get<PaginatedResponse<Document>>(
-        `/api/v1/media/patients/${patientId}/photos?${params}`
+        `/api/v1/media/patients/${patientId}/photos?${params}`,
+        { errorToast: false }
       )
       photos.value = response.data
       total.value = response.total
@@ -103,7 +104,8 @@ export function usePhotos() {
 
       const response = await api.post<ApiResponse<Document>>(
         `/api/v1/media/patients/${patientId}/photos`,
-        formData
+        formData,
+        { errorToast: false }
       )
       toast.add({
         title: t('common.success'),
@@ -131,7 +133,8 @@ export function usePhotos() {
     try {
       const response = await api.patch<ApiResponse<Document>>(
         `/api/v1/media/documents/${documentId}/photo-metadata`,
-        patch
+        patch,
+        { errorToast: false }
       )
       const idx = photos.value.findIndex(p => p.id === documentId)
       if (idx !== -1) photos.value[idx] = response.data
@@ -147,7 +150,8 @@ export function usePhotos() {
     try {
       const response = await api.post<ApiResponse<Document>>(
         `/api/v1/media/documents/${a}/pair/${b}`,
-        {}
+        {},
+        { errorToast: false }
       )
       toast.add({
         title: t('photoGallery.paired', 'Before/after paired'),
@@ -163,7 +167,7 @@ export function usePhotos() {
 
   async function unpair(documentId: string): Promise<boolean> {
     try {
-      await api.del(`/api/v1/media/documents/${documentId}/pair`)
+      await api.del(`/api/v1/media/documents/${documentId}/pair`, { errorToast: false })
       return true
     } catch (error) {
       console.error('Error unpairing:', error)

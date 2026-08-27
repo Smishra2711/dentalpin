@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { PERMISSIONS } from '~~/app/config/permissions'
+import { errorMessage } from '~~/app/utils/error'
 import {
   useMedicationCatalog,
   type MedicationCatalogItem,
@@ -142,9 +143,7 @@ async function submit() {
     showModal.value = false
     await load()
   } catch (err: unknown) {
-    // ofetch's FetchError carries the ApiResponse envelope in `.data`.
-    const fetchErr = err as { data?: { message?: string } | undefined }
-    formError.value = fetchErr?.data?.message || t('medications.duplicateName')
+    formError.value = errorMessage(err, t('medications.duplicateName'))
   } finally {
     saving.value = false
   }

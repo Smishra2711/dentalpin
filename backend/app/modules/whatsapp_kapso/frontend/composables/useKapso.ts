@@ -43,7 +43,8 @@ export function useKapso() {
   async function saveSettings(payload: Record<string, unknown>) {
     saving.value = true
     try {
-      const res = await api.put<ApiResponse<KapsoSettings>>(`${BASE}/settings`, payload)
+      // The settings page toasts errorDetail(e) in its own catch.
+      const res = await api.put<ApiResponse<KapsoSettings>>(`${BASE}/settings`, payload, { errorToast: false })
       settings.value = res.data
       return true
     } finally {
@@ -54,7 +55,7 @@ export function useKapso() {
   async function syncTemplates() {
     syncing.value = true
     try {
-      const res = await api.post<ApiResponse<KapsoTemplate[]>>(`${BASE}/templates/sync`, {})
+      const res = await api.post<ApiResponse<KapsoTemplate[]>>(`${BASE}/templates/sync`, {}, { errorToast: false })
       templates.value = res.data
       return res.data
     } finally {
@@ -67,13 +68,14 @@ export function useKapso() {
       notification_type: notificationType,
       locale,
       template_name: templateName
-    })
+    }, { errorToast: false })
   }
 
   async function testConnection(toNumber: string, templateName: string, language = 'es') {
     const res = await api.post<ApiResponse<{ success: boolean, error: string | null }>>(
       `${BASE}/test`,
-      { to_number: toNumber, template_name: templateName, language }
+      { to_number: toNumber, template_name: templateName, language },
+      { errorToast: false }
     )
     return res.data
   }

@@ -126,7 +126,9 @@ async function fetcher(q: {
   if (q.sort) params.set('sort', q.sort)
 
   const response = await api.get<PaginatedResponse<BudgetListItem>>(
-    `/api/v1/budget/budgets?${params.toString()}`
+    `/api/v1/budget/budgets?${params.toString()}`,
+    // useListQuery surfaces failures via the `error` banner.
+    { errorToast: false }
   )
 
   // Step 3: bulk summaries enrichment.
