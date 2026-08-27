@@ -3,7 +3,12 @@
 [![en](https://img.shields.io/badge/lang-en-red.svg)](./README.md)
 [![es](https://img.shields.io/badge/lang-es-yellow.svg)](./README.es.md)
 [![fr](https://img.shields.io/badge/lang-fr-blue.svg)](./README.fr.md)
+[![pt](https://img.shields.io/badge/lang-pt-brightgreen.svg)](./README.pt.md)
 [![ta](https://img.shields.io/badge/lang-ta-green.svg)](./README.ta.md)
+[![de](https://img.shields.io/badge/lang-de-black.svg)](./README.de.md)
+[![hu](https://img.shields.io/badge/lang-hu-orange.svg)](./README.hu.md)
+[![pl](https://img.shields.io/badge/lang-pl-lightgrey.svg)](./README.pl.md)
+[![it](https://img.shields.io/badge/lang-it-blueviolet.svg)](./README.it.md)
 
 **திறந்த மூல பல் மருத்துவமனை மேலாண்மை மென்பொருள்.** நோயாளிகள், பல் வரைபடம் (odontogram),
 அட்டவணை, சிகிச்சை திட்டங்கள், பில்லிங் மற்றும் உள்ளமைக்கப்பட்ட AI கோபைலட் — மட்டு அடிப்படையிலான,
@@ -90,7 +95,30 @@ DentalPin ஒரு உள்ளமைக்கப்பட்ட **ஏஜென
 ### அமைப்புகள்
 ![Settings](docs/screenshots/settings-ta.png)
 
-## விரைவு தொடக்கம்
+## நிறுவல்
+
+முன்பே கட்டமைக்கப்பட்ட இமேஜ்கள் — clone தேவையில்லை, build தேவையில்லை. Docker உள்ள எந்த சர்வரிலும்:
+
+```bash
+curl -O https://raw.githubusercontent.com/dentalpin/dentalpin/main/docker-compose.prod.yml
+curl -O https://raw.githubusercontent.com/dentalpin/dentalpin/main/Caddyfile
+curl -o .env https://raw.githubusercontent.com/dentalpin/dentalpin/main/.env.prod.example
+
+# .env இல் PUBLIC_URL, POSTGRES_PASSWORD மற்றும் SECRET_KEY ஐ அமைத்து, பிறகு:
+docker compose -f docker-compose.prod.yml up -d
+```
+
+சர்வருக்கு ஒரு டொமைனை சுட்டிக்காட்டி, `PUBLIC_URL=https://your-domain` ஐ அமைக்கவும்;
+முதல் துவக்கத்திலேயே TLS தானாக அமைக்கப்படும் — Caddy இரு சேவைகளையும் ஒரே origin இல்
+வழங்குகிறது, எனவே CORS பிரச்சனை இல்லை, புதுப்பிக்க வேண்டிய சான்றிதழும் இல்லை. நேரடி
+பயன்பாட்டிற்கு முன் டெமோ கிளினிக்கை ஏற்றிச் சுற்றிப் பார்க்க `SEED_ON_STARTUP=1` ஐ அமைக்கவும்.
+
+இமேஜ்கள்: [`dentalpin-backend`](https://github.com/dentalpin/dentalpin/pkgs/container/dentalpin-backend) ·
+[`dentalpin-frontend`](https://github.com/dentalpin/dentalpin/pkgs/container/dentalpin-frontend)
+
+## விரைவு தொடக்கம் (மேம்பாடு)
+
+மூலக் குறியீட்டிலிருந்து hot reload உடன் கட்டமைக்கிறது:
 
 ```bash
 # சேவைகளைத் தொடங்கவும்
@@ -105,7 +133,7 @@ docker-compose up -d
 # அல்லது பிரெஞ்சில்
 ./scripts/seed-demo.sh --lang fr
 
-# அல்லது தமிழில்
+# இந்தியா GST டெமோ கிளினிக் (தமிழ் UI, அல்லது --country in உடன் ஆங்கில UI)
 ./scripts/seed-demo.sh --lang ta
 ```
 
@@ -123,7 +151,7 @@ http://localhost:3000 ஐத் திறக்கவும்
 | assistant@demo.clinic | assistant | Emily Davis | Ana Martínez Ruiz | Camille Petit | பிரியா செல்வக்குமார் |
 | receptionist@demo.clinic | receptionist | Jessica Brown | Laura Sánchez Pérez | Julie Bernard | தீபிகா முருகேசன் |
 
-டெமோ தரவு பற்றிய முழு விவரங்களுக்கு [docs/user-manual/demo.md](docs/user-manual/demo.md) ஐப் பார்க்கவும்.
+டெமோ தரவு பற்றிய முழு விவரங்களுக்கு [docs/user-manual/en/demo.md](docs/user-manual/en/demo.md) ஐப் பார்க்கவும்.
 
 ## தொழில்நுட்ப அடுக்கு
 
@@ -142,7 +170,7 @@ http://localhost:3000 ஐத் திறக்கவும்
 - **PHI நீக்குதல்** — நோயாளி அடையாளங்கள் LLM ஐ அடைவதற்கு முன் டோக்கனாக்கப்படுகின்றன; இலவச-உரை மருத்துவத் தரவு கிளவுட் பாதைக்கு வெளியே இருக்கும். இயல்பாகவே இயக்கத்தில் உள்ளது
 - **உறுதிப்படுத்தப்பட்ட எழுத்துகள்** — தரவை மாற்றும் செயல்கள் உரையாடலின் நடுவில் பயனரின் வெளிப்படையான உறுதிப்படுத்தலுக்காக இடைநிறுத்தப்படும்
 - **பணிப்பாய்வுகள் & டைஜெஸ்ட்** — ஒரே-தட்டு playbooks (தினசரி சுருக்கம், ஒரு வருகையைத் தயார் செய்தல், ஒரு இடைவெளியை நிரப்புதல்) மற்றும் ஒரு விருப்ப முன்கூட்டிய காலை மின்னஞ்சல் டைஜெஸ்ட்
-- **பன்மொழி & வழங்குநர்-சாராதது** — தமிழ், பிரெஞ்சு, ஸ்பானிஷ் மற்றும் ஆங்கிலத்தில் செயல்படுகிறது; உள்ளமைக்கக்கூடிய LLM வழங்குநர், மாடல், மற்றும் கிளினிக் ஒன்றுக்கான டோக்கன் பட்ஜெட்
+- **பன்மொழி & வழங்குநர்-சாராதது** — உங்கள் UI மொழியிலேயே உங்களுடன் பேசுகிறது; உள்ளமைக்கக்கூடிய LLM வழங்குநர், மாடல், மற்றும் கிளினிக் ஒன்றுக்கான டோக்கன் பட்ஜெட்
 
 ### மருத்துவ மேலாண்மை
 - **நோயாளி பதிவுகள்** — தனிப்பட்ட தரவு, தொடர்பு தகவல், மருத்துவ வரலாறு மற்றும் குறிப்புகளுடன் கூடிய முழுமையான நோயாளி சுயவிவரங்கள்
@@ -162,7 +190,7 @@ http://localhost:3000 ஐத் திறக்கவும்
 
 ### பயனர் அனுபவம்
 - **காட்சி தேர்வாளர்கள்** — சமீபத்திய நோயாளிகள் மற்றும் பிரபலமான சிகிச்சைகளைக் காட்டும் புத்திசாலித்தனமான dropdowns
-- **பன்மொழி இடைமுகம்** — தமிழ், பிரெஞ்சு, ஸ்பானிஷ் மற்றும் ஆங்கிலத்தில் முழுமையான உள்ளூர்மயமாக்கல்
+- **ஒன்பது மொழி இடைமுகம்** — ஆங்கிலம், ஸ்பானிஷ், பிரெஞ்சு, போர்ச்சுகீசியம், தமிழ், ஜெர்மன், ஹங்கேரியன், போலிஷ் மற்றும் இத்தாலியன் — மைய பயன்பாடு மற்றும் ஒவ்வொரு மட்டும்
 - **இருண்ட பயன்முறை** — கணினியை அறிந்த தீம் மாற்றம்
 - **பதிலளிக்கக்கூடிய வடிவமைப்பு** — டெஸ்க்டாப் மற்றும் டேப்லெட்டில் வேலை செய்யும்
 
@@ -170,7 +198,23 @@ http://localhost:3000 ஐத் திறக்கவும்
 - **மட்டு கட்டமைப்பு** — எளிதான விரிவாக்கத்திற்கான பிளக்-இன் அடிப்படையிலான அமைப்பு
 - **நிகழ்வு பஸ்** — அறிவிப்புகள் மற்றும் ஒருங்கிணைப்புகளுக்கான மட்டுகளுக்கிடையேயான தொடர்பு
 - **REST API** — OpenAPI ஆவணங்களுடன் கூடிய முழுமையான API
-- **நேரடி புதுப்பிப்புகள்** — மகிழ்ச்சிகரமான புதுப்பிப்புகளுடன் கூடிய தீவிர இடைமுகம்
+- **நேரடி புதுப்பிப்புகள்** — நம்பிக்கை அடிப்படையிலான (optimistic) புதுப்பிப்புகளுடன் கூடிய வினைத்திறன் இடைமுகம்
+
+## மொழிகள்
+
+இடைமுகம் **ஒன்பது மொழிகளில்** கிடைக்கிறது — English, Español, Français, Português,
+தமிழ் (Tamil), Deutsch, Magyar, Polski மற்றும் Italiano — மைய பயன்பாடு **மற்றும் ஒவ்வொரு
+மட்டு அடுக்கையும்** உள்ளடக்கியது; CI இல் செயல்படுத்தப்படும் key-parity சோதனையால்
+மொழிபெயர்ப்புகள் அமைதியாக விலகிச் செல்ல முடியாது. போலிஷ் அதன் முழு மூன்று-வடிவ
+பன்மை விதிகளைப் பயன்படுத்துகிறது.
+
+நோயாளிகளுக்கு அனுப்பப்படும் தகவல்தொடர்புகள் (மின்னஞ்சல் டெம்ப்ளேட்கள், PDFகள்) தற்போது
+**ஐந்து மொழிகளில்** (es, en, fr, pt, ta) உருவாக்கப்படுகின்றன; ஒவ்வொரு கிளினிக்கும்
+பணியாளர் UI மொழியிலிருந்து சுயாதீனமாக அதன் தகவல்தொடர்பு மொழியைத் தேர்வு செய்கிறது.
+
+உங்கள் மொழி வேண்டுமா? ஒரு மொழியைச் சேர்ப்பது மொழிபெயர்ப்பு-மட்டும் பங்களிப்பு —
+[i18n issues](https://github.com/dentalpin/dentalpin/issues?q=label%3Ai18n) ஐப்
+பார்க்கவும் அல்லது புதிதாக ஒன்றைத் திறக்கவும்.
 
 ## மேம்பாடு
 
@@ -264,7 +308,7 @@ DentalPin ஒரு மட்டு பிளக்-இன் கட்டமை
 - ஒரு FastAPI router ஐ வழங்குகிறது
 - மற்ற மட்டுகளின் நிகழ்வுகளுக்கு subscribe செய்யலாம்
 
-விவரங்களுக்கு [docs/architecture.md](docs/architecture.md) ஐப் பார்க்கவும்.
+விவரங்களுக்கு [docs/adr/0001-modular-plugin-architecture.md](docs/adr/0001-modular-plugin-architecture.md) ஐப் பார்க்கவும்.
 
 ## உரிமம்
 
