@@ -3,7 +3,12 @@
 [![en](https://img.shields.io/badge/lang-en-red.svg)](./README.md)
 [![es](https://img.shields.io/badge/lang-es-yellow.svg)](./README.es.md)
 [![fr](https://img.shields.io/badge/lang-fr-blue.svg)](./README.fr.md)
+[![pt](https://img.shields.io/badge/lang-pt-brightgreen.svg)](./README.pt.md)
 [![ta](https://img.shields.io/badge/lang-ta-green.svg)](./README.ta.md)
+[![de](https://img.shields.io/badge/lang-de-black.svg)](./README.de.md)
+[![hu](https://img.shields.io/badge/lang-hu-orange.svg)](./README.hu.md)
+[![pl](https://img.shields.io/badge/lang-pl-lightgrey.svg)](./README.pl.md)
+[![it](https://img.shields.io/badge/lang-it-blueviolet.svg)](./README.it.md)
 
 **Software open source de gestión de clínicas dentales.** Pacientes, odontograma,
 agenda, planes de tratamiento, facturación y un copiloto de IA integrado — modular,
@@ -28,7 +33,7 @@ DentalPin se construye sobre una premisa simple: **una plataforma abierta para c
 
 ### ¿Por qué ahora?
 
-La IA ha cambiado fundamentalmente lo que los equipos pequeños pueden construir. Funcionalidades que antes requerían grandes departamentos de desarrollo ahora pueden implementarse en días. Esta es nuestra ventana para crear el software dental de código cerrado que debería haber existido hace años — antes de que las clínicas quedaran encerradas en sistemas legacy de los que no pueden escapar.
+La IA ha cambiado fundamentalmente lo que los equipos pequeños pueden construir. Funcionalidades que antes requerían grandes departamentos de desarrollo ahora pueden implementarse en días. Esta es nuestra ventana para crear el software dental de código abierto que debería haber existido hace años — antes de que las clínicas quedaran encerradas en sistemas legacy de los que no pueden escapar.
 
 ### Nuestros principios
 
@@ -57,7 +62,7 @@ Esto no es un chatbot añadido a posteriori. El Copiloto es un agente real que *
 - **Sus datos están protegidos.** Los datos de salud se enmascaran antes de enviarlos al proveedor LLM: nombres, teléfonos, correos electrónicos e identificadores se reemplazan por tokens deterministas, y las herramientas clínicas de texto libre se excluyen del camino cloud. El enmascaramiento está activado por defecto.
 - **Las escrituras preguntan primero.** Cualquier acción que modifique datos (reservas, pagos, ediciones) hace una pausa en medio de la conversación para su confirmación explícita antes de ejecutarse.
 - **Flujos de trabajo guiados.** Playbooks listos para usar — *Resumen matinal*, *Preparar una consulta*, *Llenar un espacio*, *Recordatorios pendientes*, *Presupuestos sin respuesta* — inician tareas multi-paso comunes con un solo clic.
-- **Briefings proactivos.** Elija recibir un resumen matinal determinista enviado por correo electrónico a su equipo, resumiendo el agenda del día, recordatorios pendientes y presupuestos abiertos — sin LLM, sin datos de salud fuera del sitio.
+- **Briefings proactivos.** Elija recibir un resumen matinal determinista enviado por correo electrónico a su equipo, resumiendo la agenda del día, recordatorios pendientes y presupuestos abiertos — sin LLM, sin datos de salud fuera del sitio.
 - **Modular por diseño.** El Copiloto consume herramientas publicadas por cada módulo a través de un registro compartido; cada módulo contribuye sus propias capacidades, por lo que el agente crece automáticamente a medida que se instalan nuevos módulos.
 
 Agnóstico al proveedor en las capas internas (abstracción del proveedor LLM), con proveedor, modelo y presupuestos de tokens por clínica configurables por despliegue. Arquitectura: [docs/technical/copilot-agentic-architecture.md](docs/technical/copilot-agentic-architecture.md).
@@ -90,7 +95,30 @@ Visite [**dentalpin.com**](https://www.dentalpin.com) para información del prod
 ### Configuración
 ![Settings](docs/screenshots/settings.png)
 
-## Inicio rápido
+## Instalación
+
+Imágenes preconstruidas, sin clonar ni compilar. En cualquier servidor con Docker:
+
+```bash
+curl -O https://raw.githubusercontent.com/dentalpin/dentalpin/main/docker-compose.prod.yml
+curl -O https://raw.githubusercontent.com/dentalpin/dentalpin/main/Caddyfile
+curl -o .env https://raw.githubusercontent.com/dentalpin/dentalpin/main/.env.prod.example
+
+# Configure PUBLIC_URL, POSTGRES_PASSWORD y SECRET_KEY en .env, y luego:
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Apunte un dominio al servidor, configure `PUBLIC_URL=https://your-domain`, y el TLS
+se aprovisiona en el primer arranque — Caddy sirve ambos servicios desde un único
+origen, así que no hay CORS ni certificados que renovar. Configure `SEED_ON_STARTUP=1`
+para cargar la clínica de demostración y explorar antes de pasar a producción.
+
+Imágenes: [`dentalpin-backend`](https://github.com/dentalpin/dentalpin/pkgs/container/dentalpin-backend) ·
+[`dentalpin-frontend`](https://github.com/dentalpin/dentalpin/pkgs/container/dentalpin-frontend)
+
+## Inicio rápido (desarrollo)
+
+Compila desde el código fuente con recarga en caliente:
 
 ```bash
 # Iniciar servicios
@@ -104,6 +132,9 @@ docker-compose up -d
 
 # O sembrar en francés
 ./scripts/seed-demo.sh --lang fr
+
+# Clínica demo India GST (interfaz en tamil, o en inglés con --country in)
+./scripts/seed-demo.sh --lang ta
 ```
 
 Abrir http://localhost:3000
@@ -120,7 +151,7 @@ Todos los usuarios tienen contraseña: `demo1234`
 | assistant@demo.clinic | assistant | Emily Davis | Ana Martínez Ruiz |
 | receptionist@demo.clinic | receptionist | Jessica Brown | Laura Sánchez Pérez |
 
-Consulte [docs/user-manual/demo.md](docs/user-manual/demo.md) para detalles completos sobre los datos de demostración.
+Consulte [docs/user-manual/en/demo.md](docs/user-manual/en/demo.md) para detalles completos sobre los datos de demostración.
 
 ## Stack tecnológico
 
@@ -139,7 +170,7 @@ Consulte [docs/user-manual/demo.md](docs/user-manual/demo.md) para detalles comp
 - **Enmascaramiento de datos de salud** — Identificadores de pacientes tokenizados antes de llegar al LLM; los datos clínicos de texto libre permanecen fuera del camino cloud. Activado por defecto
 - **Escrituras confirmadas** — Las acciones que modifican datos hacen una pausa para confirmación explícita del usuario en medio de la conversación
 - **Flujos de trabajo y resumen** — Playbooks con un clic (resumen matinal, preparar una consulta, llenar un espacio) más un resumen matinal por correo electrónico proactivo opcional
-- **Bilingüe y agnóstico al proveedor** — Funciona en español, francés e inglés; proveedor LLM, modelo y presupuesto de tokens por clínica configurables
+- **Multilingüe y agnóstico al proveedor** — Le habla en el idioma de su interfaz; proveedor LLM, modelo y presupuesto de tokens por clínica configurables
 
 ### Gestión clínica
 - **Historiales de pacientes** — Perfiles completos con datos personales, información de contacto, historial médico y notas
@@ -159,7 +190,7 @@ Consulte [docs/user-manual/demo.md](docs/user-manual/demo.md) para detalles comp
 
 ### Experiencia de usuario
 - **Selectores visuales** — Menús desplegables inteligentes mostrando pacientes recientes y tratamientos populares
-- **Interfaz bilingüe** — Localización completa en español, francés e inglés
+- **Interfaz en nueve idiomas** — Inglés, español, francés, portugués, tamil, alemán, húngaro, polaco e italiano — el núcleo de la aplicación y todos los módulos
 - **Modo oscuro** — Cambio de tema adaptado al sistema
 - **Diseño responsive** — Funciona en escritorio y tableta
 
@@ -168,6 +199,22 @@ Consulte [docs/user-manual/demo.md](docs/user-manual/demo.md) para detalles comp
 - **Bus de eventos** — Comunicación entre módulos para notificaciones e integraciones
 - **API REST** — API completa con documentación OpenAPI
 - **Actualizaciones en tiempo real** — Interfaz reactiva con actualizaciones optimistas
+
+## Idiomas
+
+La interfaz está disponible en **nueve idiomas** — English, Español, Français, Português,
+தமிழ் (Tamil), Deutsch, Magyar, Polski e Italiano — cubriendo el núcleo de la aplicación
+**y todas las capas de módulos**, con un test de paridad de claves aplicado en CI para
+que las traducciones no puedan desincronizarse silenciosamente. El polaco usa sus reglas
+completas de plural de tres formas.
+
+Las comunicaciones dirigidas al paciente (plantillas de email, PDFs) se generan
+actualmente en **cinco idiomas** (es, en, fr, pt, ta); cada clínica elige su idioma de
+comunicación con independencia del idioma de la interfaz del personal.
+
+¿Quiere su idioma? Añadir uno es una contribución solo de traducción — consulte los
+[issues de i18n](https://github.com/dentalpin/dentalpin/issues?q=label%3Ai18n) o abra
+uno nuevo.
 
 ## Desarrollo
 
@@ -258,7 +305,7 @@ DentalPin utiliza una arquitectura modular tipo plugin. Cada funcionalidad es un
 - Proporciona un router FastAPI
 - Puede suscribirse a eventos de otros módulos
 
-Consulte [docs/architecture.md](docs/architecture.md) para más detalles.
+Consulte [docs/adr/0001-modular-plugin-architecture.md](docs/adr/0001-modular-plugin-architecture.md) para más detalles.
 
 ## Licencia
 

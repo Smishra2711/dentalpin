@@ -8,11 +8,12 @@ Only invoked by ``backend/scripts/seed_demo.py`` and only when
 ``patient_timeline`` is installed in ``core_module``. Idempotent for the
 given clinic: wipes the clinic's timeline rows, then repopulates.
 
-Runtime isolation note: this seed intentionally imports models from
-other modules (agenda, budget, billing, odontogram, treatment_plan) so
-it can walk the seeded narrative. Seed code is admin-only; it never
-runs in the request path, so the in-process isolation that
-``events.py`` enforces is preserved.
+Lives in the host seeds package, not inside the patient_timeline
+module (#309): it reads models from five other modules to walk the
+seeded narrative, and patient_timeline deliberately declares none of
+them — its event sources are runtime-optional by design. Host-level
+demo seeding is the established home for such cross-module fixtures
+(see ``demo_data.py`` and the india_gst precedent).
 """
 
 from __future__ import annotations
@@ -28,10 +29,9 @@ from app.modules.agenda.models import Appointment
 from app.modules.billing.models import Invoice
 from app.modules.budget.models import Budget
 from app.modules.odontogram.models import Treatment
+from app.modules.patient_timeline.models import PatientTimeline
 from app.modules.treatment_plan.models import PlannedTreatmentItem, TreatmentPlan
 from app.seeds.demo_data import t
-
-from .models import PatientTimeline
 
 
 async def seed_timeline_demo(db: AsyncSession, clinic_id: UUID) -> dict[str, int]:

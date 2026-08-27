@@ -3,7 +3,12 @@
 [![en](https://img.shields.io/badge/lang-en-red.svg)](./README.md)
 [![es](https://img.shields.io/badge/lang-es-yellow.svg)](./README.es.md)
 [![fr](https://img.shields.io/badge/lang-fr-blue.svg)](./README.fr.md)
+[![pt](https://img.shields.io/badge/lang-pt-brightgreen.svg)](./README.pt.md)
 [![ta](https://img.shields.io/badge/lang-ta-green.svg)](./README.ta.md)
+[![de](https://img.shields.io/badge/lang-de-black.svg)](./README.de.md)
+[![hu](https://img.shields.io/badge/lang-hu-orange.svg)](./README.hu.md)
+[![pl](https://img.shields.io/badge/lang-pl-lightgrey.svg)](./README.pl.md)
+[![it](https://img.shields.io/badge/lang-it-blueviolet.svg)](./README.it.md)
 
 **Open source dental clinic management software.** Patients, odontogram, scheduling,
 treatment plans, billing and a built-in AI copilot — modular, self-hosted, API-first.
@@ -123,6 +128,9 @@ docker-compose up -d
 
 # Or seed in Spanish
 ./scripts/seed-demo.sh --lang es
+
+# India GST demo clinic (Tamil UI, or English UI with --country in)
+./scripts/seed-demo.sh --lang ta
 ```
 
 Open http://localhost:3000
@@ -139,7 +147,7 @@ All users have password: `demo1234`
 | assistant@demo.clinic | assistant | Emily Davis | Ana Martínez Ruiz |
 | receptionist@demo.clinic | receptionist | Jessica Brown | Laura Sánchez Pérez |
 
-See [docs/user-manual/demo.md](docs/user-manual/demo.md) for full details on demo data.
+See [docs/user-manual/en/demo.md](docs/user-manual/en/demo.md) for full details on demo data.
 
 ## Tech Stack
 
@@ -158,7 +166,7 @@ See [docs/user-manual/demo.md](docs/user-manual/demo.md) for full details on dem
 - **PHI Redaction** — Patient identifiers tokenized before reaching the LLM; free-text clinical data stays off the cloud path. On by default
 - **Confirmed Writes** — Data-changing actions pause for explicit user confirmation mid-conversation
 - **Workflows & Digest** — One-tap playbooks (daily briefing, prepare a visit, fill a gap) plus an opt-in proactive morning email digest
-- **Bilingual & Vendor-Agnostic** — Works in Spanish and English; configurable LLM provider, model, and per-clinic token budget
+- **Multilingual & Vendor-Agnostic** — Talks to you in the language of your UI; configurable LLM provider, model, and per-clinic token budget
 
 ### Clinical Management
 - **Patient Records** — Complete patient profiles with personal data, contact info, medical history, and notes
@@ -178,7 +186,7 @@ See [docs/user-manual/demo.md](docs/user-manual/demo.md) for full details on dem
 
 ### User Experience
 - **Visual Selectors** — Smart dropdowns showing recent patients and popular treatments
-- **Bilingual Interface** — Full Spanish and English localization
+- **Nine-Language Interface** — English, Spanish, French, Portuguese, Tamil, German, Hungarian, Polish and Italian — core app and every module
 - **Dark Mode** — System-aware theme switching
 - **Responsive Design** — Works on desktop and tablet
 
@@ -187,6 +195,21 @@ See [docs/user-manual/demo.md](docs/user-manual/demo.md) for full details on dem
 - **Event Bus** — Inter-module communication for notifications and integrations
 - **REST API** — Complete API with OpenAPI documentation
 - **Real-time Updates** — Reactive UI with optimistic updates
+
+## Languages
+
+The interface ships in **nine languages** — English, Español, Français, Português,
+தமிழ் (Tamil), Deutsch, Magyar, Polski and Italiano — covering the core app **and
+every module layer**, with a CI-enforced key-parity test so locales can't silently
+drift. Polish uses its full three-form plural rules.
+
+Patient-facing communications (email templates, PDFs) currently render in
+**five languages** (es, en, fr, pt, ta); each clinic picks its communication
+language independently of the staff UI language.
+
+Want your language? Adding one is a translation-only contribution — see the
+[i18n issues](https://github.com/dentalpin/dentalpin/issues?q=label%3Ai18n) or
+open a new one.
 
 ## Development
 
@@ -274,7 +297,7 @@ DentalPin uses a modular plugin architecture. Each feature is a self-contained m
 - Provides a FastAPI router
 - Can subscribe to events from other modules
 
-See [docs/architecture.md](docs/architecture.md) for details.
+See [ADR 0001 — modular plugin architecture](docs/adr/0001-modular-plugin-architecture.md) and [docs/technical/creating-modules.md](docs/technical/creating-modules.md) for details.
 
 ## License
 

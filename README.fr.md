@@ -3,7 +3,12 @@
 [![en](https://img.shields.io/badge/lang-en-red.svg)](./README.md)
 [![es](https://img.shields.io/badge/lang-es-yellow.svg)](./README.es.md)
 [![fr](https://img.shields.io/badge/lang-fr-blue.svg)](./README.fr.md)
+[![pt](https://img.shields.io/badge/lang-pt-brightgreen.svg)](./README.pt.md)
 [![ta](https://img.shields.io/badge/lang-ta-green.svg)](./README.ta.md)
+[![de](https://img.shields.io/badge/lang-de-black.svg)](./README.de.md)
+[![hu](https://img.shields.io/badge/lang-hu-orange.svg)](./README.hu.md)
+[![pl](https://img.shields.io/badge/lang-pl-lightgrey.svg)](./README.pl.md)
+[![it](https://img.shields.io/badge/lang-it-blueviolet.svg)](./README.it.md)
 
 **Logiciel open source de gestion de cliniques dentaires.** Patients, odontogramme,
 agenda, plans de traitement, facturation et un copilote IA intégré — modulaire,
@@ -90,7 +95,31 @@ Rejoignez notre [**chaîne Telegram**](https://t.me/dentalpin) pour du support, 
 ### Paramètres
 ![Settings](docs/screenshots/settings.png)
 
-## Démarrage rapide
+## Installation
+
+Images préconstruites, pas de clone, pas de build. Sur n'importe quel serveur avec Docker :
+
+```bash
+curl -O https://raw.githubusercontent.com/dentalpin/dentalpin/main/docker-compose.prod.yml
+curl -O https://raw.githubusercontent.com/dentalpin/dentalpin/main/Caddyfile
+curl -o .env https://raw.githubusercontent.com/dentalpin/dentalpin/main/.env.prod.example
+
+# Définissez PUBLIC_URL, POSTGRES_PASSWORD et SECRET_KEY dans .env, puis :
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Pointez un domaine vers le serveur, définissez `PUBLIC_URL=https://your-domain`, et le
+TLS est provisionné au premier démarrage — Caddy sert les deux services depuis une
+origine unique, donc pas de CORS et aucun certificat à renouveler. Définissez
+`SEED_ON_STARTUP=1` pour charger la clinique de démonstration et explorer avant la mise
+en production.
+
+Images : [`dentalpin-backend`](https://github.com/dentalpin/dentalpin/pkgs/container/dentalpin-backend) ·
+[`dentalpin-frontend`](https://github.com/dentalpin/dentalpin/pkgs/container/dentalpin-frontend)
+
+## Démarrage rapide (développement)
+
+Compile depuis les sources avec rechargement à chaud :
 
 ```bash
 # Démarrer les services
@@ -104,6 +133,9 @@ docker-compose up -d
 
 # Ou en français
 ./scripts/seed-demo.sh --lang fr
+
+# Clinique démo India GST (interface en tamoul, ou en anglais avec --country in)
+./scripts/seed-demo.sh --lang ta
 ```
 
 Ouvrir http://localhost:3000
@@ -120,7 +152,7 @@ Tous les utilisateurs ont le mot de passe : `demo1234`
 | assistant@demo.clinic | assistant | Emily Davis | Ana Martínez Ruiz | Camille Petit |
 | receptionist@demo.clinic | receptionist | Jessica Brown | Laura Sánchez Pérez | Julie Bernard |
 
-Voir [docs/user-manual/demo.md](docs/user-manual/demo.md) pour les détails complets sur les données démo.
+Voir [docs/user-manual/en/demo.md](docs/user-manual/en/demo.md) pour les détails complets sur les données démo.
 
 ## Stack technique
 
@@ -139,7 +171,7 @@ Voir [docs/user-manual/demo.md](docs/user-manual/demo.md) pour les détails comp
 - **Masquage des données de santé** — Identifiants des patients tokenisés avant d'atteindre le LLM ; les données cliniques en texte libre restent hors du chemin cloud. Activé par défaut
 - **Écritures confirmées** — Les actions modifiant des données font une pause pour confirmation explicite de l'utilisateur en milieu de conversation
 - **Flux de travail et digest** — Playbooks en un tap (briefing matinal, préparer une consultation, remplir un créneau) plus un digest matinal par e-mail proactif optionnel
-- **Bilingue et agnostique au fournisseur** — Fonctionne en français, espagnol et anglais ; fournisseur LLM, modèle et budget de jetons par clinique configurables
+- **Multilingue et agnostique au fournisseur** — Vous parle dans la langue de votre interface ; fournisseur LLM, modèle et budget de jetons par clinique configurables
 
 ### Gestion clinique
 - **Dossiers patients** — Profils complets avec données personnelles, coordonnées, antécédents médicaux et notes
@@ -154,12 +186,12 @@ Voir [docs/user-manual/demo.md](docs/user-manual/demo.md) pour les détails comp
 
 ### Gestion de la pratique
 - **Contrôle d'accès basé sur les rôles** — Cinq rôles (admin, dentiste, hygiéniste, assistant, réceptionniste) avec permissions granulaires
-- **Gestion des cabinets/cabinets** — Définition des salles de traitement avec emplois du temps et couleurs
-- **Gestion des professionnels** — Attribution des rendez-vous à des dentistes/hygénistes spécifiques
+- **Gestion des cabinets/salles** — Définition des salles de traitement avec emplois du temps et couleurs
+- **Gestion des professionnels** — Attribution des rendez-vous à des dentistes/hygiénistes spécifiques
 
 ### Expérience utilisateur
 - **Sélecteurs visuels** — Menus déroulants intelligents affichant les patients récents et les traitements populaires
-- **Interface bilingue** — Localisation complète en français, espagnol et anglais
+- **Interface en neuf langues** — Anglais, espagnol, français, portugais, tamoul, allemand, hongrois, polonais et italien — le cœur de l'application et chaque module
 - **Mode sombre** — Basculement de thème adapté au système
 - **Design réactif** — Fonctionne sur ordinateur et tablette
 
@@ -168,6 +200,22 @@ Voir [docs/user-manual/demo.md](docs/user-manual/demo.md) pour les détails comp
 - **Bus d'événements** — Communication inter-modules pour les notifications et intégrations
 - **API REST** — API complète avec documentation OpenAPI
 - **Mises à jour en temps réel** — Interface réactive avec mises à jour optimistes
+
+## Langues
+
+L'interface est disponible en **neuf langues** — English, Español, Français, Português,
+தமிழ் (Tamil), Deutsch, Magyar, Polski et Italiano — couvrant le cœur de l'application
+**et chaque couche de module**, avec un test de parité des clés imposé en CI pour que
+les locales ne puissent pas dériver silencieusement. Le polonais utilise ses règles
+complètes de pluriel à trois formes.
+
+Les communications destinées aux patients (modèles d'e-mail, PDF) sont actuellement
+générées en **cinq langues** (es, en, fr, pt, ta) ; chaque clinique choisit sa langue
+de communication indépendamment de la langue de l'interface du personnel.
+
+Vous voulez votre langue ? En ajouter une est une contribution de traduction uniquement —
+consultez les [issues i18n](https://github.com/dentalpin/dentalpin/issues?q=label%3Ai18n)
+ou ouvrez-en une nouvelle.
 
 ## Développement
 
@@ -258,7 +306,7 @@ DentalPin utilise une architecture modulaire de type plugin. Chaque fonctionnali
 - Fournit un routeur FastAPI
 - Peut s'abonner aux événements d'autres modules
 
-Voir [docs/architecture.md](docs/architecture.md) pour les détails.
+Voir [docs/adr/0001-modular-plugin-architecture.md](docs/adr/0001-modular-plugin-architecture.md) pour les détails.
 
 ## Licence
 

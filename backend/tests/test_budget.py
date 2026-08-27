@@ -315,7 +315,10 @@ async def test_update_budget_item(
 
 @pytest.mark.asyncio
 async def test_remove_budget_item(
-    client: AsyncClient, auth_headers: dict, budget_clinic_setup: dict
+    client: AsyncClient,
+    auth_headers: dict,
+    db_session: AsyncSession,
+    budget_clinic_setup: dict,
 ):
     """Test removing an item from a budget."""
     # Create budget
@@ -346,6 +349,13 @@ async def test_remove_budget_item(
         headers=auth_headers,
     )
     assert response.status_code == 204
+
+    # The tests share one session across requests (see conftest's
+    # override_get_db, #188): expire so the follow-up GET re-reads the
+    # DB instead of serving the identity-mapped items collection the
+    # DELETE already emptied. Locally this failed deterministically
+    # without it; production is unaffected (session per request).
+    db_session.expire_all()
 
     # Verify budget has no items and totals no longer count the removed line
     budget_response = await client.get(

@@ -845,7 +845,7 @@ async def main(lang: str = "en", country: str = "generic") -> None:
 
             if await _module_is_installed(db, "patient_timeline"):
                 print("\n[opt] Creating patient timeline demo (module installed)...")
-                from app.modules.patient_timeline.seed import seed_timeline_demo
+                from app.seeds.patient_timeline_demo import seed_timeline_demo
 
                 stats = await seed_timeline_demo(db, clinic_id=CLINIC_ID)
                 print(

@@ -17,9 +17,7 @@ from sqlalchemy.orm import selectinload
 from app.core.auth.models import ClinicMembership
 from app.core.events import EventType, event_bus
 from app.modules.catalog.models import TreatmentCatalogItem  # noqa: F401
-from app.modules.odontogram.models import Treatment
 from app.modules.patients.models import Patient
-from app.modules.treatment_plan.models import PlannedTreatmentItem
 
 from .models import (
     Appointment,
@@ -28,6 +26,7 @@ from .models import (
     AppointmentTreatment,
     Cabinet,
 )
+from .planned_work import planned_work_registry
 from .tz import as_utc, get_clinic_tz
 
 # Canonical state machine. Mirrored in the frontend composable
@@ -54,6 +53,14 @@ def _plain_excerpt(text: str, limit: int = 200) -> str:
     stripped = _HTML_TAG_RE.sub(" ", text or "")
     collapsed = _WS_RE.sub(" ", stripped).strip()
     return collapsed[:limit]
+
+
+def _planned_item_loader_options() -> list:
+    """Loader options for ``AppointmentTreatment.planned_item`` from the
+    planned-work provider; empty (relationship stays lazy) when no
+    provider is registered."""
+    provider = planned_work_registry.get()
+    return provider.appointment_loader_options() if provider else []
 
 
 class InvalidTransitionError(ValueError):
@@ -185,13 +192,9 @@ class AppointmentService:
                 selectinload(Appointment.patient),
                 selectinload(Appointment.professional),
                 selectinload(Appointment.treatments).options(
-                    selectinload(AppointmentTreatment.planned_item).options(
-                        selectinload(PlannedTreatmentItem.treatment).options(
-                            selectinload(Treatment.teeth),
-                            selectinload(Treatment.catalog_item),
-                        ),
-                        selectinload(PlannedTreatmentItem.treatment_plan),
-                    ),
+                    # Planned-item graph comes from the provider so agenda
+                    # never imports treatment_plan models (#309).
+                    *_planned_item_loader_options(),
                     selectinload(AppointmentTreatment.catalog_item),
                 ),
             )
@@ -285,13 +288,9 @@ class AppointmentService:
                 selectinload(Appointment.patient),
                 selectinload(Appointment.professional),
                 selectinload(Appointment.treatments).options(
-                    selectinload(AppointmentTreatment.planned_item).options(
-                        selectinload(PlannedTreatmentItem.treatment).options(
-                            selectinload(Treatment.teeth),
-                            selectinload(Treatment.catalog_item),
-                        ),
-                        selectinload(PlannedTreatmentItem.treatment_plan),
-                    ),
+                    # Planned-item graph comes from the provider so agenda
+                    # never imports treatment_plan models (#309).
+                    *_planned_item_loader_options(),
                     selectinload(AppointmentTreatment.catalog_item),
                 ),
             )
@@ -340,36 +339,14 @@ class AppointmentService:
         if not planned_item_ids:
             return
 
-        result = await db.execute(
-            select(PlannedTreatmentItem)
-            .options(selectinload(PlannedTreatmentItem.treatment_plan))
-            .where(PlannedTreatmentItem.id.in_(planned_item_ids))
-        )
-        items = {item.id: item for item in result.scalars().all()}
+        provider = planned_work_registry.get()
+        if provider is None:
+            # treatment_plan is non-removable, so this only happens in a
+            # process that never registered modules — refuse rather than
+            # book against unvalidated planned work.
+            raise ValueError("Planned-work provider not available")
 
-        errors = []
-        for item_id in planned_item_ids:
-            item = items.get(item_id)
-            if not item:
-                errors.append(f"Treatment item {item_id} not found")
-                continue
-            if item.clinic_id != clinic_id:
-                errors.append(f"Treatment item {item_id} not found")
-                continue
-            plan = item.treatment_plan
-            if not plan or plan.patient_id != patient_id:
-                errors.append(f"Treatment item {item_id} does not belong to patient")
-                continue
-            # `pending` (plan confirmed, budget not yet accepted) is bookable
-            # on purpose: an unconfirmed `draft` already is, so confirming a
-            # plan must not take that away — clinics book the first visit while
-            # the patient is still deciding (#108). Terminal states stay out.
-            if plan.status not in ("active", "draft", "pending"):
-                errors.append(f"Treatment item {item_id} belongs to {plan.status} plan")
-                continue
-            if item.status != "pending":
-                errors.append(f"Treatment item {item_id} is already {item.status}")
-
+        errors = await provider.validate_bookable_items(db, clinic_id, patient_id, planned_item_ids)
         if errors:
             raise ValueError("; ".join(errors))
 
@@ -488,13 +465,11 @@ class AppointmentService:
             )
 
         if planned_item_ids:
+            provider = planned_work_registry.get()
             for order, planned_item_id in enumerate(planned_item_ids):
-                planned_item = await db.get(PlannedTreatmentItem, planned_item_id)
-                catalog_item_id = None
-                if planned_item:
-                    await db.refresh(planned_item, ["treatment"])
-                    if planned_item.treatment:
-                        catalog_item_id = planned_item.treatment.catalog_item_id
+                catalog_item_id = (
+                    await provider.catalog_item_id_for(db, planned_item_id) if provider else None
+                )
 
                 treatment = AppointmentTreatment(
                     appointment_id=appointment.id,
@@ -596,13 +571,11 @@ class AppointmentService:
                 await db.delete(existing)
             await db.flush()
 
+            provider = planned_work_registry.get()
             for order, planned_item_id in enumerate(planned_item_ids):
-                planned_item = await db.get(PlannedTreatmentItem, planned_item_id)
-                catalog_item_id = None
-                if planned_item:
-                    await db.refresh(planned_item, ["treatment"])
-                    if planned_item.treatment:
-                        catalog_item_id = planned_item.treatment.catalog_item_id
+                catalog_item_id = (
+                    await provider.catalog_item_id_for(db, planned_item_id) if provider else None
+                )
 
                 treatment = AppointmentTreatment(
                     appointment_id=appointment.id,

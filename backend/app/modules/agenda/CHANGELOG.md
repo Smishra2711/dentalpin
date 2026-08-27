@@ -4,6 +4,8 @@
 
 - fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
 
+- refactor(#309): booking no longer imports treatment_plan — planned-item eager loading, validation and catalog snapshotting go through the new `PlannedWorkProvider` registry (`planned_work.py`); the import-allowlist entry is drained. The `planned_treatment_item_id` FK stays documented cycle-bound debt.
+
 - feat(#287): the appointment modal's email-only confirmation checkbox and mail dropdown are replaced by channel-aware controls driven by the clinic's manual channels (confirmation/reminder/cancellation per receivable channel).
 
 - fix(#101): a failed appointments fetch renders an error banner with Retry instead of a blank calendar that reads as a free week; the appointment modal's footer cancel now asks for confirmation.
