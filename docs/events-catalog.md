@@ -443,7 +443,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.INVENTORY_STOCK_LOW`
 - **Publishers:**
-  - `inventory` — `backend/app/modules/inventory/service.py:484`
+  - `inventory` — `backend/app/modules/inventory/service.py:486`
 - **Subscribers:** —
 
 ### `invoice.cancelled`
