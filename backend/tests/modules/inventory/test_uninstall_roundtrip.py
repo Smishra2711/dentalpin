@@ -14,7 +14,7 @@ from app.config import settings
 pytestmark = pytest.mark.alembic_roundtrip
 BACKEND_ROOT = Path(__file__).resolve().parents[3]
 ALEMBIC_INI = BACKEND_ROOT / "alembic.ini"
-INVENTORY_TABLES = {"inventory_items"}
+INVENTORY_TABLES = {"inventory_items", "stock_movements"}
 # treatment_consumables declares ``depends_on = ("cat_0004", "inv_0001")``
 # in tc_0001 (its junction table FKs inventory_items). Raw Alembic
 # downgrades drag alembic-dependents along with their dependency.

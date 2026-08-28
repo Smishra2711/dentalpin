@@ -2,9 +2,10 @@
 
 Junction linking catalog treatments to the inventory items they
 consume, with quantity per link (root canal → 2 anesthetic vials).
-Pure mapping — **no stock deduction** (that lands with the inventory
-core upgrade #226). `depends: ["catalog", "inventory"]`; writes only to
-its own table.
+Also hosts the auto-deduction handler for the inventory core upgrade
+(#226) via subscription inversion — see Events below.
+`depends: ["catalog", "inventory"]`; writes only to its own table
+(stock changes go through `InventoryService`, never direct writes).
 
 ## Public API
 
@@ -28,7 +29,15 @@ together with `inventory` when its dependency is downgraded
 
 ## Events
 
-Emits nothing, consumes nothing (pure mapping). See
+Emits nothing. Consumes `odontogram.treatment.performed`
+(`events.on_treatment_performed`, transactional per ADR 0019):
+resolves this module's links for the performed catalog item and calls
+`InventoryService.apply_consumption` with the `(item_id, quantity)`
+pairs. Subscription inversion (#226): this module already depends on
+inventory, so subscribing here avoids a dependency cycle and raw
+cross-module SQL. Payload keys read: `clinic_id`, `catalog_item_id`,
+`treatment_id` (idempotency reference), `performed_by`/`changed_by`/
+`user_id` (actor). Details:
 docs/technical/treatment_consumables/events.md.
 
 ## Permissions

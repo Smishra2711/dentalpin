@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- feat(#226): handle `odontogram.treatment.performed` (subscription
+  inversion) — resolve this module's links for the performed catalog
+  item and deduct stock via `InventoryService.apply_consumption`
+  (transactional per ADR 0019; idempotent per treatment; clamps at
+  zero). The module emits nothing and still writes only its own table.
+
 - fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
 
 - feat(#144, #132): Polish (pl) and Italian (it) locales for the module's frontend layer.
