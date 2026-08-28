@@ -97,12 +97,52 @@ export function useManagedDocuments() {
     return api.post<ApiResponse<ManagedDocument>>('/api/v1/documents/generate', { document_id })
   }
 
+  /**
+   * Download a generated document as PDF. Mirror of billing's
+   * ``useInvoices.downloadPDF``: raw ``fetch`` (blob response) so the
+   * file streams straight to a download, with the server's
+   * ``Content-Disposition`` filename preserved.
+   */
+  async function downloadDocument(document_id: string): Promise<void> {
+    const baseUrl = useRuntimeConfig().public.apiBaseUrl
+    const auth = useAuth()
+
+    const response = await fetch(
+      `${baseUrl}/api/v1/documents/${document_id}/download`,
+      {
+        headers: {
+          Authorization: `Bearer ${auth.accessToken.value}`
+        }
+      }
+    )
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => null)
+      throw new Error(body?.message || body?.detail || 'Failed to download PDF')
+    }
+
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+
+    const contentDisposition = response.headers.get('Content-Disposition')
+    const filenameMatch = contentDisposition?.match(/filename="?(.+)"?/)
+    link.download = filenameMatch?.[1] || `document_${document_id.slice(0, 8)}.pdf`
+
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  }
+
   return {
     listDocuments,
     getDocument,
     createDocument,
     updateDocument,
     deleteDocument,
-    generateDocument
+    generateDocument,
+    downloadDocument
   }
 }

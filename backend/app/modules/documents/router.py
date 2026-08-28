@@ -7,10 +7,11 @@ and RBAC.
 
 from __future__ import annotations
 
-import uuid as _uuid
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth.dependencies import (
@@ -27,9 +28,58 @@ from .schemas import (
     DocumentGenerateRequest,
     DocumentResponse,
     DocumentUpdate,
+    LetterheadSettings,
 )
 
 router = APIRouter()
+
+
+@router.get(
+    "/settings/letterhead",
+    response_model=ApiResponse[LetterheadSettings],
+)
+async def get_letterhead_settings(
+    ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
+    _: Annotated[None, Depends(require_permission("admin.clinic.read"))],
+) -> ApiResponse[LetterheadSettings]:
+    """Return the clinic's current letterhead overrides.
+
+    Unset fields are returned as ``null`` — the renderer falls back to
+    the clinic's native profile for those. The endpoint is clinic-scoped
+    via ``ctx`` and needs no database access.
+    """
+    settings_block = {}
+    if isinstance(ctx.clinic.settings, dict):
+        settings_block = ctx.clinic.settings.get("documents") or {}
+        settings_block = settings_block.get("letterhead") or {}
+    return ApiResponse(data=LetterheadSettings.model_validate(settings_block))
+
+
+@router.put(
+    "/settings/letterhead",
+    response_model=ApiResponse[LetterheadSettings],
+)
+async def set_letterhead_settings(
+    data: LetterheadSettings,
+    ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
+    _: Annotated[None, Depends(require_permission("admin.clinic.write"))],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> ApiResponse[LetterheadSettings]:
+    """Persist letterhead overrides under ``clinic.settings``.
+
+    Stored namespaced as ``settings["documents"]["letterhead"]`` so it
+    never collides with other modules' clinic settings (budget, …).
+    """
+    current = ctx.clinic.settings or {}
+    doc_block = dict(current.get("documents") or {})
+    # Only keys present in the payload are stored — absent ones fall
+    # back to the clinic profile at render time.
+    stored = {k: v for k, v in data.model_dump(exclude_none=True).items()}
+    doc_block["letterhead"] = stored
+    current["documents"] = doc_block
+    ctx.clinic.settings = current
+    await db.flush()
+    return ApiResponse(data=LetterheadSettings.model_validate(stored))
 
 
 @router.get(
@@ -40,18 +90,17 @@ async def list_documents(
     ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
     _: Annotated[None, Depends(require_permission("documents.read"))],
     db: Annotated[AsyncSession, Depends(get_db)],
-    patient_id: str | None = Query(default=None),
+    patient_id: uuid.UUID | None = Query(default=None),
     document_type: str | None = Query(default=None),
     status: str | None = Query(default=None),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
 ) -> PaginatedApiResponse[DocumentResponse]:
     """List documents with optional filters."""
-    pid = _uuid.UUID(patient_id) if patient_id else None
     items, total = await service.DocumentService.list_documents(
         db,
         ctx.clinic_id,
-        patient_id=pid,
+        patient_id=patient_id,
         document_type=document_type,
         status=status,
         page=page,
@@ -70,16 +119,56 @@ async def list_documents(
     response_model=ApiResponse[DocumentResponse],
 )
 async def get_document(
-    document_id: str,
+    document_id: uuid.UUID,
     ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
     _: Annotated[None, Depends(require_permission("documents.read"))],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> ApiResponse[DocumentResponse]:
     """Get a single document."""
-    doc = await service.DocumentService.get_document(db, ctx.clinic_id, _uuid.UUID(document_id))
+    doc = await service.DocumentService.get_document(db, ctx.clinic_id, document_id)
     if doc is None:
         raise HTTPException(status_code=404, detail="Document not found")
     return ApiResponse(data=DocumentResponse.model_validate(doc))
+
+
+@router.get(
+    "/{document_id}/download",
+    response_class=Response,
+)
+async def download_document(
+    document_id: uuid.UUID,
+    ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
+    _: Annotated[None, Depends(require_permission("documents.read"))],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> Response:
+    """Download a generated document as branded PDF.
+
+    Streams the file rendered at generation time. Returns 404 when the
+    document is unknown, not yet generated, or its file is missing.
+    """
+    doc = await service.DocumentService.get_document(db, ctx.clinic_id, document_id)
+    if doc is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    if doc.status != "generated":
+        raise HTTPException(
+            status_code=409,
+            detail="Document has not been generated yet",
+        )
+
+    pdf_bytes = await service.DocumentService.download_pdf(db, ctx.clinic_id, document_id)
+    if pdf_bytes is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Rendered file not found — regenerate the document",
+        )
+
+    filename = f"{doc.document_type}_{str(doc.id)[:8]}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.post(
@@ -92,7 +181,6 @@ async def create_document(
     ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
     _: Annotated[None, Depends(require_permission("documents.write"))],
     db: Annotated[AsyncSession, Depends(get_db)],
-    # current_user is injected via auth middleware; created_by comes from ctx
 ) -> ApiResponse[DocumentResponse]:
     """Create a new document."""
     doc = await service.DocumentService.create_document(
@@ -104,6 +192,11 @@ async def create_document(
         content=data.content,
         created_by=ctx.user_id,
     )
+    if doc is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Patient does not belong to this clinic",
+        )
     return ApiResponse(data=DocumentResponse.model_validate(doc))
 
 
@@ -112,7 +205,7 @@ async def create_document(
     response_model=ApiResponse[DocumentResponse],
 )
 async def update_document(
-    document_id: str,
+    document_id: uuid.UUID,
     data: DocumentUpdate,
     ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
     _: Annotated[None, Depends(require_permission("documents.write"))],
@@ -122,7 +215,7 @@ async def update_document(
     doc = await service.DocumentService.update_document(
         db,
         ctx.clinic_id,
-        _uuid.UUID(document_id),
+        document_id,
         title=data.title,
         content=data.content,
         status=data.status,
@@ -137,15 +230,13 @@ async def update_document(
     status_code=204,
 )
 async def delete_document(
-    document_id: str,
+    document_id: uuid.UUID,
     ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
     _: Annotated[None, Depends(require_permission("documents.write"))],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> None:
     """Soft-delete (archive) a document."""
-    deleted = await service.DocumentService.delete_document(
-        db, ctx.clinic_id, _uuid.UUID(document_id)
-    )
+    deleted = await service.DocumentService.delete_document(db, ctx.clinic_id, document_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Document not found")
 
@@ -159,13 +250,17 @@ async def generate_document(
     ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
     _: Annotated[None, Depends(require_permission("documents.write"))],
     db: Annotated[AsyncSession, Depends(get_db)],
+    locale: str = Query(default="es", pattern="^(es|en)$"),
 ) -> ApiResponse[DocumentResponse]:
     """Generate (render) a document as a branded PDF.
 
-    Marks the document as generated, stores the file path, and
-    publishes ``DOCUMENT_GENERATED`` on the event bus.
+    Renders via WeasyPrint, persists the file under the storage
+    backend, marks the document as generated, and publishes
+    ``DOCUMENT_GENERATED`` on the event bus.
     """
-    doc = await service.DocumentService.generate_pdf(db, ctx.clinic_id, data.document_id)
+    doc = await service.DocumentService.generate_pdf(
+        db, ctx.clinic_id, data.document_id, locale=locale
+    )
     if doc is None:
         raise HTTPException(status_code=404, detail="Document not found")
     return ApiResponse(data=DocumentResponse.model_validate(doc))

@@ -6,15 +6,38 @@ Every query filters by ``clinic_id`` (multi-tenancy, mandatory).
 
 from __future__ import annotations
 
+import asyncio
 import uuid
+from pathlib import Path
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.core.events import event_bus
 from app.core.events.types import EventType
+from app.modules.patients.service import PatientService
 
 from .models import DocumentStatus, GeneratedDocument
+from .pdf import DocumentPDFService
+
+TEMPLATE_MAP = {
+    "prescription": "prescriptions",
+    "medical_certificate": "certificates",
+    "referral": "referrals",
+    "radiology_request": "radiology-requests",
+}
+
+
+def _documents_root() -> Path:
+    """Filesystem root where rendered PDFs are persisted.
+
+    Defaults to a ``documents`` subdirectory of ``STORAGE_LOCAL_PATH``,
+    which docker-compose mounts as a writable volume owned by
+    ``appuser``. Kept relative to the storage backend so deployments
+    that override ``STORAGE_LOCAL_PATH`` stay consistent.
+    """
+    return Path(settings.STORAGE_LOCAL_PATH) / "documents"
 
 
 class DocumentService:
@@ -73,8 +96,17 @@ class DocumentService:
         title: str,
         content: dict,
         created_by: uuid.UUID | None = None,
-    ) -> GeneratedDocument:
-        """Create a new document."""
+    ) -> GeneratedDocument | None:
+        """Create a new document.
+
+        Returns ``None`` when the patient does not belong to the calling
+        clinic — callers surface that as a 400/403 so documents can
+        never reference an out-of-clinic patient.
+        """
+        patient = await PatientService.get_patient(db, clinic_id, patient_id)
+        if patient is None:
+            return None
+
         doc = GeneratedDocument(
             id=uuid.uuid4(),
             clinic_id=clinic_id,
@@ -130,16 +162,42 @@ class DocumentService:
         return True
 
     @staticmethod
+    async def _render_bytes(
+        db: AsyncSession,
+        clinic_id: uuid.UUID,
+        doc: GeneratedDocument,
+        locale: str = "es",
+    ) -> bytes:
+        """Render a document as branded PDF bytes.
+
+        Pulls the clinic (for the letterhead) and the patient (for the
+        demographics block), then hands off to WeasyPrint off the event
+        loop. Returns the raw PDF bytes.
+        """
+        from app.core.auth.models import Clinic
+
+        clinic = await db.get(Clinic, clinic_id)
+        patient = await PatientService.get_patient(db, clinic_id, doc.patient_id)
+        issued_by = ""
+        if doc.created_by is not None:
+            from app.core.auth.models import User
+
+            user = await db.get(User, doc.created_by)
+            issued_by = f"{user.first_name} {user.last_name}" if user else ""
+        return await DocumentPDFService.generate_pdf(doc, clinic, patient, locale, issued_by)
+
+    @staticmethod
     async def generate_pdf(
         db: AsyncSession,
         clinic_id: uuid.UUID,
         document_id: uuid.UUID,
+        locale: str = "es",
     ) -> GeneratedDocument | None:
-        """Generate (render) a document and publish DOCUMENT_GENERATED.
+        """Render a document, persist the branded PDF, publish the event.
 
-        The actual PDF rendering is handled by the PDF generation service
-        (Jinja2 + WeasyPrint or similar). This method marks the document
-        as generated and publishes the event for activity_journal pickup.
+        Rendering happens before the row is flipped to ``generated`` so
+        a broken template surfaces loudly and no event is published for
+        a document that has no real file behind it.
 
         Returns the updated document, or None if not found.
         """
@@ -147,10 +205,14 @@ class DocumentService:
         if doc is None:
             return None
 
-        # In production this calls the PDF renderer to produce the file.
-        # For now, mark as generated and publish the event.
+        pdf_bytes = await DocumentService._render_bytes(db, clinic_id, doc, locale=locale)
+
+        relative_path = f"documents/{clinic_id}/{doc.id}.pdf"
+        target = _documents_root() / str(clinic_id) / f"{doc.id}.pdf"
+        await asyncio.to_thread(target.write_bytes, pdf_bytes)
+
         doc.status = DocumentStatus.GENERATED
-        doc.file_path = f"documents/{clinic_id}/{doc.id}.pdf"
+        doc.file_path = relative_path
         await db.flush()
 
         payload: dict[str, str] = {
@@ -167,3 +229,24 @@ class DocumentService:
         await db.refresh(doc)
 
         return doc
+
+    @staticmethod
+    async def download_pdf(
+        db: AsyncSession,
+        clinic_id: uuid.UUID,
+        document_id: uuid.UUID,
+    ) -> bytes | None:
+        """Return the persisted PDF for a generated document.
+
+        Returns ``None`` when the document is unknown, not yet
+        generated, or its rendered file is missing on disk.
+        """
+        doc = await DocumentService.get_document(db, clinic_id, document_id)
+        if doc is None or doc.status != DocumentStatus.GENERATED or not doc.file_path:
+            return None
+
+        target = _documents_root() / str(clinic_id) / f"{doc.id}.pdf"
+        try:
+            return await asyncio.to_thread(target.read_bytes)
+        except (FileNotFoundError, IsADirectoryError, PermissionError):
+            return None

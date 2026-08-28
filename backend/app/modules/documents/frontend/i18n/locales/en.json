@@ -4,13 +4,12 @@
     "subtitle": "Manage prescriptions, certificates, referrals and radiology requests",
     "newDocument": "New Document",
     "editDocument": "Edit Document",
-    "searchPlaceholder": "Search documents...",
     "filterType": "Filter by type",
     "filterStatus": "Filter by status",
     "empty": "No documents yet. Create your first document to get started.",
-    "emptyPatient": "No documents for this patient. Create one using the button above.",
     "patient": "Patient",
     "selectPatient": "Select a patient",
+    "patientSearchEmpty": "No patients found matching your search",
     "type": "Document type",
     "selectType": "Select a type",
     "titleLabel": "Title",
@@ -31,13 +30,16 @@
     "actions": {
       "generate": "Generate PDF",
       "edit": "Edit",
-      "archive": "Archive"
+      "archive": "Archive",
+      "download": "Download PDF"
     },
     "messages": {
       "created": "Document created",
       "updated": "Document updated",
       "generated": "Document generated successfully",
-      "archived": "Document archived"
+      "archived": "Document archived",
+      "downloaded": "PDF downloaded",
+      "downloadFailed": "Failed to download PDF"
     },
     "content": {
       "diagnosis": "Diagnosis",
@@ -59,6 +61,28 @@
       "examType": "Exam type",
       "region": "Region",
       "clinicalQuestion": "Clinical question"
+    },
+    "settings": {
+      "cards": {
+        "letterhead": {
+          "title": "Document letterhead",
+          "description": "Clinic branding on prescriptions, certificates, referrals and radiology requests"
+        }
+      },
+      "letterhead": {
+        "help": "These fields override the clinic profile on generated PDFs. Leave a field blank to fall back to the clinic's stored name, address and tax ID.",
+        "name": "Header name",
+        "nameHint": "Defaults to the clinic name",
+        "address": "Header address",
+        "phone": "Header phone",
+        "email": "Header email",
+        "registrationNumber": "Registration / license number",
+        "logo": "Logo",
+        "logoHint": "Shown at the top-left of each PDF. Recommendation: a square transparent PNG under 512&times;512 px.",
+        "chooseLogo": "Choose image",
+        "save": "Save letterhead",
+        "saved": "Letterhead saved"
+      }
     }
   }
 }

@@ -2,9 +2,8 @@
 
 Generates prescriptions, medical certificates, referral letters and
 radiology requests as branded PDFs with configurable clinic letterhead
-(name, logo, address, registration number). Depends on `patients`
-(for patient demographics) and `medication_catalog` (for prescription
-medication lookup).
+(name, logo, address, registration number). Depends on `patients` for
+the patient demographics block.
 
 ## Public API
 
@@ -15,20 +14,39 @@ Routes mounted at `/api/v1/documents/`.
 - `POST   /documents`                — create (draft); `documents.write`
 - `PATCH  /documents/{id}`           — edit title/content/status; `documents.write`
 - `DELETE /documents/{id}`           — soft-delete (archive); `documents.write`
-- `POST   /documents/generate`       — render document as branded PDF; `documents.write`
+- `POST   /documents/generate`       — render document as branded PDF (WeasyPrint), persist under storage, flip to `generated`, publish `document.generated`; `documents.write`
+- `GET    /documents/{id}/download`  — stream the generated PDF; 404 if never generated / file missing; `documents.read`
+- `GET/PUT /documents/settings/letterhead` — letterhead overrides stored namespaced under `clinic.settings["documents"]["letterhead"]`; gated by core `admin.clinic.read`/`admin.clinic.write`; unset keys fall back to the clinic profile
 
 ## Dependencies
 
-`manifest.depends = ["patients", "medication_catalog"]` — reads patient
-demographics for the letterhead recipient, and reads the medication
-catalog for prescription autofill. Cross-module FKs to `patients.id`
-and `users.id` are in the migration.
+`manifest.depends = ["patients"]` — reads patient demographics for the
+PDF body. The `doc_0001` migration FKs to `patients.id` (declared
+`depends_on = ("pat_0003",)` — patients has no branch label) and
+`users.id` (core). Prescription medication lines are free text; there
+is no catalog coupling.
 
 ## Tenancy
 
 `GeneratedDocument` has its own `clinic_id` column and every lookup
-filters on it. The seeder and all CRUD operations are scoped to the
-calling clinic.
+filters on it. `create_document` verifies the patient belongs to the
+calling clinic (`PatientService.get_patient`) and returns `None`
+otherwise — the router surfaces a 400, so a document can never
+reference an out-of-clinic patient.
+
+## PDF rendering (`pdf.py`)
+
+- WeasyPrint via `asyncio.to_thread` (mirrors billing). Four templates
+  keyed by `document_type`, all content escaped.
+- Letterhead resolves `clinic.settings["documents"]["letterhead"]`
+  first, falling back per-key to the clinic profile (name, address,
+  phone, email, tax_id). `logo` is an inline data URL when set.
+- `generate_pdf` renders **before** flipping status, so a broken
+  document never publishes an event. The bytes are written to
+  `storage/documents/{clinic_id}/{id}.pdf`; `file_path` is the
+  relative path. `download_pdf` reads that file back (409/404 if not
+  generated yet).
+- Alias `pdf.py:DocumentPDFService` — never hand-render HTML elsewhere.
 
 ## Events
 
@@ -36,7 +54,7 @@ calling clinic.
 
 | Event | Payload | When |
 | --- | --- | --- |
-| `document.generated` | `{document_id, clinic_id, patient_id, document_type, title}` | After successful PDF generation |
+| `document.generated` | `{document_id, clinic_id, patient_id, document_type, title, created_by?}` | After successful PDF render **and** file write (transactional, `db=db`) |
 
 `activity_journal` picks up `document.generated` for timeline entries.
 
@@ -46,11 +64,15 @@ None — the module does not subscribe to any events.
 
 ## Permissions
 
-`documents.read`, `documents.write`. Default role grants:
+Module permissions: `documents.read`, `documents.write`. Default role
+grants (from `manifest.role_permissions`):
 
 - **admin**: full management.
 - **dentist**: read + write — prescribers generate documents.
 - **assistant**: read-only — can view but not create.
+
+Letterhead settings reuse the core `admin.clinic.read`/`admin.clinic.write`
+permissions (clinic-profile concern), not a module permission.
 
 ## Tools exposed
 
@@ -58,22 +80,31 @@ None — the module does not subscribe to any events.
 |---|---|---|---|
 | `generate_document` | WRITE | `DocumentService.create_document` + `DocumentService.generate_pdf` | `documents.write` |
 
-Returns structured metadata only — no free prose — so it stays
-cloud-eligible (no `exposes_free_text`).
+`document_type` is a `Literal` constrained to the four supported
+types; `created_by` is attributed via `ctx.supervisor_id` (the human
+in the loop, same convention as `agenda`/`payments`). Returns
+structured metadata only — no free prose — so it stays cloud-eligible
+(no `exposes_free_text`).
 
 ## Lifecycle
 
 - `installable=True`, `auto_install=False` (ships inactive, the admin
   activates from the module admin UI), `removable=True`.
 - Own Alembic branch (`documents`), rooted independently on core
-  `"0001"` — no cross-branch FK, so no `depends_on` needed.
+  `"0001"` with `depends_on = ("pat_0003",)` — fresh installs order
+  the patients chain before this module's patients FK.
 - Uninstall round-trip test in `test_uninstall_roundtrip.py`.
 
 ## Frontend
 
 Nuxt layer at `frontend/` with:
-- Page: `/documents` — document list with type/status/patient filters.
-- Modal: document creation and PDF generation.
+- Page: `/documents` — document list with type/status/patient filters
+  and a download action on generated rows.
+- Modal: document creation with a server-search patient picker
+  (UInputMenu pattern), client-side required-field gating, form inside
+  the `#body` slot.
+- Settings: letterhead editor card registered via
+  `registerSettingsPage` (category `billing`).
 - Navigation: sidebar entry gated on `documents.read`, order 75.
 
 ## CHANGELOG

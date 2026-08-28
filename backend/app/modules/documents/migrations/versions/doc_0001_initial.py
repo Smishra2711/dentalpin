@@ -1,22 +1,28 @@
 """Initial schema for the documents module.
 
 Creates the ``generated_documents`` table on the ``documents`` Alembic
-branch.  Chains off the core ``0001`` anchor (ADR 0002).  No
-cross-module foreign keys — ``patients.id`` and ``users.id`` are
-referenced but this migration does not ``depends_on`` those branches;
-FKs are enforced at the application level and via the ``depends``
-manifest declaration.
+branch.  Chains off the core ``0001`` anchor (ADR 0002).
+
+Cross-module foreign keys: ``patients.id`` (allowed — ``patients`` is
+declared in ``manifest.depends``) and ``users.id`` (core). ``patients``
+lives on the unlabeled/core chain (pat_0001 → pat_0003) with no branch
+of its own, so ``depends_on = ("pat_0003",)`` orders that chain before
+this FK on a fresh install — same pattern as patient_relationships'
+``prel_0001``. ``clinics``/``users`` are created by core ``0001``
+itself and are always available.
 """
+
+from collections.abc import Sequence
 
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 from alembic import op
 
-revision = "doc_0001"
-down_revision = "0001"
-branch_labels = ("documents",)
-depends_on = None
+revision: str = "doc_0001"
+down_revision: str | None = "0001"
+branch_labels: str | Sequence[str] | None = ("documents",)
+depends_on: str | Sequence[str] | None = ("pat_0003",)
 
 
 def upgrade() -> None:

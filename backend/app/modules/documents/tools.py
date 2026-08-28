@@ -7,6 +7,7 @@ duplicated.  All handlers filter by ``ctx.clinic_id`` (multi-tenancy).
 from __future__ import annotations
 
 import uuid
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -17,9 +18,12 @@ class GenerateDocumentArgs(BaseModel):
     """Arguments the LLM fills when calling the generate tool."""
 
     patient_id: uuid.UUID = Field(description="UUID of the patient")
-    document_type: str = Field(
-        description=("One of: prescription, medical_certificate, referral, radiology_request")
-    )
+    document_type: Literal[
+        "prescription",
+        "medical_certificate",
+        "referral",
+        "radiology_request",
+    ] = Field(description="Type of document to generate")
     title: str = Field(description="Document title")
     content: dict = Field(
         default_factory=dict,
@@ -42,7 +46,10 @@ async def _generate_document(ctx, params: GenerateDocumentArgs) -> dict:
         document_type=params.document_type,
         title=params.title,
         content=params.content,
+        created_by=ctx.supervisor_id,
     )
+    if doc is None:
+        return {"error": "patient_not_found"}
     # Generate the PDF
     generated = await DocumentService.generate_pdf(ctx.db, ctx.clinic_id, doc.id)
     return {

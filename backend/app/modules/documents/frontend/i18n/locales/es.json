@@ -4,13 +4,12 @@
     "subtitle": "Gestiona recetas, certificados, derivaciones y solicitudes de radiología",
     "newDocument": "Nuevo documento",
     "editDocument": "Editar documento",
-    "searchPlaceholder": "Buscar documentos...",
     "filterType": "Filtrar por tipo",
     "filterStatus": "Filtrar por estado",
     "empty": "Aún no hay documentos. Crea el primero para empezar.",
-    "emptyPatient": "No hay documentos para este paciente. Crea uno con el botón de arriba.",
     "patient": "Paciente",
     "selectPatient": "Seleccionar paciente",
+    "patientSearchEmpty": "No se han encontrado pacientes para esa búsqueda",
     "type": "Tipo de documento",
     "selectType": "Seleccionar tipo",
     "titleLabel": "Título",
@@ -31,13 +30,16 @@
     "actions": {
       "generate": "Generar PDF",
       "edit": "Editar",
-      "archive": "Archivar"
+      "archive": "Archivar",
+      "download": "Descargar PDF"
     },
     "messages": {
       "created": "Documento creado",
       "updated": "Documento actualizado",
       "generated": "Documento generado correctamente",
-      "archived": "Documento archivado"
+      "archived": "Documento archivado",
+      "downloaded": "PDF descargado",
+      "downloadFailed": "No se pudo descargar el PDF"
     },
     "content": {
       "diagnosis": "Diagnóstico",
@@ -59,6 +61,28 @@
       "examType": "Tipo de examen",
       "region": "Región",
       "clinicalQuestion": "Pregunta clínica"
+    },
+    "settings": {
+      "cards": {
+        "letterhead": {
+          "title": "Membrete de documentos",
+          "description": "Imagen de la clínica en recetas, certificados, derivaciones y solicitudes de radiología"
+        }
+      },
+      "letterhead": {
+        "help": "Estos campos sobrescriben el perfil de la clínica en los PDF generados. Deja un campo en blanco para usar el nombre, la dirección y el CIF/CIF titular de la clínica.",
+        "name": "Nombre del membrete",
+        "nameHint": "Por defecto, el nombre de la clínica",
+        "address": "Dirección del membrete",
+        "phone": "Teléfono del membrete",
+        "email": "Correo del membrete",
+        "registrationNumber": "Número de colegiado / registro",
+        "logo": "Logotipo",
+        "logoHint": "Aparece arriba a la izquierda de cada PDF. Recomendado: PNG transparente cuadrado menor de 512×512 px.",
+        "chooseLogo": "Elegir imagen",
+        "save": "Guardar membrete",
+        "saved": "Membrete guardado"
+      }
     }
   }
 }

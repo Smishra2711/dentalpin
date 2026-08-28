@@ -21,12 +21,6 @@
 
     <!-- Filters -->
     <div class="flex items-center gap-4">
-      <UInput
-        v-model="searchQuery"
-        :placeholder="t('documents.searchPlaceholder')"
-        icon="i-lucide-search"
-        class="w-64"
-      />
       <USelect
         v-model="filterType"
         :items="documentTypeOptions"
@@ -113,6 +107,13 @@
               @click="generateDocument(doc)"
             />
             <UButton
+              v-if="doc.status === 'generated'"
+              variant="ghost"
+              size="sm"
+              icon="i-lucide-download"
+              @click="downloadDocument(doc)"
+            />
+            <UButton
               variant="ghost"
               size="sm"
               icon="i-lucide-archive"
@@ -152,14 +153,13 @@ import { errorMessage } from '~~/app/utils/error'
 const { t } = useI18n()
 const { can } = usePermissions()
 const toast = useToast()
-const { listDocuments, deleteDocument, generateDocument: generateDocumentRequest } = useManagedDocuments()
+const { listDocuments, deleteDocument, generateDocument: generateDocumentRequest, downloadDocument: downloadDocumentRequest } = useManagedDocuments()
 
 // State
 const documents = ref<ManagedDocument[]>([])
 const loading = ref(true)
-const searchQuery = ref('')
-const filterType = ref<GeneratedDocumentType | ''>('')
-const filterStatus = ref('')
+const filterType = ref<GeneratedDocumentType | 'all'>('all')
+const filterStatus = ref<'draft' | 'generated' | 'archived' | 'all'>('all')
 const currentPage = ref(1)
 const pageSize = 20
 const total = ref(0)
@@ -168,9 +168,11 @@ const editingDocument = ref<ManagedDocument | null>(null)
 
 const totalPages = computed(() => Math.ceil(total.value / pageSize))
 
-// Options
+// Options — the SelectItems use an explicit ``all`` sentinel (never the
+// empty string) so a "reset" selection is a distinct, well-defined value
+// that is simply dropped from the API query.
 const documentTypeOptions = computed(() => [
-  { label: t('documents.types.all'), value: '' },
+  { label: t('documents.types.all'), value: 'all' },
   { label: t('documents.types.prescription'), value: 'prescription' },
   { label: t('documents.types.medical_certificate'), value: 'medical_certificate' },
   { label: t('documents.types.referral'), value: 'referral' },
@@ -178,7 +180,7 @@ const documentTypeOptions = computed(() => [
 ])
 
 const statusOptions = computed(() => [
-  { label: t('documents.status.all'), value: '' },
+  { label: t('documents.status.all'), value: 'all' },
   { label: t('documents.status.draft'), value: 'draft' },
   { label: t('documents.status.generated'), value: 'generated' },
   { label: t('documents.status.archived'), value: 'archived' }
@@ -191,8 +193,8 @@ async function fetchDocuments() {
     const response = await listDocuments({
       page: currentPage.value,
       page_size: pageSize,
-      document_type: filterType.value || undefined,
-      status: filterStatus.value
+      document_type: filterType.value === 'all' ? undefined : filterType.value,
+      status: filterStatus.value === 'all' ? undefined : filterStatus.value
     })
     documents.value = response.data
     total.value = response.total
@@ -249,6 +251,15 @@ async function generateDocument(doc: ManagedDocument) {
     await fetchDocuments()
   } catch (error: unknown) {
     toast.add({ title: errorMessage(error, t('common.error')), color: 'error' })
+  }
+}
+
+async function downloadDocument(doc: ManagedDocument) {
+  try {
+    await downloadDocumentRequest(doc.id)
+    toast.add({ title: t('documents.messages.downloaded'), color: 'success' })
+  } catch (error: unknown) {
+    toast.add({ title: errorMessage(error, t('documents.messages.downloadFailed')), color: 'error' })
   }
 }
 

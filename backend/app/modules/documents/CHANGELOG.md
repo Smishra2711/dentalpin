@@ -20,3 +20,23 @@
 - Frontend layer: document list page, creation/generation modal,
   sidebar navigation entry.
 - i18n: en, es, de, hu locale keys for the module.
+- Real PDF rendering in `pdf.py` (WeasyPrint off the event loop, four
+  type-specific templates, escaped content). `generate_pdf` renders and
+  persists the file under `storage/documents/{clinic_id}/` before
+  flipping status and publishing the event.
+- `GET /documents/{id}/download` streams the generated file as an
+  `application/pdf` attachment (never-generated → 409, missing file →
+  404).
+- Letterhead settings endpoints (`GET/PUT /documents/settings/letterhead`)
+  gated by core `admin.clinic.*`, persisted namespaced under
+  `clinic.settings["documents"]["letterhead"]` with per-key fallback to
+  the clinic profile; letterhead editor card on the settings page.
+- Typed content schemas wired into `DocumentCreate` (validated against
+  the document-type schema, dates normalized to JSON-safe ISO strings).
+- `create_document` verifies the patient belongs to the caller's clinic
+  (400 otherwise); tool args constrain `document_type` to a `Literal`
+  and attribute `created_by` via `ctx.supervisor_id`.
+- Router path params typed as `uuid.UUID` (malformed IDs → 422);
+  removed `medication_catalog` from `depends` (never consumed).
+- `doc_0001` declares `depends_on = ("pat_0003",)` so fresh installs
+  order the patients chain before the `patients.id` FK.

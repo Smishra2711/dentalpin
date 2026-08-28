@@ -23,7 +23,10 @@ class DocumentsModule(BaseModule):
         "author": "DentalPin Contributors",
         "license": "BSL-1.1",
         "category": "official",
-        "depends": ["patients", "medication_catalog"],
+        # ``patients`` only — patient demographics feed the document
+        # letterhead body. The prescription form holds free-text
+        # medication lines; there is no catalog coupling.
+        "depends": ["patients"],
         "installable": True,
         "auto_install": False,
         "removable": True,

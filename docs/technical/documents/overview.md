@@ -16,11 +16,16 @@ paginated), get, update (partial via `exclude_unset`), delete
 (soft-delete / archive). A `POST /documents/generate` endpoint
 renders the document as a branded PDF and publishes
 `DOCUMENT_GENERATED` on the event bus (consumed by
-`activity_journal`).
+`activity_journal`), and `GET /documents/{id}/download` streams the
+rendered file.
 
-Cross-module reads: `patients` (for demographics / letterhead
-recipient) and `medication_catalog` (for prescription medication
-lookup / autofill). No cross-module writes.
+Clinic letterhead overrides are configurable per clinic via
+`GET/PUT /documents/settings/letterhead` (stored namespaced under
+`clinic.settings["documents"]["letterhead"]`).
+
+Cross-module reads: `patients` (for the patient demographics block in
+the PDF). No cross-module writes. Prescription medication lines are
+free text entered in the form — there is no catalog coupling.
 
 ## Document types
 
@@ -44,12 +49,24 @@ forward compatibility.
 ## PDF generation
 
 The generate endpoint:
-1. Fetches the document + clinic letterhead configuration.
-2. Renders a Jinja2 template with the document content and clinic
-   branding.
-3. Produces a PDF via WeasyPrint (or similar).
-4. Stores the file at `storage/documents/{clinic_id}/{document_id}.pdf`.
-5. Marks the document as `generated` and publishes `DOCUMENT_GENERATED`.
+1. Fetches the document + clinic + patient.
+2. Resolves the letterhead from `clinic.settings["documents"]["letterhead"]`,
+   falling back per-key to the clinic's native profile (name, address,
+   phone, email, tax_id).
+3. Renders an HTML template (`pdf.py`) with the document content,
+   patient demographics and clinic branding — `body`-only if
+   WeasyPrint is unavailable it falls back to raw HTML.
+4. Renders via WeasyPrint off the event loop (`asyncio.to_thread`,
+   same pattern as billing).
+5. Persists the file at `storage/documents/{clinic_id}/{document_id}.pdf`
+   and stores the relative `file_path` on the row — only after the
+   render succeeds does the status flip to `generated`, so no event
+   fires for a document without a real file behind it.
+6. Publishes `DOCUMENT_GENERATED`.
+
+`GET /documents/{id}/download` streams the persisted bytes back as an
+`application/pdf` attachment (404 if the document was never generated
+or the file is missing; documents the download doesn't re-render).
 
 ## Data model
 
@@ -61,5 +78,9 @@ The generate endpoint:
 
 `installable=True`, `auto_install=False` (ships inactive, the admin
 activates it from the module admin UI), `removable=True`. Own Alembic
-branch (`documents`), rooted independently on core `"0001"` — no
-cross-branch FK, so no `depends_on` needed.
+branch (`documents`), rooted independently on core `"0001"`. The
+initial migration FKs to `patients.id`; because `patients` has no
+branch label of its own, `doc_0001` declares
+`depends_on = ("pat_0003",)` (same pattern as
+`patient_relationships.prel_0001`) so a fresh install orders the
+patients chain first.
