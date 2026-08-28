@@ -92,7 +92,7 @@ export function useInventory() {
     return await api.patch<ApiOk<InventoryItem>>(`/api/v1/inventory/${id}`, payload, { errorToast: false })
   }
 
-async function adjust(
+  async function adjust(
     id: string,
     delta: number,
     opts: { reason?: MovementReason, note?: string } = {}
