@@ -57,6 +57,23 @@ async def test_opening_stock_and_adjustments_are_ledgered(
     assert total == 3  # initial(10) -3 +50 — the rejected one never lands
     assert sum(m["movement"].delta for m in movements) == Decimal("57")
 
+    # The pagination total honours the filters — a second item's ledger
+    # must not inflate the first item's count.
+    other = await InventoryService.create_item(
+        db_session,
+        test_clinic.id,
+        InventoryItemCreate(name="Gloves L", category="consumables", stock_quantity=Decimal("2")),
+        created_by=None,
+    )
+    _, item_total = await InventoryService.list_movements(
+        db_session, test_clinic.id, inventory_item_id=item.id
+    )
+    assert item_total == 3
+    _, reason_total = await InventoryService.list_movements(
+        db_session, test_clinic.id, inventory_item_id=other.id, reason="initial"
+    )
+    assert reason_total == 1
+
     # Look rows up by reason: created_at ties are possible within one
     # transaction, so positional indexing would be flaky.
     by_reason = {m["movement"].reason: m["movement"] for m in movements}

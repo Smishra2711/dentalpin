@@ -11,7 +11,6 @@ is the concurrency fix for PR #153's race (roadmap #220).
 from __future__ import annotations
 
 import logging
-from datetime import datetime as dt
 from decimal import Decimal
 from uuid import UUID
 
@@ -150,8 +149,9 @@ class InventoryService:
         for field, value in data.items():
             setattr(item, field, value)
         await db.flush()
-        if new_qty is not None:
-            await InventoryService._publish_low_if_crossed(db, item, was_low=was_low)
+        # Unconditional: raising min_quantity above current stock is a
+        # not-low -> low crossing too, not just stock changes.
+        await InventoryService._publish_low_if_crossed(db, item, was_low=was_low)
         await db.commit()
         await db.refresh(item)
         return item
@@ -349,7 +349,6 @@ class InventoryService:
         clinic_id: UUID,
         inventory_item_id: UUID | None = None,
         reason: str | None = None,
-        date_from: dt | None = None,
         page: int = 1,
         page_size: int = 50,
     ) -> tuple[list[dict], int]:
@@ -358,22 +357,21 @@ class InventoryService:
         Returns dicts (not ORM objects) so each row carries a
         ``created_by_name`` resolved from the ``users`` table.
         """
+        conditions = [StockMovement.clinic_id == clinic_id]
+        if inventory_item_id:
+            conditions.append(StockMovement.inventory_item_id == inventory_item_id)
+        if reason:
+            conditions.append(StockMovement.reason == reason)
+
         stmt = (
             select(StockMovement, User.first_name, User.last_name)
             .outerjoin(User, StockMovement.created_by == User.id)
-            .where(StockMovement.clinic_id == clinic_id)
+            .where(*conditions)
         )
-        if inventory_item_id:
-            stmt = stmt.where(StockMovement.inventory_item_id == inventory_item_id)
-        if reason:
-            stmt = stmt.where(StockMovement.reason == reason)
 
-        count_stmt = select(func.count()).select_from(
-            select(StockMovement)
-            .where(StockMovement.clinic_id == clinic_id)
-            .correlate_except(StockMovement)
-            .subquery()
-        )
+        # The count must carry the same filters as the listing, or the
+        # pagination total counts the whole clinic's ledger.
+        count_stmt = select(func.count()).select_from(StockMovement).where(*conditions)
         total = (await db.execute(count_stmt)).scalar_one()
 
         stmt = (

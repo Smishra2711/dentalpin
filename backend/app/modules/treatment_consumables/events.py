@@ -66,13 +66,22 @@ async def on_treatment_performed(data: dict, db) -> None:
         (row.inventory_item_id, Decimal(str(row.quantity))) for row in rows
     ]
 
+    # Malformed treatment_id degrades to a deduction without a business
+    # reference (and thus without idempotency) instead of raising inside
+    # the publisher's transaction (ADR 0019).
+    treatment_reference_id = None
+    raw_treatment = data.get("treatment_id")
+    if raw_treatment:
+        try:
+            treatment_reference_id = UUID(str(raw_treatment))
+        except (ValueError, TypeError):
+            logger.warning("treatment_consumables: malformed treatment_id in treatment.performed")
+
     applied = await InventoryService.apply_consumption(
         db,
         clinic_id=clinic_id,
         links=links,
-        treatment_reference_id=(
-            UUID(str(data["treatment_id"])) if data.get("treatment_id") else None
-        ),
+        treatment_reference_id=treatment_reference_id,
         actor_id=actor_id,
     )
     if applied:

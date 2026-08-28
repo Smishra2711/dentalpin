@@ -190,6 +190,19 @@ async def test_low_stock_event_fires_only_on_crossing(
         )
         assert len(captured) == 3  # already-low creation is a day-one alert
         assert captured[2]["item_id"] == str(born_low.id)
+
+        # Raising min_quantity above current stock is a crossing too —
+        # not only stock changes trigger the alert.
+        await InventoryService.adjust_stock(db_session, test_clinic.id, item.id, Decimal("10"))
+        assert len(captured) == 3  # recovered (14 > 5) — no alert
+        await InventoryService.update_item(
+            db_session,
+            test_clinic.id,
+            item.id,
+            InventoryItemUpdate(min_quantity=Decimal("50")),
+        )
+        assert len(captured) == 4
+        assert captured[3]["item_id"] == str(item.id)
     finally:
         event_bus.unsubscribe(EventType.INVENTORY_STOCK_LOW, _spy)
 

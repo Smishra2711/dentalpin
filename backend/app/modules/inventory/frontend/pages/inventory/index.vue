@@ -181,21 +181,19 @@ async function adjust(item: InventoryItem, delta: number, reason?: MovementReaso
 }
 
 async function applyDelta(item: InventoryItem) {
-  await adjust(item, deltaValue.value ?? 0, adjustReason.value, adjustNote.value)
+  await adjust(item, deltaValue.value ?? 0, adjustReason.value, adjustNote.value || undefined)
   deltaRowId.value = null
   deltaValue.value = null
 }
 
-function onPopoverClose(open: boolean) {
-  if (!open) {
-    deltaRowId.value = null
-    deltaValue.value = null
-    // Reset popover state so the next row starts clean.
-    adjustReason.value = 'adjustment'
-    adjustNote.value = ''
-  } else if (deltaRowId.value) {
-    deltaRowId.value = null
-  }
+function onPopoverToggle(open: boolean, rowId: string) {
+  // Controlled popover: opening must point deltaRowId at the row, or
+  // `:open` stays false forever and the popover never shows.
+  deltaRowId.value = open ? rowId : null
+  // Reset shared state so every row starts clean.
+  deltaValue.value = null
+  adjustReason.value = 'adjustment'
+  adjustNote.value = ''
 }
 
 // --- Movements modal (audit trail) + valuation -------------------------------
@@ -384,7 +382,7 @@ const columns = computed(() => [
           <UPopover
             v-if="canWrite && row.original.is_active"
             :open="deltaRowId === row.original.id"
-            @update:open="onPopoverClose"
+            @update:open="(v: boolean) => onPopoverToggle(v, row.original.id)"
           >
             <button
               type="button"
