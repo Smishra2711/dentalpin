@@ -289,8 +289,8 @@ Generates prescriptions, medical certificates, referral letters and radiology re
 - **Depends:** `patients`, `medication_catalog`
 - **Frontend layer:** `frontend`
 - **Permissions:**
-  - `documents.documents.read`
-  - `documents.documents.write`
+  - `documents.read`
+  - `documents.write`
 - **Events emitted:**
   - `document.generated`
 - **Events consumed:** —

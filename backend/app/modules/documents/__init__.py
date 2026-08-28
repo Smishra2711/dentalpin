@@ -29,8 +29,8 @@ class DocumentsModule(BaseModule):
         "removable": True,
         "role_permissions": {
             "admin": ["*"],
-            "dentist": ["documents.read", "documents.write"],
-            "assistant": ["documents.read"],
+            "dentist": ["read", "write"],
+            "assistant": ["read"],
         },
         "frontend": {
             "layer_path": "frontend",
