@@ -53,7 +53,7 @@ class DocumentsModule(BaseModule):
         return router
 
     def get_permissions(self) -> list[str]:
-        return ["documents.read", "documents.write"]
+        return ["read", "write"]
 
     def get_tools(self) -> list:
         return _get_tools()
