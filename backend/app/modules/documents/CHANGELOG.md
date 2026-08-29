@@ -40,3 +40,6 @@
   removed `medication_catalog` from `depends` (never consumed).
 - `doc_0001` declares `depends_on = ("pat_0003",)` so fresh installs
   order the patients chain before the `patients.id` FK.
+- PDF storage honors `settings.TESTING` with a process-wide temp root
+  (mirrors the media module), fixing CI runs that execute outside the
+  compose `/app/storage` mount.

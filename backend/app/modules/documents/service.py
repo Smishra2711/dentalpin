@@ -7,6 +7,7 @@ Every query filters by ``clinic_id`` (multi-tenancy, mandatory).
 from __future__ import annotations
 
 import asyncio
+import tempfile
 import uuid
 from pathlib import Path
 
@@ -36,8 +37,33 @@ def _documents_root() -> Path:
     which docker-compose mounts as a writable volume owned by
     ``appuser``. Kept relative to the storage backend so deployments
     that override ``STORAGE_LOCAL_PATH`` stay consistent.
+
+    In tests (``settings.TESTING``) the root is a process-wide temp
+    directory instead — CI runs outside the compose mount, so the
+    default ``/app/storage`` path is not writable there. Mirrors the
+    media module's temp-storage fallback.
     """
+    if settings.TESTING:
+        return _test_documents_root()
     return Path(settings.STORAGE_LOCAL_PATH) / "documents"
+
+
+_test_documents_root_cache: Path | None = None
+
+
+def _test_documents_root() -> Path:
+    """Return a cached per-process temp root for generated PDFs.
+
+    Cached so ``generate_pdf`` and ``download_pdf`` resolve the same
+    paths within a run (a fresh ``mkdtemp`` per call would orphan the
+    file between the two requests under test).
+    """
+    global _test_documents_root_cache
+    if _test_documents_root_cache is None:
+        _test_documents_root_cache = (
+            Path(tempfile.mkdtemp(prefix="dentalpin_test_documents_")) / "documents"
+        )
+    return _test_documents_root_cache
 
 
 def _write_pdf_bytes(target: Path, data: bytes) -> None:
