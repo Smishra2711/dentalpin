@@ -18,6 +18,7 @@ from app.core.scheduling import ScheduledJob
 from app.modules.agenda.planned_work import planned_work_registry as _planned_work_registry
 
 from .models import (
+    AppointmentTreatment,
     PlannedTreatmentItem,
     TreatmentPlan,
 )
@@ -95,10 +96,7 @@ class TreatmentPlanModule(BaseModule):
     }
 
     def get_models(self) -> list:
-        return [
-            TreatmentPlan,
-            PlannedTreatmentItem,
-        ]
+        return [TreatmentPlan, PlannedTreatmentItem, AppointmentTreatment]
 
     def get_router(self) -> APIRouter:
         return router

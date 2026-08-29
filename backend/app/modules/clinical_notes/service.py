@@ -633,7 +633,8 @@ def _build_linked(
 
 async def list_merged_for_plan(db: AsyncSession, clinic_id: UUID, plan_id: UUID) -> list[dict]:
     """Plan + treatment + visit notes for a single plan, newest-first."""
-    from app.modules.agenda.models import Appointment, AppointmentTreatment
+    from app.modules.agenda.models import Appointment
+    from app.modules.treatment_plan.models import AppointmentTreatment
 
     plan_result = await db.execute(
         select(TreatmentPlan).where(
