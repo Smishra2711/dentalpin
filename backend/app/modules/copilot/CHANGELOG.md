@@ -6,6 +6,7 @@
 
 - feat(#131): German (de) locale for the module's frontend layer.
 - feat(#144, #132): Polish (pl) and Italian (it) locales for the module's frontend layer.
+- feat(#334): Hungarian (hu) locale for the module's frontend layer.
 - fix(#184): `PERMISSIONS` imported from `~~/app/config/permissions` (the `~/` form only worked through the layer-aliasing fallback).
 - i18n: add Tamil locale (`ta.json`) with full UI coverage.
 
