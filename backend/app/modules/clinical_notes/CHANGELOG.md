@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(#325): the attachment-owner registration moved from import time to `on_activate()` (ADR 0020).
+
 - fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
 
 - fix(#101): the note composer keeps typed text and attachments when a save fails (teardown only on success); the three unconfirmed delete surfaces now confirm like the other two.
