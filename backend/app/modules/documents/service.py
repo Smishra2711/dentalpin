@@ -40,6 +40,12 @@ def _documents_root() -> Path:
     return Path(settings.STORAGE_LOCAL_PATH) / "documents"
 
 
+def _write_pdf_bytes(target: Path, data: bytes) -> None:
+    """Write the rendered PDF, creating the per-clinic directory if needed."""
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(data)
+
+
 class DocumentService:
     """Service layer for document CRUD and PDF generation."""
 
@@ -209,7 +215,7 @@ class DocumentService:
 
         relative_path = f"documents/{clinic_id}/{doc.id}.pdf"
         target = _documents_root() / str(clinic_id) / f"{doc.id}.pdf"
-        await asyncio.to_thread(target.write_bytes, pdf_bytes)
+        await asyncio.to_thread(_write_pdf_bytes, target, pdf_bytes)
 
         doc.status = DocumentStatus.GENERATED
         doc.file_path = relative_path

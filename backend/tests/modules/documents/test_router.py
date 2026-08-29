@@ -155,7 +155,7 @@ async def test_create_document_rejects_foreign_patient(
 
 
 @pytest.mark.asyncio
-async def test_malformed_uuid_returns_422(client, auth_headers) -> None:
+async def test_malformed_uuid_returns_422(client, auth_headers, test_clinic) -> None:
     """Non-UUID identifiers are rejected by validation, not swallowed."""
     response = await client.get("/api/v1/documents/not-a-uuid", headers=auth_headers)
     assert response.status_code == 422
