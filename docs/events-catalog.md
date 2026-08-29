@@ -422,7 +422,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.DOCUMENT_GENERATED`
 - **Publishers:**
-  - `documents` — `backend/app/modules/documents/service.py:234`
+  - `documents` — `backend/app/modules/documents/service.py:260`
 - **Subscribers:**
   - `activity_journal`
 
