@@ -104,6 +104,16 @@ Extends the existing `copilot_settings` (`GET/PATCH /settings`,
 - `tier: "local"` (Ollama) is the privacy-first pitch: the settings
   page shows "no data leaves this server" when selected — and the
   redaction flag genuinely relaxes only in this mode.
+- **Locality is validated, not assumed** (gotcha flagged by @lamanji
+  in review): the redaction relaxation keys off the *resolved
+  deployment*, never the provider name alone. At settings-save the
+  `base_url` must resolve to loopback / a private RFC-1918 address /
+  a same-host socket for the `local` tier to hold; an "Ollama" entry
+  pointing at a public endpoint is stored as `tier: "free"`-equivalent
+  with `redaction_required: True` and the UI drops the "no data
+  leaves this server" copy. A DNS-rebinding-style change after save is
+  out of scope for v1 but the check re-runs on every settings read
+  that renders the privacy copy.
 - The seeded demo clinic stays provider-less: the copilot button
   renders its existing "not configured" state. No fake responses.
 
