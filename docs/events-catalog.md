@@ -375,7 +375,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.COPILOT_DIGEST_SENT`
 - **Publishers:**
-  - `copilot` — `backend/app/modules/copilot/tasks.py:174`
+  - `copilot` — `backend/app/modules/copilot/tasks.py:181`
 - **Subscribers:** —
 
 ### `copilot.session.ended`
