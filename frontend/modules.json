@@ -1,176 +1,176 @@
 {
   "layers": [
-    "C:/Program Files/software/Git/module_layers/accounting_export/frontend",
-    "C:/Program Files/software/Git/module_layers/activity_journal/frontend",
-    "C:/Program Files/software/Git/module_layers/agenda/frontend",
-    "C:/Program Files/software/Git/module_layers/billing/frontend",
-    "C:/Program Files/software/Git/module_layers/budget/frontend",
-    "C:/Program Files/software/Git/module_layers/catalog/frontend",
-    "C:/Program Files/software/Git/module_layers/clinical_notes/frontend",
-    "C:/Program Files/software/Git/module_layers/contacts/frontend",
-    "C:/Program Files/software/Git/module_layers/copilot/frontend",
-    "C:/Program Files/software/Git/module_layers/expenses/frontend",
-    "C:/Program Files/software/Git/module_layers/india_gst/frontend",
-    "C:/Program Files/software/Git/module_layers/inventory/frontend",
-    "C:/Program Files/software/Git/module_layers/lab_orders/frontend",
-    "C:/Program Files/software/Git/module_layers/media/frontend",
-    "C:/Program Files/software/Git/module_layers/medical_reference/frontend",
-    "C:/Program Files/software/Git/module_layers/medication_catalog/frontend",
-    "C:/Program Files/software/Git/module_layers/migration_import/frontend",
-    "C:/Program Files/software/Git/module_layers/notifications/frontend",
-    "C:/Program Files/software/Git/module_layers/odontogram/frontend",
-    "C:/Program Files/software/Git/module_layers/patient_relationships/frontend",
-    "C:/Program Files/software/Git/module_layers/patient_timeline/frontend",
-    "C:/Program Files/software/Git/module_layers/patients/frontend",
-    "C:/Program Files/software/Git/module_layers/patients_clinical/frontend",
-    "C:/Program Files/software/Git/module_layers/payments/frontend",
-    "C:/Program Files/software/Git/module_layers/periodontogram/frontend",
-    "C:/Program Files/software/Git/module_layers/recall_reminders/frontend",
-    "C:/Program Files/software/Git/module_layers/recalls/frontend",
-    "C:/Program Files/software/Git/module_layers/reports/frontend",
-    "C:/Program Files/software/Git/module_layers/schedules/frontend",
-    "C:/Program Files/software/Git/module_layers/staff_tasks/frontend",
-    "C:/Program Files/software/Git/module_layers/treatment_consumables/frontend",
-    "C:/Program Files/software/Git/module_layers/treatment_plan/frontend",
-    "C:/Program Files/software/Git/module_layers/verifactu/frontend",
-    "C:/Program Files/software/Git/module_layers/whatsapp_kapso/frontend"
+    "/module_layers/accounting_export/frontend",
+    "/module_layers/activity_journal/frontend",
+    "/module_layers/agenda/frontend",
+    "/module_layers/billing/frontend",
+    "/module_layers/budget/frontend",
+    "/module_layers/catalog/frontend",
+    "/module_layers/clinical_notes/frontend",
+    "/module_layers/contacts/frontend",
+    "/module_layers/copilot/frontend",
+    "/module_layers/expenses/frontend",
+    "/module_layers/india_gst/frontend",
+    "/module_layers/inventory/frontend",
+    "/module_layers/lab_orders/frontend",
+    "/module_layers/media/frontend",
+    "/module_layers/medical_reference/frontend",
+    "/module_layers/medication_catalog/frontend",
+    "/module_layers/migration_import/frontend",
+    "/module_layers/notifications/frontend",
+    "/module_layers/odontogram/frontend",
+    "/module_layers/patient_relationships/frontend",
+    "/module_layers/patient_timeline/frontend",
+    "/module_layers/patients/frontend",
+    "/module_layers/patients_clinical/frontend",
+    "/module_layers/payments/frontend",
+    "/module_layers/periodontogram/frontend",
+    "/module_layers/recall_reminders/frontend",
+    "/module_layers/recalls/frontend",
+    "/module_layers/reports/frontend",
+    "/module_layers/schedules/frontend",
+    "/module_layers/staff_tasks/frontend",
+    "/module_layers/treatment_consumables/frontend",
+    "/module_layers/treatment_plan/frontend",
+    "/module_layers/verifactu/frontend",
+    "/module_layers/whatsapp_kapso/frontend"
   ],
   "modules": [
     {
       "name": "accounting_export",
-      "path": "C:/Program Files/software/Git/module_layers/accounting_export/frontend"
+      "path": "/module_layers/accounting_export/frontend"
     },
     {
       "name": "activity_journal",
-      "path": "C:/Program Files/software/Git/module_layers/activity_journal/frontend"
+      "path": "/module_layers/activity_journal/frontend"
     },
     {
       "name": "agenda",
-      "path": "C:/Program Files/software/Git/module_layers/agenda/frontend"
+      "path": "/module_layers/agenda/frontend"
     },
     {
       "name": "billing",
-      "path": "C:/Program Files/software/Git/module_layers/billing/frontend"
+      "path": "/module_layers/billing/frontend"
     },
     {
       "name": "budget",
-      "path": "C:/Program Files/software/Git/module_layers/budget/frontend"
+      "path": "/module_layers/budget/frontend"
     },
     {
       "name": "catalog",
-      "path": "C:/Program Files/software/Git/module_layers/catalog/frontend"
+      "path": "/module_layers/catalog/frontend"
     },
     {
       "name": "clinical_notes",
-      "path": "C:/Program Files/software/Git/module_layers/clinical_notes/frontend"
+      "path": "/module_layers/clinical_notes/frontend"
     },
     {
       "name": "contacts",
-      "path": "C:/Program Files/software/Git/module_layers/contacts/frontend"
+      "path": "/module_layers/contacts/frontend"
     },
     {
       "name": "copilot",
-      "path": "C:/Program Files/software/Git/module_layers/copilot/frontend"
+      "path": "/module_layers/copilot/frontend"
     },
     {
       "name": "expenses",
-      "path": "C:/Program Files/software/Git/module_layers/expenses/frontend"
+      "path": "/module_layers/expenses/frontend"
     },
     {
       "name": "india_gst",
-      "path": "C:/Program Files/software/Git/module_layers/india_gst/frontend"
+      "path": "/module_layers/india_gst/frontend"
     },
     {
       "name": "inventory",
-      "path": "C:/Program Files/software/Git/module_layers/inventory/frontend"
+      "path": "/module_layers/inventory/frontend"
     },
     {
       "name": "lab_orders",
-      "path": "C:/Program Files/software/Git/module_layers/lab_orders/frontend"
+      "path": "/module_layers/lab_orders/frontend"
     },
     {
       "name": "media",
-      "path": "C:/Program Files/software/Git/module_layers/media/frontend"
+      "path": "/module_layers/media/frontend"
     },
     {
       "name": "medical_reference",
-      "path": "C:/Program Files/software/Git/module_layers/medical_reference/frontend"
+      "path": "/module_layers/medical_reference/frontend"
     },
     {
       "name": "medication_catalog",
-      "path": "C:/Program Files/software/Git/module_layers/medication_catalog/frontend"
+      "path": "/module_layers/medication_catalog/frontend"
     },
     {
       "name": "migration_import",
-      "path": "C:/Program Files/software/Git/module_layers/migration_import/frontend"
+      "path": "/module_layers/migration_import/frontend"
     },
     {
       "name": "notifications",
-      "path": "C:/Program Files/software/Git/module_layers/notifications/frontend"
+      "path": "/module_layers/notifications/frontend"
     },
     {
       "name": "odontogram",
-      "path": "C:/Program Files/software/Git/module_layers/odontogram/frontend"
+      "path": "/module_layers/odontogram/frontend"
     },
     {
       "name": "patient_relationships",
-      "path": "C:/Program Files/software/Git/module_layers/patient_relationships/frontend"
+      "path": "/module_layers/patient_relationships/frontend"
     },
     {
       "name": "patient_timeline",
-      "path": "C:/Program Files/software/Git/module_layers/patient_timeline/frontend"
+      "path": "/module_layers/patient_timeline/frontend"
     },
     {
       "name": "patients",
-      "path": "C:/Program Files/software/Git/module_layers/patients/frontend"
+      "path": "/module_layers/patients/frontend"
     },
     {
       "name": "patients_clinical",
-      "path": "C:/Program Files/software/Git/module_layers/patients_clinical/frontend"
+      "path": "/module_layers/patients_clinical/frontend"
     },
     {
       "name": "payments",
-      "path": "C:/Program Files/software/Git/module_layers/payments/frontend"
+      "path": "/module_layers/payments/frontend"
     },
     {
       "name": "periodontogram",
-      "path": "C:/Program Files/software/Git/module_layers/periodontogram/frontend"
+      "path": "/module_layers/periodontogram/frontend"
     },
     {
       "name": "recall_reminders",
-      "path": "C:/Program Files/software/Git/module_layers/recall_reminders/frontend"
+      "path": "/module_layers/recall_reminders/frontend"
     },
     {
       "name": "recalls",
-      "path": "C:/Program Files/software/Git/module_layers/recalls/frontend"
+      "path": "/module_layers/recalls/frontend"
     },
     {
       "name": "reports",
-      "path": "C:/Program Files/software/Git/module_layers/reports/frontend"
+      "path": "/module_layers/reports/frontend"
     },
     {
       "name": "schedules",
-      "path": "C:/Program Files/software/Git/module_layers/schedules/frontend"
+      "path": "/module_layers/schedules/frontend"
     },
     {
       "name": "staff_tasks",
-      "path": "C:/Program Files/software/Git/module_layers/staff_tasks/frontend"
+      "path": "/module_layers/staff_tasks/frontend"
     },
     {
       "name": "treatment_consumables",
-      "path": "C:/Program Files/software/Git/module_layers/treatment_consumables/frontend"
+      "path": "/module_layers/treatment_consumables/frontend"
     },
     {
       "name": "treatment_plan",
-      "path": "C:/Program Files/software/Git/module_layers/treatment_plan/frontend"
+      "path": "/module_layers/treatment_plan/frontend"
     },
     {
       "name": "verifactu",
-      "path": "C:/Program Files/software/Git/module_layers/verifactu/frontend"
+      "path": "/module_layers/verifactu/frontend"
     },
     {
       "name": "whatsapp_kapso",
-      "path": "C:/Program Files/software/Git/module_layers/whatsapp_kapso/frontend"
+      "path": "/module_layers/whatsapp_kapso/frontend"
     }
   ],
   "version": 1
