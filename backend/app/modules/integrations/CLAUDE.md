@@ -21,10 +21,10 @@ public/` — no JWT, authenticated by `Authorization: Bearer dp_...`,
 rate-limited per token (60/min + 1000/day, `X-RateLimit-*` headers),
 clinic-scoped off the token's `clinic_id`.
 
-Every payload carries `occurred_at`, but there's no frozen sample
-payload per trigger yet and no event id stable across subscribers
-(`WebhookDelivery.id` is per-subscription) — both are follow-up work
-(issue #65 §3), not in Phase 1.
+Every payload carries `occurred_at`. Since Phase 2, each delivery also
+carries a stable `event_id` (same id across every subscription that
+matched one bus event publish — dedupe key, issue #65 §1) and there is
+a frozen sample payload per supported trigger in `sample_payloads/`.
 
 ## Outbox
 

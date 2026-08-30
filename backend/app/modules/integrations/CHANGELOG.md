@@ -28,6 +28,9 @@
 - `triggers.py` expanded: `SUPPORTED_EVENT_TYPES` grows from 2 to 8 events;
   `SUPPORTED_TOKEN_SCOPES` unchanged (`patients:read`).
 - `test_uninstall_roundtrip.py` downgrade target updated to `integrations@-3`.
+- `test_unsupported_event_type_rejected` now uses `invoice.issued` (a real
+  but unsupported/deferred bus event) instead of `budget.sent`, which became
+  a supported trigger in Phase 2.
 
 ### Phase 1 (issue #65)
 
