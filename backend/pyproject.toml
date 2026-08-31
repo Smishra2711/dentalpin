@@ -48,6 +48,8 @@ dependencies = [
     # (app/core/llm/). The Provider protocol is vendor-agnostic, so
     # Anthropic/Ollama slot in later without touching callers.
     "openai>=1.40",
+    # telephony module: E.164 normalization of caller numbers (issue #64).
+    "phonenumbers>=8.13",
 ]
 
 [project.optional-dependencies]
@@ -90,6 +92,7 @@ lab_orders = "app.modules.lab_orders:LabOrdersModule"
 activity_journal = "app.modules.activity_journal:ActivityJournalModule"
 medication_catalog = "app.modules.medication_catalog:MedicationCatalogModule"
 whatsapp_webhook = "app.modules.whatsapp_webhook:WhatsappWebhookModule"
+telephony = "app.modules.telephony:TelephonyModule"
 
 [tool.setuptools.packages.find]
 where = ["."]

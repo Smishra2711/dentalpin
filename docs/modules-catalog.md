@@ -41,6 +41,7 @@ Maintained by `backend/scripts/generate_catalogs.py`. CI fails if a manifest cha
 | `reports` | 0.1.0 | official | patients, agenda, catalog, budget, billing, payments | auto | no | 3 | 0 | 0 | yes |
 | `schedules` | 0.1.0 | official | agenda | auto | yes | 8 | 0 | 4 | yes |
 | `staff_tasks` | 0.1.0 | community | — | manual | yes | 2 | 2 | 0 | yes |
+| `telephony` | 0.1.0 | community | patients | manual | yes | 4 | 5 | 0 | yes |
 | `treatment_consumables` | 0.1.0 | community | catalog, inventory | manual | yes | 2 | 0 | 1 | yes |
 | `treatment_plan` | 0.1.0 | official | patients, agenda, odontogram, catalog, budget, media | auto | no | 5 | 13 | 7 | yes |
 | `verifactu` | 0.1.0 | official | billing, catalog | manual | yes | 5 | 1 | 2 | yes |
@@ -777,6 +778,30 @@ Staff handoff board — internal tasks and handoffs between team members.
   - `staff_task.status_changed`
 - **Events consumed:** —
 - **Module CLAUDE.md:** [`backend/app/modules/staff_tasks/CLAUDE.md`](../backend/app/modules/staff_tasks/CLAUDE.md)
+
+### `telephony` — v0.1.0
+
+CTI: aviso en pantalla de llamadas entrantes + registro de llamadas.
+
+- **Author:** DentalPin Core Team
+- **License:** BSL-1.1
+- **Category:** community
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `patients`
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `telephony.calls.read`
+  - `telephony.calls.write`
+  - `telephony.settings.read`
+  - `telephony.settings.write`
+- **Events emitted:**
+  - `call.answered`
+  - `call.ended`
+  - `call.missed`
+  - `call.ringing`
+  - `call.unknown_caller`
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/telephony/CLAUDE.md`](../backend/app/modules/telephony/CLAUDE.md)
 
 ### `treatment_consumables` — v0.1.0
 

@@ -110,6 +110,10 @@ from app.modules.schedules.models import (  # noqa: F401
     ProfessionalWeeklySchedule,
     ScheduleShift,
 )
+from app.modules.telephony.models import (  # noqa: F401
+    CallLog,
+    TelephonySettings,
+)
 from app.modules.treatment_plan.models import (  # noqa: F401
     PlannedTreatmentItem,
     TreatmentPlan,

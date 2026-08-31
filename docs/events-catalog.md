@@ -31,6 +31,11 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 | `budget.sent` | `EventType.BUDGET_SENT` | `budget` | `activity_journal`, `notifications`, `patient_timeline` |
 | `budget.superseded` | `EventType.BUDGET_SUPERSEDED` | `budget` | `activity_journal`, `treatment_plan` |
 | `budget.viewed` | `EventType.BUDGET_VIEWED` | `budget` | `patient_timeline` |
+| `call.answered` | `EventType.CALL_ANSWERED` | `telephony` | — |
+| `call.ended` | `EventType.CALL_ENDED` | `telephony` | — |
+| `call.missed` | `EventType.CALL_MISSED` | `telephony` | — |
+| `call.ringing` | `EventType.CALL_RINGING` | `telephony` | — |
+| `call.unknown_caller` | `EventType.CALL_UNKNOWN_CALLER` | `telephony` | — |
 | `clinic.created` | `EventType.CLINIC_CREATED` | `core:core` | `agenda`, `billing`, `catalog`, `medication_catalog`, `schedules` |
 | `clinical_notes.administrative_created` | `EventType.CLINICAL_NOTE_ADMINISTRATIVE_CREATED` | `clinical_notes` | `patient_timeline` |
 | `clinical_notes.appointment_administrative_created` | `EventType.CLINICAL_NOTE_APPOINTMENT_ADMINISTRATIVE_CREATED` | `clinical_notes` | — |
@@ -306,6 +311,41 @@ Maintained by `backend/scripts/generate_catalogs.py`.
   - `budget` — `backend/app/modules/budget/workflow.py:621`
 - **Subscribers:**
   - `patient_timeline`
+
+### `call.answered`
+
+- **Constant:** `EventType.CALL_ANSWERED`
+- **Publishers:**
+  - `telephony` — `backend/app/modules/telephony/service.py:33`
+- **Subscribers:** —
+
+### `call.ended`
+
+- **Constant:** `EventType.CALL_ENDED`
+- **Publishers:**
+  - `telephony` — `backend/app/modules/telephony/service.py:34`
+- **Subscribers:** —
+
+### `call.missed`
+
+- **Constant:** `EventType.CALL_MISSED`
+- **Publishers:**
+  - `telephony` — `backend/app/modules/telephony/service.py:35`
+- **Subscribers:** —
+
+### `call.ringing`
+
+- **Constant:** `EventType.CALL_RINGING`
+- **Publishers:**
+  - `telephony` — `backend/app/modules/telephony/service.py:32`
+- **Subscribers:** —
+
+### `call.unknown_caller`
+
+- **Constant:** `EventType.CALL_UNKNOWN_CALLER`
+- **Publishers:**
+  - `telephony` — `backend/app/modules/telephony/service.py:210`
+- **Subscribers:** —
 
 ### `clinic.created`
 
