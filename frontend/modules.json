@@ -33,7 +33,8 @@
     "/module_layers/treatment_consumables/frontend",
     "/module_layers/treatment_plan/frontend",
     "/module_layers/verifactu/frontend",
-    "/module_layers/whatsapp_kapso/frontend"
+    "/module_layers/whatsapp_kapso/frontend",
+    "/module_layers/whatsapp_webhook/frontend"
   ],
   "modules": [
     {
@@ -171,6 +172,10 @@
     {
       "name": "whatsapp_kapso",
       "path": "/module_layers/whatsapp_kapso/frontend"
+    },
+    {
+      "name": "whatsapp_webhook",
+      "path": "/module_layers/whatsapp_webhook/frontend"
     }
   ],
   "version": 1
