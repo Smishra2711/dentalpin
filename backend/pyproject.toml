@@ -89,6 +89,11 @@ treatment_consumables = "app.modules.treatment_consumables:TreatmentConsumablesM
 lab_orders = "app.modules.lab_orders:LabOrdersModule"
 activity_journal = "app.modules.activity_journal:ActivityJournalModule"
 medication_catalog = "app.modules.medication_catalog:MedicationCatalogModule"
+accounting_export = "app.modules.accounting_export:AccountingExportModule"
+clinical_notes = "app.modules.clinical_notes:ClinicalNotesModule"
+payments = "app.modules.payments:PaymentsModule"
+periodontogram = "app.modules.periodontogram:PeriodontogramModule"
+whatsapp_kapso = "app.modules.whatsapp_kapso:WhatsappKapsoModule"
 
 [tool.setuptools.packages.find]
 where = ["."]
