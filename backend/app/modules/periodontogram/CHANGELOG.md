@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(#126): de/it/pl locale parity with en (closeAborted key); fixed an Italian typo (parodontogramma).
+
 - feat(#334): Hungarian (hu) locale for the module's frontend layer.
 - fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
 
