@@ -429,14 +429,14 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.EMAIL_FAILED`
 - **Publishers:**
-  - `notifications` — `backend/app/modules/notifications/gateway.py:581`
+  - `notifications` — `backend/app/modules/notifications/gateway.py:594`
 - **Subscribers:** —
 
 ### `email.sent`
 
 - **Constant:** `EventType.EMAIL_SENT`
 - **Publishers:**
-  - `notifications` — `backend/app/modules/notifications/gateway.py:579`
+  - `notifications` — `backend/app/modules/notifications/gateway.py:592`
 - **Subscribers:** —
 
 ### `inventory.low_stock`
@@ -580,14 +580,14 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.NOTIFICATION_DELIVERED`
 - **Publishers:**
-  - `notifications` — `backend/app/modules/notifications/gateway.py:324`
+  - `notifications` — `backend/app/modules/notifications/gateway.py:338`
 - **Subscribers:** —
 
 ### `notification.failed`
 
 - **Constant:** `EventType.NOTIFICATION_FAILED`
 - **Publishers:**
-  - `notifications` — `backend/app/modules/notifications/gateway.py:294`
+  - `notifications` — `backend/app/modules/notifications/gateway.py:308`
 - **Subscribers:**
   - `patient_timeline`
 
@@ -602,7 +602,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.NOTIFICATION_REPLY_RECEIVED`
 - **Publishers:**
-  - `notifications` — `backend/app/modules/notifications/gateway.py:384`
+  - `notifications` — `backend/app/modules/notifications/gateway.py:398`
 - **Subscribers:**
   - `patient_timeline`
 
@@ -610,7 +610,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 
 - **Constant:** `EventType.NOTIFICATION_SENT`
 - **Publishers:**
-  - `notifications` — `backend/app/modules/notifications/gateway.py:281`
+  - `notifications` — `backend/app/modules/notifications/gateway.py:295`
 - **Subscribers:**
   - `patient_timeline`
 

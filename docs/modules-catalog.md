@@ -45,6 +45,7 @@ Maintained by `backend/scripts/generate_catalogs.py`. CI fails if a manifest cha
 | `treatment_plan` | 0.1.0 | official | patients, agenda, odontogram, catalog, budget, media | auto | no | 5 | 13 | 7 | yes |
 | `verifactu` | 0.1.0 | official | billing, catalog | manual | yes | 5 | 1 | 2 | yes |
 | `whatsapp_kapso` | 0.1.0 | community | notifications, patients | manual | yes | 2 | 0 | 0 | yes |
+| `whatsapp_webhook` | 0.1.0 | community | notifications | manual | yes | 2 | 0 | 0 | yes |
 
 ## Modules
 
@@ -873,3 +874,20 @@ WhatsApp para notifications vía Kapso (Meta Cloud API).
 - **Events emitted:** —
 - **Events consumed:** —
 - **Module CLAUDE.md:** [`backend/app/modules/whatsapp_kapso/CLAUDE.md`](../backend/app/modules/whatsapp_kapso/CLAUDE.md)
+
+### `whatsapp_webhook` — v0.1.0
+
+WhatsApp para notifications vía webhook firmado (Zapier/Make/n8n).
+
+- **Author:** DentalPin Core Team
+- **License:** BSL-1.1
+- **Category:** community
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `notifications`
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `whatsapp_webhook.settings.read`
+  - `whatsapp_webhook.settings.write`
+- **Events emitted:** —
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/whatsapp_webhook/CLAUDE.md`](../backend/app/modules/whatsapp_webhook/CLAUDE.md)

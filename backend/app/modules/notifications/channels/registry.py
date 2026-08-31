@@ -51,6 +51,18 @@ class ChannelRegistry:
                 return adapter
         return None
 
+    def adapters_for_channel(self, channel: Channel | str) -> list[ChannelAdapter]:
+        """All adapters registered for ``channel``, most recent first.
+
+        Callers that can ``await adapter.supports(...)`` should iterate
+        this instead of :meth:`get_for_channel` — with two vendors
+        installed for one channel (e.g. ``whatsapp_kapso`` +
+        ``whatsapp_webhook``) the clinic's *configured* one wins, not the
+        last-imported one.
+        """
+        channel = Channel(channel)
+        return [a for a in reversed(list(self._adapters.values())) if a.channel == channel]
+
     def get_by_name(self, adapter_name: str) -> ChannelAdapter | None:
         return self._adapters.get(adapter_name)
 
