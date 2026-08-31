@@ -46,6 +46,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 | `credit_note.issued` | `EventType.CREDIT_NOTE_ISSUED` | — | — |
 | `document.archived` | `EventType.DOCUMENT_ARCHIVED` | — | — |
 | `document.deleted` | `EventType.DOCUMENT_DELETED` | `media` | — |
+| `document.generated` | `EventType.DOCUMENT_GENERATED` | `documents` | `activity_journal` |
 | `document.uploaded` | `EventType.DOCUMENT_UPLOADED` | `media` | `patient_timeline` |
 | `email.failed` | `EventType.EMAIL_FAILED` | `notifications` | — |
 | `email.sent` | `EventType.EMAIL_SENT` | `notifications` | — |
@@ -416,6 +417,14 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `media` — `backend/app/modules/media/service.py:218`
 - **Subscribers:** —
+
+### `document.generated`
+
+- **Constant:** `EventType.DOCUMENT_GENERATED`
+- **Publishers:**
+  - `documents` — `backend/app/modules/documents/service.py:260`
+- **Subscribers:**
+  - `activity_journal`
 
 ### `document.uploaded`
 

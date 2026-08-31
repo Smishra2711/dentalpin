@@ -95,6 +95,7 @@ clinical_notes = "app.modules.clinical_notes:ClinicalNotesModule"
 payments = "app.modules.payments:PaymentsModule"
 periodontogram = "app.modules.periodontogram:PeriodontogramModule"
 whatsapp_kapso = "app.modules.whatsapp_kapso:WhatsappKapsoModule"
+documents = "app.modules.documents:DocumentsModule"
 
 [tool.setuptools.packages.find]
 where = ["."]
