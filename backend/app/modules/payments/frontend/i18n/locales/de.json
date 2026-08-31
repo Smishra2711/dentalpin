@@ -233,6 +233,7 @@
     "reports": {
       "title": "Zahlungsberichte",
       "subtitle": "Einnahmen, Erstattungen, Patientensalden und Trends für den Zeitraum.",
+      "loadError": "Zahlungsberichte konnten nicht geladen werden.",
       "cardDescription": "Einnahmen, Erstattungen, Patientensalden, Altersstruktur und Trends.",
       "period": "Zeitraum",
       "refresh": "Aktualisieren",
@@ -298,6 +299,10 @@
       "submit": "Zuordnen",
       "success": "Zahlung dem Kostenvoranschlag zugeordnet",
       "error": "Die Zahlung konnte nicht neu zugeordnet werden. Bitte versuchen Sie es erneut."
+    },
+    "followup": {
+      "collect": "Zahlung kassieren",
+      "collected": "Zahlung erfasst."
     }
   }
 }
