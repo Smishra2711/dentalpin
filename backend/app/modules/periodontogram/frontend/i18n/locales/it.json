@@ -78,7 +78,7 @@
     "errors": {
       "closeAborted": "Alcune misurazioni non sono ancora state salvate — l'esame non è stato chiuso. Controlla la connessione e riprova.",
       "checkConnection": "Controlla la connessione e riprova.",
-      "loadFailed": "Impossibile caricare il parodentogramma.",
+      "loadFailed": "Impossibile caricare il parodontogramma.",
       "saveFailed": "Impossibile salvare la modifica."
     }
   }

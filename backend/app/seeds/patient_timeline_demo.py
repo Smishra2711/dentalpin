@@ -203,12 +203,7 @@ async def seed_timeline_demo(db: AsyncSession, clinic_id: UUID) -> dict[str, int
     for treatment in performed.scalars().all():
         names = (treatment.catalog_item.names if treatment.catalog_item else {}) or {}
         name = (
-            names.get("es")
-            or names.get("en")
-            or names.get("fr")
-            or names.get("pt")
-            or names.get("ta")
-            or next((v for v in names.values() if v), None)
+            catalog_name(names)
             or treatment.clinical_type
             or t({"es": "tratamiento", "en": "treatment", "fr": "traitement", "ta": "சிகிச்சை"})
         )

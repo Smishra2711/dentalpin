@@ -10,6 +10,12 @@ import { resolve } from 'node:path'
  * through `fallbackLocale`) and no orphans (dead translations that
  * drift silently, the problem documented in #126).
  *
+ * Beyond keys, every translated string must keep the same `{placeholder}`
+ * names as the English source, and pluralized keys (` | `-separated) must
+ * stay pluralized: a locale may need MORE forms than English (Polish has
+ * more, wired up via pluralRules in i18n.config.ts), but a pipe in a
+ * non-plural key would render literally, so those must stay single.
+ *
  * Runs in plain Node on purpose: it reads JSON straight off the
  * repository tree, so no Nuxt context (and no module-layer bootstrap)
  * is required.
@@ -28,27 +34,56 @@ const MODULES_ROOT = existsSync('/module_layers')
 
 type Tree = Record<string, unknown>
 
-function flatten(obj: Tree, prefix = ''): string[] {
-  const keys: string[] = []
+function flatten(obj: Tree, prefix = ''): Map<string, string> {
+  const out = new Map<string, string>()
   for (const [k, v] of Object.entries(obj)) {
     const path = prefix ? `${prefix}.${k}` : k
-    if (v !== null && typeof v === 'object') keys.push(...flatten(v as Tree, path))
-    else keys.push(path)
+    if (v !== null && typeof v === 'object') {
+      for (const [ck, cv] of flatten(v as Tree, path)) out.set(ck, cv)
+    } else {
+      out.set(path, String(v))
+    }
   }
-  return keys
+  return out
 }
 
 function loadJson(path: string): Tree {
   return JSON.parse(readFileSync(path, 'utf-8')) as Tree
 }
 
+function placeholders(message: string): string[] {
+  return [...new Set(message.match(/\{[^}]*\}/g) ?? [])].sort()
+}
+
+function pluralVariants(message: string): number {
+  return message.split(' | ').length
+}
+
 function comparePair(name: string, enPath: string, xxPath: string) {
-  const en = new Set(flatten(loadJson(enPath)))
-  const xx = new Set(flatten(loadJson(xxPath)))
-  const missing = [...en].filter(k => !xx.has(k))
-  const extra = [...xx].filter(k => !en.has(k))
-  expect(missing, `${name}: missing keys vs en`).toEqual([])
-  expect(extra, `${name}: orphan keys not present in en`).toEqual([])
+  const en = flatten(loadJson(enPath))
+  const xx = flatten(loadJson(xxPath))
+  const problems: string[] = []
+  for (const k of en.keys()) {
+    if (!xx.has(k)) problems.push(`missing (add to ${name}): ${k}`)
+  }
+  for (const k of xx.keys()) {
+    if (!en.has(k)) problems.push(`orphan (not in en — translate everywhere or delete): ${k}`)
+  }
+  for (const [key, enValue] of en) {
+    const value = xx.get(key)
+    if (value === undefined) continue // already reported as missing
+    const expected = placeholders(enValue)
+    const actual = placeholders(value)
+    if (expected.join(',') !== actual.join(',')) {
+      problems.push(`${key}: placeholders [${actual}] != en [${expected}]`)
+    }
+    const enVariants = pluralVariants(enValue)
+    const variants = pluralVariants(value)
+    if (enVariants === 1 ? variants !== 1 : variants < 2) {
+      problems.push(`${key}: ${variants} plural variants vs en ${enVariants}`)
+    }
+  }
+  expect(problems, `${name}:\n${problems.join('\n')}`).toEqual([])
 }
 
 describe('locale key parity', () => {

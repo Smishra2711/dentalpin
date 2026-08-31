@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- refactor(#126): budget_sent treatment names resolve through the shared `app.core.i18n_names.catalog_name` helper (was es → en → first value).
+
 - feat(#343): patient communications in German, Hungarian, Polish and Italian — full email-template sets under `backend/templates/email/{de,hu,pl,it}/`, the clinic communication-language gate and pickers extended to all 9 UI languages, and parity gaps in existing locales filled (`en` verifactu `.txt` bodies, `invoice_sent` for es/fr/pt). A parity test now pins every locale to the same template set.
 
 - feat(#334): Hungarian (hu) locale for the module's frontend layer.

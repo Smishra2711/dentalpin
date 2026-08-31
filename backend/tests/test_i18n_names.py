@@ -16,8 +16,8 @@ def test_arabic_only_item_resolves():
 def test_arabic_beats_catchall_when_present():
     names = {"de": "Bleaching", "ar": "تبييض"}
     assert catalog_name(names) == "Bleaching"
-    names2 = {"it": "Blanchiment", "ar": "تبييض"}
-    # 'ar' is in the priority chain; 'it' only via catch-all
+    names2 = {"nl": "Bleken", "ar": "تبييض"}
+    # 'ar' is in the priority chain; 'nl' only via catch-all
     assert catalog_name(names2) == "تبييض"
 
 
@@ -36,5 +36,5 @@ def test_priority_chain_covers_known_locales():
     """CATALOG_NAME_PRIORITY must list the core locales; future locales
     are added by appending to the tuple — this test pins the known set
     without breaking when a new locale is added."""
-    for lang in ("es", "en", "fr", "pt", "ta", "de", "hu"):
+    for lang in ("es", "en", "fr", "pt", "ta", "de", "hu", "it", "pl"):
         assert lang in CATALOG_NAME_PRIORITY, f"{lang} missing from CATALOG_NAME_PRIORITY"
