@@ -30,6 +30,7 @@
     "/module_layers/reports/frontend",
     "/module_layers/schedules/frontend",
     "/module_layers/staff_tasks/frontend",
+    "/module_layers/telephony/frontend",
     "/module_layers/treatment_consumables/frontend",
     "/module_layers/treatment_plan/frontend",
     "/module_layers/verifactu/frontend",
@@ -156,6 +157,10 @@
     {
       "name": "staff_tasks",
       "path": "/module_layers/staff_tasks/frontend"
+    },
+    {
+      "name": "telephony",
+      "path": "/module_layers/telephony/frontend"
     },
     {
       "name": "treatment_consumables",

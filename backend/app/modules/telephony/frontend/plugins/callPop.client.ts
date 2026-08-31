@@ -55,6 +55,8 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   if (import.meta.client) {
     timer = setInterval(tick, POLL_MS)
-    nuxtApp.hook('app:unmount' as never, () => timer && clearInterval(timer))
+    nuxtApp.hook('app:unmount' as never, (() => {
+      if (timer) clearInterval(timer)
+    }) as never)
   }
 })

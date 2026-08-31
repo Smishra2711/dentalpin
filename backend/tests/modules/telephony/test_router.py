@@ -3,8 +3,9 @@
 import json
 
 import pytest
-from app.core.webhooks.signing import SIGNATURE_HEADER, sign
 from httpx import AsyncClient
+
+from app.core.webhooks.signing import SIGNATURE_HEADER, sign
 
 SETTINGS = "/api/v1/telephony/settings"
 CALLS = "/api/v1/telephony/calls"

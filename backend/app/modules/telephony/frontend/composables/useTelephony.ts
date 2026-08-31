@@ -45,8 +45,10 @@ export function useTelephony() {
     return res.data
   }
 
-  async function fetchCalls(params: Record<string, unknown>): Promise<PaginatedResponse<CallLog>> {
-    return await api.get<PaginatedResponse<CallLog>>('/api/v1/telephony/calls', { params })
+  async function fetchCalls(
+    query: Record<string, string | number | boolean | undefined | null>
+  ): Promise<PaginatedResponse<CallLog>> {
+    return await api.get<PaginatedResponse<CallLog>>('/api/v1/telephony/calls', { query })
   }
 
   async function fetchActiveCalls(): Promise<CallLog[]> {
