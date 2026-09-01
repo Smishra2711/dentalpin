@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(#326): the connect-WhatsApp onboarding rule carries `permission: 'whatsapp_kapso.settings.read'`.
+
 - fix(#126): de/it/pl locale parity with en (onboarding + message-type labels).
 
 - feat(#334): Hungarian (hu) locale for the module's frontend layer.

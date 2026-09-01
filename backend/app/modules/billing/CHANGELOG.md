@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(#326): the invoice-series onboarding rule carries `permission: 'billing.read'` — it no longer renders or fires its load for a clinic where billing isn't active.
+
 - refactor(#126): invoice-line descriptions resolve catalog names through the shared `app.core.i18n_names.catalog_name` helper (same chain, one source of truth).
 
 - fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
