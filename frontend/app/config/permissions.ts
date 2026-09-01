@@ -189,5 +189,9 @@ export const PERMISSIONS = {
   medicationCatalog: {
     read: 'medication_catalog.read',
     write: 'medication_catalog.write'
+  },
+  generatedDocuments: {
+    read: 'documents.read',
+    write: 'documents.write'
   }
 } as const

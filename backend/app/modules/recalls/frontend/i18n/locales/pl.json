@@ -124,6 +124,10 @@
       "body": "Po tym zabiegu sugerujemy wizytę kontrolną w {month} ({reason}).",
       "create": "Utwórz wizytę kontrolną",
       "dismiss": "Odrzuć"
+    },
+    "confirms": {
+      "cancel": "Anulować przypomnienie dla {name}? Tej operacji nie można cofnąć.",
+      "done": "Oznaczyć przypomnienie dla {name} jako wykonane? Zamyka je na ten cykl."
     }
   }
 }

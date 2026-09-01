@@ -254,6 +254,7 @@
       "unknownProfessional": "Non assegnato",
       "countShort": "{n} transazioni",
       "countPatients": "{n} pazienti",
+      "loadError": "Impossibile caricare i report dei pagamenti.",
       "granularity": {
         "day": "Giorno",
         "week": "Settimana",
@@ -283,6 +284,10 @@
         "viewPayments": "Vedi i pagamenti del periodo",
         "viewPatients": "Vedi i pazienti con debito"
       }
+    },
+    "followup": {
+      "collect": "Incassa",
+      "collected": "Pagamento registrato."
     },
     "target": {
       "label": "Applica a",

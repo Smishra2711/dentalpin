@@ -254,6 +254,7 @@
       "unknownProfessional": "Nieprzypisane",
       "countShort": "{n} transakcji",
       "countPatients": "{n} pacjentów",
+      "loadError": "Nie udało się załadować raportów płatności.",
       "granularity": {
         "day": "Dzień",
         "week": "Tydzień",
@@ -283,6 +284,10 @@
         "viewPayments": "Zobacz płatności z okresu",
         "viewPatients": "Zobacz pacjentów z zadłużeniem"
       }
+    },
+    "followup": {
+      "collect": "Przyjmij płatność",
+      "collected": "Płatność zarejestrowana."
     },
     "target": {
       "label": "Zastosuj do",

@@ -76,9 +76,10 @@
     },
     "loading": "Wczytywanie periodontogramu…",
     "errors": {
-      "loadFailed": "Nie udało się wczytać periodontogramu.",
-      "saveFailed": "Nie udało się zapisać zmiany.",
-      "checkConnection": "Sprawdź połączenie i spróbuj ponownie."
+      "closeAborted": "Niektóre pomiary nie zostały jeszcze zapisane — badanie nie zostało zamknięte. Sprawdź połączenie i spróbuj ponownie.",
+      "checkConnection": "Sprawdź połączenie i spróbuj ponownie.",
+      "loadFailed": "Nie udało się załadować periodontogramu.",
+      "saveFailed": "Nie udało się zapisać zmiany."
     }
   }
 }
