@@ -221,3 +221,90 @@ async def test_cross_clinic_isolation(
     assert resp.status_code == 200
     names = [p["first_name"] for p in resp.json()["data"]]
     assert "Clinic A patient" not in names
+
+
+# --------------------------------------------------------------- #65 deltas
+# /ping introspection, last_used_at stamping, structured find params
+# (ported from PR #348).
+
+
+@pytest.mark.asyncio
+async def test_ping_introspects_token(client: AsyncClient, auth_headers: dict, test_clinic):
+    token = await _create_token(client, auth_headers, ["patients:read"])
+
+    resp = await client.get(
+        f"{PUBLIC_BASE}/ping", headers={"Authorization": f"Bearer {token}"}
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()["data"]
+    assert body["clinic_id"] == str(test_clinic.id)
+    assert body["token_name"] == "test-public"
+    assert body["scopes"] == ["patients:read"]
+    assert "X-RateLimit-Remaining-Minute" in resp.headers
+
+    resp = await client.get(f"{PUBLIC_BASE}/ping")
+    assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_public_call_stamps_last_used_at(
+    client: AsyncClient, auth_headers: dict, test_clinic
+):
+    token = await _create_token(client, auth_headers, ["patients:read"])
+
+    listed = (await client.get(TOKENS_BASE, headers=auth_headers)).json()["data"]
+    assert listed[0]["last_used_at"] is None
+
+    resp = await client.get(
+        f"{PUBLIC_BASE}/ping", headers={"Authorization": f"Bearer {token}"}
+    )
+    assert resp.status_code == 200
+
+    listed = (await client.get(TOKENS_BASE, headers=auth_headers)).json()["data"]
+    assert listed[0]["last_used_at"] is not None
+
+
+@pytest.mark.asyncio
+async def test_structured_find_is_format_tolerant(
+    client: AsyncClient, auth_headers: dict, test_clinic
+):
+    token = await _create_token(client, auth_headers, ["patients:read"])
+    resp = await client.post(
+        "/api/v1/patients",
+        json={
+            "first_name": "Marta",
+            "last_name": "Buscable",
+            "phone": "+34 600-99-88-77",
+            "email": "Marta.Buscable@Example.com",
+            "national_id": "12345678z",
+        },
+        headers=auth_headers,
+    )
+    assert resp.status_code == 201, resp.text
+    await _create_patient(client, auth_headers, first_name="Otro", last_name="Paciente")
+
+    headers = {"Authorization": f"Bearer {token}"}
+
+    resp = await client.get(
+        f"{PUBLIC_BASE}/patients", params={"phone": "+34600998877"}, headers=headers
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["total"] == 1
+    assert resp.json()["data"][0]["first_name"] == "Marta"
+
+    resp = await client.get(
+        f"{PUBLIC_BASE}/patients",
+        params={"email": "  marta.buscable@example.COM "},
+        headers=headers,
+    )
+    assert resp.json()["total"] == 1
+
+    resp = await client.get(
+        f"{PUBLIC_BASE}/patients", params={"national_id": "12345678Z"}, headers=headers
+    )
+    assert resp.json()["total"] == 1
+
+    resp = await client.get(
+        f"{PUBLIC_BASE}/patients", params={"phone": "+34999999999"}, headers=headers
+    )
+    assert resp.json()["total"] == 0

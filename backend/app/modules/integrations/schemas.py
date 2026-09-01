@@ -109,6 +109,15 @@ class ApiTokenCreated(ApiTokenResponse):
     token: str = Field(description="Shown once. Store it now; it cannot be retrieved again.")
 
 
+class PublicTokenInfo(BaseModel):
+    """``GET /public/ping`` — token introspection for a consumer's auth
+    test (Zapier/Make call this to validate the pasted token)."""
+
+    clinic_id: UUID
+    token_name: str
+    scopes: list[str]
+
+
 class PublicPatientResponse(BaseModel):
     """Patient record exposed through the token-authenticated public API.
 
