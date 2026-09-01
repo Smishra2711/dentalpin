@@ -40,12 +40,13 @@ _default_repo_root = _scripts_dir.parents[1]
 
 
 def _find_repo_root(start: Path) -> Path:
-    """Ascend to the repo root — a dir holding both ``docker-compose.yml`` and
-    ``AGENTS.md``. Falls back to two levels above this scripts dir, which is
-    the layout under a bare backend mount (compose bind-mounts ``./backend``
-    to ``/app``, one level shallower than the checked-out repo)."""
+    """Ascend to the repo root — a dir holding both ``docs/`` and ``backend/``
+    (same marker as ``check_docs_coverage._locate_repo_root``). Falls back to
+    two levels above this scripts dir, which is the layout under a bare
+    backend mount (compose bind-mounts ``./backend`` to ``/app``, one level
+    shallower than the checked-out repo)."""
     for candidate in (start, *start.parents):
-        if (candidate / "docker-compose.yml").is_file() and (candidate / "AGENTS.md").is_file():
+        if (candidate / "docs").is_dir() and (candidate / "backend").is_dir():
             return candidate
     return _default_repo_root
 
@@ -160,7 +161,9 @@ def _scan_publishers() -> dict[str, list[tuple[str, str, int]]]:
                 relpath = path.relative_to(REPO_ROOT).as_posix()
             except ValueError:
                 # Repo and backend mounted separately (gate: /repo + /app).
-                relpath = path.relative_to(BACKEND_ROOT).as_posix()
+                # Prefix "backend/" so the rendered path matches the host
+                # layout and a regenerated catalog stays freshness-stable.
+                relpath = "backend/" + path.relative_to(BACKEND_ROOT).as_posix()
             module_name = _module_name_for(path)
 
             # Same-file constant table (module-local event enums).
