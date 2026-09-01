@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- chore(#337): imports `AppointmentTreatment` from its new home in treatment_plan (a declared dependency).
+
 - refactor(#126): linked-treatment labels resolve catalog names through the shared `app.core.i18n_names.catalog_name` helper.
 
 - fix(#325): the attachment-owner registration moved from import time to `on_activate()` (ADR 0020).

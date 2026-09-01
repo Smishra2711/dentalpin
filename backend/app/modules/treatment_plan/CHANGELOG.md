@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- refactor(#337): owns `AppointmentTreatment` (`appointment_treatments`) — the NOT NULL planned-item FK always made it the plan's visit bridge; the model's backref installs `Appointment.treatments`, the provider gained `attach_planned_items`/`visit_note_row`, and all three of the table's FKs are now declarable. No schema migration; future ALTERs live on the tp branch.
+
 - refactor(#126): plan-item names resolve catalog names through the shared `app.core.i18n_names.catalog_name` helper.
 
 - fix(#325): the attachment-owner and planned-work registrations moved from import time to `on_activate()` (ADR 0020) — they now go live only while the module is installed.
