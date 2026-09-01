@@ -12,7 +12,9 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.auth.dependencies import ClinicContext, get_clinic_context, require_permission
 from app.core.auth.router import limiter
@@ -123,8 +125,14 @@ async def set_call_note(
     _: Annotated[None, Depends(require_permission("telephony.calls.write"))],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> ApiResponse[CallLogResponse]:
-    row = await db.get(CallLog, call_log_id)
-    if row is None or row.clinic_id != ctx.clinic_id:
+    row = (
+        await db.execute(
+            select(CallLog)
+            .options(selectinload(CallLog.patient))
+            .where(CallLog.id == call_log_id, CallLog.clinic_id == ctx.clinic_id)
+        )
+    ).scalar_one_or_none()
+    if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Call not found")
     row.note = data.note
     await db.flush()

@@ -22,7 +22,9 @@ from alembic import op
 revision: str = "tel_0001"
 down_revision: str | None = "0001"
 branch_labels: str | Sequence[str] | None = ("telephony",)
-depends_on: str | Sequence[str] | None = None
+# patients lives on its own migration chain; the FK below needs it
+# ordered first on a fresh install — same pattern as prel_0001/labo_0001.
+depends_on: str | Sequence[str] | None = ("pat_0003",)
 
 
 def upgrade() -> None:

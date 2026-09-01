@@ -102,6 +102,45 @@ async def test_call_log_and_active_endpoints(client: AsyncClient, auth_headers, 
 
 
 @pytest.mark.asyncio
+async def test_matched_patient_renders_in_log_active_and_note(
+    client: AsyncClient, auth_headers, test_clinic
+):
+    """The headline use case: a known patient calls — their name must
+    render on the log, the screen-pop poll, and the note round-trip
+    (regression: the lazy ``CallLog.patient`` load raised MissingGreenlet
+    in the async request context before eager loading was added)."""
+    res = await client.post(
+        "/api/v1/patients",
+        json={"first_name": "Ana", "last_name": "Llamadora", "phone": "+34600112233"},
+        headers=auth_headers,
+    )
+    assert res.status_code == 201, res.text
+
+    secret = await _configure(client, auth_headers)
+    raw, headers = _signed(_event(call_id="c-match"), secret)
+    res = await client.post(
+        f"/api/v1/telephony/events/{test_clinic.id}", content=raw, headers=headers
+    )
+    assert res.status_code == 200, res.text
+
+    res = await client.get(CALLS, headers=auth_headers)
+    assert res.status_code == 200, res.text
+    row = res.json()["data"][0]
+    assert row["patient_id"] is not None
+    assert row["patient_name"] == "Ana Llamadora"
+
+    res = await client.get(f"{CALLS}/active", headers=auth_headers)
+    assert res.status_code == 200, res.text
+    assert res.json()["data"][0]["patient_name"] == "Ana Llamadora"
+
+    res = await client.put(
+        f"{CALLS}/{row['id']}/note", json={"note": "pidió cita"}, headers=auth_headers
+    )
+    assert res.status_code == 200, res.text
+    assert res.json()["data"]["patient_name"] == "Ana Llamadora"
+
+
+@pytest.mark.asyncio
 async def test_ingest_accepts_and_ignores_unusable_event(
     client: AsyncClient, auth_headers, test_clinic
 ):

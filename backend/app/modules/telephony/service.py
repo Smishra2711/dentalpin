@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from sqlalchemy import func, select
+from sqlalchemy.orm import selectinload
 
 from app.core.email.encryption import encrypt_password
 from app.core.events import EventType, event_bus
@@ -220,7 +221,13 @@ class TelephonyService:
         page: int = 1,
         page_size: int = 20,
     ) -> tuple[list[CallLog], int]:
-        stmt = select(CallLog).where(CallLog.clinic_id == clinic_id)
+        # Responses render ``patient.full_name`` — eager-load it; a lazy
+        # load from the async request context raises MissingGreenlet.
+        stmt = (
+            select(CallLog)
+            .options(selectinload(CallLog.patient))
+            .where(CallLog.clinic_id == clinic_id)
+        )
         if status:
             stmt = stmt.where(CallLog.status == status)
         total = (await db.execute(select(func.count()).select_from(stmt.subquery()))).scalar_one()
@@ -246,6 +253,7 @@ class TelephonyService:
             (
                 await db.execute(
                     select(CallLog)
+                    .options(selectinload(CallLog.patient))
                     .where(
                         CallLog.clinic_id == clinic_id,
                         CallLog.status.in_(("ringing", "answered")),
