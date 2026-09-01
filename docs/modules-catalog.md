@@ -22,7 +22,7 @@ Maintained by `backend/scripts/generate_catalogs.py`. CI fails if a manifest cha
 | `documents` | 0.1.0 | official | patients | manual | yes | 2 | 1 | 0 | yes |
 | `expenses` | 0.1.0 | community | — | manual | yes | 2 | 0 | 0 | yes |
 | `india_gst` | 0.1.0 | official | billing, catalog | manual | yes | 4 | 0 | 0 | yes |
-| `integrations` | 0.1.0 | official | patients | manual | yes | 4 | 0 | 2 | no |
+| `integrations` | 0.1.0 | official | patients | manual | yes | 4 | 0 | 8 | no |
 | `inventory` | 0.2.0 | community | — | manual | yes | 2 | 1 | 0 | yes |
 | `lab_orders` | 0.1.0 | community | patients, contacts | manual | yes | 2 | 1 | 0 | yes |
 | `media` | 0.2.0 | official | patients | auto | no | 4 | 7 | 1 | yes |
@@ -349,7 +349,13 @@ Webhook subscriptions (REST Hooks) for third-party automations.
   - `integrations.tokens.write`
 - **Events emitted:** —
 - **Events consumed:**
+  - `appointment.cancelled`
   - `appointment.completed`
+  - `appointment.no_show`
+  - `appointment.scheduled`
+  - `budget.accepted`
+  - `budget.rejected`
+  - `budget.sent`
   - `patient.created`
 - **Module CLAUDE.md:** [`backend/app/modules/integrations/CLAUDE.md`](../backend/app/modules/integrations/CLAUDE.md)
 
