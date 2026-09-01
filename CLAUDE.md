@@ -9,7 +9,7 @@ DentalPin — open-source dental clinic management software with a modular plugi
 | Component | Tech |
 |-----------|------|
 | Backend | FastAPI (Python 3.11+), SQLAlchemy 2.0, Alembic |
-| Frontend | Vue 3, Nuxt 3, Nuxt UI, TypeScript |
+| Frontend | Vue 3, Nuxt 4, Nuxt UI, TypeScript |
 | Database | PostgreSQL (asyncpg) |
 | Auth | JWT (access + refresh) |
 | Container | Docker Compose |

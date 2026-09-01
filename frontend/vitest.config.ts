@@ -22,6 +22,10 @@ export default defineVitestConfig({
     // not be picked up by vitest — doing so throws
     // "Playwright Test did not expect test.describe() to be called here".
     exclude: ['**/node_modules/**', '**/dist/**', 'tests/e2e/**'],
+    // Nuxt 4.5 + vitest 4 boots the full Nuxt app in a `beforeAll` hook;
+    // startup (incl. i18n + module-layer locale loading) can exceed the
+    // 10s vitest default, so raise the hook timeout for the nuxt environment.
+    hookTimeout: 120000,
     environmentOptions: {
       nuxt: {
         mock: {

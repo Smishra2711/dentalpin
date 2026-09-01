@@ -158,7 +158,7 @@ Consulte [docs/user-manual/en/demo.md](docs/user-manual/en/demo.md) para detalle
 | Capa | Tecnología |
 |------|-----------|
 | Backend | FastAPI (Python 3.11+) |
-| Frontend | Nuxt 3 + Nuxt UI |
+| Frontend | Nuxt 4 + Nuxt UI |
 | Base de datos | PostgreSQL 15 |
 | Autenticación | JWT con refresh tokens |
 

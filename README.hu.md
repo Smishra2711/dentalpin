@@ -157,7 +157,7 @@ A demóadatok teljes leírását lásd: [docs/user-manual/en/demo.md](docs/user-
 | Réteg | Technológia |
 |-------|-------------|
 | Backend | FastAPI (Python 3.11+) |
-| Frontend | Nuxt 3 + Nuxt UI |
+| Frontend | Nuxt 4 + Nuxt UI |
 | Adatbázis | PostgreSQL 15 |
 | Hitelesítés | JWT refresh tokenekkel |
 

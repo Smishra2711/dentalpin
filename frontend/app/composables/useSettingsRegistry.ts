@@ -253,6 +253,17 @@ export function unregisterGettingStartedRule(id: string): void {
   bumpVersion()
 }
 
+/**
+ * Remove every registered getting-started rule. The app boots its
+ * settings/registry plugin (and each module's) inside the Nuxt vitest
+ * environment, so tests must clear the whole registry before registering
+ * their own rules to keep the suite hermetic.
+ */
+export function resetGettingStartedRules(): void {
+  _rules.splice(0)
+  bumpVersion()
+}
+
 export function useSettingsRegistry() {
   const { t } = useI18n()
   const { can, canAny } = usePermissions()
@@ -460,6 +471,7 @@ export function useSettingsRegistry() {
     register: registerSettingsPage,
     unregister: unregisterSettingsPage,
     registerGettingStartedRule,
-    unregisterGettingStartedRule
+    unregisterGettingStartedRule,
+    resetGettingStartedRules
   }
 }

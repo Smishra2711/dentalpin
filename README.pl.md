@@ -155,7 +155,7 @@ Pełne informacje o danych demo znajdziesz w [docs/user-manual/en/demo.md](docs/
 | Warstwa | Technologia |
 |---------|-------------|
 | Backend | FastAPI (Python 3.11+) |
-| Frontend | Nuxt 3 + Nuxt UI |
+| Frontend | Nuxt 4 + Nuxt UI |
 | Baza danych | PostgreSQL 15 |
 | Uwierzytelnianie | JWT z refresh tokenami |
 

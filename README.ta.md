@@ -158,7 +158,7 @@ http://localhost:3000 ஐத் திறக்கவும்
 | அடுக்கு | தொழில்நுட்பம் |
 |------|-----------|
 | Backend | FastAPI (Python 3.11+) |
-| Frontend | Nuxt 3 + Nuxt UI |
+| Frontend | Nuxt 4 + Nuxt UI |
 | தரவுத்தளம் | PostgreSQL 15 |
 | அங்கீகாரம் | Refresh டோக்கன்களுடன் JWT |
 

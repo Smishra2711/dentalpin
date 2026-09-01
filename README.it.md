@@ -155,7 +155,7 @@ Per tutti i dettagli sui dati demo consulta [docs/user-manual/en/demo.md](docs/u
 | Livello | Tecnologia |
 |---------|------------|
 | Backend | FastAPI (Python 3.11+) |
-| Frontend | Nuxt 3 + Nuxt UI |
+| Frontend | Nuxt 4 + Nuxt UI |
 | Database | PostgreSQL 15 |
 | Autenticazione | JWT con refresh token |
 

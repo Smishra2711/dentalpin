@@ -159,7 +159,7 @@ Voir [docs/user-manual/en/demo.md](docs/user-manual/en/demo.md) pour les détail
 | Couche | Technologie |
 |--------|-------------|
 | Backend | FastAPI (Python 3.11+) |
-| Frontend | Nuxt 3 + Nuxt UI |
+| Frontend | Nuxt 4 + Nuxt UI |
 | Base de données | PostgreSQL 15 |
 | Authentification | JWT avec refresh tokens |
 
