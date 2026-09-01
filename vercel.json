@@ -1,0 +1,23 @@
+{
+  "$schema": "https://vercel.sh",
+  "services": {
+    "nuxt_frontend": {
+      "root": "frontend/",
+      "framework": "nuxtjs"
+    },
+    "fastapi_backend": {
+      "root": "backend/",
+      "entrypoint": "main.py"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": { "service": "fastapi_backend" }
+    },
+    {
+      "source": "/(.*)",
+      "destination": { "service": "nuxt_frontend" }
+    }
+  ]
+}
