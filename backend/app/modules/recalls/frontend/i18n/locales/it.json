@@ -124,6 +124,10 @@
       "body": "Dopo questo trattamento suggeriamo un richiamo a {month} ({reason}).",
       "create": "Crea richiamo",
       "dismiss": "Ignora"
+    },
+    "confirms": {
+      "cancel": "Annullare il richiamo per {name}? L'azione non può essere annullata.",
+      "done": "Segnare il richiamo per {name} come completato? Questo lo chiude per questo ciclo."
     }
   }
 }
