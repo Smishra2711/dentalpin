@@ -65,7 +65,7 @@
 - Fixed `update_subscription`: `description` can now actually be
   cleared to `null` (was previously unclearable).
 - `get_tools()` added, returning `[]` (new-module checklist).
-- `manifest.depends` stays `[\"patients\"]` — `agenda` (the
+- `manifest.depends` stays `["patients"]` — `agenda` (the
   `appointment.completed` publisher) is not a dependency, since
   consuming an event doesn't require depending on its publisher.
 - Added `CLAUDE.md` and this file.
