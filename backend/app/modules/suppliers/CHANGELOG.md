@@ -17,3 +17,6 @@
 - `removable=True` — supports full uninstall with roundtrip tests.
 - Registered `app/modules/suppliers` in `backend/alembic.ini` `version_locations`
   so the Alembic CLI graph (heads/upgrade) resolves `supp_0001` (CI parity).
+- Registered `suppliers` in `pyproject.toml` module entry points so the module
+  is discoverable in production (`DENTALPIN_DEV_MODULE_SCAN=False`); closes the
+  entry-point parity gap reported by `tests/test_entry_point_parity.py`.
