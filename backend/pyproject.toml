@@ -96,6 +96,7 @@ payments = "app.modules.payments:PaymentsModule"
 periodontogram = "app.modules.periodontogram:PeriodontogramModule"
 whatsapp_kapso = "app.modules.whatsapp_kapso:WhatsappKapsoModule"
 documents = "app.modules.documents:DocumentsModule"
+whatsapp_webhook = "app.modules.whatsapp_webhook:WhatsappWebhookModule"
 
 [tool.setuptools.packages.find]
 where = ["."]

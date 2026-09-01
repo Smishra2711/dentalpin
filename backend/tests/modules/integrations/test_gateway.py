@@ -7,10 +7,10 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.email.encryption import encrypt_password
+from app.core.webhooks.signing import SIGNATURE_HEADER, verify
 from app.modules.integrations import client as webhook_client
 from app.modules.integrations.gateway import MAX_CONSECUTIVE_FAILURES, WebhookGateway
 from app.modules.integrations.models import WebhookDelivery, WebhookSubscription
-from app.modules.integrations.signing import SIGNATURE_HEADER, verify
 
 EVENT = "patient.created"
 

@@ -128,6 +128,10 @@ export const PERMISSIONS = {
     settingsRead: 'whatsapp_kapso.settings.read',
     settingsWrite: 'whatsapp_kapso.settings.write'
   },
+  whatsappWebhook: {
+    settingsRead: 'whatsapp_webhook.settings.read',
+    settingsWrite: 'whatsapp_webhook.settings.write'
+  },
   schedules: {
     clinicHoursRead: 'schedules.clinic_hours.read',
     clinicHoursWrite: 'schedules.clinic_hours.write',

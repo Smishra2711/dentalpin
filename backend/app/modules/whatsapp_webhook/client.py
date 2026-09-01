@@ -1,10 +1,9 @@
-"""Thin outbound HTTP client for webhook deliveries.
+"""Thin outbound HTTP client for the webhook adapter.
 
-Isolated from ``gateway.py`` so tests can ``monkeypatch.setattr`` this
-one function instead of patching httpx internals — same pattern as
-``whatsapp_kapso.client.send_message`` (mirrors
-``verifactu/services/aeat_client.py``: an ``httpx.AsyncClient`` per
-call with a timeout, mapping transport errors to one exception type).
+Isolated so tests ``monkeypatch.setattr`` this one function — same
+pattern as ``integrations.client.post_webhook`` (this module cannot
+import that one: optional modules never import each other; the shared
+pieces live in ``app.core.webhooks``).
 """
 
 from __future__ import annotations
@@ -21,12 +20,9 @@ class WebhookDeliveryError(Exception):
 
 
 async def post_webhook(url: str, body: bytes, headers: dict[str, str]) -> httpx.Response:
-    """POST ``body`` to ``url``. Raises :class:`WebhookDeliveryError` on any
-    transport failure (including a URL that now fails the SSRF check — a
-    subscription's target_url is re-validated here, not just at creation,
-    since a hostname can be repointed after the subscription was created);
-    a non-2xx HTTP response is returned normally — the caller decides how
-    to treat the status code."""
+    """POST ``body`` to ``url``. Raises :class:`WebhookDeliveryError` on
+    transport failures (including a URL that now fails the SSRF check);
+    a non-2xx HTTP response is returned normally."""
     try:
         await validate_before_dispatch(url)
     except UnsafeWebhookURLError as exc:

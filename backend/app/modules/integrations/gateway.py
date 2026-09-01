@@ -19,11 +19,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.email.encryption import decrypt_password
+from app.core.webhooks.signing import SIGNATURE_HEADER, sign
 
 from . import client as webhook_client
 from .client import WebhookDeliveryError
 from .models import WebhookDelivery, WebhookSubscription
-from .signing import SIGNATURE_HEADER, sign
 
 logger = logging.getLogger(__name__)
 

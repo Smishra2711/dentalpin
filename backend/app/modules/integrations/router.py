@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth.dependencies import ClinicContext, get_clinic_context, require_permission
 from app.core.schemas import ApiResponse
+from app.core.webhooks.url_safety import UnsafeWebhookURLError
 from app.database import get_db
 
 from .public import public_router
@@ -30,7 +31,6 @@ from .schemas import (
     WebhookSubscriptionUpdate,
 )
 from .service import IntegrationsService
-from .url_safety import UnsafeWebhookURLError
 
 router = APIRouter()
 router.include_router(public_router, prefix="/public")

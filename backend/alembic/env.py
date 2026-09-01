@@ -120,6 +120,9 @@ from app.modules.whatsapp_kapso.models import (  # noqa: F401
     WhatsappKapsoSettings,
     WhatsappKapsoTemplate,
 )
+from app.modules.whatsapp_webhook.models import (  # noqa: F401
+    WhatsappWebhookSettings,
+)
 
 ALEMBIC_DIR = Path(__file__).parent
 BACKEND_ROOT = ALEMBIC_DIR.parent
