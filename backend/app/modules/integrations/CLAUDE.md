@@ -19,7 +19,11 @@ delivers a JSON payload to that URL whenever a subscribed event fires.
 Token-authenticated public data-read API under `/api/v1/integrations/
 public/` — no JWT, authenticated by `Authorization: Bearer dp_...`,
 rate-limited per token (60/min + 1000/day, `X-RateLimit-*` headers),
-clinic-scoped off the token's `clinic_id`.
+clinic-scoped off the token's `clinic_id`. `GET /public/ping` is the
+token-introspection auth test (no scope); every authenticated request
+stamps the token's `last_used_at`; `GET /public/patients` accepts
+format-tolerant exact-match `phone`/`email`/`national_id` params (the
+search-or-create find primitive, issue #65 §5; ported from PR #348).
 
 Every payload carries `occurred_at`. Since Phase 2, each delivery also
 carries a stable `event_id` (same id across every subscription that

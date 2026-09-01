@@ -20,19 +20,21 @@ Design notes:
 from __future__ import annotations
 
 import time
+from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response, status
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.schemas import ApiResponse, PaginatedApiResponse
 from app.database import get_db
 
+from ..patients.models import Patient
 from ..patients.service import PatientService
 from .models import ApiToken
-from .schemas import PublicPatientResponse
+from .schemas import PublicPatientResponse, PublicTokenInfo
 from .service import _TOKEN_PREFIX, _hash_token
 
 public_router = APIRouter()
@@ -134,6 +136,9 @@ async def get_api_token_context(
         )
 
     rate_headers = _rate_limit(token.id)
+    # Usage tracking for the admin token list — committed with the
+    # request's session on success.
+    token.last_used_at = datetime.now(UTC)
     return PublicTokenContext(token=token, rate_headers=rate_headers)
 
 
@@ -152,6 +157,21 @@ def require_scope(scope: str):
     return _scope_checker
 
 
+@public_router.get("/ping", response_model=ApiResponse[PublicTokenInfo])
+async def ping(
+    response: Response,
+    ctx: Annotated[PublicTokenContext, Depends(get_api_token_context)],
+) -> ApiResponse[PublicTokenInfo]:
+    """Token introspection — what a Zapier/Make app calls as its auth
+    test. Any valid (unrevoked) token may ping; no scope required."""
+    response.headers.update(ctx.rate_headers)
+    return ApiResponse(
+        data=PublicTokenInfo(
+            clinic_id=ctx.clinic_id, token_name=ctx.token.name, scopes=list(ctx.scopes)
+        )
+    )
+
+
 @public_router.get("/patients", response_model=PaginatedApiResponse[PublicPatientResponse])
 async def list_public_patients(
     response: Response,
@@ -159,12 +179,34 @@ async def list_public_patients(
     _: Annotated[None, Depends(require_scope("patients:read"))],
     db: Annotated[AsyncSession, Depends(get_db)],
     search: str | None = None,
+    phone: str | None = Query(default=None, max_length=32),
+    email: str | None = Query(default=None, max_length=255),
+    national_id: str | None = Query(default=None, max_length=50),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
 ) -> PaginatedApiResponse[PublicPatientResponse]:
-    patients, total = await PatientService.list_patients(
-        db, ctx.clinic_id, search=search, page=page, page_size=page_size
-    )
+    """List/find patients for the token's clinic.
+
+    ``phone`` / ``email`` / ``national_id`` are format-tolerant exact
+    matches (whitespace/dashes and case ignored) — the find leg of
+    Zapier's search-or-create pattern (issue #65 §5). ``search`` stays
+    the generic name/phone substring filter.
+    """
+    if phone or email or national_id:
+        patients, total = await _find_patients(
+            db,
+            ctx.clinic_id,
+            phone=phone,
+            email=email,
+            national_id=national_id,
+            search=search,
+            page=page,
+            page_size=page_size,
+        )
+    else:
+        patients, total = await PatientService.list_patients(
+            db, ctx.clinic_id, search=search, page=page, page_size=page_size
+        )
     response.headers.update(ctx.rate_headers)
     return PaginatedApiResponse(
         data=[PublicPatientResponse.model_validate(p) for p in patients],
@@ -172,6 +214,44 @@ async def list_public_patients(
         page=page,
         page_size=page_size,
     )
+
+
+async def _find_patients(
+    db: AsyncSession,
+    clinic_id: UUID,
+    *,
+    phone: str | None,
+    email: str | None,
+    national_id: str | None,
+    search: str | None,
+    page: int,
+    page_size: int,
+) -> tuple[list[Patient], int]:
+    """Format-tolerant exact-match lookup (the structured find primitive)."""
+    stmt = select(Patient).where(Patient.clinic_id == clinic_id)
+    if phone:
+        normalized = phone.replace(" ", "").replace("-", "")
+        stmt = stmt.where(func.replace(func.replace(Patient.phone, " ", ""), "-", "") == normalized)
+    if email:
+        stmt = stmt.where(func.lower(Patient.email) == email.strip().lower())
+    if national_id:
+        stmt = stmt.where(func.upper(Patient.national_id) == national_id.strip().upper())
+    if search:
+        like = f"%{search.strip()}%"
+        stmt = stmt.where(or_(Patient.first_name.ilike(like), Patient.last_name.ilike(like)))
+    total = (await db.execute(select(func.count()).select_from(stmt.subquery()))).scalar_one()
+    rows = (
+        (
+            await db.execute(
+                stmt.order_by(Patient.created_at.desc())
+                .offset((page - 1) * page_size)
+                .limit(page_size)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return list(rows), total
 
 
 @public_router.get("/patients/{patient_id}", response_model=ApiResponse[PublicPatientResponse])

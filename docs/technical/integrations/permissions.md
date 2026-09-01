@@ -28,7 +28,11 @@ creation time. Enforced per-endpoint by the `require_scope()` dependency in
 
 | Scope | Allows | Required by |
 |-------|--------|-------------|
-| `patients:read` | Read patients for the token's clinic | `GET /api/v1/integrations/public/patients`, `GET /api/v1/integrations/public/patients/{id}` |
+| `patients:read` | Read patients for the token's clinic (incl. the structured `phone`/`email`/`national_id` find params) | `GET /api/v1/integrations/public/patients`, `GET /api/v1/integrations/public/patients/{id}` |
+
+`GET /api/v1/integrations/public/ping` (token introspection — the auth
+test a Zapier/Make app runs) requires a valid token but no scope.
+Every authenticated public request stamps the token's `last_used_at`.
 
 ## Role assignment
 
