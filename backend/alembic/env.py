@@ -44,7 +44,7 @@ from app.core.plugins.db_models import (  # noqa: F401
     ModuleRecord,
 )
 from app.database import Base
-from app.modules.agenda.models import Appointment, AppointmentTreatment, Cabinet  # noqa: F401
+from app.modules.agenda.models import Appointment, Cabinet  # noqa: F401
 from app.modules.billing.models import (  # noqa: F401
     Invoice,
     InvoiceHistory,
@@ -65,6 +65,7 @@ from app.modules.catalog.models import (  # noqa: F401
     TreatmentOdontogramMapping,
     VatType,
 )
+from app.modules.documents.models import GeneratedDocument  # noqa: F401
 from app.modules.media.models import Document, MediaAttachment  # noqa: F401
 from app.modules.notifications.models import (  # noqa: F401
     ClinicChannelSettings,
@@ -111,6 +112,7 @@ from app.modules.schedules.models import (  # noqa: F401
     ScheduleShift,
 )
 from app.modules.treatment_plan.models import (  # noqa: F401
+    AppointmentTreatment,
     PlannedTreatmentItem,
     TreatmentPlan,
 )
