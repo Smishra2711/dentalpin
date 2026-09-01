@@ -98,7 +98,7 @@ Clinical-note created events (`clinical_notes.{administrative,diagnosis,treatmen
 ## Agenda planned-work provider
 
 ``agenda_provider.py`` implements agenda's ``PlannedWorkProvider``
-protocol (registered from ``on_activate``, issues #309/#325/#337):
+protocol (registered in ``on_activate()`` — ADR 0020, issues #309/#325/#337):
 the full ``Appointment.treatments`` eager-load options, the
 booking-time validation rules (draft/pending/active plans bookable —
 #108 — items only while ``pending``), creation of the link rows with
