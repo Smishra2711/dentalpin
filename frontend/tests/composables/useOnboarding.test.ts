@@ -20,12 +20,8 @@ const clinic = (onboarding: Record<string, unknown> = {}) => ({
 
 describe('useOnboarding', () => {
   beforeEach(async () => {
-    // The Nuxt vitest environment boots the app's settings/registry plugin
-    // (and each module's), which register their own getting-started rules.
-    // Clear the whole shared registry before staging the test's stubs so
-    // those core rules don't leak into these assertions.
-    const { resetGettingStartedRules, registerGettingStartedRule } = await import('~/composables/useSettingsRegistry')
-    resetGettingStartedRules()
+    const { registerGettingStartedRule, unregisterGettingStartedRule } = await import('~/composables/useSettingsRegistry')
+    for (const id of ['a', 'b', 'c', 'opt']) unregisterGettingStartedRule(id)
     registerGettingStartedRule({ id: 'b', labelKey: 'b', to: '/b', order: 20, when: () => true })
     registerGettingStartedRule({ id: 'a', labelKey: 'a', to: '/a', order: 10, when: () => false })
     registerGettingStartedRule({ id: 'opt', labelKey: 'opt', to: '/opt', order: 5, optional: true, when: () => true })

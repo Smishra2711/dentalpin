@@ -59,8 +59,7 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
     '@nuxt/ui',
-    '@nuxtjs/i18n',
-    '@nuxt/test-utils/module'
+    '@nuxtjs/i18n'
   ],
 
   components: [

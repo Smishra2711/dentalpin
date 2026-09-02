@@ -4,7 +4,7 @@ Working notes for AI agents on DentalPin.
 
 ## Project
 
-DentalPin — open-source dental clinic management software with a modular plugin architecture.
+DentalPin — source-available (BSL 1.1) dental clinic management software with a modular plugin architecture.
 
 | Component | Tech |
 |-----------|------|

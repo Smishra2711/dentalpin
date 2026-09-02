@@ -1,12 +1,10 @@
 {
   // https://nuxt.com/docs/guide/concepts/typescript
-  // NOTE: we deliberately use the `extends` form instead of Nuxt's
-  // project-references form. Under `vue-tsc -b` (build mode) TypeScript
-  // does not resolve layered auto-imports declared in
-  // `.nuxt/types/imports.d.ts` across project boundaries, producing
-  // TS2304 "Cannot find name 'useXxx'" for every extended-layer
-  // composable (nuxt/nuxt#34145, #34212). The `extends` form keeps the
-  // layer auto-import globals visible while still type-checking the host
-  // app and every module layer via the `include` in nuxt.config.
-  "extends": "./.nuxt/tsconfig.json"
+  "files": [],
+  "references": [
+    { "path": "./.nuxt/tsconfig.app.json" },
+    { "path": "./.nuxt/tsconfig.server.json" },
+    { "path": "./.nuxt/tsconfig.shared.json" },
+    { "path": "./.nuxt/tsconfig.node.json" }
+  ]
 }
