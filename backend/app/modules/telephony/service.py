@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
 from app.core.email.encryption import encrypt_password
@@ -166,7 +167,7 @@ class TelephonyService:
         now = datetime.now(UTC)
         if row is None:
             patient = await TelephonyService.match_patient(db, clinic_id, from_number)
-            row = CallLog(
+            fresh = CallLog(
                 clinic_id=clinic_id,
                 provider=provider,
                 call_id=call_id,
@@ -177,7 +178,24 @@ class TelephonyService:
                 patient_id=patient.id if patient else None,
                 started_at=_parse_ts(payload.get("started_at")) or now,
             )
-            db.add(row)
+            try:
+                # Savepoint: two simultaneous *first* events of one call can
+                # both miss the SELECT above; the unique constraint arbitrates
+                # and the loser adopts the winner's row instead of 500ing.
+                async with db.begin_nested():
+                    db.add(fresh)
+                    await db.flush()
+                row = fresh
+            except IntegrityError:
+                row = (
+                    await db.execute(
+                        select(CallLog).where(
+                            CallLog.clinic_id == clinic_id,
+                            CallLog.provider == provider,
+                            CallLog.call_id == call_id,
+                        )
+                    )
+                ).scalar_one()
 
         row.status = status
         if status == "answered" and row.answered_at is None:

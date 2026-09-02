@@ -151,3 +151,18 @@ async def test_ingest_accepts_and_ignores_unusable_event(
     )
     assert res.status_code == 200
     assert res.json()["call_log_id"] is None
+
+
+@pytest.mark.asyncio
+async def test_status_probe(client: AsyncClient, auth_headers, test_clinic):
+    res = await client.get("/api/v1/telephony/status", headers=auth_headers)
+    assert res.status_code == 200
+    assert res.json()["data"] == {"active": False}
+
+    await _configure(client, auth_headers)
+    res = await client.get("/api/v1/telephony/status", headers=auth_headers)
+    assert res.json()["data"] == {"active": True}
+
+    await client.put(SETTINGS, json={"is_active": False}, headers=auth_headers)
+    res = await client.get("/api/v1/telephony/status", headers=auth_headers)
+    assert res.json()["data"] == {"active": False}
