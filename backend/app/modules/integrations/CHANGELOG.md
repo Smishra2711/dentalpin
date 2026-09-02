@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+### CI hygiene (ruff 0.16.5 drift)
+
+- Reformatted the two multi-line `client.get(...)` calls in
+  `tests/modules/integrations/test_public_api.py` that the newest (unpinned)
+  ruff `format --check` flags — keeps `backend-lint` green for any PR built on
+  the current tree.
+
+### Phase 2 follow-up (ported from PR #348)
+
+- `GET /public/ping` — token introspection (clinic, name, scopes); the
+  auth test a Zapier/Make app calls. Valid token required, no scope.
+- Authenticated public requests now stamp `ApiToken.last_used_at`
+  (the column existed since `int_0002` but was never written).
+- `GET /public/patients` grows format-tolerant exact-match params
+  `phone` / `email` / `national_id` (whitespace/dash/case ignored) —
+  the find leg of the search-or-create pattern (issue #65 §5).
+  The generic `search` filter is unchanged.
+
 ### Phase 2 (issue #65)
 
 - **Six new webhook triggers** (appointment.scheduled, appointment.cancelled,
