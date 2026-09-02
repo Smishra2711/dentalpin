@@ -25,6 +25,13 @@ frontend as a Nuxt layer under its own Python package.
 
 ### Fixed
 
+- Production deploy hardening (#351): `docker-compose.prod.yml` pulls
+  from `ghcr.io/dentalpin/dentalpin-*`, the namespace `release.yml`
+  actually publishes to, instead of the stale personal one; the frontend
+  image installs with `npm ci` and runs as `node` instead of root; Caddy
+  sets HSTS, `X-Content-Type-Options`, `Referrer-Policy` and
+  `frame-ancestors 'self'`; `.env.prod.example` pins a release instead of
+  `latest` (thanks @lamanji).
 - Batch uninstall of a dependency pair no longer strands the dependent
   in `to_remove` (#286): the pending processor now runs removals in
   reverse topological order (dependents first), after installs and
