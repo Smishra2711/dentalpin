@@ -73,10 +73,25 @@ const PRIMARY_METHODS: MethodOption[] = [
   { value: 'bank_transfer', icon: 'i-lucide-building-2' },
   { value: 'insurance', icon: 'i-lucide-shield' }
 ]
-const SECONDARY_METHODS: MethodOption[] = [
-  { value: 'direct_debit', icon: 'i-lucide-repeat' },
-  { value: 'other', icon: 'i-lucide-more-horizontal' }
+// India-only methods (#365 / #263): shown to clinics whose server-side
+// country is IN, same gate india_gst uses (never a client-editable field).
+const { currentClinic } = useClinic()
+// The shared Clinic type doesn't surface `country`; read it the way
+// india_gst's slot gate does (top-level or legacy settings.country).
+type ClinicWithCountry = { country?: string | null, settings?: { country?: string | null } | null } | null
+const clinicCountry = computed(() => {
+  const c = currentClinic.value as ClinicWithCountry
+  return c?.country ?? c?.settings?.country ?? null
+})
+const INDIA_METHODS: MethodOption[] = [
+  { value: 'upi', icon: 'i-lucide-smartphone-nfc' },
+  { value: 'netbanking', icon: 'i-lucide-landmark' }
 ]
+const SECONDARY_METHODS = computed<MethodOption[]>(() => [
+  { value: 'direct_debit', icon: 'i-lucide-repeat' },
+  ...(clinicCountry.value === 'IN' ? INDIA_METHODS : []),
+  { value: 'other', icon: 'i-lucide-more-horizontal' }
+])
 
 function buildInitialAllocations(): PaymentAllocationCreate[] {
   const amount = Number(props.defaultAmount ?? 0)

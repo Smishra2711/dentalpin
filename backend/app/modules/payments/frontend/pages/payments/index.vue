@@ -191,6 +191,10 @@ function methodIcon(method: string): string {
       return 'i-lucide-repeat'
     case 'insurance':
       return 'i-lucide-shield'
+    case 'upi':
+      return 'i-lucide-smartphone-nfc'
+    case 'netbanking':
+      return 'i-lucide-landmark'
     default:
       return 'i-lucide-circle-dollar-sign'
   }
@@ -236,6 +240,11 @@ function formatDate(s: string | undefined): string {
       @update:page="(v) => (page = v)"
     >
       <template #actions>
+        <!-- Gateway modules add their own "Collect via …" action here (#365). -->
+        <ModuleSlot
+          name="payments.collect.actions"
+          :ctx="{}"
+        />
         <UButton
           v-if="can(PERMISSIONS.payments.recordWrite)"
           color="primary"
@@ -401,6 +410,11 @@ function formatDate(s: string | undefined): string {
                   />
                   {{ formatDate(p.payment_date) }} · {{ t(`payments.methods.${p.method}`) }}
                 </div>
+                <!-- Provider badge / settlement state from a gateway module (#365). -->
+                <ModuleSlot
+                  name="payments.list.row.meta"
+                  :ctx="{ payment: p }"
+                />
               </div>
               <div class="text-right shrink-0">
                 <Money
@@ -429,6 +443,12 @@ function formatDate(s: string | undefined): string {
                 {{ a.amount }} · {{ a.label }}
               </UBadge>
             </div>
+            <!-- Provider ids / event log from a gateway module (#365). The list
+                 row is the closest thing to a payment detail view today. -->
+            <ModuleSlot
+              name="payments.detail.sections"
+              :ctx="{ payment: p }"
+            />
             <div
               v-if="can(PERMISSIONS.payments.recordRefund) && Number(p.net_amount) > 0"
               class="flex justify-end"
