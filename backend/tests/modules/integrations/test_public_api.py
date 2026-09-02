@@ -232,9 +232,7 @@ async def test_cross_clinic_isolation(
 async def test_ping_introspects_token(client: AsyncClient, auth_headers: dict, test_clinic):
     token = await _create_token(client, auth_headers, ["patients:read"])
 
-    resp = await client.get(
-        f"{PUBLIC_BASE}/ping", headers={"Authorization": f"Bearer {token}"}
-    )
+    resp = await client.get(f"{PUBLIC_BASE}/ping", headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 200, resp.text
     body = resp.json()["data"]
     assert body["clinic_id"] == str(test_clinic.id)
@@ -255,9 +253,7 @@ async def test_public_call_stamps_last_used_at(
     listed = (await client.get(TOKENS_BASE, headers=auth_headers)).json()["data"]
     assert listed[0]["last_used_at"] is None
 
-    resp = await client.get(
-        f"{PUBLIC_BASE}/ping", headers={"Authorization": f"Bearer {token}"}
-    )
+    resp = await client.get(f"{PUBLIC_BASE}/ping", headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 200
 
     listed = (await client.get(TOKENS_BASE, headers=auth_headers)).json()["data"]
