@@ -89,6 +89,19 @@ async def update_settings(
     return ApiResponse(data=_settings_response(settings, secret=secret))
 
 
+@router.get("/status", response_model=ApiResponse[dict])
+async def gateway_status(
+    ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
+    _: Annotated[None, Depends(require_permission("telephony.calls.read"))],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> ApiResponse[dict]:
+    """Cheap probe for the screen-pop plugin: is the gateway configured
+    and active for this clinic? Lets clients back off the 15s poll to a
+    slow re-check instead of hammering /calls/active for nothing."""
+    settings = await TelephonyService.get_settings(db, ctx.clinic_id)
+    return ApiResponse(data={"active": bool(settings and settings.is_active)})
+
+
 @router.get("/calls", response_model=PaginatedApiResponse[CallLogResponse])
 async def list_calls(
     ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
