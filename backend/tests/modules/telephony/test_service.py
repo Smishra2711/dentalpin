@@ -150,3 +150,50 @@ async def test_unknown_caller_event_published(db_session: AsyncSession, test_cli
         assert seen[0]["call_log_id"] == str(row.id)
     finally:
         event_bus.unsubscribe(EventType.CALL_UNKNOWN_CALLER, capture)
+
+
+@pytest.mark.asyncio
+async def test_first_event_race_adopts_winner_row(
+    db_session: AsyncSession, test_clinic, monkeypatch
+):
+    """Two simultaneous first events of one call: the loser of the unique
+    constraint must adopt the winner's row instead of raising."""
+    from sqlalchemy import text
+
+    settings = await _settings(db_session, test_clinic.id)
+
+    original = TelephonyService.match_patient
+
+    async def match_and_race(db, clinic_id, number):
+        # Simulate the concurrent writer landing between our SELECT (which
+        # found nothing) and our INSERT: the row exists by flush time.
+        await db.execute(
+            text(
+                "INSERT INTO telephony_call_logs "
+                "(id, clinic_id, provider, call_id, direction, from_number, status, "
+                " created_at, updated_at) "
+                "VALUES (gen_random_uuid(), :clinic, 'webhook', 'c-race', 'inbound', "
+                " '+34600112233', 'ringing', now(), now())"
+            ),
+            {"clinic": str(clinic_id)},
+        )
+        return await original(db, clinic_id, number)
+
+    monkeypatch.setattr(TelephonyService, "match_patient", match_and_race)
+    row = await TelephonyService.ingest_event(
+        db_session, settings, _event("call.answered", call_id="c-race")
+    )
+    assert row is not None
+    assert row.call_id == "c-race"
+    assert row.status == "answered"  # the update still applied to the winner's row
+
+    from sqlalchemy import func, select
+
+    from app.modules.telephony.models import CallLog
+
+    count = (
+        await db_session.execute(
+            select(func.count()).select_from(CallLog).where(CallLog.call_id == "c-race")
+        )
+    ).scalar_one()
+    assert count == 1

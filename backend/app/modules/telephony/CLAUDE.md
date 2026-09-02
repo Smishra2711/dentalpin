@@ -16,6 +16,7 @@ Routes at `/api/v1/telephony/`:
 | Method | Path | Auth |
 |---|---|---|
 | GET/PUT | `/settings` | `telephony.settings.read` / `.write` |
+| GET | `/status` | `telephony.calls.read` (pop-poll gate probe) |
 | GET | `/calls` | `telephony.calls.read` |
 | GET | `/calls/active` | `telephony.calls.read` (the pop poll) |
 | PUT | `/calls/{id}/note` | `telephony.calls.write` |
@@ -91,7 +92,13 @@ that generated it, rotation via `PUT /settings {"rotate_secret": true}`.
   call-flows/Zaps against it; version, don't rename.
 - The pop is polling (15s) by design in phase 1 — a realtime channel is
   the documented upgrade path in issue #64 §3, not something to bolt on
-  here ad hoc.
+  here ad hoc. The plugin gates the poll on `GET /status` (re-checked
+  every 10 min) so unconfigured clinics don't pay the 15s cadence, and
+  caps its seen-ids set at 200.
+- Two simultaneous *first* events of one call race past the SELECT; the
+  savepoint + `IntegrityError` adopt-the-winner path in
+  `ingest_event` is what keeps the loser from 500ing — don't "simplify"
+  it away.
 - Vendor adapters (aircall/3cx/twilio_voice) belong in their own
   community modules that POST into this gateway, not in this module.
 
