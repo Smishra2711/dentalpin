@@ -310,14 +310,16 @@ tokenization means under GDPR.
 
 4. **Free-text-returning tools excluded** — tools carrying
    `Tool.exposes_free_text=True` are filtered out of the tool list
-   offered to the cloud provider when redaction is enabled.  None of
-   the v1 tools return free prose; this guard is in place for future
-   tools that do.
+   offered to the cloud provider when redaction is enabled.  Today
+   that flag is set by tools in `recalls`, `activity_journal` and
+   `expenses` (grep `exposes_free_text=True`); those tools are simply
+   unavailable to the model while redaction is on.
 
 5. **Deterministic tokens** — the same real value always maps to the
-   same token within a session (`SHA-1(real)[:6]`), so the model can
-   reason about "the same patient" across turns without seeing the real
-   value.
+   same token (`SHA-1(real)[:6]`, unsalted), within a session *and*
+   across sessions, so the model can reason about "the same patient"
+   across turns without seeing the real value, and a resumed
+   conversation can rebuild its symbol table by re-redacting history.
 
 ### What is NOT guaranteed
 
@@ -330,18 +332,21 @@ tokenization means under GDPR.
 
 2. **Anonymization** — tokens are deterministic short hashes, not
    random nonces.  This is **pseudonymization** under GDPR Article
-   4(5)), not anonymization.  A party that possesses the symbol table
-   (i.e. the DentalPin server) can reverse every token.  The cloud
-   provider receives only the tokenized form and cannot reverse it
-   without the server's secret, but the distinction matters for legal
-   classification.
+   4(5), not anonymization.  A party that possesses the symbol table
+   (i.e. the DentalPin server) can reverse every token.  There is no
+   secret or salt in the hash: the cloud provider receives only the
+   tokenized form and holds no table, but a party with a candidate
+   list (common names, phone-number ranges) can confirm a guess by
+   hashing it.  Tokens reduce identifiability; they do not remove it.
 
-3. **Aggregation attacks** — a cloud provider observing many
-   tokenized sessions could theoretically correlate repeated tokens
-   across conversations.  The per-session symbol table limits this to
-   within-session correlation only (tokens are regenerated per
-   session), but cross-session patterns in token frequency remain
-   theoretically observable.
+3. **Cross-session correlation** — because tokens are unsalted and
+   deterministic, the same patient yields the same token in every
+   conversation, every session and every clinic on the server.  A cloud
+   provider observing many sessions can therefore link a token across
+   conversations and build frequency patterns.  The per-session symbol
+   table bounds what the server rehydrates, not what the provider can
+   correlate.  A per-clinic salt would confine correlation to one
+   clinic without breaking resume; it is not implemented.
 
 ### GDPR and deployment guidance
 
@@ -355,6 +360,7 @@ tokenization means under GDPR.
   data-processing agreement.
 - The gap is acceptable for v1 because: (a) the primary interaction
   pattern is structured tool calls (search/book/cancel), not free-text
-  clinical notes; (b) the model is instructed not to echo patient names
-  in responses; (c) free-text tools are excluded from the cloud path.
-  Revisit if real transcripts show free-text PII leakage is common.
+  clinical notes; (b) rehydration is server-side, so the model only
+  ever sees and emits tokens; (c) free-text tools are excluded from the
+  cloud path.  Revisit if real transcripts show free-text PII leakage
+  is common.
