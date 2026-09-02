@@ -1,8 +1,8 @@
 # Production stack from prebuilt images. No repo clone, no build.
 #
-#   curl -O https://raw.githubusercontent.com/martinezsalmeron/dentalpin/main/docker-compose.prod.yml
-#   curl -O https://raw.githubusercontent.com/martinezsalmeron/dentalpin/main/Caddyfile
-#   curl -o .env https://raw.githubusercontent.com/martinezsalmeron/dentalpin/main/.env.prod.example
+#   curl -O https://raw.githubusercontent.com/dentalpin/dentalpin/main/docker-compose.prod.yml
+#   curl -O https://raw.githubusercontent.com/dentalpin/dentalpin/main/Caddyfile
+#   curl -o .env https://raw.githubusercontent.com/dentalpin/dentalpin/main/.env.prod.example
 #   # edit .env, then:
 #   docker compose -f docker-compose.prod.yml up -d
 #
