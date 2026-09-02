@@ -279,3 +279,88 @@ New module ⇒ `app/modules/copilot/{CLAUDE.md, CHANGELOG.md}`; `docs/technical/
 - **Turn resume correctness** — resuming from `copilot_messages` must reconstruct the exact `tool_use`/`tool_result` ordering the provider expects; cover with the inline-confirm test.
 - **SSE session lifetime** (§8) — verify the generator-scoped session under load; no reliance on `Depends(get_db)` during streaming.
 - **`agenda.book_appointment` validation** — the tool must surface the service's conflict/validation errors as a structured `tool_result` so the model can explain failures rather than the stream 500-ing.
+
+## 15. Redaction guarantees and limits
+
+The PHI boundary in `app/core/agents/redaction.py` tokenizes patient
+identifiers before any payload reaches a cloud LLM provider.  This
+section states precisely what is guaranteed, what is not, and what the
+tokenization means under GDPR.
+
+### What is guaranteed
+
+1. **Structured fields** — any JSON key matching the PII denylist
+   (`first_name`, `last_name`, `full_name`, `name`, `patient_name`,
+   `phone`, `mobile`, `telephone`, `phone_number`, `email`,
+   `email_address`, `dni`, `nif`, `tax_id`, `national_id`) is replaced
+   with a deterministic token (`NAME_<hash>`, `PHONE_<hash>`, etc.)
+   before the payload leaves the server.  UUID-valued reference keys
+   (`id`, `patient_id`, `appointment_id`) are tokenized when the value
+   is a valid UUID.
+
+2. **Seeded context entities** — names and IDs from the conversation's
+   `context_jsonb` blob are pre-loaded into the per-session symbol table
+   at session start, so they are redacted even if they appear as
+   free-text later in the conversation.
+
+3. **Known-entity free text** — substring replacement of every value
+   already present in the symbol table.  If "María García" was loaded
+   as a structured field, any subsequent user-typed occurrence of that
+   exact string is tokenized.
+
+4. **Free-text-returning tools excluded** — tools carrying
+   `Tool.exposes_free_text=True` are filtered out of the tool list
+   offered to the cloud provider when redaction is enabled.  Today
+   that flag is set by tools in `recalls`, `activity_journal` and
+   `expenses` (grep `exposes_free_text=True`); those tools are simply
+   unavailable to the model while redaction is on.
+
+5. **Deterministic tokens** — the same real value always maps to the
+   same token (`SHA-1(real)[:6]`, unsalted), within a session *and*
+   across sessions, so the model can reason about "the same patient"
+   across turns without seeing the real value, and a resumed
+   conversation can rebuild its symbol table by re-redacting history.
+
+### What is NOT guaranteed
+
+1. **Unknown free-text PII** — a name, phone number, or identifier
+   typed by the user as free text for an entity **not yet loaded** into
+   the symbol table cannot be caught without named-entity recognition
+   (NER).  The orchestrator performs substring replacement of *known*
+   values only; novel identifiers pass through to the provider in
+   cleartext.  NER is deferred to a later milestone.
+
+2. **Anonymization** — tokens are deterministic short hashes, not
+   random nonces.  This is **pseudonymization** under GDPR Article
+   4(5), not anonymization.  A party that possesses the symbol table
+   (i.e. the DentalPin server) can reverse every token.  There is no
+   secret or salt in the hash: the cloud provider receives only the
+   tokenized form and holds no table, but a party with a candidate
+   list (common names, phone-number ranges) can confirm a guess by
+   hashing it.  Tokens reduce identifiability; they do not remove it.
+
+3. **Cross-session correlation** — because tokens are unsalted and
+   deterministic, the same patient yields the same token in every
+   conversation, every session and every clinic on the server.  A cloud
+   provider observing many sessions can therefore link a token across
+   conversations and build frequency patterns.  The per-session symbol
+   table bounds what the server rehydrates, not what the provider can
+   correlate.  A per-clinic salt would confine correlation to one
+   clinic without breaking resume; it is not implemented.
+
+### GDPR and deployment guidance
+
+- The redaction boundary implements **pseudonymization** (GDPR Art.
+  4(5)) as a technical measure under Art. 25 (data protection by
+  design) and Art. 32 (security of processing).
+- Deployments processing health data at scale (which dental records
+  are) should include the copilot's data flow in their **Data
+  Protection Impact Assessment** (DPIA, Art. 35) — specifically the
+  pseudonymization scope, the free-text gap, and the cloud provider's
+  data-processing agreement.
+- The gap is acceptable for v1 because: (a) the primary interaction
+  pattern is structured tool calls (search/book/cancel), not free-text
+  clinical notes; (b) rehydration is server-side, so the model only
+  ever sees and emits tokens; (c) free-text tools are excluded from the
+  cloud path.  Revisit if real transcripts show free-text PII leakage
+  is common.
