@@ -108,17 +108,9 @@ async def _update_supplier(ctx: AgentContext, params: UpdateSupplierArgs) -> dic
         return {"error": "Supplier not found"}
     contact, supplier = result
 
-    payload = SupplierUpdate(
-        name=params.name,
-        phone=params.phone,
-        email=params.email,
-        address=params.address,
-        notes=params.notes,
-        website=params.website,
-        payment_terms=params.payment_terms,
-        lead_time_days=params.lead_time_days,
-        is_preferred=params.is_preferred,
-    )
+    # Only forward the fields the agent actually set — passing every attribute
+    # explicitly would mark them all as "set" and wipe the omitted ones.
+    payload = SupplierUpdate(**params.model_dump(exclude_unset=True, exclude={"supplier_id"}))
     contact, supplier = await SupplierService.update_supplier(ctx.db, contact, supplier, payload)
     return _supplier_summary(contact, supplier)
 

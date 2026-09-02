@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
@@ -10,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.auth.models import Clinic
 from app.modules.suppliers.schemas import SupplierCreate, SupplierUpdate
 from app.modules.suppliers.service import SupplierService
+from app.modules.suppliers.tools import UpdateSupplierArgs, _update_supplier
 
 
 @pytest.mark.asyncio
@@ -137,3 +139,23 @@ async def test_cross_clinic_isolation(db_session: AsyncSession, test_clinic: Cli
 
     result = await SupplierService.get_supplier(db_session, test_clinic.id, contact.id)
     assert result is None
+
+
+@pytest.mark.asyncio
+async def test_update_tool_partial_update_keeps_other_fields(
+    db_session: AsyncSession, test_clinic: Clinic
+):
+    contact, _ = await SupplierService.create_supplier(
+        db_session,
+        test_clinic.id,
+        SupplierCreate(name="Acme", phone="555-0100", payment_terms="NET30"),
+    )
+    ctx = SimpleNamespace(db=db_session, clinic_id=test_clinic.id)
+    out = await _update_supplier(
+        ctx, UpdateSupplierArgs(supplier_id=str(contact.id), is_preferred=True)
+    )
+    assert "error" not in out
+    assert out["name"] == "Acme"
+    assert out["phone"] == "555-0100"
+    assert out["payment_terms"] == "NET30"
+    assert out["is_preferred"] is True
