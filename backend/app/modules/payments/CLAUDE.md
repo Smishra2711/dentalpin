@@ -127,9 +127,10 @@ the public endpoints.
 
 - **Methods are a closed list** — `PAYMENT_METHODS` (models) and the
   `PaymentMethod` Literal (schemas) must stay in sync; `upi` /
-  `netbanking` (#365) exist for India gateway modules and the
-  `PaymentCreateModal` shows them only when the clinic's server-side
-  country is `IN`.
+  `netbanking` (#365) exist for India gateway modules; the create modal
+  and the list's method filter show them only when the clinic's
+  server-side country is `IN` (`useClinicCountry`). The refund modal
+  always offers the source payment's method, whatever the country.
 - **`idempotency_key` short-circuits `record_payment`** (#365): a key
   hit returns the existing payment *before* any validation — the
   caller's retry gets the original row, allocations untouched. Unique

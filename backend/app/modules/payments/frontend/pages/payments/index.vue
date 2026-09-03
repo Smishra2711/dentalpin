@@ -104,10 +104,16 @@ const {
   fetcher
 })
 
-const PAYMENT_METHODS: PaymentMethod[] = ['cash', 'card', 'bank_transfer', 'direct_debit', 'insurance', 'other']
+const clinicCountry = useClinicCountry()
+// upi / netbanking (#365) only for IN clinics, same gate as the create modal.
+const PAYMENT_METHODS = computed<PaymentMethod[]>(() => [
+  'cash', 'card', 'bank_transfer', 'direct_debit', 'insurance',
+  ...(clinicCountry.value === 'IN' ? ['upi', 'netbanking'] as PaymentMethod[] : []),
+  'other'
+])
 
 const methodItems = computed(() =>
-  PAYMENT_METHODS.map(m => ({ label: t(`payments.methods.${m}`), value: m }))
+  PAYMENT_METHODS.value.map(m => ({ label: t(`payments.methods.${m}`), value: m }))
 )
 
 const sortOptions = computed(() => [

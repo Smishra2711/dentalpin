@@ -75,14 +75,7 @@ const PRIMARY_METHODS: MethodOption[] = [
 ]
 // India-only methods (#365 / #263): shown to clinics whose server-side
 // country is IN, same gate india_gst uses (never a client-editable field).
-const { currentClinic } = useClinic()
-// The shared Clinic type doesn't surface `country`; read it the way
-// india_gst's slot gate does (top-level or legacy settings.country).
-type ClinicWithCountry = { country?: string | null, settings?: { country?: string | null } | null } | null
-const clinicCountry = computed(() => {
-  const c = currentClinic.value as ClinicWithCountry
-  return c?.country ?? c?.settings?.country ?? null
-})
+const clinicCountry = useClinicCountry()
 const INDIA_METHODS: MethodOption[] = [
   { value: 'upi', icon: 'i-lucide-smartphone-nfc' },
   { value: 'netbanking', icon: 'i-lucide-landmark' }
