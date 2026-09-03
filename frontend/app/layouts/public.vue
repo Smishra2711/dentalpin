@@ -13,14 +13,14 @@
           name="i-lucide-tooth"
           class="w-6 h-6 text-[var(--ui-primary)]"
         />
-        <span class="font-semibold tracking-tight">DentalPin</span>
+        <span class="font-semibold tracking-tight">Orident</span>
       </div>
     </header>
     <main class="flex-1">
       <slot />
     </main>
     <footer class="border-t border-[var(--ui-border)] py-4 text-center text-xs text-[var(--ui-text-muted)]">
-      <span>DentalPin · {{ new Date().getFullYear() }}</span>
+      <span>A Product of W Mishra · {{ new Date().getFullYear() }}</span>
     </footer>
   </div>
 </template>

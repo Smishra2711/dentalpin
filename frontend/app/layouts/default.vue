@@ -112,7 +112,7 @@ function isActive(to: string): boolean {
             v-if="!isSidebarCollapsed"
             class="text-h2 text-default truncate"
           >
-            DentalPin
+            Orident PMS
           </span>
         </NuxtLink>
       </div>

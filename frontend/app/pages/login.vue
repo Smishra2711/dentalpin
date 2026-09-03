@@ -113,7 +113,7 @@ watch(() => formState.password, () => {
         class="mx-auto mb-3"
       >
       <h1 class="text-h1 text-default">
-        DentalPin
+        Orident
       </h1>
       <p class="text-caption text-muted mt-1">
         {{ t('app.tagline') }}
@@ -189,7 +189,7 @@ watch(() => formState.password, () => {
     <DemoCredentialsHint />
 
     <p class="text-center text-caption text-subtle mt-6">
-      &copy; {{ new Date().getFullYear() }} DentalPin
+      &copy; {{ new Date().getFullYear() }}. A Product of W Mishra
     </p>
   </div>
 </template>
