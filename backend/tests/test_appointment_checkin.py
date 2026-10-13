@@ -138,6 +138,8 @@ def test_checkin_secret_hard_required_in_production(monkeypatch: pytest.MonkeyPa
     assert _checkin_secret() == settings.SECRET_KEY
     monkeypatch.setattr(settings, "AGENDA_PUBLIC_SECRET_KEY", " " * 32)
     assert _checkin_secret() == settings.SECRET_KEY
+    monkeypatch.setattr(settings, "AGENDA_PUBLIC_SECRET_KEY", "a" * 32 + " ")
+    assert _checkin_secret() == "a" * 32
 
 
 @pytest.mark.asyncio
