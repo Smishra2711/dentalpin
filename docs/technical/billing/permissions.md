@@ -1,6 +1,6 @@
 ---
 module: billing
-last_verified_commit: 2195ad0e
+last_verified_commit: 562fa006
 ---
 
 # Billing — permissions
