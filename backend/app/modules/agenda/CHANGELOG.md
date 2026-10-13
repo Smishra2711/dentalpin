@@ -6,6 +6,7 @@
   (missing, blank, padded, or short values refuse to boot via the shared
   `Settings` validator, alongside `BUDGET_PUBLIC_SECRET_KEY`); the
   dev-only fallback is unchanged.
+- chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
 
 - fix(#590): `validate_professional_access` tolerates duplicated
   membership rows (`.limit(1)` existence read, same fix as #598 for

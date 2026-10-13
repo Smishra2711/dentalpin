@@ -2,6 +2,30 @@
 
 ## Unreleased
 
+- fix(security): `assigned_professional_id` is now validated as a
+  professional member of the budget's clinic, on create and on update.
+  It was a bare FK to `users`, so a caller could name any user id: an
+  unknown one failed as a `ForeignKeyViolation` (a 500 for a bad
+  request) and one belonging to **another clinic** was stored and then
+  rendered back with that user's name. The check mirrors
+  `treatment_plan._validate_professional_in_clinic`, whose docstring
+  already names the threat; `agenda` does the same inline. The create
+  route also gained the `ValueError` → 400 mapping the update route
+  already had.
+- fix: the PUT response carried the new `assigned_professional_id` with a
+  stale `assigned_professional` object (null, or the previously assigned
+  doctor), because the post-update reload hit the identity map with the
+  relationship already loaded. The relationship is expired when the FK
+  changes.
+
+- fix(#539): `GET /public/budgets/{token}/meta` no longer discloses
+  patient identity or budget contents before the knowledge factor; it
+  answers with routing state plus the clinic fields the page needs
+  (name, contacts, locale, currency), and the welcome greeting is the
+  generic title. The old clinic-scoped patient-name lookup is gone
+  with the removed query.
+- chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
+
 - fix(#531): the verify permanent lockout stays budget-wide on purpose
   (10 retained failures lock the token), and the staff `unlock-public`
   recovery path is now documented in ADR 0006; unlocking also drops
@@ -14,9 +38,6 @@
   `BudgetAccessLog` with `success=True` (so they do not count towards
   the lockout), like the signed-PDF download.
 - feat(i18n): Telugu (`te`) quote PDF labels.
-- fix: the public `/meta` patient-name lookup is now clinic-scoped
-  (`AND clinic_id`). The id already comes from the budget's own row so this
-  was not exploitable, but an id-only query is a checklist point-3 miss.
 - feat(#509): the quote PDF for `pt-BR` reuses the `pt` labels.
 
 - fix(#522): the "today" and "in N days" markers on the budget list, and the

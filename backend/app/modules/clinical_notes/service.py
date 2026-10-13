@@ -212,8 +212,12 @@ class NoteService:
 
     @staticmethod
     async def get(db: AsyncSession, clinic_id: UUID, note_id: UUID) -> ClinicalNote | None:
+        # Same eager load as update()/list_for_owner(): anything that
+        # becomes a ClinicalNoteResponse needs the author on board.
         result = await db.execute(
-            select(ClinicalNote).where(
+            select(ClinicalNote)
+            .options(selectinload(ClinicalNote.author))
+            .where(
                 ClinicalNote.id == note_id,
                 ClinicalNote.clinic_id == clinic_id,
                 ClinicalNote.deleted_at.is_(None),
@@ -289,8 +293,21 @@ class NoteService:
         user_id: UUID,
         is_admin: bool,
     ) -> ClinicalNote | None:
+        # Eager-load the author: the caller hands this straight to
+        # ``ClinicalNoteResponse``, whose ``author`` field makes Pydantic
+        # read the relationship, and ``_author_brief_from`` projects "the
+        # loaded author relationship" by its own docstring. Without this
+        # the read is a lazy load inside an async session, which raises
+        # MissingGreenlet and 500s the request.
+        #
+        # It only bit when the author was NOT the caller: editing your own
+        # note resolves from the session's identity map with no IO, so an
+        # admin editing someone else's note was the only broken path --
+        # and the only one with no test.
         result = await db.execute(
-            select(ClinicalNote).where(
+            select(ClinicalNote)
+            .options(selectinload(ClinicalNote.author))
+            .where(
                 ClinicalNote.id == note_id,
                 ClinicalNote.clinic_id == clinic_id,
                 ClinicalNote.deleted_at.is_(None),

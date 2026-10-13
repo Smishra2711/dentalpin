@@ -13,10 +13,14 @@ related_permissions:
 related_paths:
   - backend/app/modules/leads/router.py
   - backend/app/modules/leads/frontend/pages/leads/index.vue
-last_verified_commit: ecda1519
+last_verified_commit: 5e89d9b3
+screenshots:
+  - leads/leads-list.png
 ---
 
 # Lead queue
+
+![Lead queue](../../../../screenshots/leads/leads-list.png)
 
 The queue at **/leads** lists the enquiries that came in and matched nobody.
 It is the reception desk work list: read the enquiry, call the person, convert

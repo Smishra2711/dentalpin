@@ -13,20 +13,22 @@ frontend as a Nuxt layer under its own Python package.
 
 ### Changed
 
-- **Upgrade note (production):** `BUDGET_PUBLIC_SECRET_KEY` is now
-  required. A production boot without it fails fast with an actionable
-  message instead of signing public budget sessions with the staff-JWT
-  `SECRET_KEY`. Blank, whitespace-only, and whitespace-padded values are
-  also refused, so generate a clean value (e.g. `openssl rand -hex 32`)
-  before upgrading; `docker-compose.prod.yml` and
-  `docker-compose.coolify.yml` now both refuse to start without it.
 - **Upgrade note (production):** `AGENDA_PUBLIC_SECRET_KEY` is now
   required on the same terms: a production boot without a clean value
   fails fast instead of signing QR check-in tokens with the staff-JWT
   `SECRET_KEY`. Set it alongside `BUDGET_PUBLIC_SECRET_KEY` before
-  upgrading.
+  upgrading (that key's own note already shipped in the release below).
 
 ### Security
+
+- **A budget could be assigned a professional from another clinic.**
+  `assigned_professional_id` was a plain FK to `users` with no
+  membership check, so a caller naming a user id from a different clinic
+  had it stored — and the budget then rendered that user's name back. An
+  unknown id surfaced as a `ForeignKeyViolation`, i.e. a 500 for what is
+  a bad request. Both paths now answer 400, on create and on update. The
+  patient on the same route was already checked against the clinic; the
+  professional was not.
 
 - **The backend no longer trusts `X-Forwarded-For` from any peer** (#623).
   `backend/Dockerfile` and every compose file ran uvicorn with
@@ -65,6 +67,49 @@ frontend as a Nuxt layer under its own Python package.
   surfaces use, so their behaviour is unchanged — and an empty list
   permits nothing, which is `BaseAgent`'s default.
 
+### Fixed
+
+- **An admin editing another user's clinical note always returned 500.**
+  `NoteService.update` fetched the note without eager-loading `author`,
+  and `ClinicalNoteResponse` declares that field, so building the
+  response lazy-loaded the relationship inside an async session and
+  raised `MissingGreenlet`. Editing your *own* note worked, because the
+  author is the caller and already in the session's identity map — so
+  the only broken path was the documented admin override, and it had no
+  test. Found by exercising every mutating endpoint against a seeded
+  database.
+
+- **The split-host cookie warning told PaaS operators to set a value
+  browsers reject** (#444). `_shared_parent` built `.onrender.com` from
+  `app.onrender.com` + `api.onrender.com` — two labels, so it passed the
+  existing "a public suffix is not a parent" check — and the guard then
+  advised `COOKIE_DOMAIN=.onrender.com`, which the browser drops. The
+  operator restarted the backend and nothing changed. Known hosting
+  suffixes now resolve to no parent, and the remedy for that case points
+  at `NUXT_API_PROXY=true` (shipped in 2.8.0 for exactly this shape)
+  instead of suggesting they go and buy a domain. A real multi-label
+  domain such as `.example.co.uk` is still suggested as before.
+
+- **The help-portal build now fails on a fragment slug collision** and
+  warns about a slug the app can never request (#573, partial). Two
+  screens whose routes collapse to the same slug used to write the same
+  `.html`, last one winning, with nothing to show it had happened — and
+  the obvious fix for the periodontogram route (`{id}` → `[id]`) walks
+  straight into that: it would have silently taken the patient-detail
+  page's help away. The underlying question of how a query-selected
+  sub-view gets its own fragment is still open on #573; this only makes
+  the two failure modes visible.
+
+### Changed
+
+- **Upgrade note (production):** `BUDGET_PUBLIC_SECRET_KEY` is now
+  required. A production boot without it fails fast with an actionable
+  message instead of signing public budget sessions with the staff-JWT
+  `SECRET_KEY`. Blank, whitespace-only, and whitespace-padded values are
+  also refused, so generate a clean value (e.g. `openssl rand -hex 32`)
+  before upgrading; `docker-compose.prod.yml` and
+  `docker-compose.coolify.yml` now both refuse to start without it.
+
 ### Tests
 
 - **Every declared scheduled job is now executed by a test** (#629).
@@ -93,29 +138,6 @@ frontend as a Nuxt layer under its own Python package.
   for every user, forever, with nothing logged to say the string was the
   problem. The tree is clean today (673 literal call sites, 189 distinct,
   all valid), so `test_route_permissions.py` is purely preventive.
-
-### Fixed
-
-- **The split-host cookie warning told PaaS operators to set a value
-  browsers reject** (#444). `_shared_parent` built `.onrender.com` from
-  `app.onrender.com` + `api.onrender.com` — two labels, so it passed the
-  existing "a public suffix is not a parent" check — and the guard then
-  advised `COOKIE_DOMAIN=.onrender.com`, which the browser drops. The
-  operator restarted the backend and nothing changed. Known hosting
-  suffixes now resolve to no parent, and the remedy for that case points
-  at `NUXT_API_PROXY=true` (shipped in 2.8.0 for exactly this shape)
-  instead of suggesting they go and buy a domain. A real multi-label
-  domain such as `.example.co.uk` is still suggested as before.
-
-- **The help-portal build now fails on a fragment slug collision** and
-  warns about a slug the app can never request (#573, partial). Two
-  screens whose routes collapse to the same slug used to write the same
-  `.html`, last one winning, with nothing to show it had happened — and
-  the obvious fix for the periodontogram route (`{id}` → `[id]`) walks
-  straight into that: it would have silently taken the patient-detail
-  page's help away. The underlying question of how a query-selected
-  sub-view gets its own fragment is still open on #573; this only makes
-  the two failure modes visible.
 
 ## [2.8.0] - 2026-10-07
 
@@ -303,7 +325,7 @@ frontend as a Nuxt layer under its own Python package.
 
 ### Changed
 
-- **License**: Licensor set to Wikiparty Labs S.L. (#417, #419).
+- **License**: Licensor set to Dentared Odontology Services S.L. (#417, #419).
 - **Payments**: recording a payment is split from collecting one
   through a gateway (#519, #506, thanks @ZoliQua).
 - **Odontogram**: realistic occlusal view and crown profile without

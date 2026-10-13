@@ -13,10 +13,14 @@ related_permissions:
 related_paths:
   - backend/app/modules/leads/router.py
   - backend/app/modules/leads/frontend/components/settings/LeadsIntakeSettingsPage.vue
-last_verified_commit: ecda1519
+last_verified_commit: 5e89d9b3
+screenshots:
+  - leads/leads-intake-settings.png
 ---
 
 # Web form settings
+
+![Web form settings](../../../../screenshots/leads/leads-intake-settings.png)
 
 Page at **Settings → Integrations → Website form** (*Formulario web*) — administrators only.
 Everything the clinic website form needs lives here: how many enquiries are

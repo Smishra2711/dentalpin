@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- fix: an admin editing a note written by someone else got a 500.
+  `NoteService.update` did not eager-load `author`, and
+  `ClinicalNoteResponse` declares the field, so building the response
+  lazy-loaded the relationship inside an async session
+  (`MissingGreenlet`). Editing your own note never hit it — the author is
+  the caller, already in the session's identity map — which is why the
+  documented admin-override path shipped broken and untested. `get()`
+  gained the same eager load; it has no callers yet and fed the same
+  response shape.
+
+- chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
+
 - feat(i18n): Telugu (`te`) locale for the module's frontend layer.
 - feat(i18n): Telugu (`te`) demo clinical notes in the seed.
 - chore(#337): imports `AppointmentTreatment` from its new home in treatment_plan (a declared dependency).

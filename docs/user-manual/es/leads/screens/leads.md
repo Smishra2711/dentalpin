@@ -13,10 +13,14 @@ related_permissions:
 related_paths:
   - backend/app/modules/leads/router.py
   - backend/app/modules/leads/frontend/pages/leads/index.vue
-last_verified_commit: ecda1519
+last_verified_commit: 5e89d9b3
+screenshots:
+  - leads/leads-list-es.png
 ---
 
 # Cola de solicitudes
+
+![Cola de solicitudes](../../../../screenshots/leads/leads-list-es.png)
 
 La cola de **/leads** lista las consultas que han entrado y no coincidían con
 ningún paciente. Es la lista de trabajo de recepción: leer la consulta, llamar

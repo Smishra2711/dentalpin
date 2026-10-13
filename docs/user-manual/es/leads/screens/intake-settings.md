@@ -13,10 +13,14 @@ related_permissions:
 related_paths:
   - backend/app/modules/leads/router.py
   - backend/app/modules/leads/frontend/components/settings/LeadsIntakeSettingsPage.vue
-last_verified_commit: ecda1519
+last_verified_commit: 5e89d9b3
+screenshots:
+  - leads/leads-intake-settings-es.png
 ---
 
 # Ajustes del formulario web
+
+![Ajustes del formulario web](../../../../screenshots/leads/leads-intake-settings-es.png)
 
 Página en **Ajustes → Integraciones → «Formulario web»** (solo
 administradores). Aquí está todo lo que necesita el formulario de la web de la
