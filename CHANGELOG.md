@@ -16,8 +16,8 @@ frontend as a Nuxt layer under its own Python package.
 - **Upgrade note (production):** `AGENDA_PUBLIC_SECRET_KEY` is now
   required on the same terms: a production boot without a clean value
   fails fast instead of signing QR check-in tokens with the staff-JWT
-  `SECRET_KEY`. Set it alongside `BUDGET_PUBLIC_SECRET_KEY` before
-  upgrading (that key's own note already shipped in the release below).
+  `SECRET_KEY`. Set it alongside `BUDGET_PUBLIC_SECRET_KEY` (see its
+  note below) before upgrading.
 
 ### Security
 

@@ -262,8 +262,7 @@ class Settings(BaseSettings):
             if key != stripped_key:
                 raise ValueError(
                     f"{name} must not have leading or trailing whitespace in "
-                    "production: the validator checks the stripped value, "
-                    "while signing uses the configured value."
+                    "production: validation and signing must see the same value."
                 )
             if len(stripped_key) < MIN_SECRET_KEY_LENGTH:
                 raise ValueError(
