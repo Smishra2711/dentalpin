@@ -516,3 +516,28 @@ async def test_budget_acceptance_rolls_back_when_the_plan_cannot_activate(
     await db_session.rollback()
     status = await db_session.scalar(select(Budget.status).where(Budget.id == UUID(budget_id)))
     assert status == "sent", "a failed plan activation must not leave the budget accepted"
+
+
+@pytest.mark.asyncio
+async def test_update_response_keeps_the_linked_plan(
+    db_session: AsyncSession, client: AsyncClient, auth_headers: dict, setup: dict
+) -> None:
+    """PUT must carry ``treatment_plan`` like GET does.
+
+    The detail page replaces its budget with the PUT response; without the
+    link it dropped the "lines are managed by the plan" notice and showed
+    add/remove controls until a reload.
+    """
+    plan_id, _ = await _create_plan_with_items(client, auth_headers, setup, [16])
+    budget_id = await _confirm_plan(client, auth_headers, plan_id)
+    await _sync(db_session)
+
+    r = await client.put(
+        f"/api/v1/budget/budgets/{budget_id}",
+        headers=auth_headers,
+        json={"patient_notes": "Edited"},
+    )
+    assert r.status_code == 200, r.text
+    linked = r.json()["data"]["treatment_plan"]
+    assert linked is not None, "PUT response lost the linked plan"
+    assert linked["id"] == plan_id
