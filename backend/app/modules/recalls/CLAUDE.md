@@ -85,6 +85,7 @@ when redaction is on.
 | `appointment.cancelled`              | `on_appointment_cancelled`       | Unlink, revert `contacted_scheduled` → `pending`. |
 | `treatment_plan.treatment_completed` | `on_treatment_plan_completed`    | Logging-only stub. Suggestion is pulled by the frontend via `GET /suggestions/next`; keeps state stateless and avoids stale dismissals. |
 | `patient.archived`                   | `on_patient_archived`            | Active recalls (`pending`/`contacted_no_answer`/`contacted_scheduled`) → `needs_review`. |
+| `gdpr.erasure.executed`              | `on_gdpr_erasure_executed`       | Clear the patient's contact-attempt notes when a contact category is erased; the recall and its clinical `reason_note` stay (#546). |
 
 ## Frontend integration (slot registrations)
 

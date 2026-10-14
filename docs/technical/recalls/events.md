@@ -16,9 +16,10 @@ _This module does not publish any events._
 
 ## Subscribed
 
-All four state-changing handlers are **transactional** (ADR 0019): a recall
-mirrors an appointment, and `linked_appointment_id` is an FK to a row that
-only exists in the publisher's transaction (issue #183).
+All state-changing handlers except the payload-only stub are
+**transactional** (ADR 0019): a recall mirrors an appointment, and
+`linked_appointment_id` is an FK to a row that only exists in the publisher's
+transaction (issue #183).
 
 | Event | Handler | Mode | Effect |
 |-------|---------|------|--------|
@@ -27,6 +28,7 @@ only exists in the publisher's transaction (issue #183).
 | `appointment.cancelled` | `events.on_appointment_cancelled` | transactional | Unlink and send the recall back to `pending`. |
 | `patient.archived` | `events.on_patient_archived` | transactional | Move active recalls to `needs_review`. |
 | `treatment_plan.treatment_completed` | `events.on_treatment_plan_completed` | own-session (payload-only) | Logs only — suggestions are pulled by the frontend. |
+| `gdpr.erasure.executed` | `events.on_gdpr_erasure_executed` | transactional | Clear the patient's contact-attempt notes when a contact category is erased; the recall and its clinical `reason_note` stay (#546). |
 
 ## Adding a new event
 

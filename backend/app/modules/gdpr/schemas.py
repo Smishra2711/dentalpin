@@ -105,15 +105,19 @@ class ErasureRequest(BaseModel):
     rationale: str | None = Field(default=None, max_length=2000)
 
 
-#: Coverage limitation recorded on every erasure result (#546): only
-#: patient-row identity fields are blanked. Notes, budgets, media and
-#: other module data are untouched, and no module subscribes to
-#: ``gdpr.erasure.executed`` — a completed DSR must never read as
-#: full coverage.
-ERASURE_COVERAGE_NOTE = (
-    "Patient-row identity fields only; notes, budgets, media and other "
-    "module data are not touched (no cross-module fan-out)."
-)
+class ErasureCoverage(BaseModel):
+    """Per-scope outcome of one partial erasure (#546).
+
+    ``status`` is ``erased`` when that scope's copy of the erased
+    categories was removed, ``retained`` when a legal basis keeps it
+    (Art. 17(3)), and ``not_applicable`` when the scope holds nothing for
+    the erased categories. The list is the DSR's honest coverage: a
+    completed erasure must never read as covering data it never touched.
+    """
+
+    scope: str
+    status: Literal["erased", "retained", "not_applicable"]
+    detail: str
 
 
 class ErasureResult(BaseModel):
@@ -124,7 +128,8 @@ class ErasureResult(BaseModel):
     audit_log_id: UUID
     # Patient identity fields kept under the legal-hold gate, if any.
     retained_categories: list[str] = Field(default_factory=list)
-    coverage_note: str = ERASURE_COVERAGE_NOTE
+    # Cross-module coverage report (#546) — see ErasureCoverage.
+    coverage: list[ErasureCoverage] = Field(default_factory=list)
 
 
 class ErasureAuditResponse(BaseModel):

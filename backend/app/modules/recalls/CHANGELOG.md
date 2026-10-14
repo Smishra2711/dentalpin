@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- feat(#546): subscribe to `gdpr.erasure.executed`; clear the patient's
+  contact-attempt notes when a contact category is erased (the recall and
+  its clinical `reason_note` stay). Transactional (ADR 0019).
 - chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
 
 - fix(#611): the recall CSV export no longer emits live spreadsheet

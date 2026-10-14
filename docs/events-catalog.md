@@ -58,7 +58,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 | `gdpr.breach.reported` | `EventType.GDPR_BREACH_REPORTED` | `gdpr` | — |
 | `gdpr.consent.granted` | `EventType.GDPR_CONSENT_GRANTED` | `gdpr` | — |
 | `gdpr.consent.withdrawn` | `EventType.GDPR_CONSENT_WITHDRAWN` | `gdpr` | — |
-| `gdpr.erasure.executed` | `EventType.GDPR_ERASURE_EXECUTED` | `gdpr` | — |
+| `gdpr.erasure.executed` | `EventType.GDPR_ERASURE_EXECUTED` | `gdpr` | `notifications`, `recalls` |
 | `gdpr.request.created` | `EventType.GDPR_REQUEST_CREATED` | `gdpr` | — |
 | `gdpr.request.status_changed` | `EventType.GDPR_REQUEST_STATUS_CHANGED` | `gdpr` | — |
 | `imaging.ai_job_confirmed` | `EventType.IMAGING_AI_JOB_CONFIRMED` | `imaging_ai` | — |
@@ -543,7 +543,9 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Constant:** `EventType.GDPR_ERASURE_EXECUTED`
 - **Publishers:**
   - `gdpr` — `backend/app/modules/gdpr/service.py`
-- **Subscribers:** —
+- **Subscribers:**
+  - `notifications`
+  - `recalls`
 
 ### `gdpr.request.created`
 

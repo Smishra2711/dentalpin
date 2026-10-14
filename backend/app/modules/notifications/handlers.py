@@ -23,6 +23,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from .models import CommunicationMessage
 from .service import budget_treatments_context
 
 logger = logging.getLogger(__name__)
@@ -56,8 +57,76 @@ def _public_budget_url(public_token) -> str | None:
     return f"{base}/p/budget/{public_token}"
 
 
+def _as_uuid(raw: Any) -> UUID | None:
+    if raw is None:
+        return None
+    if isinstance(raw, UUID):
+        return raw
+    try:
+        return UUID(str(raw))
+    except (TypeError, ValueError):
+        return None
+
+
+#: Outbound channels whose recipient address is a copy of a patient contact
+#: field, mapped to the GDPR erasure category that blanks it. Consumed by the
+#: ``gdpr.erasure.executed`` subscriber (#546) to scrub the message audit log.
+ERASURE_CHANNEL_CATEGORY: dict[str, str] = {
+    "email": "email",
+    "sms": "phone",
+    "whatsapp": "phone",
+    "voice": "phone",
+    "phone": "phone",
+}
+
+#: Left in place of a redacted recipient so the NOT NULL column still holds a
+#: value and the audit reads as deliberately cleared, not merely empty.
+ERASED_PLACEHOLDER = "[erased]"
+
+
 class NotificationHandlers:
     """Event handlers for notification triggers."""
+
+    @staticmethod
+    async def on_gdpr_erasure_executed(data: dict[str, Any], *, db: AsyncSession) -> None:
+        """Redact a patient's contact copies from the communication log (#546).
+
+        Transactional (ADR 0019): runs inside the erasure's transaction, so
+        the audit log and this redaction commit or roll back together. Only
+        rows whose channel matches an erased contact category are cleared —
+        the recipient address, subject and body of the patient's own
+        messages. The row itself stays: the outbox is also the send audit,
+        and a completed erasure must be visible without erasing the fact
+        that messages were sent.
+        """
+        patient_id = _as_uuid(data.get("patient_id"))
+        clinic_id = _as_uuid(data.get("clinic_id"))
+        erased = set(data.get("erased_categories") or ())
+        if not (patient_id and clinic_id):
+            return
+        channels = [
+            channel for channel, category in ERASURE_CHANNEL_CATEGORY.items() if category in erased
+        ]
+        if not channels:
+            return
+        rows = (
+            (
+                await db.execute(
+                    select(CommunicationMessage).where(
+                        CommunicationMessage.clinic_id == clinic_id,
+                        CommunicationMessage.patient_id == patient_id,
+                        CommunicationMessage.channel.in_(channels),
+                        CommunicationMessage.to_address != ERASED_PLACEHOLDER,
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
+        for message in rows:
+            message.to_address = ERASED_PLACEHOLDER
+            message.subject = None
+            message.body_text = None
 
     @staticmethod
     async def on_appointment_scheduled(data: dict[str, Any], *, db: AsyncSession) -> None:

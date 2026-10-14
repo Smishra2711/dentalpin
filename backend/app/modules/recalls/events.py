@@ -26,7 +26,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .models import Recall
+from .models import Recall, RecallContactAttempt
 from .service import RecallService, RecallSettingsService
 
 logger = logging.getLogger(__name__)
@@ -186,3 +186,40 @@ async def on_patient_archived(data: dict[str, Any], *, db: AsyncSession) -> None
     for recall in result.scalars().all():
         recall.status = "needs_review"
         recall.updated_at = now
+
+
+async def on_gdpr_erasure_executed(data: dict[str, Any], *, db: AsyncSession) -> None:
+    """Clear a patient's contact-attempt notes on a GDPR erasure (#546).
+
+    Transactional (ADR 0019): runs inside the erasure's transaction, so
+    the audit log and this redaction commit or roll back together. Only
+    the free-text ``note`` is cleared — it records what was dialled and
+    can carry the erased contact. The recall itself and its clinical
+    ``reason_note`` are retained: a recall is treatment history, not a
+    contact copy.
+    """
+    patient_id = _safe_uuid(data.get("patient_id"))
+    clinic_id = _safe_uuid(data.get("clinic_id"))
+    erased = set(data.get("erased_categories") or ())
+    if not (patient_id and clinic_id) or not ({"email", "phone"} & erased):
+        return
+
+    recall_ids = select(Recall.id).where(
+        Recall.patient_id == patient_id,
+        Recall.clinic_id == clinic_id,
+    )
+    attempts = (
+        (
+            await db.execute(
+                select(RecallContactAttempt).where(
+                    RecallContactAttempt.clinic_id == clinic_id,
+                    RecallContactAttempt.recall_id.in_(recall_ids),
+                    RecallContactAttempt.note.is_not(None),
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    for attempt in attempts:
+        attempt.note = None

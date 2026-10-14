@@ -2,10 +2,14 @@
 
 ## Unreleased
 
-- fix(#546): erasure results record their partial coverage on the
-  response (`coverage_note`): patient-row identity fields only, no
-  cross-module fan-out — a completed run never reads as full DSR
-  coverage.
+- feat(#546): erasure fans out over the event bus. `notifications` and
+  `recalls` redact their copies of the erased contacts inside the
+  erasure's transaction, and the response now reports a per-scope coverage
+  list (`ErasureCoverage`: `patient_record`, `notifications`, `recalls`,
+  `budget`, `billing`, `clinical`, each `erased | retained | not_applicable`) instead
+  of a single note - a completed run never reads as full DSR coverage.
+  `gdpr.erasure.executed` now publishes before commit so subscribers join
+  the transaction (ADR 0019).
 - Maintainer-review fixes (PR #374, part of #44): closed erasure
   vocabulary `ErasureCategory` (`email | phone | identity`, 422 on anything
   else) in the schema and tool args so an erasure can never report a

@@ -20,6 +20,7 @@ from .schemas import (
     ConsentCreate,
     DataBreachCreate,
     DataBreachUpdate,
+    ErasureCoverage,
     ErasureResult,
     GdprRequestCreate,
     GdprRequestUpdate,
@@ -370,8 +371,12 @@ class ErasureService:
             executed_by=executed_by,
         )
         db.add(log)
-        await db.commit()
-        await db.refresh(log)
+        # Flush so ``log.id`` is assigned, then publish *before* commit so
+        # the fan-out subscribers (#546) run inside this transaction: the
+        # audit log and every subscriber's redaction commit or roll back
+        # together, and a subscriber failure surfaces instead of leaving a
+        # committed erasure with un-scrubbed copies behind.
+        await db.flush()
 
         await event_bus.publish(
             EventType.GDPR_ERASURE_EXECUTED,
@@ -384,12 +389,71 @@ class ErasureService:
             },
             db=db,
         )
+        await db.commit()
+        await db.refresh(log)
         return ErasureResult(
             patient_id=patient_id,
             erased_categories=erasable,
             audit_log_id=log.id,
             retained_categories=retained,
+            coverage=ErasureService.build_coverage(erasable, retained),
         )
+
+    @staticmethod
+    def build_coverage(erased: list[str], retained: list[str]) -> list[ErasureCoverage]:
+        """Cross-module coverage report for one erasure run (#546).
+
+        Distinguishes what this module scrubbed (the patient row), what the
+        event-driven fan-out subscribers scrub (``notifications`` message
+        recipients, ``recalls`` contact-attempt notes), and what a legal
+        basis keeps (``budget`` signature emails, ``billing`` fiscal
+        snapshots, ``clinical`` care records). Recording it on the result
+        stops a completed DSR from reading as full coverage.
+        """
+        erased_set = set(erased)
+        contact_erased = bool({"email", "phone"} & erased_set)
+        contact_requested = bool({"email", "phone"} & (erased_set | set(retained)))
+
+        # A contact scope is scrubbed only when a contact category was
+        # actually erasable; otherwise it holds what the legal-hold gate
+        # kept (retained), or nothing at all (not_applicable).
+        def contact_status() -> str:
+            if contact_erased:
+                return "erased"
+            return "retained" if contact_requested else "not_applicable"
+
+        return [
+            ErasureCoverage(
+                scope="patient_record",
+                status="erased" if erased_set else "retained",
+                detail="Identity/contact fields on the patient row.",
+            ),
+            ErasureCoverage(
+                scope="notifications",
+                status=contact_status(),
+                detail="Recipient contact on the patient's communication log.",
+            ),
+            ErasureCoverage(
+                scope="recalls",
+                status=contact_status(),
+                detail="Contact-attempt notes on the patient's recalls.",
+            ),
+            ErasureCoverage(
+                scope="budget",
+                status="retained" if contact_requested else "not_applicable",
+                detail="Budget estimates/signatures keep the signer's email (Art. 17(3)).",
+            ),
+            ErasureCoverage(
+                scope="billing",
+                status="retained" if contact_requested else "not_applicable",
+                detail="Issued invoices keep a fiscal snapshot (Art. 17(3)).",
+            ),
+            ErasureCoverage(
+                scope="clinical",
+                status="retained",
+                detail="Clinical notes, documents and media are retained as care records.",
+            ),
+        ]
 
     @staticmethod
     async def list_audit(

@@ -74,6 +74,9 @@ the full consent path — never bypasses `do_not_contact`.
 - `appointment.scheduled` / `appointment.cancelled`
 - `budget.sent` / `budget.accepted` / `budget.reminder_sent`
 - `invoice.sent`
+- `gdpr.erasure.executed` — redact recipient, subject and body of the
+  patient's messages for the erased contact categories; the row stays as the
+  send audit (#546). Transactional.
 
 ## Lifecycle
 

@@ -164,10 +164,23 @@ async def test_partial_erasure_blanks_identity_and_never_hard_deletes(
     )
     assert result.erased_categories == ["email"]
     assert result.retained_categories == []
-    # The result records its own partial coverage (#546): a completed
+    # The result records a per-scope coverage report (#546): a completed
     # run must never read as full DSR coverage.
-    assert "Patient-row" in result.coverage_note
-    assert "not touched" in result.coverage_note
+    coverage = {c.scope: c.status for c in result.coverage}
+    assert coverage["patient_record"] == "erased"
+    assert coverage["notifications"] == "erased"
+    assert coverage["recalls"] == "erased"
+    assert coverage["budget"] == "retained"
+    assert coverage["billing"] == "retained"
+    assert coverage["clinical"] == "retained"
+    assert set(coverage) == {
+        "patient_record",
+        "notifications",
+        "recalls",
+        "budget",
+        "billing",
+        "clinical",
+    }
 
     # Row still exists (never hard-deleted).
     from sqlalchemy import select as sel
@@ -207,6 +220,12 @@ async def test_erasure_retained_when_retention_holds(
     )
     assert result.erased_categories == []
     assert result.retained_categories == ["clinical"]
+    # Nothing was erased, so every scope reports what it kept (#546).
+    coverage = {c.scope: c.status for c in result.coverage}
+    assert coverage["patient_record"] == "retained"
+    assert coverage["notifications"] == "not_applicable"
+    assert coverage["budget"] == "not_applicable"
+    assert coverage["clinical"] == "retained"
 
     patient = (
         await db_session.execute(

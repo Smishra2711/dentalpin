@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- feat(#546): subscribe to `gdpr.erasure.executed`; redact the recipient,
+  subject and body of a patient's messages for the erased contact
+  categories (the row stays as the send audit). Transactional (ADR 0019).
 - chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
 
 - feat(i18n): Telugu (`te`) locale (`notifications-te.json`) and Telugu (తెలుగు) in the clinic communications-language picker.

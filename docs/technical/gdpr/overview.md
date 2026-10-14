@@ -84,7 +84,27 @@ hold, otherwise the window runs that many years from the patient's
 `updated_at` (minimum-honest anchor). Categories with no policy, or with
 no field mapping (e.g. `clinical`, `billing`, `radiology` policies document
 the hold and always retain), stay retained. Every run writes an
-`ErasureAuditLog` and publishes `gdpr.erasure.executed`.
+`ErasureAuditLog`, publishes `gdpr.erasure.executed` inside the transaction
+(before commit), and returns a per-scope `coverage` report so a completed
+DSR never reads as full coverage (#546).
+
+### Cross-module coverage (#546)
+
+Erasure fans out over the event bus. Subscribers redact their own copies of
+the erased contacts inside the erasure's transaction (`notifications` clears
+the recipient/subject/body of the patient's messages; `recalls` clears
+contact-attempt notes). The result carries an `ErasureCoverage` list with one
+row per scope and a `status` of `erased`, `retained` (legal basis, Art.
+17(3)) or `not_applicable`:
+
+| Scope | What it covers | Typical status |
+|-------|----------------|----------------|
+| `patient_record` | identity/contact fields on the patient row | `erased` when any category was erasable |
+| `notifications` | recipient/body on the communication log | `erased` when a contact category was erasable |
+| `recalls` | contact-attempt notes | `erased` when a contact category was erasable |
+| `budget` | budget estimate/signature records | `retained` (Art. 17(3)) |
+| `billing` | issued-invoice fiscal snapshot | `retained` (Art. 17(3)) |
+| `clinical` | clinical notes, documents, media | `retained` (care records) |
 
 ## Agent tools
 

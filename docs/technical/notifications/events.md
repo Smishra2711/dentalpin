@@ -25,7 +25,7 @@ Published by the gateway (`gateway.py`) across the outbox lifecycle:
 
 ## Subscribed
 
-All seven are **transactional** (ADR 0019): they queue a `CommunicationMessage`
+All eight are **transactional** (ADR 0019): they queue a `CommunicationMessage`
 on the publisher's session inside a savepoint, and the outbox tick does the
 sending. A rolled-back request queues nothing (issue #183).
 
@@ -38,6 +38,7 @@ sending. A rolled-back request queues nothing (issue #183).
 | `budget.accepted` | `handlers.on_budget_accepted` | Enqueue `budget_accepted`. |
 | `budget.reminder_sent` | `handlers.on_budget_reminder_sent` | Enqueue `budget_reminder` with the public quote link (#287 bug 7). |
 | `invoice.sent` | `handlers.on_invoice_sent` | Enqueue `invoice_sent` (only when `send_method` is `email` or `whatsapp`). |
+| `gdpr.erasure.executed` | `handlers.on_gdpr_erasure_executed` | Redact the recipient, subject and body of the patient's messages whose channel matches an erased category; the row stays as the send audit (#546). |
 
 ## Adding a new event
 
