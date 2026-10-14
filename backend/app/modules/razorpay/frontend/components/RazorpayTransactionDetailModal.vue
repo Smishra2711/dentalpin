@@ -102,7 +102,7 @@ async function submitRefund() {
               <dt class="text-subtle">
                 {{ t('razorpay.detail.method') }}
               </dt>
-              <dd>{{ t(`razorpay.collect.methods.${info.request.requested_method}`) }}</dd>
+              <dd>{{ t(`payments.methods.${payment.method}`) }}</dd>
             </div>
             <div class="flex items-center justify-between">
               <dt class="text-subtle">
