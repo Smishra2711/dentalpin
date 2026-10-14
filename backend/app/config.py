@@ -188,14 +188,16 @@ class Settings(BaseSettings):
     EMAIL_FROM_ADDRESS: str = "noreply@dentalpin.com"
     EMAIL_FROM_NAME: str = "DentalPin"
 
-    # Copilot / agentic layer (app/core/llm/). OpenAI and Anthropic are
-    # the live providers; per-clinic `copilot_settings` overrides
+    # Copilot / agentic layer (app/core/llm/). OpenAI, Anthropic and
+    # Gemini are the live providers; per-clinic `copilot_settings` overrides
     # provider + model.
     OPENAI_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
+    GEMINI_API_KEY: str = ""
     COPILOT_PROVIDER_DEFAULT: str = "openai"
     COPILOT_MODEL_CHAT_OPENAI: str = "gpt-5.4-mini"
     COPILOT_MODEL_CHAT_ANTHROPIC: str = "claude-sonnet-5"
+    COPILOT_MODEL_CHAT_GEMINI: str = "gemini-3.5-flash"
     COPILOT_MAX_TOKENS: int = 4096
     COPILOT_REDACTION_DEFAULT: bool = True
 

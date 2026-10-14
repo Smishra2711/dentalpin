@@ -13,6 +13,10 @@ frontend as a Nuxt layer under its own Python package.
 
 ### Added
 
+- **Copilot: Gemini LLM provider adapter** over Google's OpenAI-compatible
+  endpoint (same wire format and `openai` tool dialect as the OpenAI
+  provider; `GEMINI_API_KEY` + per-clinic selection, spec registered from
+  `on_activate`). No bridge, settings or UI change (#332).
 - **Hindi (`hi`, हिन्दी) locale** — core app and every module layer,
   patient email templates, PDF labels (`hi_IN` money/date formatting,
   Devanagari via Noto Sans Devanagari), and a Hindi demo seed
