@@ -44,9 +44,9 @@ onMounted(async () => {
 })
 
 const label = computed(() => {
-  const method = info.value?.request?.requested_method
+  const method = props.ctx.payment.method
   if (!method) return 'Razorpay'
-  return `Razorpay · ${t(`razorpay.collect.methods.${method}`)}`
+  return `Razorpay · ${t(`payments.methods.${method}`)}`
 })
 </script>
 

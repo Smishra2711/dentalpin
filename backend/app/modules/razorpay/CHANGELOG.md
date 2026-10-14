@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix(#608): the transaction modal and the payments-list badge showed the checkout rail the receptionist picked (always "Card" for Razorpay checkout) instead of the method the customer actually paid with. They now read the stored payment's method, so a NetBanking payment shows "Net banking".
 - feat(i18n): Hindi (`hi`) locale for the module's frontend layer.
 
 - feat(i18n): Telugu (`te`) locale for the module's frontend layer.

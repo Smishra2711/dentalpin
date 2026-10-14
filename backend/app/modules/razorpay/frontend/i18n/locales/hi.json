@@ -58,12 +58,6 @@
         "expired": "भुगतान समाप्त",
         "cancelled": "भुगतान रद्द"
       },
-      "methods": {
-        "upi": "UPI",
-        "qr": "QR",
-        "card": "कार्ड",
-        "payment_link": "भुगतान लिंक"
-      },
       "railUpiQr": "UPI QR",
       "railCheckout": "Razorpay",
       "railPaymentLink": "भुगतान लिंक"
