@@ -24,9 +24,14 @@ frontend as a Nuxt layer under its own Python package.
 
 ### Changed
 
+- **Upgrade note (production):** `AGENDA_PUBLIC_SECRET_KEY` is now
+  required on the same terms: a production boot without a clean value
+  fails fast instead of signing QR check-in tokens with the staff-JWT
+  `SECRET_KEY`. Set it alongside `BUDGET_PUBLIC_SECRET_KEY` (see its
+  note below) before upgrading.
+
 - Email templates missing in a locale now fall back to the English
   template instead of rendering nothing.
-### Changed
 
 - **Upgrade note (production):** `BUDGET_PUBLIC_SECRET_KEY` is now
   required. A production boot without it fails fast with an actionable
