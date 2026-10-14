@@ -8,10 +8,13 @@ rows and queue a ``CommunicationMessage`` on its session. Nothing is sent
 here — ``NotificationGateway.dispatch_outbox`` (scheduler) owns the network
 I/O, so there is no external side effect inside the transaction.
 
-Each body runs inside a **savepoint**: queueing a message is best-effort and
-must never fail the appointment, patient or invoice it announces, but an
-error still has to unwind cleanly or the publisher's transaction would be
-left unusable. The outer transaction rolling back discards the queued
+Each queueing body runs inside a **savepoint**: queueing a message is
+best-effort and must never fail the appointment, patient or invoice it
+announces, but an error still has to unwind cleanly or the publisher's
+transaction would be left unusable. The one exception is
+``on_gdpr_erasure_executed``: it redacts instead of queueing and runs in the
+erasure's transaction with no savepoint, so a subscriber failure rolls the
+whole erasure back (#546). The outer transaction rolling back discards the queued
 message too, which is the point — no confirmation email for an appointment
 that was never booked (issue #183).
 """
@@ -95,13 +98,16 @@ class NotificationHandlers:
         Transactional (ADR 0019): runs inside the erasure's transaction, so
         the audit log and this redaction commit or roll back together. Only
         rows whose channel matches an erased contact category are cleared —
-        the recipient address, subject, body and template context of the
-        patient's own messages. The row itself stays: the outbox is also the
-        send audit, and a completed erasure must be visible without erasing
-        the fact that messages were sent. A row that has not been dispatched
-        yet (``queued``/``sending``/``failed``) is additionally cancelled
-        (``skipped``) so the outbox tick can never send to the placeholder
-        address or an emptied body (#546).
+        the recipient address, subject, body, template context and failure
+        text of the patient's own messages (a failed send persists the
+        refused address in ``error_message``). The row itself stays: the
+        outbox is also the send audit, and a completed erasure must be
+        visible without erasing the fact that messages were sent. A row
+        still waiting to go out (``queued``/``failed``) is additionally
+        cancelled (``skipped``) so a later outbox tick skips it; a ``sending``
+        row is cancelled too, but a send already on the wire still reports
+        its terminal status from the dispatcher, whose commit can land after
+        ours and supersede the cancel (#546).
         """
         patient_id = _as_uuid(data.get("patient_id"))
         clinic_id = _as_uuid(data.get("clinic_id"))
@@ -132,6 +138,7 @@ class NotificationHandlers:
             message.subject = None
             message.body_text = None
             message.context_data = None
+            message.error_message = None
             if message.status in ("queued", "sending", "failed"):
                 # Never dispatch an erased recipient or an emptied message:
                 # cancel the unsent row so the outbox tick skips it.

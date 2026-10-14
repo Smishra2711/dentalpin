@@ -40,7 +40,7 @@ existing message rows instead of queueing a new one.
 | `budget.accepted` | `handlers.on_budget_accepted` | Enqueue `budget_accepted`. |
 | `budget.reminder_sent` | `handlers.on_budget_reminder_sent` | Enqueue `budget_reminder` with the public quote link (#287 bug 7). |
 | `invoice.sent` | `handlers.on_invoice_sent` | Enqueue `invoice_sent` (only when `send_method` is `email` or `whatsapp`). |
-| `gdpr.erasure.executed` | `handlers.on_gdpr_erasure_executed` | Redact the recipient, subject, body and template context of the patient's messages whose channel matches an erased category, and cancel (`skipped`) any row not yet dispatched; the dispatched row stays as the send audit (#546). |
+| `gdpr.erasure.executed` | `handlers.on_gdpr_erasure_executed` | Redact the recipient, subject, body, template context and failure text of the patient's messages whose channel matches an erased category, and cancel (`skipped`) any row not yet dispatched; the dispatched row stays as the send audit (#546). |
 
 ## Adding a new event
 

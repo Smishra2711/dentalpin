@@ -74,11 +74,11 @@ the full consent path — never bypasses `do_not_contact`.
 - `appointment.scheduled` / `appointment.cancelled`
 - `budget.sent` / `budget.accepted` / `budget.reminder_sent`
 - `invoice.sent`
-- `gdpr.erasure.executed` — redact recipient, subject, body and template
-  context of the patient's messages for the erased contact categories, and
-  cancel (`skipped`) any row not yet dispatched so the outbox cannot send to
-  the placeholder; the dispatched row stays as the send audit (#546).
-  Transactional.
+- `gdpr.erasure.executed` — redact recipient, subject, body, template
+  context and failure text of the patient's messages for the erased contact
+  categories, and cancel (`skipped`) any row not yet dispatched so the
+  outbox cannot send to the placeholder; the dispatched row stays as the
+  send audit (#546). Transactional.
 
 ## Lifecycle
 

@@ -104,7 +104,8 @@ frontend as a Nuxt layer under its own Python package.
 
 - **GDPR erasure now reaches the redundant copies, not just the patient
   row** (#546). A completed erasure redacts the patient's contact copies
-  in `notifications` (message recipient, subject, body) and `recalls`
+  in `notifications` (message recipient, subject, body, template context,
+  failure text; unsent rows cancelled) and `recalls`
   (contact-attempt notes) inside the same transaction as the patient-row
   blanks, and the erasure result now reports a per-scope coverage list
   (`ErasureCoverage`) instead of the single `coverage_note`. Issued

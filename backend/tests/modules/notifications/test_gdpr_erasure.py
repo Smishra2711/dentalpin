@@ -95,6 +95,16 @@ async def test_erasure_cancels_unsent_and_clears_context(
         status="queued",
         context_data={"patient_name": "Ana Test", "locale": "es"},
     )
+    failed = await _message(
+        db_session,
+        clinic_id=test_clinic.id,
+        patient_id=test_patient.id,
+        channel="email",
+        to_address=test_patient.email,
+        status="failed",
+        attempts=1,
+        error_message="Recipients refused: {'ana@test.com': (550, b'5.1.1 User unknown')}",
+    )
     sent = await _message(
         db_session,
         clinic_id=test_clinic.id,
@@ -117,10 +127,13 @@ async def test_erasure_cancels_unsent_and_clears_context(
     # An unsent row is cancelled so the outbox can never dispatch to the
     # placeholder address; a dispatched row stays as the send audit.
     assert queued.status == "skipped"
+    assert failed.status == "skipped"
     assert sent.status == "sent"
     # The template context can carry the patient's name; it is cleared too.
     assert queued.context_data is None
     assert sent.context_data is None
+    # A failed send persists the refused address in error_message (#546).
+    assert failed.error_message is None
 
 
 @pytest.mark.asyncio
