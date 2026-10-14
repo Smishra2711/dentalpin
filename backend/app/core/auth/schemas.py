@@ -261,7 +261,9 @@ class SystemSetup(BaseModel):
     country: str | None = Field(default=None, pattern="^[A-Za-z]{2}$")
     # Communication language for the clinic (patient-facing). Defaults from
     # the country preset.
-    language: str | None = Field(default=None, pattern="^(es|en|fr|pt|pt-BR|ta|te|de|hu|pl|it|ar)$")
+    language: str | None = Field(
+        default=None, pattern="^(es|en|fr|pt|pt-BR|ta|te|hi|de|hu|pl|it|ar)$"
+    )
 
     @field_validator("timezone")
     @classmethod

@@ -11,6 +11,17 @@ frontend as a Nuxt layer under its own Python package.
 
 ## [Unreleased]
 
+### Added
+
+- **Hindi (`hi`, हिन्दी) locale** — core app and every module layer,
+  patient email templates, PDF labels (`hi_IN` money/date formatting,
+  Devanagari via Noto Sans Devanagari), and a Hindi demo seed
+  (`--lang hi`): an India GST clinic in New Delhi (GST state 07,
+  GSTIN `07ABCDE1234F1Z2`) with Hindi patient names. `README.hi.md` added.
+  Country-specific compliance modules (`verifactu`, `nav_online`,
+  `sdi_it`, `sistema_ts`) and the Verifactu emails are not translated
+  to Hindi; they fall back to English.
+
 ### Changed
 
 - **Upgrade note (production):** `AGENDA_PUBLIC_SECRET_KEY` is now
@@ -18,6 +29,17 @@ frontend as a Nuxt layer under its own Python package.
   fails fast instead of signing QR check-in tokens with the staff-JWT
   `SECRET_KEY`. Set it alongside `BUDGET_PUBLIC_SECRET_KEY` (see its
   note below) before upgrading.
+
+- Email templates missing in a locale now fall back to the English
+  template instead of rendering nothing.
+
+- **Upgrade note (production):** `BUDGET_PUBLIC_SECRET_KEY` is now
+  required. A production boot without it fails fast with an actionable
+  message instead of signing public budget sessions with the staff-JWT
+  `SECRET_KEY`. Blank, whitespace-only, and whitespace-padded values are
+  also refused, so generate a clean value (e.g. `openssl rand -hex 32`)
+  before upgrading; `docker-compose.prod.yml` and
+  `docker-compose.coolify.yml` now both refuse to start without it.
 
 ### Security
 

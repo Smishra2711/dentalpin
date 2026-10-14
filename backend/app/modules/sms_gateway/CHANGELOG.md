@@ -5,6 +5,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer.
 ### Added
 
 - feat(i18n): Telugu (`te`) locale for the module's frontend layer.

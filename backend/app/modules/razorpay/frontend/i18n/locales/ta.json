@@ -58,12 +58,6 @@
         "expired": "பணம் செலுத்துதல் காலாவதியானது",
         "cancelled": "பணம் செலுத்துதல் ரத்து செய்யப்பட்டது"
       },
-      "methods": {
-        "upi": "UPI",
-        "qr": "QR",
-        "card": "கார்டு",
-        "payment_link": "பணம் செலுத்தும் இணைப்பு"
-      },
       "railUpiQr": "UPI QR",
       "railCheckout": "Razorpay",
       "railPaymentLink": "கட்டண இணைப்பு"

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat(i18n): Hindi (`hi`) locale: Hindi quote PDF labels.
 - fix(security): `assigned_professional_id` is now validated as a
   professional member of the budget's clinic, on create and on update.
   It was a bare FK to `users`, so a caller could name any user id: an

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer.
+
 - fix: the queue list stays visible when the counts call fails (counts
   fall back to empty instead of blanking the whole queue).
 - fix: drop the stale `{total}` interpolation from the RVG queue title in

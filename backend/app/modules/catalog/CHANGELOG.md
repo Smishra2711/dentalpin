@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat(i18n): Hindi (`hi`) locale: Hindi names for the default VAT types and the seeded catalog (categories, treatments, sessions).
 - chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
 
 - feat(i18n): Telugu (`te`) names for the seeded catalog (categories, treatments, sessions) and the default VAT types.
