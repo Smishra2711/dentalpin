@@ -85,7 +85,7 @@ The PHI boundary. Per-session `SymbolTable` mapping real value ↔ stable opaque
 `Tool` gains exactly one optional field: `exposes_free_text: bool = False`. No other change to the frozen dataclass.
 
 ### 2.4 Config (`app/config.py`)
-Add `OPENAI_API_KEY: str = ""`, `COPILOT_PROVIDER_DEFAULT: str = "openai"`, `COPILOT_MODEL_CHAT_OPENAI: str = "gpt-4.1"`, `COPILOT_MAX_TOKENS: int = 4096`, `COPILOT_REDACTION_DEFAULT: bool = True`. Per-clinic `copilot_settings` overrides provider and model. (`ANTHROPIC_API_KEY` + Anthropic model default are added when that provider lands.)
+Add `OPENAI_API_KEY: str = ""`, `COPILOT_PROVIDER_DEFAULT: str = "openai"`, `COPILOT_MODEL_CHAT_OPENAI: str = "gpt-4.1"`, `COPILOT_MAX_TOKENS: int = 4096`, `COPILOT_REDACTION_DEFAULT: bool = True`. Per-clinic `copilot_settings` overrides provider and model. (`ANTHROPIC_API_KEY` + Anthropic model default landed with that provider; `GEMINI_API_KEY` + Gemini model default with #332.)
 
 ---
 
