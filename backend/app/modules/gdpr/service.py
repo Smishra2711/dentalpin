@@ -13,6 +13,7 @@ from uuid import UUID
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.erasure.registry import erasure_registry
 from app.core.events import EventType, event_bus
 
 from .models import DataBreach, ErasureAuditLog, GdprRequest, PatientConsent, RetentionPolicy
@@ -371,13 +372,31 @@ class ErasureService:
             executed_by=executed_by,
         )
         db.add(log)
-        # Flush so ``log.id`` is assigned, then publish *before* commit so
-        # the fan-out subscribers (#546) run inside this transaction: the
-        # audit log and every subscriber's redaction commit or roll back
-        # together, and a subscriber failure surfaces instead of leaving a
-        # committed erasure with un-scrubbed copies behind.
+        # Flush so ``log.id`` is assigned, then pull every registered
+        # erasure contributor inside this transaction (ADR 0038): each
+        # contributor redacts its own copies and reports its own coverage,
+        # so the audit log and every redaction commit or roll back together,
+        # and a contributor failure surfaces instead of leaving a committed
+        # erasure with un-scrubbed copies behind. A scope with no registered
+        # contributor produces no row — an uninstalled module is never
+        # reported as erased.
         await db.flush()
 
+        coverages = [
+            ErasureCoverage(
+                scope="patient_record",
+                status="erased" if erasable else "retained",
+                detail="Mapped fields only (`email`, `billing_email`, `phone`, `national_id`).",
+            )
+        ]
+        for contributor in erasure_registry.contributors():
+            coverages.append(await contributor.erase(clinic_id, patient_id, erasable, retained, db))
+        coverages.extend(ErasureService._interim_retained_coverage(erasable, retained))
+        await db.commit()
+        await db.refresh(log)
+        # Announcement only: contributors already ran above. Published after
+        # commit with no session, so no handler can join the erasure
+        # transaction (#546).
         await event_bus.publish(
             EventType.GDPR_ERASURE_EXECUTED,
             {
@@ -387,77 +406,50 @@ class ErasureService:
                 "erased_categories": erasable,
                 "retained_categories": retained,
             },
-            db=db,
         )
-        await db.commit()
-        await db.refresh(log)
         return ErasureResult(
             patient_id=patient_id,
             erased_categories=erasable,
             audit_log_id=log.id,
             retained_categories=retained,
-            coverage=ErasureService.build_coverage(erasable, retained),
+            coverage=coverages,
         )
 
     @staticmethod
-    def build_coverage(erased: list[str], retained: list[str]) -> list[ErasureCoverage]:
-        """Cross-module coverage report for one erasure run (#546).
+    def _interim_retained_coverage(erased: list[str], retained: list[str]) -> list[ErasureCoverage]:
+        """Retained-scope rows until their contributor modules land (#546).
 
-        Distinguishes what this module scrubbed (the patient row), what the
-        event-driven fan-out subscribers scrub (``notifications`` message
-        recipients, ``recalls`` contact-attempt notes), and what a legal
-        basis keeps (the append-only ``patient_timeline`` feed, ``budget``
-        signature emails, ``billing`` fiscal snapshots, ``clinical`` care
-        records). Recording it on the result stops a completed DSR from
-        reading as full coverage.
+        INTERIM, not the contract: these four rows are still hardcoded in
+        ``gdpr`` because their owning modules (patient_timeline, budget,
+        billing, clinical) do not contribute yet. Each row claims only
+        retention under Art. 17(3) — a conservative claim that cannot
+        under-erase — and the follow-up replaces them with contributor
+        answers. The scrubbed scopes (``patient_record`` here,
+        ``notifications``/``recalls`` via the registry) are never hardcoded.
         """
         erased_set = set(erased)
-        contact_erased = bool({"email", "phone"} & erased_set)
         contact_requested = bool({"email", "phone"} & (erased_set | set(retained)))
-
-        # A contact scope is scrubbed only when a contact category was
-        # actually erasable; otherwise it holds what the legal-hold gate
-        # kept (retained), or nothing at all (not_applicable).
-        def contact_status() -> str:
-            if contact_erased:
-                return "erased"
-            return "retained" if contact_requested else "not_applicable"
 
         return [
             ErasureCoverage(
-                scope="patient_record",
-                status="erased" if erased_set else "retained",
-                detail="Mapped fields only (`email`, `billing_email`, `phone`, `national_id`).",
-            ),
-            ErasureCoverage(
-                scope="notifications",
-                status=contact_status(),
-                detail="Recipient, subject, body, template context and failure text on the communication log.",
-            ),
-            ErasureCoverage(
-                scope="recalls",
-                status=contact_status(),
-                detail="Contact-attempt notes on the patient's recalls.",
-            ),
-            ErasureCoverage(
                 scope="patient_timeline",
                 status="retained" if contact_requested else "not_applicable",
-                detail="Append-only activity feed keeps communication copies (Art. 17(3)).",
+                detail="Append-only activity feed keeps communication copies (Art. 17(3)). Interim: contributor lands in follow-up.",
             ),
             ErasureCoverage(
                 scope="budget",
                 status="retained" if contact_requested else "not_applicable",
-                detail="Budget estimates/signatures keep the signer's email (Art. 17(3)).",
+                detail="Budget estimates/signatures keep the signer's email (Art. 17(3)). Interim: contributor lands in follow-up.",
             ),
             ErasureCoverage(
                 scope="billing",
                 status="retained" if contact_requested else "not_applicable",
-                detail="Issued invoices keep a fiscal snapshot (Art. 17(3)).",
+                detail="Issued invoices keep a fiscal snapshot (Art. 17(3)). Interim: contributor lands in follow-up.",
             ),
             ErasureCoverage(
                 scope="clinical",
                 status="retained",
-                detail="Clinical notes, documents and media are retained as care records.",
+                detail="Clinical notes, documents and media are retained as care records. Interim: contributor lands in follow-up.",
             ),
         ]
 

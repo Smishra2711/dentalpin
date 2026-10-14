@@ -8,6 +8,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+# Re-exported: the coverage shape lives in core so contributor modules can
+# return it without depending on the optional gdpr module (ADR 0038).
+from app.core.erasure.types import ErasureCoverage  # noqa: F401
+
 RequestType = Literal["access", "rectification", "erasure", "portability", "restrict"]
 RequestStatus = Literal["received", "in_progress", "completed", "rejected"]
 
@@ -103,21 +107,6 @@ class ErasureRequest(BaseModel):
     # retention policy AND to patient PII fields. Unknown values are a 422.
     categories: list[ErasureCategory] = Field(min_length=1)
     rationale: str | None = Field(default=None, max_length=2000)
-
-
-class ErasureCoverage(BaseModel):
-    """Per-scope outcome of one partial erasure (#546).
-
-    ``status`` is ``erased`` when that scope's copy of the erased
-    categories was removed, ``retained`` when a legal basis keeps it
-    (Art. 17(3)), and ``not_applicable`` when the scope holds nothing for
-    the erased categories. The list is the DSR's honest coverage: a
-    completed erasure must never read as covering data it never touched.
-    """
-
-    scope: str
-    status: Literal["erased", "retained", "not_applicable"]
-    detail: str
 
 
 class ErasureResult(BaseModel):

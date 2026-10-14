@@ -35,7 +35,7 @@ Maintained by `backend/scripts/generate_catalogs.py`. CI fails if a manifest cha
 | `medication_catalog` | 0.1.0 | community | — | manual | yes | 2 | 0 | 1 | yes |
 | `migration_import` | 0.1.0 | official | patients, patients_clinical, clinical_notes, agenda, schedules, recalls, catalog, budget, odontogram, treatment_plan, billing, payments, media | manual | yes | 4 | 5 | 0 | yes |
 | `nav_online` | 0.1.0 | official | billing | manual | yes | 4 | 0 | 0 | yes |
-| `notifications` | 0.1.0 | official | patients, agenda, budget, billing, catalog | auto | no | 10 | 7 | 8 | yes |
+| `notifications` | 0.1.0 | official | patients, agenda, budget, billing, catalog | auto | no | 10 | 7 | 7 | yes |
 | `odontogram` | 0.3.0 | official | patients, catalog | auto | no | 4 | 7 | 0 | yes |
 | `orthodontics` | 0.1.0 | official | patients, agenda, media, recalls, treatment_plan | manual | yes | 4 | 3 | 0 | yes |
 | `patient_relationships` | 0.2.0 | community | patients | manual | yes | 2 | 0 | 0 | yes |
@@ -51,7 +51,7 @@ Maintained by `backend/scripts/generate_catalogs.py`. CI fails if a manifest cha
 | `purchase_orders` | 0.1.0 | official | contacts, inventory, suppliers | manual | yes | 2 | 3 | 0 | yes |
 | `razorpay` | 0.1.0 | official | payment_gateways | manual | yes | 2 | 0 | 0 | yes |
 | `recall_reminders` | 0.1.0 | community | recalls, notifications, patients | manual | yes | 0 | 0 | 1 | yes |
-| `recalls` | 0.1.0 | official | patients, agenda | auto | yes | 3 | 4 | 6 | yes |
+| `recalls` | 0.1.0 | official | patients, agenda | auto | yes | 3 | 4 | 5 | yes |
 | `reports` | 0.2.0 | official | patients, agenda, catalog, budget, billing, payments, treatment_plan | auto | no | 6 | 0 | 0 | yes |
 | `schedules` | 0.1.0 | official | agenda | auto | yes | 8 | 0 | 4 | yes |
 | `sdi_it` | 0.1.0 | official | billing | manual | yes | 4 | 0 | 0 | yes |
@@ -671,7 +671,6 @@ Email templates, preferences, SMTP, event-driven sending.
   - `budget.accepted`
   - `budget.reminder_sent`
   - `budget.sent`
-  - `gdpr.erasure.executed`
   - `invoice.sent`
   - `patient.created`
 - **Module CLAUDE.md:** [`backend/app/modules/notifications/CLAUDE.md`](../backend/app/modules/notifications/CLAUDE.md)
@@ -1031,7 +1030,6 @@ Patient recalls: schedule call-backs, work the monthly call list, log attempts, 
   - `appointment.cancelled`
   - `appointment.completed`
   - `appointment.scheduled`
-  - `gdpr.erasure.executed`
   - `patient.archived`
   - `treatment_plan.treatment_completed`
 - **Module CLAUDE.md:** [`backend/app/modules/recalls/CLAUDE.md`](../backend/app/modules/recalls/CLAUDE.md)

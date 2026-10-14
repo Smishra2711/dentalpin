@@ -25,11 +25,13 @@ Published by the gateway (`gateway.py`) across the outbox lifecycle:
 
 ## Subscribed
 
-Seven of these are **transactional** (ADR 0019): they queue a
-`CommunicationMessage` on the publisher's session, and the outbox tick does
-the sending. A rolled-back request queues nothing (issue #183). The eighth,
-`gdpr.erasure.executed`, is also transactional but redacts the patient's
-existing message rows instead of queueing a new one.
+All seven are **transactional** (ADR 0019): they queue a `CommunicationMessage`
+on the publisher's session inside a savepoint, and the outbox tick does the
+sending. A rolled-back request queues nothing (issue #183).
+
+GDPR erasure is not an event subscription: the module exposes a
+`NotificationsErasureContributor` (`erasure.py`), pulled by `gdpr` inside
+the erasure transaction (ADR 0038, #546).
 
 | Event | Handler | Effect |
 |-------|---------|--------|
@@ -40,7 +42,6 @@ existing message rows instead of queueing a new one.
 | `budget.accepted` | `handlers.on_budget_accepted` | Enqueue `budget_accepted`. |
 | `budget.reminder_sent` | `handlers.on_budget_reminder_sent` | Enqueue `budget_reminder` with the public quote link (#287 bug 7). |
 | `invoice.sent` | `handlers.on_invoice_sent` | Enqueue `invoice_sent` (only when `send_method` is `email` or `whatsapp`). |
-| `gdpr.erasure.executed` | `handlers.on_gdpr_erasure_executed` | Redact the recipient, subject, body, template context and failure text of the patient's messages whose channel matches an erased category, and cancel (`skipped`) any queued, sending or failed row; the dispatched row stays as the send audit (#546). |
 
 ## Adding a new event
 

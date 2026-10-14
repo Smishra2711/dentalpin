@@ -30,6 +30,24 @@ from app.modules.gdpr.tools import _record_consent
 from app.modules.patients.models import Patient
 
 
+@pytest.fixture
+def erasure_contributors():
+    """Mirror boot: collect the real contributors into the global registry.
+
+    The loader only runs in app boot, so tests register explicitly. Always
+    cleared afterwards so contributor state never leaks between tests.
+    """
+    from app.core.erasure.registry import erasure_registry
+    from app.modules.notifications import NotificationsModule
+    from app.modules.recalls import RecallsModule
+
+    erasure_registry.clear()
+    erasure_registry.register_from(NotificationsModule())
+    erasure_registry.register_from(RecallsModule())
+    yield
+    erasure_registry.clear()
+
+
 def _make_patient(db, clinic_id, **kw) -> Patient:
     p = Patient(
         clinic_id=clinic_id,
@@ -146,7 +164,10 @@ async def test_consent_grant_withdraw_regrant_keeps_full_trail(
 
 @pytest.mark.asyncio
 async def test_partial_erasure_blanks_identity_and_never_hard_deletes(
-    db_session: AsyncSession, test_clinic: Clinic, test_patient: Patient
+    db_session: AsyncSession,
+    test_clinic: Clinic,
+    test_patient: Patient,
+    erasure_contributors: None,
 ):
     # No retention policy → conservative default retains everything.
     await RetentionService.create(
@@ -204,7 +225,10 @@ async def test_partial_erasure_blanks_identity_and_never_hard_deletes(
 
 @pytest.mark.asyncio
 async def test_erasure_retained_when_retention_holds(
-    db_session: AsyncSession, test_clinic: Clinic, test_patient: Patient
+    db_session: AsyncSession,
+    test_clinic: Clinic,
+    test_patient: Patient,
+    erasure_contributors: None,
 ):
     # "clinical" has no field mapping, so it always retains (nothing to
     # blank) — the closed erasure vocabulary is email|phone|identity.
@@ -238,6 +262,37 @@ async def test_erasure_retained_when_retention_holds(
         )
     ).scalar_one_or_none()
     assert patient.email is not None  # not blanked
+
+
+@pytest.mark.asyncio
+async def test_erasure_omits_scope_without_contributor(
+    db_session: AsyncSession, test_clinic: Clinic, test_patient: Patient
+):
+    # ADR 0038 honesty: a scope with no registered contributor produces no
+    # row. Uninstall recalls and the DSR must NOT report recalls: erased.
+    from app.core.erasure.registry import erasure_registry
+    from app.modules.notifications import NotificationsModule
+
+    await RetentionService.create(
+        db_session,
+        test_clinic.id,
+        RetentionPolicyCreate(data_category="email", retention_years=0),
+    )
+    erasure_registry.clear()
+    try:
+        erasure_registry.register_from(NotificationsModule())
+        result = await ErasureService.execute(
+            db_session,
+            test_clinic.id,
+            patient_id=test_patient.id,
+            categories=["email"],
+            rationale="Art.17 erasure request",
+        )
+    finally:
+        erasure_registry.clear()
+    coverage = {c.scope: c.status for c in result.coverage}
+    assert coverage["notifications"] == "erased"
+    assert "recalls" not in coverage
 
 
 @pytest.mark.asyncio

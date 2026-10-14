@@ -2,15 +2,16 @@
 
 ## Unreleased
 
-- feat(#546): erasure fans out over the event bus. `notifications` and
-  `recalls` redact their copies of the erased contacts inside the
-  erasure's transaction, and the response now reports a per-scope coverage
-  list (`ErasureCoverage`: `patient_record`, `notifications`, `recalls`,
-  `patient_timeline`, `budget`, `billing`, `clinical`, each
-  `erased | retained | not_applicable`) instead
-  of a single note - a completed run never reads as full DSR coverage.
-  `gdpr.erasure.executed` now publishes before commit so subscribers join
-  the transaction (ADR 0019).
+- feat(#546, ADR 0038): erasure pulls a core contributor registry instead of
+  event-bus fan-out. `gdpr` calls every registered contributor
+  (`get_erasure_contributors()`, collected from active modules like
+  `get_tools()`) inside the erasure transaction and assembles the
+  per-scope coverage list (`ErasureCoverage`: `patient_record` plus each
+  contributor's own row) from their answers — a scope with no contributor
+  produces no row, so an uninstalled module is never reported as erased.
+  `gdpr.erasure.executed` is now a post-commit announcement.
+  `patient_timeline`/`budget`/`billing`/`clinical` rows stay hardcoded as
+  interim retained entries until their contributors land.
 - Maintainer-review fixes (PR #374, part of #44): closed erasure
   vocabulary `ErasureCategory` (`email | phone | identity`, 422 on anything
   else) in the schema and tool args so an erasure can never report a

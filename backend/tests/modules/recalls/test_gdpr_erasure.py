@@ -1,4 +1,4 @@
-"""GDPR erasure fan-out: recalls clear contact-attempt notes (#546).
+"""GDPR erasure contributor: recalls clear contact-attempt notes (#546).
 
 A contact-attempt note records what was dialled and can carry the erased
 contact. The recall itself and its clinical ``reason_note`` are treatment
@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth.models import Clinic, User
 from app.modules.patients.models import Patient
-from app.modules.recalls.events import on_gdpr_erasure_executed
+from app.modules.recalls.erasure import RecallsErasureContributor
 from app.modules.recalls.models import Recall, RecallContactAttempt
 
 
@@ -74,15 +74,12 @@ async def test_contact_erasure_clears_attempt_notes_but_keeps_recall(
         note="Llamado al +34666123456, sin respuesta",
     )
 
-    await on_gdpr_erasure_executed(
-        {
-            "clinic_id": str(test_clinic.id),
-            "patient_id": str(test_patient.id),
-            "erased_categories": ["phone"],
-        },
-        db=db_session,
-    )
+    contributor = RecallsErasureContributor()
+    coverage = await contributor.erase(test_clinic.id, test_patient.id, ["phone"], [], db_session)
     await db_session.commit()
+
+    assert coverage.scope == "recalls"
+    assert coverage.status == "erased"
 
     assert attempt.note is None
     # Recall + its clinical reason_note are retained (treatment history).
@@ -102,15 +99,14 @@ async def test_non_contact_erasure_leaves_attempt_notes(
         note="Llamado, sin respuesta",
     )
 
-    await on_gdpr_erasure_executed(
-        {
-            "clinic_id": str(test_clinic.id),
-            "patient_id": str(test_patient.id),
-            "erased_categories": ["identity"],
-        },
-        db=db_session,
+    contributor = RecallsErasureContributor()
+    coverage = await contributor.erase(
+        test_clinic.id, test_patient.id, ["identity"], [], db_session
     )
     await db_session.commit()
+
+    assert coverage.scope == "recalls"
+    assert coverage.status == "not_applicable"
 
     assert attempt.note == "Llamado, sin respuesta"
 
@@ -142,15 +138,12 @@ async def test_erasure_does_not_touch_another_patients_attempts(
         note="Mi nota",
     )
 
-    await on_gdpr_erasure_executed(
-        {
-            "clinic_id": str(test_clinic.id),
-            "patient_id": str(test_patient.id),
-            "erased_categories": ["phone"],
-        },
-        db=db_session,
-    )
+    contributor = RecallsErasureContributor()
+    coverage = await contributor.erase(test_clinic.id, test_patient.id, ["phone"], [], db_session)
     await db_session.commit()
+
+    assert coverage.scope == "recalls"
+    assert coverage.status == "erased"
 
     assert other_attempt.note == "Llamado al +34666000000"
     assert mine.note is None
@@ -179,15 +172,12 @@ async def test_email_erasure_keeps_phone_attempt_notes(
         channel="phone",
     )
 
-    await on_gdpr_erasure_executed(
-        {
-            "clinic_id": str(test_clinic.id),
-            "patient_id": str(test_patient.id),
-            "erased_categories": ["email"],
-        },
-        db=db_session,
-    )
+    contributor = RecallsErasureContributor()
+    coverage = await contributor.erase(test_clinic.id, test_patient.id, ["email"], [], db_session)
     await db_session.commit()
+
+    assert coverage.scope == "recalls"
+    assert coverage.status == "erased"
 
     assert email_attempt.note is None
     assert phone_attempt.note == "Llamado al +34666123456"

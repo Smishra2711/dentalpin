@@ -1,4 +1,4 @@
-"""GDPR erasure fan-out: the communication log redacts erased contacts (#546).
+"""GDPR erasure contributor: the communication log redacts erased contacts (#546).
 
 The outbox row is also the send audit, so erasure clears the patient's
 contact copies (recipient, subject, body) without deleting the row.
@@ -10,9 +10,9 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth.models import Clinic
-from app.modules.notifications.handlers import (
+from app.modules.notifications.erasure import (
     ERASED_PLACEHOLDER,
-    NotificationHandlers,
+    NotificationsErasureContributor,
 )
 from app.modules.notifications.models import CommunicationMessage
 from app.modules.patients.models import Patient
@@ -64,15 +64,12 @@ async def test_email_erasure_redacts_only_email_messages(
         body_text="Recordatorio SMS",
     )
 
-    await NotificationHandlers.on_gdpr_erasure_executed(
-        {
-            "clinic_id": str(test_clinic.id),
-            "patient_id": str(test_patient.id),
-            "erased_categories": ["email"],
-        },
-        db=db_session,
-    )
+    contributor = NotificationsErasureContributor()
+    coverage = await contributor.erase(test_clinic.id, test_patient.id, ["email"], [], db_session)
     await db_session.commit()
+
+    assert coverage.scope == "notifications"
+    assert coverage.status == "erased"
 
     assert email_msg.to_address == ERASED_PLACEHOLDER
     assert email_msg.subject is None
@@ -114,15 +111,12 @@ async def test_erasure_cancels_unsent_and_clears_context(
         context_data={"patient_name": "Ana Test", "locale": "es"},
     )
 
-    await NotificationHandlers.on_gdpr_erasure_executed(
-        {
-            "clinic_id": str(test_clinic.id),
-            "patient_id": str(test_patient.id),
-            "erased_categories": ["email"],
-        },
-        db=db_session,
-    )
+    contributor = NotificationsErasureContributor()
+    coverage = await contributor.erase(test_clinic.id, test_patient.id, ["email"], [], db_session)
     await db_session.commit()
+
+    assert coverage.scope == "notifications"
+    assert coverage.status == "erased"
 
     # An unsent row is cancelled so the outbox can never dispatch to the
     # placeholder address; a dispatched row stays as the send audit.
@@ -162,15 +156,12 @@ async def test_phone_erasure_redacts_sms_and_whatsapp(
         to_address=test_patient.email,
     )
 
-    await NotificationHandlers.on_gdpr_erasure_executed(
-        {
-            "clinic_id": str(test_clinic.id),
-            "patient_id": str(test_patient.id),
-            "erased_categories": ["phone"],
-        },
-        db=db_session,
-    )
+    contributor = NotificationsErasureContributor()
+    coverage = await contributor.erase(test_clinic.id, test_patient.id, ["phone"], [], db_session)
     await db_session.commit()
+
+    assert coverage.scope == "notifications"
+    assert coverage.status == "erased"
 
     assert sms.to_address == ERASED_PLACEHOLDER
     assert whatsapp.to_address == ERASED_PLACEHOLDER
@@ -190,15 +181,14 @@ async def test_identity_erasure_leaves_contacts_untouched(
         to_address=test_patient.email,
     )
 
-    await NotificationHandlers.on_gdpr_erasure_executed(
-        {
-            "clinic_id": str(test_clinic.id),
-            "patient_id": str(test_patient.id),
-            "erased_categories": ["identity"],
-        },
-        db=db_session,
+    contributor = NotificationsErasureContributor()
+    coverage = await contributor.erase(
+        test_clinic.id, test_patient.id, ["identity"], [], db_session
     )
     await db_session.commit()
+
+    assert coverage.scope == "notifications"
+    assert coverage.status == "not_applicable"
 
     assert msg.to_address == test_patient.email
 
@@ -230,15 +220,12 @@ async def test_erasure_does_not_touch_another_patient(
         to_address=test_patient.email,
     )
 
-    await NotificationHandlers.on_gdpr_erasure_executed(
-        {
-            "clinic_id": str(test_clinic.id),
-            "patient_id": str(test_patient.id),
-            "erased_categories": ["email"],
-        },
-        db=db_session,
-    )
+    contributor = NotificationsErasureContributor()
+    coverage = await contributor.erase(test_clinic.id, test_patient.id, ["email"], [], db_session)
     await db_session.commit()
+
+    assert coverage.scope == "notifications"
+    assert coverage.status == "erased"
 
     assert other_msg.to_address == "otro@test.com"
     assert mine.to_address == ERASED_PLACEHOLDER

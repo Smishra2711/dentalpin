@@ -14,14 +14,12 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.core.events.types import EventType
 from app.core.plugins import BaseModule
 
 from .events import (
     on_appointment_cancelled,
     on_appointment_completed,
     on_appointment_scheduled,
-    on_gdpr_erasure_executed,
     on_patient_archived,
     on_treatment_plan_completed,
 )
@@ -84,8 +82,12 @@ class RecallsModule(BaseModule):
             "appointment.cancelled": on_appointment_cancelled,
             "treatment_plan.treatment_completed": on_treatment_plan_completed,
             "patient.archived": on_patient_archived,
-            EventType.GDPR_ERASURE_EXECUTED: on_gdpr_erasure_executed,
         }
+
+    def get_erasure_contributors(self) -> list:
+        from .erasure import RecallsErasureContributor
+
+        return [RecallsErasureContributor()]
 
     def get_tools(self) -> list:
         from .tools import get_tools

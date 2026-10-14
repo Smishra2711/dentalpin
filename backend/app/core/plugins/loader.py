@@ -173,6 +173,7 @@ def mount_modules(app: FastAPI, modules: Iterable[BaseModule]) -> list[BaseModul
     mounted this call.
     """
     from app.core.agents.tools.registry import tool_registry
+    from app.core.erasure.registry import erasure_registry
     from app.core.events import event_bus
 
     mounted: list[BaseModule] = []
@@ -192,6 +193,7 @@ def mount_modules(app: FastAPI, modules: Iterable[BaseModule]) -> list[BaseModul
         for event_type, handler in module.get_event_handlers().items():
             event_bus.subscribe(event_type, handler)
         tool_registry.register_from(module)
+        erasure_registry.register_from(module)
         module.on_activate()
         module_registry.activate(module.name)
         mounted.append(module)

@@ -8,13 +8,10 @@ rows and queue a ``CommunicationMessage`` on its session. Nothing is sent
 here — ``NotificationGateway.dispatch_outbox`` (scheduler) owns the network
 I/O, so there is no external side effect inside the transaction.
 
-Each queueing body runs inside a **savepoint**: queueing a message is
-best-effort and must never fail the appointment, patient or invoice it
-announces, but an error still has to unwind cleanly or the publisher's
-transaction would be left unusable. The one exception is
-``on_gdpr_erasure_executed``: it redacts instead of queueing and runs in the
-erasure's transaction with no savepoint, so a subscriber failure rolls the
-whole erasure back (#546). The outer transaction rolling back discards the queued
+Each body runs inside a **savepoint**: queueing a message is best-effort and
+must never fail the appointment, patient or invoice it announces, but an
+error still has to unwind cleanly or the publisher's transaction would be
+left unusable. The outer transaction rolling back discards the queued
 message too, which is the point — no confirmation email for an appointment
 that was never booked (issue #183).
 """
@@ -26,7 +23,6 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .models import CommunicationMessage
 from .service import budget_treatments_context
 
 logger = logging.getLogger(__name__)
@@ -60,89 +56,8 @@ def _public_budget_url(public_token) -> str | None:
     return f"{base}/p/budget/{public_token}"
 
 
-def _as_uuid(raw: Any) -> UUID | None:
-    if raw is None:
-        return None
-    if isinstance(raw, UUID):
-        return raw
-    try:
-        return UUID(str(raw))
-    except (TypeError, ValueError):
-        return None
-
-
-#: Outbound channels whose recipient address is a copy of a patient contact
-#: field, mapped to the GDPR erasure category that blanks it. Consumed by the
-#: ``gdpr.erasure.executed`` subscriber (#546) to scrub the message audit log.
-#: Only the channels the ``Channel`` enum defines are listed; ``push`` is
-#: excluded because its recipient is a device subscription endpoint, not a
-#: copy of a patient contact field.
-ERASURE_CHANNEL_CATEGORY: dict[str, str] = {
-    "email": "email",
-    "sms": "phone",
-    "whatsapp": "phone",
-}
-
-#: Left in place of a redacted recipient so the NOT NULL column still holds a
-#: value and the audit reads as deliberately cleared, not merely empty.
-ERASED_PLACEHOLDER = "[erased]"
-
-
 class NotificationHandlers:
     """Event handlers for notification triggers."""
-
-    @staticmethod
-    async def on_gdpr_erasure_executed(data: dict[str, Any], *, db: AsyncSession) -> None:
-        """Redact a patient's contact copies from the communication log (#546).
-
-        Transactional (ADR 0019): runs inside the erasure's transaction, so
-        the audit log and this redaction commit or roll back together. Only
-        rows whose channel matches an erased contact category are cleared —
-        the recipient address, subject, body, template context and failure
-        text of the patient's own messages (a failed send persists the
-        refused address in ``error_message``). The row itself stays: the
-        outbox is also the send audit, and a completed erasure must be
-        visible without erasing the fact that messages were sent. A row
-        still waiting to go out (``queued``/``failed``) is additionally
-        cancelled (``skipped``) so a later outbox tick skips it; a ``sending``
-        row is cancelled too, but a send already on the wire still reports
-        its terminal status from the dispatcher, whose commit can land after
-        ours and supersede the cancel (#546).
-        """
-        patient_id = _as_uuid(data.get("patient_id"))
-        clinic_id = _as_uuid(data.get("clinic_id"))
-        erased = set(data.get("erased_categories") or ())
-        if not (patient_id and clinic_id):
-            return
-        channels = [
-            channel for channel, category in ERASURE_CHANNEL_CATEGORY.items() if category in erased
-        ]
-        if not channels:
-            return
-        rows = (
-            (
-                await db.execute(
-                    select(CommunicationMessage).where(
-                        CommunicationMessage.clinic_id == clinic_id,
-                        CommunicationMessage.patient_id == patient_id,
-                        CommunicationMessage.channel.in_(channels),
-                        CommunicationMessage.to_address != ERASED_PLACEHOLDER,
-                    )
-                )
-            )
-            .scalars()
-            .all()
-        )
-        for message in rows:
-            message.to_address = ERASED_PLACEHOLDER
-            message.subject = None
-            message.body_text = None
-            message.context_data = None
-            message.error_message = None
-            if message.status in ("queued", "sending", "failed"):
-                # Never dispatch an erased recipient or an emptied message:
-                # cancel the unsent row so the outbox tick skips it.
-                message.status = "skipped"
 
     @staticmethod
     async def on_appointment_scheduled(data: dict[str, Any], *, db: AsyncSession) -> None:

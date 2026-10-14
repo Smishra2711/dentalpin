@@ -2,11 +2,11 @@
 
 ## Unreleased
 
-- feat(#546): subscribe to `gdpr.erasure.executed`; redact the recipient,
-  subject, body, template context and failure text of a patient's messages
-  for the erased contact categories, and cancel (`skipped`) any queued,
-  sending or failed row so the outbox cannot send to the placeholder (the
-  dispatched row stays as the send audit). Transactional (ADR 0019).
+- feat(#546, ADR 0038): expose a `NotificationsErasureContributor` instead of
+  subscribing to `gdpr.erasure.executed`; `gdpr` pulls it inside the
+  erasure transaction. Same redaction (recipient, subject, body, template
+  context, failure text; unsent rows cancelled) and the contributor
+  reports its own coverage row. Transactional.
 - feat(i18n): Hindi (`hi`) locale for the module's frontend layer; Hindi option in the clinic communication-language picker.
 - chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
 

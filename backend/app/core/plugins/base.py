@@ -14,6 +14,7 @@ from .manifest import Manifest
 if TYPE_CHECKING:
     from app.core.agents.base import BaseAgent
     from app.core.agents.tools.tool import Tool
+    from app.core.erasure.types import ErasureContributor
     from app.core.scheduling import ScheduledJob
 
     from .context import ModuleContext
@@ -111,6 +112,23 @@ class BaseModule(ABC):
         *active* modules (installed and mounted at boot), so the scheduler
         no longer imports module task functions directly. See
         :class:`~app.core.scheduling.ScheduledJob`.
+        """
+        return []
+
+    # --- GDPR erasure contract (ADR 0038, issue #546) ---------------------
+
+    def get_erasure_contributors(self) -> list[ErasureContributor]:
+        """Return this module's GDPR erasure contributors, if it holds
+        subject copies.
+
+        Default is an empty list. The loader collects contributors from the
+        *active* modules into
+        :class:`~app.core.erasure.registry.SubjectErasureRegistry`, and
+        ``gdpr`` pulls them inside the erasure transaction. A contributor
+        redacts its own copies and reports its own
+        :class:`~app.core.erasure.types.ErasureCoverage` — ``gdpr`` never
+        imports contributor modules, and contributors never depend on
+        ``gdpr``. See ``docs/technical/creating-modules.md``.
         """
         return []
 

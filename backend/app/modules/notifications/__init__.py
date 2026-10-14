@@ -177,5 +177,9 @@ class NotificationsModule(BaseModule):
             EventType.BUDGET_ACCEPTED: NotificationHandlers.on_budget_accepted,
             EventType.BUDGET_REMINDER_SENT: NotificationHandlers.on_budget_reminder_sent,
             EventType.INVOICE_SENT: NotificationHandlers.on_invoice_sent,
-            EventType.GDPR_ERASURE_EXECUTED: NotificationHandlers.on_gdpr_erasure_executed,
         }
+
+    def get_erasure_contributors(self) -> list:
+        from .erasure import NotificationsErasureContributor
+
+        return [NotificationsErasureContributor()]

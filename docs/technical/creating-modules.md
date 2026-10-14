@@ -1342,6 +1342,53 @@ Rules:
 - **No LLM abstraction in core.** Each agent imports its own SDK. Core
   guarantees the contract (tools + registry + audit), nothing else.
 
+### GDPR erasure contributors (ADR 0038)
+
+If your module stores copies of patient contact data (message logs,
+contact-attempt notes, signature emails, …), expose them to GDPR erasure
+through a contributor — never through an event subscription. `gdpr`
+pulls every registered contributor inside the erasure transaction and
+assembles the DSR coverage list from their answers; a scope with no
+contributor produces no row, so an uninstalled module is never reported
+as erased. The `gdpr.erasure.executed` event is announcement-only.
+
+```python
+from app.core.erasure.types import ErasureContributor, ErasureCoverage
+
+
+class MyModuleErasureContributor(ErasureContributor):
+    @property
+    def scope(self) -> str:
+        return "mymodule"
+
+    async def erase(self, clinic_id, patient_id, erased, retained, db):
+        # Redact this module's own copies; filter every query by
+        # clinic_id (and patient_id). No commit. Then report:
+        return ErasureCoverage(scope=self.scope, status="erased", detail="…")
+
+
+class MyModule(BaseModule):
+    def get_erasure_contributors(self) -> list:
+        from .erasure import MyModuleErasureContributor
+
+        return [MyModuleErasureContributor()]
+```
+
+Rules:
+
+- **The contract lives in core** (`app/core/erasure/`). Contributors
+  return `ErasureCoverage` from there — never import `gdpr`, and never
+  add `gdpr` to `manifest.depends`.
+- **`get_erasure_contributors()` is optional** — the default returns
+  `[]`. Override it only when the module holds subject copies.
+- **One scope per contributor**; scopes are unique registry-wide (a
+  duplicate raises at boot).
+- **A raising contributor rolls back the whole erasure.** Fail loudly;
+  never swallow.
+- **Status honesty:** `erased` only when this scope's copies were
+  removed, `retained` with the legal basis in `detail`, otherwise
+  `not_applicable`.
+
 ### Contract checklist for agent-ready modules
 
 - [ ] `get_tools()` is overridden once the module has tools to expose

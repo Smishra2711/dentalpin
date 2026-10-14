@@ -26,7 +26,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .models import Recall, RecallContactAttempt
+from .models import Recall
 from .service import RecallService, RecallSettingsService
 
 logger = logging.getLogger(__name__)
@@ -41,18 +41,6 @@ def _safe_uuid(raw: Any) -> UUID | None:
         return UUID(str(raw))
     except (ValueError, TypeError):
         return None
-
-
-#: Contact-attempt channels (``RecallContactAttempt.channel``) mapped to the
-#: GDPR erasure category that blanks the contact the note may carry. Cleared
-#: per-channel so an email-only erasure never discards a phone-attempt note
-#: (and vice versa), matching the notifications subscriber (#546).
-_ERASURE_CHANNEL_CATEGORY: dict[str, str] = {
-    "email": "email",
-    "phone": "phone",
-    "whatsapp": "phone",
-    "sms": "phone",
-}
 
 
 async def on_appointment_scheduled(data: dict[str, Any], *, db: AsyncSession) -> None:
@@ -198,46 +186,3 @@ async def on_patient_archived(data: dict[str, Any], *, db: AsyncSession) -> None
     for recall in result.scalars().all():
         recall.status = "needs_review"
         recall.updated_at = now
-
-
-async def on_gdpr_erasure_executed(data: dict[str, Any], *, db: AsyncSession) -> None:
-    """Clear a patient's contact-attempt notes on a GDPR erasure (#546).
-
-    Transactional (ADR 0019): runs inside the erasure's transaction, so
-    the audit log and this redaction commit or roll back together. Only
-    the free-text ``note`` of an attempt whose channel matches an erased
-    contact category is cleared — it records what was dialled and can
-    carry the erased contact. The recall itself and its clinical
-    ``reason_note`` are retained: a recall is treatment history, not a
-    contact copy.
-    """
-    patient_id = _safe_uuid(data.get("patient_id"))
-    clinic_id = _safe_uuid(data.get("clinic_id"))
-    erased = set(data.get("erased_categories") or ())
-    categories = {"email", "phone"} & erased
-    if not (patient_id and clinic_id) or not categories:
-        return
-    channels = [
-        channel for channel, category in _ERASURE_CHANNEL_CATEGORY.items() if category in categories
-    ]
-
-    recall_ids = select(Recall.id).where(
-        Recall.patient_id == patient_id,
-        Recall.clinic_id == clinic_id,
-    )
-    attempts = (
-        (
-            await db.execute(
-                select(RecallContactAttempt).where(
-                    RecallContactAttempt.clinic_id == clinic_id,
-                    RecallContactAttempt.recall_id.in_(recall_ids),
-                    RecallContactAttempt.channel.in_(channels),
-                    RecallContactAttempt.note.is_not(None),
-                )
-            )
-        )
-        .scalars()
-        .all()
-    )
-    for attempt in attempts:
-        attempt.note = None

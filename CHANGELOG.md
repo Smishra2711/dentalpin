@@ -132,15 +132,14 @@ frontend as a Nuxt layer under its own Python package.
   before upgrading; `docker-compose.prod.yml` and
   `docker-compose.coolify.yml` now both refuse to start without it.
 
-- **GDPR erasure now reaches the redundant copies, not just the patient
-  row** (#546). A completed erasure redacts the patient's contact copies
-  in `notifications` (message recipient, subject, body, template context,
-  failure text; unsent rows cancelled) and `recalls`
-  (contact-attempt notes) inside the same transaction as the patient-row
-  blanks, and the erasure result now reports a per-scope coverage list
-  (`ErasureCoverage`) instead of the single `coverage_note`. Issued
-  invoices, budget estimates/signatures and clinical records stay retained
-  (Art. 17(3)).
+- **GDPR erasure now pulls a contributor registry, not a fan-out** (#546,
+  ADR 0038). `gdpr` calls every registered erasure contributor
+  (`notifications`, `recalls`) inside the erasure transaction and builds
+  the per-scope coverage list (`ErasureCoverage`) from their answers — a
+  scope with no contributor produces no row. `gdpr.erasure.executed` is a
+  post-commit announcement. Fiscal, signature and clinical records stay
+  retained (Art. 17(3)), hardcoded as interim rows until their
+  contributors land.
 
 ### Tests
 
