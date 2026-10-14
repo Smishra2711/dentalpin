@@ -90,7 +90,7 @@ class RecallsErasureContributor(ErasureContributor):
         status: Literal["erased", "retained", "not_applicable"]
         if {"email", "phone"} & erased_set:
             status = "erased"
-        elif {"email", "phone"} & (erased_set | set(retained)):
+        elif {"email", "phone"} & set(retained):
             status = "retained"
         else:
             status = "not_applicable"

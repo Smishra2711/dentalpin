@@ -279,8 +279,44 @@ async def test_erasure_omits_scope_without_contributor(
         RetentionPolicyCreate(data_category="email", retention_years=0),
     )
     erasure_registry.clear()
+    erasure_registry.register_from(NotificationsModule())
     try:
-        erasure_registry.register_from(NotificationsModule())
+        result = await ErasureService.execute(
+            db_session,
+            test_clinic.id,
+            patient_id=test_patient.id,
+            categories=["email"],
+            rationale="Art.17 erasure request",
+        )
+        coverage = {c.scope: c.status for c in result.coverage}
+        assert coverage["notifications"] == "erased"
+        assert "recalls" not in coverage
+    finally:
+        erasure_registry.clear()
+
+
+@pytest.mark.asyncio
+async def test_announcement_failure_does_not_fail_erasure(
+    db_session: AsyncSession,
+    test_clinic: Clinic,
+    test_patient: Patient,
+    erasure_contributors: None,
+):
+    # The post-commit announcement must not fail the committed erasure:
+    # a subscriber declaring db raises inside publish (bus rule), after
+    # the audit log is already durable.
+    from app.core.events import EventType, event_bus
+
+    async def _db_subscriber(data, *, db):
+        raise AssertionError("announcement must not run in-transaction")
+
+    await RetentionService.create(
+        db_session,
+        test_clinic.id,
+        RetentionPolicyCreate(data_category="email", retention_years=0),
+    )
+    event_bus.subscribe(EventType.GDPR_ERASURE_EXECUTED, _db_subscriber)
+    try:
         result = await ErasureService.execute(
             db_session,
             test_clinic.id,
@@ -289,10 +325,11 @@ async def test_erasure_omits_scope_without_contributor(
             rationale="Art.17 erasure request",
         )
     finally:
-        erasure_registry.clear()
+        event_bus.unsubscribe(EventType.GDPR_ERASURE_EXECUTED, _db_subscriber)
+    assert result is not None
+    assert result.erased_categories == ["email"]
     coverage = {c.scope: c.status for c in result.coverage}
     assert coverage["notifications"] == "erased"
-    assert "recalls" not in coverage
 
 
 @pytest.mark.asyncio

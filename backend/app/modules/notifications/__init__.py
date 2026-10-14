@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter
 
+from app.core.erasure.types import ErasureContributor
 from app.core.events.types import EventType
 from app.core.plugins import BaseModule
 from app.core.scheduling import ScheduledJob
@@ -179,7 +180,7 @@ class NotificationsModule(BaseModule):
             EventType.INVOICE_SENT: NotificationHandlers.on_invoice_sent,
         }
 
-    def get_erasure_contributors(self) -> list:
+    def get_erasure_contributors(self) -> list[ErasureContributor]:
         from .erasure import NotificationsErasureContributor
 
         return [NotificationsErasureContributor()]

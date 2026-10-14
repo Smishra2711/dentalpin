@@ -24,6 +24,12 @@ class SubjectErasureRegistry:
     loader calls :meth:`register_from` for every mounted module, and
     ``gdpr`` pulls :meth:`contributors` inside the erasure transaction.
     A scope with no registered contributor produces no coverage row.
+
+    Boot-only writes: the only production writer is mount (plus tests via
+    :meth:`clear`); nothing mutates the registry during a request, so no
+    lock is needed. Like ``ToolRegistry.unregister_module``, the uninstall
+    path relies on rebuild-at-boot from the active modules instead of
+    hot-unwiring.
     """
 
     def __init__(self) -> None:

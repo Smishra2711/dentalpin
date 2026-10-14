@@ -8,9 +8,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-# Re-exported: the coverage shape lives in core so contributor modules can
-# return it without depending on the optional gdpr module (ADR 0038).
-from app.core.erasure.types import ErasureCoverage  # noqa: F401
+# The coverage shape lives in core so contributor modules can return it
+# without depending on the optional gdpr module (ADR 0038); gdpr itself
+# uses it for the ErasureResult response below.
+from app.core.erasure.types import ErasureCoverage
 
 RequestType = Literal["access", "rectification", "erasure", "portability", "restrict"]
 RequestStatus = Literal["received", "in_progress", "completed", "rejected"]
