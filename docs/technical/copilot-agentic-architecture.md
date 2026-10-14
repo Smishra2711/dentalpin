@@ -5,10 +5,11 @@ Status: **plan / not yet implemented**. This is the technical/architecture plan 
 > **Scope cut (owner):** v1 = thin vertical slice + **mandatory PHI redaction** + **OpenAI provider only**. The `Provider` protocol stays vendor-agnostic so Anthropic plugs in later with zero changes below `app/core/llm/`. Deferred: Anthropic provider, RAG/pgvector, proactive/scheduled agents, self-hosted/Ollama provider, admin dashboards. Rationale in the design phase; not repeated here.
 >
 > **Drift note (2026-09, audit DOCS-01):** this page is the frozen v1-design
-> record — the scope cut above is historical. `AnthropicProvider` has since
-> landed in `backend/app/core/llm/`; the factory now resolves active provider
-> specifications through a process-wide registry. Copilot registers the built-in
-> OpenAI and Anthropic specifications from `CopilotModule.on_activate()` per
+> record — the scope cut above is historical. `AnthropicProvider` and
+> `GeminiProvider` have since landed in `backend/app/core/llm/`; the factory
+> now resolves active provider specifications through a process-wide
+> registry. Copilot registers the built-in OpenAI, Anthropic and Gemini
+> specifications from `CopilotModule.on_activate()` per
 > ADR 0020. RAG/Ollama remain deferred as stated.
 
 ---
@@ -286,7 +287,7 @@ Backend (`pytest`, fixtures `client`/`auth_headers`/`db_session`/`test_clinic` f
 - **Inline confirm** — drive the orchestrator with a fake provider that emits a `book_appointment` tool_use: assert the turn **suspends** with `confirmation_required` and **no** appointment row exists; POST confirm → row created + audit row; POST reject → no row, audit reflects skip.
 - **Redaction** — assert no raw `full_name`/`phone`/`email`/patient-UUID appears in the payload handed to the fake provider; assert displayed tokens are rehydrated; assert a tool flagged `exposes_free_text` is excluded from `tool_names` when redaction is on.
 - **Budget** — over-limit `copilot_settings` → orchestrator yields `budget_exceeded`, provider never called.
-- **Provider abstraction** — run the orchestrator turn against a fake provider emitting the neutral `ProviderEvent` sequence; assert redaction/confirm/audit behave purely on neutral types (proves Anthropic will drop in later untouched). Assert `factory.get_provider` raises on unsupported names and `settings` PATCH rejects a provider whose API key is unset.
+- **Provider abstraction** — run the orchestrator turn against a fake provider emitting the neutral `ProviderEvent` sequence; assert redaction/confirm/audit behave purely on neutral types (proves new providers drop in later untouched). Assert `factory.get_provider` raises on unsupported names and `settings` PATCH rejects a provider whose API key is unset.
 - **Uninstall round-trip** — install → converse → uninstall leaves core agent tables + other modules intact (`test_uninstall_roundtrip.py` pattern).
 
 Manual: `docker-compose up`, login `admin@demo.clinic`, `Cmd+K`, run an Ask ("pacientes que se llamen María") and an Act ("agenda revisión a María mañana 10:00" → confirm card → confirm → booked).
