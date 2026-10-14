@@ -139,7 +139,8 @@ frontend as a Nuxt layer under its own Python package.
   scope with no contributor produces no row. `gdpr.erasure.executed` is a
   post-commit announcement. Fiscal, signature and clinical records stay
   retained (Art. 17(3)), hardcoded as interim rows until their
-  contributors land.
+  contributors land. `ErasureResult.coverage_note` is removed in favor of
+  the `coverage` list (no frontend reader affected).
 
 ### Tests
 
