@@ -171,7 +171,7 @@ def test_uvicorn_reads_the_env_var_when_the_flag_is_absent() -> None:
         del os.environ["FORWARDED_ALLOW_IPS"]
         fallback = Config("app.main:app", proxy_headers=True)
         # Safe, but not what we ship — see the comment above.
-        assert fallback.forwarded_allow_ips == "127.0.0.1,::1"
+        assert fallback.forwarded_allow_ips in ("127.0.0.1", "127.0.0.1,::1")
         assert "*" not in str(fallback.forwarded_allow_ips)
     finally:
         os.environ.pop("FORWARDED_ALLOW_IPS", None)

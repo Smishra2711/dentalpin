@@ -6,6 +6,7 @@
 [![pt](https://img.shields.io/badge/lang-pt-brightgreen.svg)](./README.pt.md)
 [![ta](https://img.shields.io/badge/lang-ta-green.svg)](./README.ta.md)
 [![te](https://img.shields.io/badge/lang-te-teal.svg)](./README.te.md)
+[![hi](https://img.shields.io/badge/lang-hi-FF9933.svg)](./README.hi.md)
 [![de](https://img.shields.io/badge/lang-de-black.svg)](./README.de.md)
 [![hu](https://img.shields.io/badge/lang-hu-orange.svg)](./README.hu.md)
 [![pl](https://img.shields.io/badge/lang-pl-lightgrey.svg)](./README.pl.md)

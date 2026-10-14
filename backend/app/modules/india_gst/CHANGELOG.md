@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer; Hindi name for the `GST 18%` VAT type; India demo seed supports a New Delhi (state 07) clinic.
+
 - refactor(#611): `_csv_cell` moved to `app/core/csv_safety.py` and is now
   shared. This module solved formula injection first; the other exports
   did not pick it up until #611. No behaviour change here.
