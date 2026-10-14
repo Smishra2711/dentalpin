@@ -36,14 +36,16 @@ table.
 ([`backend/app/core/auth/permissions.py`](../../../backend/app/core/auth/permissions.py))
 expands to `billing.read`, `billing.write` and `billing.admin` — the same
 admin-tier reach `admin` has. This is intended and is deliberately not
-narrowed (issue #542):
+narrowed ([maintainer confirmation on issue
+#542](https://github.com/dentalpin/dentalpin/issues/542#issuecomment-6172678909)):
 
 - The irreversible, AEAT-chained actions are **not** admin-tier. Issuing
   an invoice and issuing a credit note (how an already-issued invoice is
   reversed) are `billing.write`, held by `receptionist` and `assistant`
-  too. Compliance chaining into Veri*Factu runs through the `verifactu`
-  module's `invoice.issued` hook, independently of who triggered the
-  issue.
+  too. Compliance chaining into Veri*Factu runs through a
+  `BillingHookRegistry` hook — `VerifactuHook.on_invoice_issued`
+  (`verifactu/hook.py`, registered in `on_activate` and resolved inline
+  in the issuing path) — independently of who triggered the issue.
 - `void` is draft-only (`InvoiceWorkflowService.can_void`,
   [`workflow.py`](../../../backend/app/modules/billing/workflow.py)), so
   it never touches an issued or fiscally-recorded invoice.
