@@ -58,12 +58,6 @@
         "expired": "انتهت صلاحية الدفعة",
         "cancelled": "تم إلغاء الدفعة"
       },
-      "methods": {
-        "upi": "UPI",
-        "qr": "رمز QR",
-        "card": "بطاقة",
-        "payment_link": "رابط دفع"
-      },
       "railUpiQr": "رمز UPI QR",
       "railCheckout": "Razorpay",
       "railPaymentLink": "رابط دفع"

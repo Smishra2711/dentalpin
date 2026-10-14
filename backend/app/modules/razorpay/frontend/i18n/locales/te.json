@@ -58,12 +58,6 @@
         "expired": "చెల్లింపు గడువు ముగిసింది",
         "cancelled": "చెల్లింపు రద్దు చేయబడింది"
       },
-      "methods": {
-        "upi": "UPI",
-        "qr": "QR",
-        "card": "కార్డు",
-        "payment_link": "పేమెంట్ లింక్"
-      },
       "railUpiQr": "UPI QR",
       "railCheckout": "Razorpay",
       "railPaymentLink": "పేమెంట్ లింక్"
