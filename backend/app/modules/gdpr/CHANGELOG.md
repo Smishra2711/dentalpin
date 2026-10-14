@@ -11,7 +11,9 @@
   produces no row, so an uninstalled module is never reported as erased.
   `gdpr.erasure.executed` is now a post-commit announcement.
   `patient_timeline`/`budget`/`billing`/`clinical` rows stay hardcoded as
-  interim retained entries until their contributors land.
+  interim retained entries until their contributors land. A failing
+  announcement is logged, never raised (the erasure is already committed);
+  interim rows defer to any contributor answering the same scope.
 - Maintainer-review fixes (PR #374, part of #44): closed erasure
   vocabulary `ErasureCategory` (`email | phone | identity`, 422 on anything
   else) in the schema and tool args so an erasure can never report a

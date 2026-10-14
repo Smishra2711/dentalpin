@@ -1356,7 +1356,8 @@ as erased. The `gdpr.erasure.executed` event is announcement-only.
 from app.core.erasure.types import ErasureContributor, ErasureCoverage
 
 
-class MyModuleErasureContributor(ErasureContributor):    @property
+class MyModuleErasureContributor(ErasureContributor):
+    @property
     def scope(self) -> str:
         return "mymodule"
 

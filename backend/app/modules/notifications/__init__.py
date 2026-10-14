@@ -2,6 +2,9 @@
 
 from fastapi import APIRouter
 
+# Runtime (not TYPE_CHECKING) import: this module has no
+# `from __future__ import annotations`, so the override's annotation is
+# evaluated at def time. Cycle-free: core.erasure.types imports no modules.
 from app.core.erasure.types import ErasureContributor
 from app.core.events.types import EventType
 from app.core.plugins import BaseModule

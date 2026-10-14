@@ -15,6 +15,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.erasure.registry import erasure_registry
+from app.core.erasure.types import ErasureCoverage
 from app.core.events import EventType, event_bus
 
 from .models import DataBreach, ErasureAuditLog, GdprRequest, PatientConsent, RetentionPolicy
@@ -22,7 +23,6 @@ from .schemas import (
     ConsentCreate,
     DataBreachCreate,
     DataBreachUpdate,
-    ErasureCoverage,
     ErasureResult,
     GdprRequestCreate,
     GdprRequestUpdate,
@@ -418,7 +418,11 @@ class ErasureService:
                 },
             )
         except Exception:
-            logger.exception("Erasure announcement failed after commit")
+            logger.exception(
+                "Erasure announcement failed after commit (clinic %s, request %s)",
+                clinic_id,
+                request_id,
+            )
         return ErasureResult(
             patient_id=patient_id,
             erased_categories=erasable,

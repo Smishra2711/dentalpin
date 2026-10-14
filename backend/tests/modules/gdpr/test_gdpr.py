@@ -279,8 +279,8 @@ async def test_erasure_omits_scope_without_contributor(
         RetentionPolicyCreate(data_category="email", retention_years=0),
     )
     erasure_registry.clear()
-    erasure_registry.register_from(NotificationsModule())
     try:
+        erasure_registry.register_from(NotificationsModule())
         result = await ErasureService.execute(
             db_session,
             test_clinic.id,
@@ -310,11 +310,19 @@ async def test_announcement_failure_does_not_fail_erasure(
     async def _db_subscriber(data, *, db):
         raise AssertionError("announcement must not run in-transaction")
 
+    announced: list[dict] = []
+
+    async def _recorder(data):
+        announced.append(data)
+
     await RetentionService.create(
         db_session,
         test_clinic.id,
         RetentionPolicyCreate(data_category="email", retention_years=0),
     )
+    # Subscribe the recorder first: the bus aborts the loop on the
+    # db-subscriber's RuntimeError, so ordering decides what is recorded.
+    event_bus.subscribe(EventType.GDPR_ERASURE_EXECUTED, _recorder)
     event_bus.subscribe(EventType.GDPR_ERASURE_EXECUTED, _db_subscriber)
     try:
         result = await ErasureService.execute(
@@ -326,10 +334,32 @@ async def test_announcement_failure_does_not_fail_erasure(
         )
     finally:
         event_bus.unsubscribe(EventType.GDPR_ERASURE_EXECUTED, _db_subscriber)
+        event_bus.unsubscribe(EventType.GDPR_ERASURE_EXECUTED, _recorder)
     assert result is not None
     assert result.erased_categories == ["email"]
     coverage = {c.scope: c.status for c in result.coverage}
     assert coverage["notifications"] == "erased"
+    # The announcement still went out (to the non-transactional subscriber)
+    # even though the db-subscriber raised.
+    assert [a["patient_id"] for a in announced] == [str(test_patient.id)]
+
+
+def test_interim_coverage_dedupes_answered_scopes():
+    # Pure unit test (no DB): once a contributor answers a scope, the
+    # interim row for that scope is suppressed so it never reports twice.
+    rows = ErasureService._interim_retained_coverage(["email"], [])
+    assert {r.scope for r in rows} == {
+        "patient_timeline",
+        "budget",
+        "billing",
+        "clinical",
+    }
+    rows = ErasureService._interim_retained_coverage(
+        ["email"], [], answered={"budget", "notifications"}
+    )
+    assert {r.scope for r in rows} == {"patient_timeline", "billing", "clinical"}
+    rows = ErasureService._interim_retained_coverage([], ["clinical"])
+    assert {r.scope: r.status for r in rows}["clinical"] == "retained"
 
 
 @pytest.mark.asyncio
