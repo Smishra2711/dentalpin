@@ -31,8 +31,8 @@ Art. 5(2), immutable except for status transitions):
 - `PATCH /api/v1/gdpr/retention/{id}` — update a policy
 - `DELETE /api/v1/gdpr/retention/{id}` — delete a policy (204)
 - `POST /api/v1/gdpr/erasure` — run a partial erasure (201). The result
-  carries its own coverage limitation: patient-row identity fields
-  only, no cross-module fan-out (#546).
+  carries a per-scope coverage list (`ErasureCoverage`, see below), so a
+  completed run never reads as full DSR coverage (#546).
 - `GET /api/v1/gdpr/audit` — list erasure audit logs
 - `GET /api/v1/gdpr/breaches` — list breaches
 - `GET /api/v1/gdpr/breaches/{id}` — get one breach

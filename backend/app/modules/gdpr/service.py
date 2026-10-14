@@ -432,7 +432,7 @@ class ErasureService:
             ErasureCoverage(
                 scope="notifications",
                 status=contact_status(),
-                detail="Recipient contact on the patient's communication log.",
+                detail="Recipient, subject, body, template context and failure text on the communication log.",
             ),
             ErasureCoverage(
                 scope="recalls",
