@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer; Hindi demo seed contact attempts.
 - chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
 
 - fix(#611): the recall CSV export no longer emits live spreadsheet

@@ -15,6 +15,7 @@ export default defineNuxtConfig({
       { code: 'pt', file: 'notifications-pt.json' },
       { code: 'ta', file: 'notifications-ta.json' },
       { code: 'te', file: 'notifications-te.json' },
+      { code: 'hi', file: 'notifications-hi.json' },
       { code: 'de', file: 'notifications-de.json' },
       { code: 'pl', file: 'notifications-pl.json' },
       { code: 'it', file: 'notifications-it.json' },

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer.
+
 - feat(i18n): Telugu (`te`) locale for the module's frontend layer.
 - Follow-up: `AttendanceService.clock()` requires `created_by` (keyword-only)
   and the `clocked` payload no longer carries a null branch (review nit on #501).

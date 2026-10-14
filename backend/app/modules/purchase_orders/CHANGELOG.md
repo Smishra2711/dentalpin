@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer; Hindi purchase-order PDF labels.
 - feat(i18n): Telugu (`te`) locale for the module's frontend layer.
 - feat(i18n): Telugu (`te`) purchase-order PDF labels.
 - feat(#509): the purchase-order PDF for `pt-BR` reuses the `pt` labels.

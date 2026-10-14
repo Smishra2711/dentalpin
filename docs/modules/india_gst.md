@@ -144,21 +144,28 @@ The module must already be installed (§3.3) before seeding.
 ```bash
 ./scripts/seed-demo.sh --lang ta                 # Tamil UI, India GST demo
 ./scripts/seed-demo.sh --lang te                 # Telugu UI, India GST demo (Hyderabad, Telangana)
+./scripts/seed-demo.sh --lang hi                  # Hindi UI, India GST demo (Delhi)
 ./scripts/seed-demo.sh --lang en --country in     # English UI, India GST demo
 ./scripts/seed-demo.sh --lang en                  # default — USA/USD clinic, no GST
 ```
 
-Both India variants seed the same fixture set:
+All India variants seed the same fixture set; only the clinic's home
+state differs:
 
 - Clinic: **Chennai Dental Care**, GSTIN `33ABCDE1234F1Z7`, `regular`
-  registration, `clinic_state="33"` (Tamil Nadu).
+  registration, `clinic_state="33"` (Tamil Nadu) for `--lang ta` and
+  `--lang en --country in`; **Delhi Dental Care**, GSTIN
+  `07ABCDE1234F1Z2`, `clinic_state="07"` (Delhi, address in New Delhi)
+  for `--lang hi`. Both GSTINs pass the mod-36 checksum.
 - Catalog: every active treatment reassigned to a `GST 18%` VAT type
   and auto-configured with SAC `999312`.
 - 7 invoices, run through the real `IndiaGstHook` (not a hand-rolled
   approximation), so `compliance_data['IN']`, `india_gst_invoice_items`,
   and `india_gst_einvoice_submissions` are populated exactly as they
   would be at real issue time:
-  - 4 intra-state (place of supply `33`, Tamil Nadu) → CGST + SGST.
+  - 4 intra-state (place of supply = the clinic's home state, `33` or
+    `07`) → CGST + SGST. The seed marks these with the `HOME_STATE`
+    sentinel and resolves it through `india_home_state()`.
   - 2 inter-state (place of supply `29` Karnataka and `27` Maharashtra,
     each with a structurally valid recipient GSTIN on
     `Invoice.billing_tax_id`) → IGST.
@@ -172,7 +179,7 @@ same 15 patients (and their emergency contacts) from the Tamil demo's
 native Indian names into Latin script, rather than reusing the default
 English demo's American names, since GST invoices next to American
 names read oddly. `--country in` is currently only accepted with
-`--lang en` (`--lang ta` already implies it); combining it with
+`--lang en` (`--lang ta` and `--lang hi` already imply it); combining it with
 `--lang es`/`--lang fr` exits with an error. Clinic staff names are
 unaffected by `--country in` in either language.
 
@@ -182,7 +189,7 @@ intra-state invoices with place of supply `36` (the inter-state `29` /
 `27` invoices are unchanged), and traditional Telugu patient names.
 
 The default `./scripts/seed-demo.sh` (no flags, or any `--lang` other
-than `ta`/`te` without `--country in`) is unchanged — a generic non-India
+than `ta`/`te`/`hi`) is unchanged — a generic non-India without `--country in`) is unchanged — a generic non-India
 clinic with the India GST hook inactive.
 
 ---
@@ -366,6 +373,15 @@ Labels are defined in `pdf.py::_get_labels` and the CSS font-family
 includes `'Noto Sans Tamil'` and `'Noto Sans Telugu'` (both installed via
 `fonts-noto-core` in the Dockerfile).
 
+### Hindi language support
+
+PDF generation supports `locale=hi` (Hindi, Devanagari script). Labels
+live next to the Tamil ones in each module's `pdf.py`; money and dates
+use the `hi_IN` Babel locale (lakh/crore grouping, Latin digits, Hindi
+month names). Glyphs come from `'Noto Sans Devanagari'`, also shipped by
+`fonts-noto-core` — fontconfig falls back to it even where a module's
+CSS does not list it.
+
 ---
 
 ## 8. E-invoice scaffolding
@@ -531,6 +547,7 @@ Translations ship for every host locale, including:
 - `i18n/locales/es.json` — Spanish
 - `i18n/locales/ta.json` — Tamil
 - `i18n/locales/te.json` — Telugu
+- `i18n/locales/hi.json` — Hindi
 
 ### Utility functions
 
@@ -778,6 +795,7 @@ test that fails against the defect or missing behaviour it protects.
 | M1 | Tamil demo clinic gets `country=IN`, generic-country locales don't | `test_seed_data.py` | `get_clinic_data()["settings"]["country"]` set for `lang="ta"` and `lang="en" + country="in"`; unset otherwise |
 | M2 | Explicit Tamil demo GST fixture is reproducible | `test_seed_data.py` | `seed_india_gst()` creates settings (GSTIN `33ABCDE1234F1Z7`, state `33`), `GST 18%` VAT type, SAC defaults on every active catalog item — only when explicitly called, never from install |
 | M3 | English + India demo overlays Chennai/INR in English, not Tamil script | `test_seed_data.py` | `lang="en", country="in"` → `address.city == "Chennai"`, `currency == "INR"`, `timezone == "Asia/Kolkata"` |
+| M4 | Hindi demo is a New Delhi clinic | `test_seed_data.py` | `lang="hi"` → `country=IN`, `address.city == "नई दिल्ली"`, `india_home_state() == "07"`, GSTIN `07…` passes the checksum; Tamil keeps state `33` |
 
 ### Safety invariants verified
 

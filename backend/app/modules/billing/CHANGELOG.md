@@ -4,6 +4,7 @@
 
 - docs(#542): `docs/technical/billing/permissions.md` now documents why `dentist` holds `billing.admin` (series config, draft-only void, clinic billing settings) and corrects the `void` description to draft-only; grants unchanged.
 
+- feat(i18n): Hindi (`hi`) locale: Hindi invoice PDF labels; `Noto Sans Devanagari` in the PDF font stack.
 - chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
 
 - feat(i18n): Telugu (`te`) invoice PDF labels; `Noto Sans Telugu` joins the PDF font stack.

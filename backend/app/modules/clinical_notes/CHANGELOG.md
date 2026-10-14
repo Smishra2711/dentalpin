@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer; Hindi demo seed notes.
 - fix: an admin editing a note written by someone else got a 500.
   `NoteService.update` did not eager-load `author`, and
   `ClinicalNoteResponse` declares the field, so building the response

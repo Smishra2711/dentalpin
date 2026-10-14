@@ -280,6 +280,30 @@ _LABELS = {
             "cancelled": "రద్దు చేయబడింది",
         },
     },
+    "hi": {
+        "po": "क्रय आदेश",
+        "draft": "मसौदा",
+        "supplier": "आपूर्तिकर्ता",
+        "status": "स्थिति",
+        "expected_date": "अपेक्षित तिथि",
+        "created_at": "तिथि",
+        "notes": "टिप्पणियाँ",
+        "item": "वस्तु",
+        "items": "वस्तुएँ",
+        "qty_ordered": "ऑर्डर की गई मात्रा",
+        "qty_received": "प्राप्त मात्रा",
+        "unit_price": "इकाई मूल्य",
+        "total": "कुल",
+        "line_total": "राशि",
+        "generated_by": "द्वारा तैयार",
+        "status_label": {
+            "draft": "मसौदा",
+            "sent": "भेजा गया",
+            "confirmed": "पुष्टि हुई",
+            "received": "प्राप्त",
+            "cancelled": "रद्द",
+        },
+    },
 }
 # pt-BR reuses pt labels as there is no differing words so far.
 _LABELS["pt-BR"] = _LABELS["pt"]

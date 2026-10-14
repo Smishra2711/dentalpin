@@ -58,12 +58,6 @@
         "expired": "Payment expired",
         "cancelled": "Payment cancelled"
       },
-      "methods": {
-        "upi": "UPI",
-        "qr": "QR",
-        "card": "Card",
-        "payment_link": "Payment link"
-      },
       "railUpiQr": "UPI QR",
       "railCheckout": "Razorpay",
       "railPaymentLink": "Payment link"
