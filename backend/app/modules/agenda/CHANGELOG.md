@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat(i18n): Hindi (`hi`) locale: Hindi default cabinet name (`कक्ष 1`) for clinics created in `hi`.
 - chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
 
 - fix(#590): `validate_professional_access` tolerates duplicated

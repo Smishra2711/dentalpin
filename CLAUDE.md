@@ -108,6 +108,7 @@ cd frontend && npm run typecheck:layers   # vue-tsc over host + all module layer
 ./scripts/seed-demo.sh       # demo clinic, users, sample data
 ./scripts/seed-demo.sh --lang ta                  # + India GST demo (Tamil UI; module must be installed)
 ./scripts/seed-demo.sh --lang te                  # + India GST demo (Telugu UI, Hyderabad/Telangana; module must be installed)
+./scripts/seed-demo.sh --lang hi                  # + India GST demo (Hindi UI, New Delhi; module must be installed)
 ./scripts/seed-demo.sh --lang en --country in      # + India GST demo (English UI) — see docs/modules/india_gst.md §3.5
 
 # Demo login

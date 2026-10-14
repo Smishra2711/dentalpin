@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer.
+
 - feat(i18n): Telugu (`te`) locale for the module's frontend layer.
 - fix(#482): the test/live mode is derived from the key prefix instead of
   being a separate field that could disagree with it. The selector is now a

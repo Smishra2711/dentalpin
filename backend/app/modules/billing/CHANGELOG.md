@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat(i18n): Hindi (`hi`) locale: Hindi invoice PDF labels; `Noto Sans Devanagari` in the PDF font stack.
 - chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
 
 - feat(i18n): Telugu (`te`) invoice PDF labels; `Noto Sans Telugu` joins the PDF font stack.

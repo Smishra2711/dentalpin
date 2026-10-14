@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer.
 - test(#552): branch-scoped uninstall round-trip test (heads, branch downgrade, reinstall).
 
 - fix(#611): party names and descriptions in `facturas.csv` / `cobros.csv`

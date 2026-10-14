@@ -2,9 +2,9 @@
 const { t } = useI18n()
 const { settings, loading, saving, fetch, update } = useCommunicationsSettings()
 
-const language = ref<'es' | 'en' | 'fr' | 'pt' | 'pt-BR' | 'ta' | 'te' | 'de' | 'hu' | 'pl' | 'it' | 'ar'>('es')
+const language = ref<'es' | 'en' | 'fr' | 'pt' | 'pt-BR' | 'ta' | 'te' | 'hi' | 'de' | 'hu' | 'pl' | 'it' | 'ar'>('es')
 
-const SUPPORTED = ['en', 'fr', 'pt', 'pt-BR', 'ta', 'te', 'de', 'hu', 'pl', 'it', 'ar'] as const
+const SUPPORTED = ['en', 'fr', 'pt', 'pt-BR', 'ta', 'te', 'hi', 'de', 'hu', 'pl', 'it', 'ar'] as const
 
 watch(settings, (s) => {
   if (s) language.value = (SUPPORTED.includes(s.language as typeof SUPPORTED[number]) ? s.language as typeof language.value : 'es')
@@ -20,6 +20,7 @@ const options = [
   { value: 'pt-BR', label: 'Português (BR)' },
   { value: 'ta', label: 'தமிழ்' },
   { value: 'te', label: 'తెలుగు' },
+  { value: 'hi', label: 'हिन्दी' },
   { value: 'de', label: 'Deutsch' },
   { value: 'hu', label: 'Magyar' },
   { value: 'pl', label: 'Polski' },
