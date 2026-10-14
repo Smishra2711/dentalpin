@@ -315,6 +315,7 @@ class IndiaGstCatalogService:
                         "fr": "GST 18%",
                         "ta": "GST 18%",
                         "te": "GST 18%",
+                        "hi": "GST 18%",
                     },
                     rate=18.0,
                 )

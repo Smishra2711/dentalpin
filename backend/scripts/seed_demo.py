@@ -18,6 +18,7 @@ Usage:
     docker-compose exec -T backend python scripts/seed_demo.py              # English
     docker-compose exec -T backend python scripts/seed_demo.py --lang es    # Spanish
     docker-compose exec -T backend python scripts/seed_demo.py --lang ta    # Tamil, India GST demo
+    docker-compose exec -T backend python scripts/seed_demo.py --lang hi    # Hindi, India GST demo (New Delhi)
     docker-compose exec -T backend python scripts/seed_demo.py --lang te    # Telugu, India GST demo
     docker-compose exec -T backend python scripts/seed_demo.py --lang en --country in
         # English UI, India GST demo (Chennai clinic, GSTIN, CGST/SGST/IGST invoices)
@@ -630,7 +631,8 @@ async def seed_india_gst(db: AsyncSession) -> dict:
     would do via the settings UI:
 
     1. Create ``IndiaGstSettings`` with the home-state GSTIN — Tamil Nadu
-       (``clinic_state="33"``), or Telangana (``"36"``) for Telugu.
+       (``clinic_state="33"``), or Telangana (``"36"``) for Telugu,
+       or Delhi ``07`` for Hindi.
     2. Get-or-create the ``GST 18%`` VAT type (via the service layer).
     3. Auto-configure SAC 999312 on every catalog item missing one.
     4. Re-assign all catalog items from the exempt (0%) VAT type to
@@ -712,13 +714,14 @@ Examples:
   python scripts/seed_demo.py --lang fr              # French
   python scripts/seed_demo.py --lang ta              # Tamil, India GST demo
   python scripts/seed_demo.py --lang te              # Telugu, India GST demo (Hyderabad)
+  python scripts/seed_demo.py --lang hi              # Hindi, India GST demo (New Delhi)
   python scripts/seed_demo.py --lang en --country in # English, India GST demo
         """,
     )
     parser.add_argument(
         "--lang",
         "-l",
-        choices=["en", "es", "fr", "ta", "te"],
+        choices=["en", "es", "fr", "ta", "te", "hi"],
         default="en",
         help="Language for demo data (default: en)",
     )
@@ -729,7 +732,7 @@ Examples:
         help=(
             "Country variant (default: generic). 'in' seeds the India GST "
             "clinic (Chennai, GSTIN, CGST/SGST/IGST invoices) in the chosen "
-            "--lang; currently only supported with --lang en (--lang ta / te "
+            "--lang; currently only supported with --lang en (--lang ta / te / hi"
             "already imply it)."
         ),
     )
@@ -738,16 +741,23 @@ Examples:
 
 async def main(lang: str = "en", country: str = "generic") -> None:
     """Seed the full demo clinical workflow."""
-    if country == "in" and lang not in ("en", "ta", "te"):
+    if country == "in" and lang not in ("en", "ta", "te", "hi"):
         raise SystemExit(
-            f"--country in is not supported with --lang {lang} yet — use --lang en, ta or te."
+            f"--country in is not supported with --lang {lang} yet — use --lang en, ta, te or hi."
         )
 
     set_language(lang)
     set_country(country)
-    lang_names = {"en": "English", "es": "Spanish", "fr": "French", "ta": "Tamil", "te": "Telugu"}
+    lang_names = {
+        "en": "English",
+        "es": "Spanish",
+        "fr": "French",
+        "ta": "Tamil",
+        "te": "Telugu",
+        "hi": "Hindi",
+    }
     lang_name = lang_names.get(lang, lang)
-    if country == "in" and lang not in ("ta", "te"):
+    if country == "in" and lang not in ("ta", "te", "hi"):
         lang_name += " (India GST demo)"
 
     print("\n" + "=" * 60)
@@ -786,7 +796,7 @@ async def main(lang: str = "en", country: str = "generic") -> None:
             # in). Must run after the catalog seed so SAC defaults and VAT
             # reassignment have items to act on, and before invoices so the
             # catalog_map reflects the GST 18% VAT type.
-            is_india_demo = lang in ("ta", "te") or country == "in"
+            is_india_demo = lang in ("ta", "te", "hi") or country == "in"
             if is_india_demo and await _module_is_installed(db, "india_gst"):
                 print(f"\n[opt] Creating India GST demo data (module installed, {lang_name})...")
                 gst_stats = await seed_india_gst(db)

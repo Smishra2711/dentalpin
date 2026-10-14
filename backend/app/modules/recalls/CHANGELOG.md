@@ -5,6 +5,7 @@
 - feat(#546): subscribe to `gdpr.erasure.executed`; clear the patient's
   contact-attempt notes whose channel matches an erased contact category
   (the recall and its clinical `reason_note` stay). Transactional (ADR 0019).
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer; Hindi demo seed contact attempts.
 - chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
 
 - fix(#611): the recall CSV export no longer emits live spreadsheet

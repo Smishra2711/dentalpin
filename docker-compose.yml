@@ -61,6 +61,15 @@ services:
       # Mount the frontend root read-write so the backend can regenerate
       # modules.json when a module with a Nuxt layer is installed.
       - ./frontend:/host_frontend
+      # Repo-root files read by the backend test suite, which resolves the
+      # repo root to `/` inside the container (tests/test_module_docs.py,
+      # test_email_provider_production.py, test_forwarded_allow_ips.py).
+      - ./docs:/docs:ro
+      - ./backend:/backend:ro
+      - ./.env.example:/.env.example:ro
+      - ./docker-compose.yml:/docker-compose.yml:ro
+      - ./docker-compose.prod.yml:/docker-compose.prod.yml:ro
+      - ./docker-compose.coolify.yml:/docker-compose.coolify.yml:ro
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --proxy-headers
 
   frontend:

@@ -19,19 +19,21 @@ from pathlib import Path
 
 from app.core.email.service import TEMPLATES_DIR
 
-EXPECTED_LOCALES = {"es", "en", "fr", "pt", "ta", "te", "de", "hu", "pl", "it", "ar"}
+EXPECTED_LOCALES = {"es", "en", "fr", "pt", "ta", "te", "hi", "de", "hu", "pl", "it", "ar"}
 # Overlay dirs: subset of templates, not subject to full-file parity.
 OVERLAY_LOCALES = {"pt-BR"}
 
 # Country-specific templates a locale deliberately does not ship: Telugu
 # targets Indian clinics, which never run Spain's Verifactu (AEAT).
+_VERIFACTU_TEMPLATES = {
+    "verifactu_cert_expiry.html",
+    "verifactu_cert_expiry.txt",
+    "verifactu_record_rejected.html",
+    "verifactu_record_rejected.txt",
+}
 COUNTRY_EXEMPT: dict[str, set[str]] = {
-    "te": {
-        "verifactu_cert_expiry.html",
-        "verifactu_cert_expiry.txt",
-        "verifactu_record_rejected.html",
-        "verifactu_record_rejected.txt",
-    },
+    "te": _VERIFACTU_TEMPLATES,
+    "hi": _VERIFACTU_TEMPLATES,
 }
 
 
@@ -175,3 +177,17 @@ def test_templates_are_nonempty_and_html_extends_base() -> None:
                 assert 'extends "base.html"' in content, (
                     f"{locale}/{f.name} does not extend base.html"
                 )
+
+
+def test_exempt_template_falls_back_to_english() -> None:
+    """A country-specific template missing from a locale renders the English one."""
+    from app.core.email.service import EmailService
+
+    service = EmailService()
+    service._initialize()
+    html = service._render_template(
+        "verifactu_cert_expiry",
+        "hi",
+        {"admin_name": "A", "clinic_name": "C", "is_expired": True, "valid_until": "x"},
+    )
+    assert html is not None and "Verifactu certificate" in html

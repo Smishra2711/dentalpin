@@ -7,6 +7,7 @@
   for the erased contact categories, and cancel (`skipped`) any queued,
   sending or failed row so the outbox cannot send to the placeholder (the
   dispatched row stays as the send audit). Transactional (ADR 0019).
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer; Hindi option in the clinic communication-language picker.
 - chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
 
 - feat(i18n): Telugu (`te`) locale (`notifications-te.json`) and Telugu (తెలుగు) in the clinic communications-language picker.

@@ -58,12 +58,6 @@
         "expired": "Lejárt fizetés",
         "cancelled": "Törölt fizetés"
       },
-      "methods": {
-        "upi": "UPI",
-        "qr": "QR",
-        "card": "Kártya",
-        "payment_link": "Fizetési link"
-      },
       "railUpiQr": "UPI QR",
       "railCheckout": "Razorpay",
       "railPaymentLink": "Fizetési link"

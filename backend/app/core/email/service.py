@@ -342,6 +342,7 @@ class EmailService:
             template_paths.append(f"pt/{template_key}.{extension}")
         template_paths.extend(
             [
+                f"en/{template_key}.{extension}",
                 f"default/{template_key}.{extension}",
                 f"{template_key}.{extension}",
             ]
