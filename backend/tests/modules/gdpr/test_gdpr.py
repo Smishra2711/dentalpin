@@ -170,6 +170,7 @@ async def test_partial_erasure_blanks_identity_and_never_hard_deletes(
     assert coverage["patient_record"] == "erased"
     assert coverage["notifications"] == "erased"
     assert coverage["recalls"] == "erased"
+    assert coverage["patient_timeline"] == "retained"
     assert coverage["budget"] == "retained"
     assert coverage["billing"] == "retained"
     assert coverage["clinical"] == "retained"
@@ -177,6 +178,7 @@ async def test_partial_erasure_blanks_identity_and_never_hard_deletes(
         "patient_record",
         "notifications",
         "recalls",
+        "patient_timeline",
         "budget",
         "billing",
         "clinical",
@@ -192,7 +194,7 @@ async def test_partial_erasure_blanks_identity_and_never_hard_deletes(
     ).scalar_one_or_none()
     assert patient is not None
     assert patient.email is None  # identity blanked
-    assert patient.first_name == "Test"  # non-PII retained
+    assert patient.first_name == "Test"  # retained: name is not a mapped erasure field
 
     # Audit log written.
     logs, _ = await ErasureService.list_audit(db_session, test_clinic.id)
@@ -224,6 +226,7 @@ async def test_erasure_retained_when_retention_holds(
     coverage = {c.scope: c.status for c in result.coverage}
     assert coverage["patient_record"] == "retained"
     assert coverage["notifications"] == "not_applicable"
+    assert coverage["patient_timeline"] == "not_applicable"
     assert coverage["budget"] == "not_applicable"
     assert coverage["clinical"] == "retained"
 

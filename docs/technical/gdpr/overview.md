@@ -102,6 +102,7 @@ row per scope and a `status` of `erased`, `retained` (legal basis, Art.
 | `patient_record` | identity/contact fields on the patient row | `erased` when any category was erasable |
 | `notifications` | recipient/body on the communication log | `erased` when a contact category was erasable |
 | `recalls` | contact-attempt notes | `erased` when a contact category was erasable |
+| `patient_timeline` | append-only activity feed (communication copies) | `retained` (Art. 17(3)) |
 | `budget` | budget estimate/signature records | `retained` (Art. 17(3)) |
 | `billing` | issued-invoice fiscal snapshot | `retained` (Art. 17(3)) |
 | `clinical` | clinical notes, documents, media | `retained` (care records) |

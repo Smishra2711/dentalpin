@@ -71,12 +71,13 @@ def _as_uuid(raw: Any) -> UUID | None:
 #: Outbound channels whose recipient address is a copy of a patient contact
 #: field, mapped to the GDPR erasure category that blanks it. Consumed by the
 #: ``gdpr.erasure.executed`` subscriber (#546) to scrub the message audit log.
+#: Only the channels the ``Channel`` enum defines are listed; ``push`` is
+#: excluded because its recipient is a device subscription endpoint, not a
+#: copy of a patient contact field.
 ERASURE_CHANNEL_CATEGORY: dict[str, str] = {
     "email": "email",
     "sms": "phone",
     "whatsapp": "phone",
-    "voice": "phone",
-    "phone": "phone",
 }
 
 #: Left in place of a redacted recipient so the NOT NULL column still holds a
@@ -94,10 +95,13 @@ class NotificationHandlers:
         Transactional (ADR 0019): runs inside the erasure's transaction, so
         the audit log and this redaction commit or roll back together. Only
         rows whose channel matches an erased contact category are cleared —
-        the recipient address, subject and body of the patient's own
-        messages. The row itself stays: the outbox is also the send audit,
-        and a completed erasure must be visible without erasing the fact
-        that messages were sent.
+        the recipient address, subject, body and template context of the
+        patient's own messages. The row itself stays: the outbox is also the
+        send audit, and a completed erasure must be visible without erasing
+        the fact that messages were sent. A row that has not been dispatched
+        yet (``queued``/``sending``/``failed``) is additionally cancelled
+        (``skipped``) so the outbox tick can never send to the placeholder
+        address or an emptied body (#546).
         """
         patient_id = _as_uuid(data.get("patient_id"))
         clinic_id = _as_uuid(data.get("clinic_id"))
@@ -127,6 +131,11 @@ class NotificationHandlers:
             message.to_address = ERASED_PLACEHOLDER
             message.subject = None
             message.body_text = None
+            message.context_data = None
+            if message.status in ("queued", "sending", "failed"):
+                # Never dispatch an erased recipient or an emptied message:
+                # cancel the unsent row so the outbox tick skips it.
+                message.status = "skipped"
 
     @staticmethod
     async def on_appointment_scheduled(data: dict[str, Any], *, db: AsyncSession) -> None:

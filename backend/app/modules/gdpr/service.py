@@ -406,9 +406,10 @@ class ErasureService:
         Distinguishes what this module scrubbed (the patient row), what the
         event-driven fan-out subscribers scrub (``notifications`` message
         recipients, ``recalls`` contact-attempt notes), and what a legal
-        basis keeps (``budget`` signature emails, ``billing`` fiscal
-        snapshots, ``clinical`` care records). Recording it on the result
-        stops a completed DSR from reading as full coverage.
+        basis keeps (the append-only ``patient_timeline`` feed, ``budget``
+        signature emails, ``billing`` fiscal snapshots, ``clinical`` care
+        records). Recording it on the result stops a completed DSR from
+        reading as full coverage.
         """
         erased_set = set(erased)
         contact_erased = bool({"email", "phone"} & erased_set)
@@ -426,7 +427,7 @@ class ErasureService:
             ErasureCoverage(
                 scope="patient_record",
                 status="erased" if erased_set else "retained",
-                detail="Identity/contact fields on the patient row.",
+                detail="Mapped fields only (`email`, `billing_email`, `phone`, `national_id`).",
             ),
             ErasureCoverage(
                 scope="notifications",
@@ -437,6 +438,11 @@ class ErasureService:
                 scope="recalls",
                 status=contact_status(),
                 detail="Contact-attempt notes on the patient's recalls.",
+            ),
+            ErasureCoverage(
+                scope="patient_timeline",
+                status="retained" if contact_requested else "not_applicable",
+                detail="Append-only activity feed keeps communication copies (Art. 17(3)).",
             ),
             ErasureCoverage(
                 scope="budget",

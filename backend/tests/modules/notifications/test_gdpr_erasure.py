@@ -19,7 +19,14 @@ from app.modules.patients.models import Patient
 
 
 async def _message(
-    db: AsyncSession, *, clinic_id, patient_id, channel: str, to_address: str, **extra
+    db: AsyncSession,
+    *,
+    clinic_id,
+    patient_id,
+    channel: str,
+    to_address: str,
+    status: str = "sent",
+    **extra,
 ) -> CommunicationMessage:
     msg = CommunicationMessage(
         clinic_id=clinic_id,
@@ -27,7 +34,7 @@ async def _message(
         to_address=to_address,
         patient_id=patient_id,
         template_key="appointment_reminder",
-        status="sent",
+        status=status,
         **extra,
     )
     db.add(msg)
@@ -73,6 +80,47 @@ async def test_email_erasure_redacts_only_email_messages(
     # Phone was not erased: the SMS copy survives untouched.
     assert sms_msg.to_address == test_patient.phone
     assert sms_msg.body_text == "Recordatorio SMS"
+
+
+@pytest.mark.asyncio
+async def test_erasure_cancels_unsent_and_clears_context(
+    db_session: AsyncSession, test_clinic: Clinic, test_patient: Patient
+):
+    queued = await _message(
+        db_session,
+        clinic_id=test_clinic.id,
+        patient_id=test_patient.id,
+        channel="email",
+        to_address=test_patient.email,
+        status="queued",
+        context_data={"patient_name": "Ana Test", "locale": "es"},
+    )
+    sent = await _message(
+        db_session,
+        clinic_id=test_clinic.id,
+        patient_id=test_patient.id,
+        channel="email",
+        to_address=test_patient.email,
+        context_data={"patient_name": "Ana Test", "locale": "es"},
+    )
+
+    await NotificationHandlers.on_gdpr_erasure_executed(
+        {
+            "clinic_id": str(test_clinic.id),
+            "patient_id": str(test_patient.id),
+            "erased_categories": ["email"],
+        },
+        db=db_session,
+    )
+    await db_session.commit()
+
+    # An unsent row is cancelled so the outbox can never dispatch to the
+    # placeholder address; a dispatched row stays as the send audit.
+    assert queued.status == "skipped"
+    assert sent.status == "sent"
+    # The template context can carry the patient's name; it is cleared too.
+    assert queued.context_data is None
+    assert sent.context_data is None
 
 
 @pytest.mark.asyncio

@@ -6,7 +6,8 @@
   `recalls` redact their copies of the erased contacts inside the
   erasure's transaction, and the response now reports a per-scope coverage
   list (`ErasureCoverage`: `patient_record`, `notifications`, `recalls`,
-  `budget`, `billing`, `clinical`, each `erased | retained | not_applicable`) instead
+  `patient_timeline`, `budget`, `billing`, `clinical`, each
+  `erased | retained | not_applicable`) instead
   of a single note - a completed run never reads as full DSR coverage.
   `gdpr.erasure.executed` now publishes before commit so subscribers join
   the transaction (ADR 0019).

@@ -36,7 +36,9 @@ async def staff_id(db_session: AsyncSession) -> str:
     return str(staff.id)
 
 
-async def _recall_with_attempt(db: AsyncSession, *, clinic_id, patient_id, attempted_by, note: str):
+async def _recall_with_attempt(
+    db: AsyncSession, *, clinic_id, patient_id, attempted_by, note: str, channel: str = "phone"
+):
     recall = Recall(
         clinic_id=clinic_id,
         patient_id=patient_id,
@@ -51,7 +53,7 @@ async def _recall_with_attempt(db: AsyncSession, *, clinic_id, patient_id, attem
         clinic_id=clinic_id,
         recall_id=recall.id,
         attempted_by=attempted_by,
-        channel="phone",
+        channel=channel,
         outcome="no_answer",
         note=note,
     )
@@ -152,3 +154,40 @@ async def test_erasure_does_not_touch_another_patients_attempts(
 
     assert other_attempt.note == "Llamado al +34666000000"
     assert mine.note is None
+
+
+@pytest.mark.asyncio
+async def test_email_erasure_keeps_phone_attempt_notes(
+    db_session: AsyncSession, test_clinic: Clinic, test_patient: Patient, staff_id: str
+):
+    # Notes are cleared per channel: an email-only erasure must not discard a
+    # note that records a phone call (#546).
+    email_recall, email_attempt = await _recall_with_attempt(
+        db_session,
+        clinic_id=test_clinic.id,
+        patient_id=test_patient.id,
+        attempted_by=staff_id,
+        note="Correo enviado",
+        channel="email",
+    )
+    phone_recall, phone_attempt = await _recall_with_attempt(
+        db_session,
+        clinic_id=test_clinic.id,
+        patient_id=test_patient.id,
+        attempted_by=staff_id,
+        note="Llamado al +34666123456",
+        channel="phone",
+    )
+
+    await on_gdpr_erasure_executed(
+        {
+            "clinic_id": str(test_clinic.id),
+            "patient_id": str(test_patient.id),
+            "erased_categories": ["email"],
+        },
+        db=db_session,
+    )
+    await db_session.commit()
+
+    assert email_attempt.note is None
+    assert phone_attempt.note == "Llamado al +34666123456"
