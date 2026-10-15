@@ -147,7 +147,7 @@ def test_gdpr_0002_reconciles_duplicate_actives() -> None:
             "INSERT INTO retention_policies "
             "(id, clinic_id, data_category, retention_years, legal_hold_until, "
             "is_active, created_at, updated_at) "
-            "VALUES ($1, $2, 'phone', 3, NULL, true, $3, $3)",
+            "VALUES ($1, $2, 'email', 3, NULL, true, $3, $3)",
             other_policy_id,
             other_clinic_id,
             old_stamp,
@@ -184,16 +184,22 @@ def test_gdpr_0002_reconciles_duplicate_actives() -> None:
         )
         assert [(r["id"], r["is_active"]) for r in other_rows] == [(other_policy_id, True)]
         # The backstop itself exists: deleting create_index from the
-        # migration would leave this green, so pin it in pg_indexes.
+        # migration would leave this green, so pin it in pg_indexes —
+        # name plus the properties that make it a backstop (unique,
+        # partial predicate), not just the name.
         index_rows = asyncio.run(
             _fetch_async(
-                "SELECT indexname FROM pg_indexes WHERE tablename = "
-                "'retention_policies' AND indexname = "
+                "SELECT p.indexname, i.indisunique, "
+                "pg_get_expr(i.indpred, i.indrelid) AS indpred "
+                "FROM pg_indexes p JOIN pg_index i ON i.indexrelid = "
+                "to_regclass(p.schemaname || '.' || p.indexname) "
+                "WHERE p.schemaname = 'public' AND p.tablename = "
+                "'retention_policies' AND p.indexname = "
                 "'ix_retention_policies_clinic_category_active'"
             )
         )
-        assert [r["indexname"] for r in index_rows] == [
-            "ix_retention_policies_clinic_category_active"
-        ]
+        assert len(index_rows) == 1
+        assert index_rows[0]["indisunique"] is True
+        assert "is_active" in index_rows[0]["indpred"]
     finally:
         asyncio.run(_teardown())

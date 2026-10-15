@@ -391,7 +391,7 @@ async def test_receptionist_cannot_write_breaches(
             headers=desk_headers,
         )
         assert denied.status_code == 403
-        assert "message" in denied.json()
+        assert denied.json()["message"] == "Permission denied: gdpr.breaches.write"
     finally:
         settings.RBAC_FROM_DB = original_flag
 
