@@ -194,10 +194,14 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
+    OPENROUTER_API_KEY: str = ""
+    GROQ_API_KEY: str = ""
     COPILOT_PROVIDER_DEFAULT: str = "openai"
     COPILOT_MODEL_CHAT_OPENAI: str = "gpt-5.4-mini"
     COPILOT_MODEL_CHAT_ANTHROPIC: str = "claude-sonnet-5"
     COPILOT_MODEL_CHAT_GEMINI: str = "gemini-3.5-flash"
+    COPILOT_MODEL_CHAT_OPENROUTER: str = "meta-llama/llama-3.3-70b-instruct"
+    COPILOT_MODEL_CHAT_GROQ: str = "llama-3.3-70b-versatile"
     COPILOT_MAX_TOKENS: int = 4096
     COPILOT_REDACTION_DEFAULT: bool = True
 
