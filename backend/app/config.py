@@ -188,9 +188,9 @@ class Settings(BaseSettings):
     EMAIL_FROM_ADDRESS: str = "noreply@dentalpin.com"
     EMAIL_FROM_NAME: str = "DentalPin"
 
-    # Copilot / agentic layer (app/core/llm/). OpenAI, Anthropic and
-    # Gemini are the live providers; per-clinic `copilot_settings` overrides
-    # provider + model.
+    # Copilot / agentic layer (app/core/llm/). OpenAI, Anthropic, Gemini,
+    # OpenRouter and Groq are the live providers; per-clinic
+    # `copilot_settings` overrides provider + model.
     OPENAI_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
