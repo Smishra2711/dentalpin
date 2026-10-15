@@ -108,6 +108,8 @@ def test_gdpr_0002_reconciles_duplicate_actives() -> None:
     _alembic("downgrade", "gdpr@-1")
 
     clinic_id = uuid.uuid4()
+    other_clinic_id = uuid.uuid4()
+    other_policy_id = uuid.uuid4()
     old_id, new_id = uuid.uuid4(), uuid.uuid4()
     old_stamp = datetime(2020, 1, 1, tzinfo=UTC)
     new_stamp = datetime.now(UTC)
@@ -117,6 +119,11 @@ def test_gdpr_0002_reconciles_duplicate_actives() -> None:
             "INSERT INTO clinics (id, name, tax_id, settings, created_at, updated_at) "
             "VALUES ($1, 'Mig Clinic', 'B00000002', '{}'::jsonb, now(), now())",
             clinic_id,
+        )
+        await _execute_async(
+            "INSERT INTO clinics (id, name, tax_id, settings, created_at, updated_at) "
+            "VALUES ($1, 'Other Mig Clinic', 'B00000003', '{}'::jsonb, now(), now())",
+            other_clinic_id,
         )
         await _execute_async(
             "INSERT INTO retention_policies "
@@ -136,10 +143,24 @@ def test_gdpr_0002_reconciles_duplicate_actives() -> None:
             clinic_id,
             new_stamp,
         )
+        await _execute_async(
+            "INSERT INTO retention_policies "
+            "(id, clinic_id, data_category, retention_years, legal_hold_until, "
+            "is_active, created_at, updated_at) "
+            "VALUES ($1, $2, 'phone', 3, NULL, true, $3, $3)",
+            other_policy_id,
+            other_clinic_id,
+            old_stamp,
+        )
 
     async def _teardown() -> None:
-        await _execute_async("DELETE FROM retention_policies WHERE clinic_id = $1", clinic_id)
-        await _execute_async("DELETE FROM clinics WHERE id = $1", clinic_id)
+        await _execute_async(
+            "DELETE FROM retention_policies WHERE clinic_id = ANY($1::uuid[])",
+            [clinic_id, other_clinic_id],
+        )
+        await _execute_async(
+            "DELETE FROM clinics WHERE id = ANY($1::uuid[])", [clinic_id, other_clinic_id]
+        )
 
     try:
         asyncio.run(_setup())
@@ -153,5 +174,26 @@ def test_gdpr_0002_reconciles_duplicate_actives() -> None:
         )
         by_id = {r["id"]: r["is_active"] for r in rows}
         assert by_id == {old_id: False, new_id: True}
+        # The other clinic's policy is untouched: the reconcile groups by
+        # (clinic_id, data_category), never by category alone (#562 ADV-A3).
+        other_rows = asyncio.run(
+            _fetch_async(
+                "SELECT id, is_active FROM retention_policies WHERE clinic_id = $1",
+                other_clinic_id,
+            )
+        )
+        assert [(r["id"], r["is_active"]) for r in other_rows] == [(other_policy_id, True)]
+        # The backstop itself exists: deleting create_index from the
+        # migration would leave this green, so pin it in pg_indexes.
+        index_rows = asyncio.run(
+            _fetch_async(
+                "SELECT indexname FROM pg_indexes WHERE tablename = "
+                "'retention_policies' AND indexname = "
+                "'ix_retention_policies_clinic_category_active'"
+            )
+        )
+        assert [r["indexname"] for r in index_rows] == [
+            "ix_retention_policies_clinic_category_active"
+        ]
     finally:
         asyncio.run(_teardown())

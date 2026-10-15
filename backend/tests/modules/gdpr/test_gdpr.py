@@ -558,15 +558,15 @@ async def test_retention_update_ignores_reactivate(db_session: AsyncSession, tes
         test_clinic.id,
         RetentionPolicyCreate(data_category="email", retention_years=0),
     )
-    # Reactivation is not a path: an inactive row is unreachable via the
-    # router, and silently deactivating siblings would destroy live
-    # config. The flag is ignored; siblings stay untouched (#562 ADV-02).
-    reactivated = await RetentionService.update(
-        db_session, second, RetentionPolicyUpdate(is_active=True)
-    )
-    assert reactivated.is_active is True
+    # Reactivation is not a path: pass the INACTIVE row and assert the
+    # guard holds it inactive while the live sibling is untouched. (Passing
+    # the already-active row would assert nothing.) (#562 ADV-A2.)
     await db_session.refresh(first)
     assert first.is_active is False
+    still = await RetentionService.update(db_session, first, RetentionPolicyUpdate(is_active=True))
+    assert still.is_active is False
+    await db_session.refresh(second)
+    assert second.is_active is True
 
 
 @pytest.mark.asyncio
@@ -871,8 +871,6 @@ async def test_erasure_other_clinic_patient_returns_none(
 
 @pytest.mark.asyncio
 async def test_erasure_rejects_unknown_category():
-    from pydantic import ValidationError
-
     from app.modules.gdpr.schemas import ErasureRequest
 
     with pytest.raises(ValidationError):
