@@ -350,8 +350,11 @@ async def test_receptionist_cannot_write_breaches(
 ):
     # `receptionist` holds consents.write but NOT breaches.write: one role
     # proves both gates instead of assuming them (#562 advisory F2).
+    # Pinned to the static role map: under RBAC_FROM_DB the same role can
+    # resolve differently, so the flag is saved and restored.
     from uuid import uuid4
 
+    from app.config import settings
     from app.core.auth.models import ClinicMembership, User
     from app.core.auth.service import create_access_token, hash_password
 
@@ -370,28 +373,31 @@ async def test_receptionist_cannot_write_breaches(
     desk_headers = {
         "Authorization": f"Bearer {create_access_token(desk.id, token_version=desk.token_version)}"
     }
+    original_flag = settings.RBAC_FROM_DB
+    settings.RBAC_FROM_DB = False
+    try:
+        # Allowed: the gate passes, so the unknown patient 404s (not 403s).
+        ok = await client.post(
+            "/api/v1/gdpr/consents",
+            json={"patient_id": str(uuid4()), "purpose": "sms", "granted": True},
+            headers=desk_headers,
+        )
+        assert ok.status_code == 404
 
-    # Allowed: the gate passes, so the unknown patient 404s (not 403s).
-    ok = await client.post(
-        "/api/v1/gdpr/consents",
-        json={"patient_id": str(uuid4()), "purpose": "sms", "granted": True},
-        headers=desk_headers,
-    )
-    assert ok.status_code == 404
-
-    # Denied: no breaches.write for receptionist.
-    denied = await client.patch(
-        f"/api/v1/gdpr/breaches/{uuid4()}",
-        json={"description": "x"},
-        headers=desk_headers,
-    )
-    assert denied.status_code == 403
+        # Denied: no breaches.write for receptionist.
+        denied = await client.patch(
+            f"/api/v1/gdpr/breaches/{uuid4()}",
+            json={"description": "x"},
+            headers=desk_headers,
+        )
+        assert denied.status_code == 403
+        assert "message" in denied.json()
+    finally:
+        settings.RBAC_FROM_DB = original_flag
 
 
 @pytest.mark.asyncio
 async def test_tool_erasure_rejects_unknown_category():
-    from pydantic import ValidationError
-
     from app.modules.gdpr.tools import ExecuteErasureArgs
 
     # The closed vocabulary on the DESTRUCTIVE tool boundary: widening
@@ -617,8 +623,6 @@ async def test_breach_notified_authority_at_ignored(db_session: AsyncSession, te
 async def test_breach_create_rejects_empty_data_involved(
     db_session: AsyncSession, test_clinic: Clinic
 ):
-    from pydantic import ValidationError
-
     # An Art. 33 register entry with zero data categories is rejected
     # (#562 SEC-05).
     with pytest.raises(ValidationError):
