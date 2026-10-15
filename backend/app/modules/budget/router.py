@@ -178,9 +178,12 @@ async def update_budget(
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-    # Reload with relationships
+    # Reload with relationships. The detail page replaces its budget with
+    # this response, so it must carry the plan link like GET does.
     budget = await BudgetService.get_budget(db, ctx.clinic_id, budget.id, include_items=True)
-    return ApiResponse(data=BudgetDetailResponse.model_validate(budget))
+    response_data = BudgetDetailResponse.model_validate(budget)
+    response_data.treatment_plan = await lookup_linked_plan(db, ctx.clinic_id, budget.id)
+    return ApiResponse(data=response_data)
 
 
 @router.delete("/budgets/{budget_id}", status_code=status.HTTP_204_NO_CONTENT)

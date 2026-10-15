@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- fix: `PUT /budgets/{id}` now returns the linked `treatment_plan`, like
+  `GET`. The detail page replaces its budget with the PUT response, so after
+  editing a plan-linked quote it dropped the "lines are managed by the plan"
+  notice and showed add/remove controls until a reload.
 - feat(i18n): Hindi (`hi`) locale: Hindi quote PDF labels.
 - fix(security): `assigned_professional_id` is now validated as a
   professional member of the budget's clinic, on create and on update.
