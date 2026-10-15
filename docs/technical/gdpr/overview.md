@@ -31,8 +31,8 @@ Art. 5(2), immutable except for status transitions):
 - `PATCH /api/v1/gdpr/retention/{id}` — update a policy
 - `DELETE /api/v1/gdpr/retention/{id}` — delete a policy (204)
 - `POST /api/v1/gdpr/erasure` — run a partial erasure (201). The result
-  carries its own coverage limitation: patient-row identity fields
-  only, no cross-module fan-out (#546).
+  carries a per-scope coverage list (`ErasureCoverage`, see below), so a
+  completed run never reads as full DSR coverage (#546).
 - `GET /api/v1/gdpr/audit` — list erasure audit logs
 - `GET /api/v1/gdpr/breaches` — list breaches
 - `GET /api/v1/gdpr/breaches/{id}` — get one breach
@@ -84,7 +84,32 @@ hold, otherwise the window runs that many years from the patient's
 `updated_at` (minimum-honest anchor). Categories with no policy, or with
 no field mapping (e.g. `clinical`, `billing`, `radiology` policies document
 the hold and always retain), stay retained. Every run writes an
-`ErasureAuditLog` and publishes `gdpr.erasure.executed`.
+`ErasureAuditLog`, pulls every registered erasure contributor inside the
+transaction, and returns a per-scope `coverage` report so a completed
+DSR never reads as full coverage (#546). `gdpr.erasure.executed` publishes
+after commit as an announcement only.
+
+### Cross-module coverage (#546, ADR 0038)
+
+Erasure pulls a contributor registry, not a fan-out. Each active module
+may expose `get_erasure_contributors()`; the loader collects them into
+the core `SubjectErasureRegistry`, and `gdpr` calls every contributor
+inside the erasure transaction — each redacts its own copies and reports
+its own `ErasureCoverage`. A scope with no registered contributor
+produces no row, so an uninstalled module is never reported as erased.
+A raising contributor rolls the whole run back. The result carries one
+row per scope with a `status` of `erased`, `retained` (legal basis, Art.
+17(3)) or `not_applicable`:
+
+| Scope | What it covers | Typical status |
+|-------|----------------|----------------|
+| `patient_record` | identity/contact fields on the patient row | `erased` when any category was erasable |
+| `notifications` | recipient/subject/body/context/failure text on the communication log (contributor) | `erased` when a contact category was erasable |
+| `recalls` | contact-attempt notes (contributor) | `erased` when a contact category was erasable |
+| `patient_timeline` | append-only activity feed (communication copies) | `retained` (Art. 17(3), interim — contributor lands in follow-up) |
+| `budget` | budget estimate/signature records | `retained` (Art. 17(3), interim — contributor lands in follow-up) |
+| `billing` | issued-invoice fiscal snapshot | `retained` (Art. 17(3), interim — contributor lands in follow-up) |
+| `clinical` | clinical notes, documents, media | `retained` (care records) |
 
 ## Agent tools
 

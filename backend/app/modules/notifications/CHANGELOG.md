@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- feat(#546, ADR 0038): expose a `NotificationsErasureContributor` instead of
+  subscribing to `gdpr.erasure.executed`; `gdpr` pulls it inside the
+  erasure transaction. Same redaction (recipient, subject, body, template
+  context, failure text; unsent rows cancelled) and the contributor
+  reports its own coverage row. Transactional.
 - feat(i18n): Hindi (`hi`) locale for the module's frontend layer; Hindi option in the clinic communication-language picker.
 - chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
 

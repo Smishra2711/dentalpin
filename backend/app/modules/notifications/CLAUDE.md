@@ -74,6 +74,13 @@ the full consent path — never bypasses `do_not_contact`.
 - `appointment.scheduled` / `appointment.cancelled`
 - `budget.sent` / `budget.accepted` / `budget.reminder_sent`
 - `invoice.sent`
+- `gdpr.erasure.executed` is **not** subscribed. The module exposes a
+  `NotificationsErasureContributor` (`erasure.py`), pulled by `gdpr`
+  inside the erasure transaction: it redacts recipient, subject, body,
+  template context and failure text of the patient's messages whose
+  channel matches an erased category, and cancels (`skipped`) any
+  queued, sending or failed row; the dispatched row stays as the send
+  audit (#546, ADR 0038). Transactional.
 
 ## Lifecycle
 

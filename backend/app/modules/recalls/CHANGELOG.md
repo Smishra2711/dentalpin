@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- feat(#546, ADR 0038): expose a `RecallsErasureContributor` instead of
+  subscribing to `gdpr.erasure.executed`; `gdpr` pulls it inside the
+  erasure transaction. Same per-channel note clearing (recall and
+  `reason_note` stay) and the contributor reports its own coverage row.
+  Transactional.
 - feat(i18n): Hindi (`hi`) locale for the module's frontend layer; Hindi demo seed contact attempts.
 - chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
 

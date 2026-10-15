@@ -16,12 +16,14 @@ Per-module slice of [`docs/events-catalog.md`](../../events-catalog.md)
 | `gdpr.request.status_changed` | a DSR status changes (received → in_progress → completed/rejected) | `clinic_id`, `request_id`, `patient_id`, `from_status`, `to_status`, `changed_by` |
 | `gdpr.consent.granted` | a consent is recorded | `clinic_id`, `consent_id`, `patient_id`, `purpose` |
 | `gdpr.consent.withdrawn` | a consent is withdrawn (same row, `granted=false`) | `clinic_id`, `consent_id`, `patient_id`, `purpose` |
-| `gdpr.erasure.executed` | a partial erasure ran | `clinic_id`, `patient_id`, `request_id`, `erased_categories`, `retained_categories` |
+| `gdpr.erasure.executed` | a partial erasure committed; announcement only, published after commit (#546) | `clinic_id`, `patient_id`, `request_id`, `erased_categories`, `retained_categories` |
 | `gdpr.breach.reported` | a data-breach report is created | `clinic_id`, `breach_id`, `affected_people` |
 
 All events are published by the gdpr service layer after the DB commit
-succeeds, so optional subscribers (patient_timeline, notifications, audit
-exports) react to rights lifecycle without importing gdpr models.
+succeeds — including `gdpr.erasure.executed` (#546): the in-transaction
+work moved to the erasure contributor registry (ADR 0038), so the event
+is a pure announcement with no transactional subscribers. Optional
+subscribers react to rights lifecycle without importing gdpr models.
 
 ## Subscribed
 

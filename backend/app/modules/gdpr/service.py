@@ -7,12 +7,15 @@ bus for cross-module reactions (patient_timeline, notifications, etc.).
 
 from __future__ import annotations
 
+import logging
 from datetime import UTC, date, datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.erasure.registry import erasure_registry
+from app.core.erasure.types import ErasureCoverage
 from app.core.events import EventType, event_bus
 
 from .models import DataBreach, ErasureAuditLog, GdprRequest, PatientConsent, RetentionPolicy
@@ -26,6 +29,8 @@ from .schemas import (
     RetentionPolicyCreate,
     RetentionPolicyUpdate,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class SlaCalculator:
@@ -370,26 +375,104 @@ class ErasureService:
             executed_by=executed_by,
         )
         db.add(log)
+        # Flush so ``log.id`` is assigned, then pull every registered
+        # erasure contributor inside this transaction (ADR 0038): each
+        # contributor redacts its own copies and reports its own coverage,
+        # so the audit log and every redaction commit or roll back together,
+        # and a contributor failure surfaces instead of leaving a committed
+        # erasure with un-scrubbed copies behind. A scope with no registered
+        # contributor produces no row — an uninstalled module is never
+        # reported as erased.
+        await db.flush()
+
+        coverages = [
+            ErasureCoverage(
+                scope="patient_record",
+                status="erased" if erasable else "retained",
+                detail="Mapped fields only (`email`, `billing_email`, `phone`, `national_id`).",
+            )
+        ]
+        for contributor in erasure_registry.contributors():
+            coverages.append(await contributor.erase(clinic_id, patient_id, erasable, retained, db))
+        coverages.extend(
+            ErasureService._interim_retained_coverage(
+                erasable, retained, answered={c.scope for c in coverages}
+            )
+        )
         await db.commit()
         await db.refresh(log)
-
-        await event_bus.publish(
-            EventType.GDPR_ERASURE_EXECUTED,
-            {
-                "clinic_id": str(clinic_id),
-                "patient_id": str(patient_id),
-                "request_id": str(request_id) if request_id else None,
-                "erased_categories": erasable,
-                "retained_categories": retained,
-            },
-            db=db,
-        )
+        # Announcement only: contributors already ran above. Published after
+        # commit with no session, so no handler can join the erasure
+        # transaction (#546). A failing announcement must not fail the
+        # committed erasure (e.g. a future transactional subscriber would
+        # raise here, after the audit log is already durable).
+        try:
+            await event_bus.publish(
+                EventType.GDPR_ERASURE_EXECUTED,
+                {
+                    "clinic_id": str(clinic_id),
+                    "patient_id": str(patient_id),
+                    "request_id": str(request_id) if request_id else None,
+                    "erased_categories": erasable,
+                    "retained_categories": retained,
+                },
+            )
+        except Exception:
+            logger.exception(
+                "Erasure announcement failed after commit (clinic %s, request %s)",
+                clinic_id,
+                request_id,
+            )
         return ErasureResult(
             patient_id=patient_id,
             erased_categories=erasable,
             audit_log_id=log.id,
             retained_categories=retained,
+            coverage=coverages,
         )
+
+    @staticmethod
+    def _interim_retained_coverage(
+        erased: list[str], retained: list[str], answered: set[str] | None = None
+    ) -> list[ErasureCoverage]:
+        """Retained-scope rows until their contributor modules land (#546).
+
+        INTERIM, not the contract: these four rows are still hardcoded in
+        ``gdpr`` because their owning modules (patient_timeline, budget,
+        billing, clinical) do not contribute yet. Each row claims only
+        retention under Art. 17(3) — a conservative claim that cannot
+        under-erase — and the follow-up replaces them with contributor
+        answers. The scrubbed scopes (``patient_record`` here,
+        ``notifications``/``recalls`` via the registry) are never hardcoded.
+        """
+        erased_set = set(erased)
+        contact_requested = bool({"email", "phone"} & (erased_set | set(retained)))
+
+        rows = [
+            ErasureCoverage(
+                scope="patient_timeline",
+                status="retained" if contact_requested else "not_applicable",
+                detail="Append-only activity feed keeps communication copies (Art. 17(3)). Interim: contributor lands in follow-up.",
+            ),
+            ErasureCoverage(
+                scope="budget",
+                status="retained" if contact_requested else "not_applicable",
+                detail="Budget estimates/signatures keep the signer's email (Art. 17(3)). Interim: contributor lands in follow-up.",
+            ),
+            ErasureCoverage(
+                scope="billing",
+                status="retained" if contact_requested else "not_applicable",
+                detail="Issued invoices keep a fiscal snapshot (Art. 17(3)). Interim: contributor lands in follow-up.",
+            ),
+            ErasureCoverage(
+                scope="clinical",
+                status="retained",
+                detail="Clinical notes, documents and media are retained as care records. Interim: contributor lands in follow-up.",
+            ),
+        ]
+        # A scope the registry already answered must not be reported twice
+        # once its contributor lands: the contributor's row wins.
+        return [row for row in rows if row.scope not in (answered or set())]
 
     @staticmethod
     async def list_audit(

@@ -2,10 +2,18 @@
 
 ## Unreleased
 
-- fix(#546): erasure results record their partial coverage on the
-  response (`coverage_note`): patient-row identity fields only, no
-  cross-module fan-out — a completed run never reads as full DSR
-  coverage.
+- feat(#546, ADR 0038): erasure pulls a core contributor registry instead of
+  event-bus fan-out. `gdpr` calls every registered contributor
+  (`get_erasure_contributors()`, collected from active modules like
+  `get_tools()`) inside the erasure transaction and assembles the
+  per-scope coverage list (`ErasureCoverage`: `patient_record` plus each
+  contributor's own row) from their answers — a scope with no contributor
+  produces no row, so an uninstalled module is never reported as erased.
+  `gdpr.erasure.executed` is now a post-commit announcement.
+  `patient_timeline`/`budget`/`billing`/`clinical` rows stay hardcoded as
+  interim retained entries until their contributors land. A failing
+  announcement is logged, never raised (the erasure is already committed);
+  interim rows defer to any contributor answering the same scope.
 - Maintainer-review fixes (PR #374, part of #44): closed erasure
   vocabulary `ErasureCategory` (`email | phone | identity`, 422 on anything
   else) in the schema and tool args so an erasure can never report a

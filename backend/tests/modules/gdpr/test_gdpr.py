@@ -30,6 +30,24 @@ from app.modules.gdpr.tools import _record_consent
 from app.modules.patients.models import Patient
 
 
+@pytest.fixture
+def erasure_contributors():
+    """Mirror boot: collect the real contributors into the global registry.
+
+    The loader only runs in app boot, so tests register explicitly. Always
+    cleared afterwards so contributor state never leaks between tests.
+    """
+    from app.core.erasure.registry import erasure_registry
+    from app.modules.notifications import NotificationsModule
+    from app.modules.recalls import RecallsModule
+
+    erasure_registry.clear()
+    erasure_registry.register_from(NotificationsModule())
+    erasure_registry.register_from(RecallsModule())
+    yield
+    erasure_registry.clear()
+
+
 def _make_patient(db, clinic_id, **kw) -> Patient:
     p = Patient(
         clinic_id=clinic_id,
@@ -146,7 +164,10 @@ async def test_consent_grant_withdraw_regrant_keeps_full_trail(
 
 @pytest.mark.asyncio
 async def test_partial_erasure_blanks_identity_and_never_hard_deletes(
-    db_session: AsyncSession, test_clinic: Clinic, test_patient: Patient
+    db_session: AsyncSession,
+    test_clinic: Clinic,
+    test_patient: Patient,
+    erasure_contributors: None,
 ):
     # No retention policy → conservative default retains everything.
     await RetentionService.create(
@@ -164,10 +185,25 @@ async def test_partial_erasure_blanks_identity_and_never_hard_deletes(
     )
     assert result.erased_categories == ["email"]
     assert result.retained_categories == []
-    # The result records its own partial coverage (#546): a completed
+    # The result records a per-scope coverage report (#546): a completed
     # run must never read as full DSR coverage.
-    assert "Patient-row" in result.coverage_note
-    assert "not touched" in result.coverage_note
+    coverage = {c.scope: c.status for c in result.coverage}
+    assert coverage["patient_record"] == "erased"
+    assert coverage["notifications"] == "erased"
+    assert coverage["recalls"] == "erased"
+    assert coverage["patient_timeline"] == "retained"
+    assert coverage["budget"] == "retained"
+    assert coverage["billing"] == "retained"
+    assert coverage["clinical"] == "retained"
+    assert set(coverage) == {
+        "patient_record",
+        "notifications",
+        "recalls",
+        "patient_timeline",
+        "budget",
+        "billing",
+        "clinical",
+    }
 
     # Row still exists (never hard-deleted).
     from sqlalchemy import select as sel
@@ -179,7 +215,7 @@ async def test_partial_erasure_blanks_identity_and_never_hard_deletes(
     ).scalar_one_or_none()
     assert patient is not None
     assert patient.email is None  # identity blanked
-    assert patient.first_name == "Test"  # non-PII retained
+    assert patient.first_name == "Test"  # retained: name is not a mapped erasure field
 
     # Audit log written.
     logs, _ = await ErasureService.list_audit(db_session, test_clinic.id)
@@ -189,7 +225,10 @@ async def test_partial_erasure_blanks_identity_and_never_hard_deletes(
 
 @pytest.mark.asyncio
 async def test_erasure_retained_when_retention_holds(
-    db_session: AsyncSession, test_clinic: Clinic, test_patient: Patient
+    db_session: AsyncSession,
+    test_clinic: Clinic,
+    test_patient: Patient,
+    erasure_contributors: None,
 ):
     # "clinical" has no field mapping, so it always retains (nothing to
     # blank) — the closed erasure vocabulary is email|phone|identity.
@@ -207,6 +246,13 @@ async def test_erasure_retained_when_retention_holds(
     )
     assert result.erased_categories == []
     assert result.retained_categories == ["clinical"]
+    # Nothing was erased, so every scope reports what it kept (#546).
+    coverage = {c.scope: c.status for c in result.coverage}
+    assert coverage["patient_record"] == "retained"
+    assert coverage["notifications"] == "not_applicable"
+    assert coverage["patient_timeline"] == "not_applicable"
+    assert coverage["budget"] == "not_applicable"
+    assert coverage["clinical"] == "retained"
 
     patient = (
         await db_session.execute(
@@ -216,6 +262,104 @@ async def test_erasure_retained_when_retention_holds(
         )
     ).scalar_one_or_none()
     assert patient.email is not None  # not blanked
+
+
+@pytest.mark.asyncio
+async def test_erasure_omits_scope_without_contributor(
+    db_session: AsyncSession, test_clinic: Clinic, test_patient: Patient
+):
+    # ADR 0038 honesty: a scope with no registered contributor produces no
+    # row. Uninstall recalls and the DSR must NOT report recalls: erased.
+    from app.core.erasure.registry import erasure_registry
+    from app.modules.notifications import NotificationsModule
+
+    await RetentionService.create(
+        db_session,
+        test_clinic.id,
+        RetentionPolicyCreate(data_category="email", retention_years=0),
+    )
+    erasure_registry.clear()
+    try:
+        erasure_registry.register_from(NotificationsModule())
+        result = await ErasureService.execute(
+            db_session,
+            test_clinic.id,
+            patient_id=test_patient.id,
+            categories=["email"],
+            rationale="Art.17 erasure request",
+        )
+        coverage = {c.scope: c.status for c in result.coverage}
+        assert coverage["notifications"] == "erased"
+        assert "recalls" not in coverage
+    finally:
+        erasure_registry.clear()
+
+
+@pytest.mark.asyncio
+async def test_announcement_failure_does_not_fail_erasure(
+    db_session: AsyncSession,
+    test_clinic: Clinic,
+    test_patient: Patient,
+    erasure_contributors: None,
+):
+    # The post-commit announcement must not fail the committed erasure:
+    # a subscriber declaring db raises inside publish (bus rule), after
+    # the audit log is already durable.
+    from app.core.events import EventType, event_bus
+
+    async def _db_subscriber(data, *, db):
+        raise AssertionError("announcement must not run in-transaction")
+
+    announced: list[dict] = []
+
+    async def _recorder(data):
+        announced.append(data)
+
+    await RetentionService.create(
+        db_session,
+        test_clinic.id,
+        RetentionPolicyCreate(data_category="email", retention_years=0),
+    )
+    # Subscribe the recorder first: the bus aborts the loop on the
+    # db-subscriber's RuntimeError, so ordering decides what is recorded.
+    event_bus.subscribe(EventType.GDPR_ERASURE_EXECUTED, _recorder)
+    event_bus.subscribe(EventType.GDPR_ERASURE_EXECUTED, _db_subscriber)
+    try:
+        result = await ErasureService.execute(
+            db_session,
+            test_clinic.id,
+            patient_id=test_patient.id,
+            categories=["email"],
+            rationale="Art.17 erasure request",
+        )
+    finally:
+        event_bus.unsubscribe(EventType.GDPR_ERASURE_EXECUTED, _db_subscriber)
+        event_bus.unsubscribe(EventType.GDPR_ERASURE_EXECUTED, _recorder)
+    assert result is not None
+    assert result.erased_categories == ["email"]
+    coverage = {c.scope: c.status for c in result.coverage}
+    assert coverage["notifications"] == "erased"
+    # The announcement still went out (to the non-transactional subscriber)
+    # even though the db-subscriber raised.
+    assert [a["patient_id"] for a in announced] == [str(test_patient.id)]
+
+
+def test_interim_coverage_dedupes_answered_scopes():
+    # Pure unit test (no DB): once a contributor answers a scope, the
+    # interim row for that scope is suppressed so it never reports twice.
+    rows = ErasureService._interim_retained_coverage(["email"], [])
+    assert {r.scope for r in rows} == {
+        "patient_timeline",
+        "budget",
+        "billing",
+        "clinical",
+    }
+    rows = ErasureService._interim_retained_coverage(
+        ["email"], [], answered={"budget", "notifications"}
+    )
+    assert {r.scope for r in rows} == {"patient_timeline", "billing", "clinical"}
+    rows = ErasureService._interim_retained_coverage([], ["clinical"])
+    assert {r.scope: r.status for r in rows}["clinical"] == "retained"
 
 
 @pytest.mark.asyncio

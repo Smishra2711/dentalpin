@@ -2,6 +2,10 @@
 
 from fastapi import APIRouter
 
+# Runtime (not TYPE_CHECKING) import: this module has no
+# `from __future__ import annotations`, so the override's annotation is
+# evaluated at def time. Cycle-free: core.erasure.types imports no modules.
+from app.core.erasure.types import ErasureContributor
 from app.core.events.types import EventType
 from app.core.plugins import BaseModule
 from app.core.scheduling import ScheduledJob
@@ -178,3 +182,8 @@ class NotificationsModule(BaseModule):
             EventType.BUDGET_REMINDER_SENT: NotificationHandlers.on_budget_reminder_sent,
             EventType.INVOICE_SENT: NotificationHandlers.on_invoice_sent,
         }
+
+    def get_erasure_contributors(self) -> list[ErasureContributor]:
+        from .erasure import NotificationsErasureContributor
+
+        return [NotificationsErasureContributor()]

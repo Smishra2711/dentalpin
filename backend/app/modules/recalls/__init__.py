@@ -12,9 +12,14 @@ snapshot) so we keep the dependency at ``["patients", "agenda"]``.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from fastapi import APIRouter
 
 from app.core.plugins import BaseModule
+
+if TYPE_CHECKING:
+    from app.core.erasure.types import ErasureContributor
 
 from .events import (
     on_appointment_cancelled,
@@ -83,6 +88,11 @@ class RecallsModule(BaseModule):
             "treatment_plan.treatment_completed": on_treatment_plan_completed,
             "patient.archived": on_patient_archived,
         }
+
+    def get_erasure_contributors(self) -> list[ErasureContributor]:
+        from .erasure import RecallsErasureContributor
+
+        return [RecallsErasureContributor()]
 
     def get_tools(self) -> list:
         from .tools import get_tools

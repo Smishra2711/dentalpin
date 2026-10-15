@@ -29,6 +29,10 @@ All seven are **transactional** (ADR 0019): they queue a `CommunicationMessage`
 on the publisher's session inside a savepoint, and the outbox tick does the
 sending. A rolled-back request queues nothing (issue #183).
 
+GDPR erasure is not an event subscription: the module exposes a
+`NotificationsErasureContributor` (`erasure.py`), pulled by `gdpr` inside
+the erasure transaction (ADR 0038, #546).
+
 | Event | Handler | Effect |
 |-------|---------|--------|
 | `appointment.scheduled` | `handlers.on_appointment_scheduled` | Enqueue `appointment_confirmation`. |

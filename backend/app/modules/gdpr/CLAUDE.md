@@ -72,7 +72,12 @@ therefore:
    **retained**.
 5. For each erasable category, the patient's corresponding identity/PII fields
    (`email`+`billing_email`, `phone`, `national_id`) are set to `NULL`.
-6. Every run writes an `ErasureAuditLog` and publishes `gdpr.erasure.executed`.
+6. Every run writes an `ErasureAuditLog`, pulls every registered erasure
+   contributor inside the transaction (each redacts its own copies and
+   reports its own coverage; a raising contributor rolls the run back),
+   and returns the assembled per-scope `coverage` list (`ErasureCoverage`,
+   #546, ADR 0038). `gdpr.erasure.executed` publishes after commit as an
+   announcement only.
 
 Sibling modules must not add hard-DELETE for GDPR; if a future full-erasure
 feature ships, it must clear rows via a dedicated reversible job, not an
@@ -114,7 +119,7 @@ All tools filter by `ctx.clinic_id` and return native values (UUID/datetime).
 | `gdpr.request.status_changed` | a DSR status changes | `clinic_id`, `request_id`, `patient_id`, `from_status`, `to_status`, `changed_by` |
 | `gdpr.consent.granted` | consent recorded | `clinic_id`, `consent_id`, `patient_id`, `purpose` |
 | `gdpr.consent.withdrawn` | consent withdrawn | `clinic_id`, `consent_id`, `patient_id`, `purpose` |
-| `gdpr.erasure.executed` | partial erasure ran | `clinic_id`, `patient_id`, `request_id`, `erased_categories`, `retained_categories` |
+| `gdpr.erasure.executed` | partial erasure committed; announcement only, published after commit (#546) | `clinic_id`, `patient_id`, `request_id`, `erased_categories`, `retained_categories` |
 | `gdpr.breach.reported` | a breach is created | `clinic_id`, `breach_id`, `affected_people` |
 
 ## Lifecycle
