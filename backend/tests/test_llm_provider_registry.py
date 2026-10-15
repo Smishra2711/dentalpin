@@ -9,7 +9,7 @@ import pytest
 
 from app.config import settings
 from app.core.llm.base import ProviderEvent
-from app.core.llm.factory import ANTHROPIC_SPEC, OPENAI_SPEC, get_provider
+from app.core.llm.factory import ANTHROPIC_SPEC, GEMINI_SPEC, OPENAI_SPEC, get_provider
 from app.core.llm.registry import ProviderRegistry, llm_provider_registry
 from app.core.llm.spec import ProviderConfig, ProviderSpec
 from app.modules.copilot import CopilotModule
@@ -88,9 +88,11 @@ def test_copilot_activation_registers_builtin_providers() -> None:
     previous_specs = {
         "openai": llm_provider_registry.get("openai"),
         "anthropic": llm_provider_registry.get("anthropic"),
+        "gemini": llm_provider_registry.get("gemini"),
     }
     llm_provider_registry.unregister("openai")
     llm_provider_registry.unregister("anthropic")
+    llm_provider_registry.unregister("gemini")
 
     try:
         module = CopilotModule()
@@ -98,14 +100,17 @@ def test_copilot_activation_registers_builtin_providers() -> None:
 
         assert llm_provider_registry.get("openai") is OPENAI_SPEC
         assert llm_provider_registry.get("anthropic") is ANTHROPIC_SPEC
+        assert llm_provider_registry.get("gemini") is GEMINI_SPEC
 
         module.on_activate()
 
         assert llm_provider_registry.get("openai") is OPENAI_SPEC
         assert llm_provider_registry.get("anthropic") is ANTHROPIC_SPEC
+        assert llm_provider_registry.get("gemini") is GEMINI_SPEC
     finally:
         llm_provider_registry.unregister("openai")
         llm_provider_registry.unregister("anthropic")
+        llm_provider_registry.unregister("gemini")
         for spec in previous_specs.values():
             if spec is not None:
                 llm_provider_registry.register(spec)

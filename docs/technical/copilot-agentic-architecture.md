@@ -5,10 +5,11 @@ Status: **plan / not yet implemented**. This is the technical/architecture plan 
 > **Scope cut (owner):** v1 = thin vertical slice + **mandatory PHI redaction** + **OpenAI provider only**. The `Provider` protocol stays vendor-agnostic so Anthropic plugs in later with zero changes below `app/core/llm/`. Deferred: Anthropic provider, RAG/pgvector, proactive/scheduled agents, self-hosted/Ollama provider, admin dashboards. Rationale in the design phase; not repeated here.
 >
 > **Drift note (2026-09, audit DOCS-01):** this page is the frozen v1-design
-> record — the scope cut above is historical. `AnthropicProvider` has since
-> landed in `backend/app/core/llm/`; the factory now resolves active provider
-> specifications through a process-wide registry. Copilot registers the built-in
-> OpenAI and Anthropic specifications from `CopilotModule.on_activate()` per
+> record — the scope cut above is historical. `AnthropicProvider` and
+> `GeminiProvider` have since landed in `backend/app/core/llm/`; the factory
+> now resolves active provider specifications through a process-wide
+> registry. Copilot registers the built-in OpenAI, Anthropic and Gemini
+> specifications from `CopilotModule.on_activate()` per
 > ADR 0020. RAG/Ollama remain deferred as stated.
 
 ---
@@ -41,13 +42,14 @@ The whole point of this sub-package is that **the orchestrator never knows which
   - `ProviderEvent` union (vendor-agnostic): `TextDelta`, `ToolUse(id, name, input)`, `Usage(input_tokens, output_tokens)`, `Done(stop_reason)`.
 - `openai_provider.py` — `OpenAIProvider` over the `openai` SDK (`client.chat.completions.create(..., stream=True)` or the Responses API). Tool schemas via `tool_to_openai_schema()` (`app/core/agents/tools/schema.py:28`). Maps OpenAI streaming deltas → `ProviderEvent`: assembles fragmented `tool_calls` deltas (id/name/arguments arrive in pieces) into a single `ToolUse`; reads usage from the final chunk (`stream_options={"include_usage": True}`).
 - `anthropic_provider.py` — `AnthropicProvider` over the `anthropic` SDK (`client.messages.create(..., stream=True)`), tool schemas via `tool_to_anthropic_schema()` (`app/core/agents/tools/schema.py:19`). Same single-tool posture (`disable_parallel_tool_use`); tool results are serialized as `tool_result` blocks merged into the next `user` turn; dotted tool names map `.` ↔ `-` (Anthropic's name charset, same trick as OpenAI).
-- `spec.py` / `registry.py` — `ProviderSpec` is the single source for a provider's default model, tool-schema dialect and deployment API-key setting. `ProviderRegistry` stores active specs process-wide; `CopilotModule.on_activate()` registers OpenAI and Anthropic only while the module is installed (ADR 0020).
+- `gemini_provider.py` — `GeminiProvider(OpenAIProvider)` over Google's OpenAI-compatible endpoint (`.../v1beta/openai/`) through the `openai` SDK: identical wire format and `openai` tool dialect, no new dependency. Free-tier API keys from AI Studio work; the operator accepts Google's data-use terms there, and the mandatory PHI redactor still runs upstream.
+- `spec.py` / `registry.py` — `ProviderSpec` is the single source for a provider's default model, tool-schema dialect and deployment API-key setting. `ProviderRegistry` stores active specs process-wide; `CopilotModule.on_activate()` registers OpenAI, Anthropic and Gemini only while the module is installed (ADR 0020).
 - `factory.py` — `get_provider(name: str) -> Provider` resolves the active spec through the registry and calls `spec.factory(config)`. Unknown or inactive providers raise a clear `LLMConfigError`; adding a registered provider does not require another factory branch.
 - **Resolution order:** per-clinic `copilot_settings.provider` + `.model` override the registered spec defaults. Settings-save reads `spec.needs_api_key` and `spec.api_key_setting`; the bridge reads `spec.tool_dialect`, so provider policy is not duplicated in Copilot call sites.
 - Tier, capability and redaction-policy metadata remains in the #332 design brief and will be added with the settings/redaction consumers that enforce it, avoiding unused duplicate sources of truth in this initial registry slice.
 - Deps: `openai>=1.40` and `anthropic>=0.40` in `backend/pyproject.toml`.
 
-Redaction, budget, audit, and the inline-confirm pause are all **upstream of the provider** and therefore vendor-agnostic — adding Anthropic changed nothing outside `app/core/llm/` beyond the dialect hint and settings validation.
+Redaction, budget, audit, and the inline-confirm pause are all **upstream of the provider** and therefore vendor-agnostic — adding Anthropic and Gemini changed nothing outside `app/core/llm/` beyond the dialect hint and settings validation.
 
 ### 2.2 Orchestrator (`app/core/agents/orchestrator.py`)
 The reusable tool-use loop. **No HTTP / SSE / copilot knowledge.** Signature sketch:
@@ -84,7 +86,7 @@ The PHI boundary. Per-session `SymbolTable` mapping real value ↔ stable opaque
 `Tool` gains exactly one optional field: `exposes_free_text: bool = False`. No other change to the frozen dataclass.
 
 ### 2.4 Config (`app/config.py`)
-Add `OPENAI_API_KEY: str = ""`, `COPILOT_PROVIDER_DEFAULT: str = "openai"`, `COPILOT_MODEL_CHAT_OPENAI: str = "gpt-4.1"`, `COPILOT_MAX_TOKENS: int = 4096`, `COPILOT_REDACTION_DEFAULT: bool = True`. Per-clinic `copilot_settings` overrides provider and model. (`ANTHROPIC_API_KEY` + Anthropic model default are added when that provider lands.)
+Add `OPENAI_API_KEY: str = ""`, `COPILOT_PROVIDER_DEFAULT: str = "openai"`, `COPILOT_MODEL_CHAT_OPENAI: str = "gpt-4.1"`, `COPILOT_MAX_TOKENS: int = 4096`, `COPILOT_REDACTION_DEFAULT: bool = True`. Per-clinic `copilot_settings` overrides provider and model. (`ANTHROPIC_API_KEY` + Anthropic model default landed with that provider; `GEMINI_API_KEY` + Gemini model default with #332.)
 
 ---
 
@@ -285,7 +287,7 @@ Backend (`pytest`, fixtures `client`/`auth_headers`/`db_session`/`test_clinic` f
 - **Inline confirm** — drive the orchestrator with a fake provider that emits a `book_appointment` tool_use: assert the turn **suspends** with `confirmation_required` and **no** appointment row exists; POST confirm → row created + audit row; POST reject → no row, audit reflects skip.
 - **Redaction** — assert no raw `full_name`/`phone`/`email`/patient-UUID appears in the payload handed to the fake provider; assert displayed tokens are rehydrated; assert a tool flagged `exposes_free_text` is excluded from `tool_names` when redaction is on.
 - **Budget** — over-limit `copilot_settings` → orchestrator yields `budget_exceeded`, provider never called.
-- **Provider abstraction** — run the orchestrator turn against a fake provider emitting the neutral `ProviderEvent` sequence; assert redaction/confirm/audit behave purely on neutral types (proves Anthropic will drop in later untouched). Assert `factory.get_provider` raises on unsupported names and `settings` PATCH rejects a provider whose API key is unset.
+- **Provider abstraction** — run the orchestrator turn against a fake provider emitting the neutral `ProviderEvent` sequence; assert redaction/confirm/audit behave purely on neutral types (proves new providers drop in later untouched). Assert `factory.get_provider` raises on unsupported names and `settings` PATCH rejects a provider whose API key is unset.
 - **Uninstall round-trip** — install → converse → uninstall leaves core agent tables + other modules intact (`test_uninstall_roundtrip.py` pattern).
 
 Manual: `docker-compose up`, login `admin@demo.clinic`, `Cmd+K`, run an Ask ("pacientes que se llamen María") and an Act ("agenda revisión a María mañana 10:00" → confirm card → confirm → booked).

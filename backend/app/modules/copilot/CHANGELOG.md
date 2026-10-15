@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- feat(#332): Gemini LLM provider adapter over Google's OpenAI-compatible
+  endpoint (same wire format and `openai` tool dialect as `OpenAIProvider`;
+  `GEMINI_API_KEY` + `COPILOT_MODEL_CHAT_GEMINI`, spec registered from
+  `on_activate`). No bridge, settings or UI change: selection and
+  validation are registry-driven.
 - feat(i18n): Hindi (`hi`) locale for the module's frontend layer; Hindi subject for the morning digest email.
 - test(#552): branch-scoped uninstall round-trip test (heads, branch downgrade, reinstall).
 - chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).

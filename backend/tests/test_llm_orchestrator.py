@@ -375,7 +375,7 @@ def test_salted_round_trip() -> None:
 
 def test_factory_rejects_unsupported_provider() -> None:
     with pytest.raises(LLMConfigError):
-        get_provider("gemini")
+        get_provider("groq")
 
 
 def test_openai_name_roundtrip() -> None:
@@ -415,6 +415,42 @@ def test_anthropic_provider_requires_key() -> None:
 
     with pytest.raises(LLMConfigError):
         AnthropicProvider(api_key="")
+
+
+# --- gemini provider -----------------------------------------------------
+
+
+def test_gemini_provider_requires_key() -> None:
+    from app.core.llm.gemini_provider import GeminiProvider
+
+    with pytest.raises(LLMConfigError, match="GEMINI_API_KEY"):
+        GeminiProvider(api_key="")
+
+
+def test_gemini_provider_targets_compat_endpoint() -> None:
+    # The whole point of the adapter: the openai SDK pointed at Google's
+    # OpenAI-compatible base URL, so the OpenAI wire format is reused as-is.
+    from app.core.llm.gemini_provider import (
+        GEMINI_OPENAI_COMPAT_BASE_URL,
+        GeminiProvider,
+    )
+
+    provider = GeminiProvider(api_key="test-key")
+    assert str(provider._client.base_url) == GEMINI_OPENAI_COMPAT_BASE_URL
+
+
+def test_gemini_spec_shape() -> None:
+    from app.config import settings
+    from app.core.llm.factory import GEMINI_SPEC
+    from app.core.llm.gemini_provider import GeminiProvider
+    from app.core.llm.spec import ProviderConfig
+
+    assert GEMINI_SPEC.name == "gemini"
+    assert GEMINI_SPEC.tool_dialect == "openai"
+    assert GEMINI_SPEC.api_key_setting == "GEMINI_API_KEY"
+    assert GEMINI_SPEC.default_model == settings.COPILOT_MODEL_CHAT_GEMINI
+    provider = GEMINI_SPEC.factory(ProviderConfig(api_key="test-key"))
+    assert isinstance(provider, GeminiProvider)
 
 
 def test_anthropic_message_mapping_merges_tool_results_into_user_turn() -> None:

@@ -20,6 +20,12 @@ def _create_anthropic(config: ProviderConfig) -> Provider:
     return AnthropicProvider(api_key=config.api_key or "")
 
 
+def _create_gemini(config: ProviderConfig) -> Provider:
+    from app.core.llm.gemini_provider import GeminiProvider
+
+    return GeminiProvider(api_key=config.api_key or "")
+
+
 OPENAI_SPEC = ProviderSpec(
     name="openai",
     label="OpenAI",
@@ -38,6 +44,16 @@ ANTHROPIC_SPEC = ProviderSpec(
     needs_api_key=True,
     api_key_setting="ANTHROPIC_API_KEY",
     factory=_create_anthropic,
+)
+
+GEMINI_SPEC = ProviderSpec(
+    name="gemini",
+    label="Gemini",
+    default_model=settings.COPILOT_MODEL_CHAT_GEMINI,
+    tool_dialect="openai",
+    needs_api_key=True,
+    api_key_setting="GEMINI_API_KEY",
+    factory=_create_gemini,
 )
 
 
