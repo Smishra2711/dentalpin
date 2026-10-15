@@ -1337,7 +1337,14 @@
       "errorGeneric": "Impossible de créer le patient. Réessayez."
     }
   },
+  "errors": {
+    "loadFailed": "Échec du chargement",
+    "createFailed": "Échec de la création",
+    "updateFailed": "Échec de la mise à jour",
+    "deleteFailed": "Échec de la suppression"
+  },
   "common": {
+    "andMore": "+{count} de plus",
     "save": "Enregistrer",
     "add": "Ajouter",
     "cancel": "Annuler",
