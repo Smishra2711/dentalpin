@@ -8,7 +8,8 @@
   is not a path) with a partial unique index backstop (`gdpr_0002`,
   concurrent twins answer 409); breach status follows a transition table
   (illegal moves 422) with the authority timestamp stamped only by
-  reporting; empty `data_involved` rejected.
+  reporting; record fields correctable, explicit nulls on required fields
+  ignored; empty `data_involved` rejected.
 - feat(#546, ADR 0038): erasure pulls a core contributor registry instead of
   event-bus fan-out. `gdpr` calls every registered contributor
   (`get_erasure_contributors()`, collected from active modules like

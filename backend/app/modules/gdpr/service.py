@@ -628,6 +628,11 @@ class DataBreachService:
             # status would let a backdated or forged stamp stand (#562 SEC-04).
             if field == "notified_authority_at":
                 continue
+            if value is None and field in ("description", "data_involved", "status"):
+                # Non-nullable columns: an explicit null is a no-op, not a
+                # 500 from the NOT NULL constraint (#562 S1-04). (Nullable
+                # affected_people genuinely clears on null.)
+                continue
             setattr(row, field, value)
         if payload.status == "reported" and not row.notified_authority_at:
             row.notified_authority_at = datetime.now(UTC)

@@ -5,6 +5,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import pytest
+from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -564,6 +565,47 @@ async def test_breach_create_rejects_empty_data_involved(
 
 
 @pytest.mark.asyncio
+async def test_consent_http_unknown_patient_404(
+    client: AsyncClient, auth_headers: dict, test_clinic: Clinic
+):
+    from uuid import uuid4
+
+    # The 404 surface, end to end: router maps the service None (#562 CONS-03).
+    response = await client.post(
+        "/api/v1/gdpr/consents",
+        json={"patient_id": str(uuid4()), "purpose": "sms", "granted": True},
+        headers=auth_headers,
+    )
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_breach_http_illegal_transition_422(
+    db_session: AsyncSession,
+    client: AsyncClient,
+    auth_headers: dict,
+    test_clinic: Clinic,
+):
+    row = await DataBreachService.create(
+        db_session,
+        test_clinic.id,
+        DataBreachCreate(
+            description="Backup exposed",
+            data_involved=["patients"],
+            affected_people=1,
+        ),
+    )
+    reported = await DataBreachService.update(db_session, row, DataBreachUpdate(status="reported"))
+    # The 422 surface, end to end: router maps the transition error (#562 SEC-03).
+    response = await client.patch(
+        f"/api/v1/gdpr/breaches/{reported.id}",
+        json={"status": "under_review"},
+        headers=auth_headers,
+    )
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
 async def test_breach_record_fields_correctable(db_session: AsyncSession, test_clinic: Clinic):
     from app.modules.gdpr.schemas import DataBreachUpdate
 
@@ -586,6 +628,33 @@ async def test_breach_record_fields_correctable(db_session: AsyncSession, test_c
     assert updated.description == "Backup exposed (revised)"
     assert updated.affected_people == 5
     assert updated.status == "under_review"
+
+
+@pytest.mark.asyncio
+async def test_breach_explicit_null_on_required_fields_is_noop(
+    db_session: AsyncSession, test_clinic: Clinic
+):
+    from app.modules.gdpr.schemas import DataBreachUpdate
+
+    # Explicit nulls on non-nullable columns are ignored, not 500s (#562 S1-04).
+    # (Nullable affected_people genuinely clears on null.)
+    row = await DataBreachService.create(
+        db_session,
+        test_clinic.id,
+        DataBreachCreate(
+            description="Backup exposed",
+            data_involved=["patients"],
+            affected_people=1,
+        ),
+    )
+    updated = await DataBreachService.update(
+        db_session,
+        row,
+        DataBreachUpdate(description=None, data_involved=None, affected_people=None),
+    )
+    assert updated.description == "Backup exposed"
+    assert updated.data_involved == ["patients"]
+    assert updated.affected_people is None
 
 
 @pytest.mark.asyncio
