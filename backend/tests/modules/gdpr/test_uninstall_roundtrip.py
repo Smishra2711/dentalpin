@@ -200,6 +200,10 @@ def test_gdpr_0002_reconciles_duplicate_actives() -> None:
         )
         assert len(index_rows) == 1
         assert index_rows[0]["indisunique"] is True
-        assert "is_active" in index_rows[0]["indpred"]
+        pred = index_rows[0]["indpred"]
+        assert pred is not None and pred.replace(" ", "") == "is_active"
     finally:
+        # Restore schema as well as rows: a failure between the downgrade
+        # and the re-upgrade would otherwise leave the branch head behind.
+        _alembic("upgrade", "heads")
         asyncio.run(_teardown())
