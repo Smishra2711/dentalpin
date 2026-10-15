@@ -148,7 +148,7 @@ class DataBreachCreate(BaseModel):
 class DataBreachUpdate(BaseModel):
     status: Literal["under_review", "reported", "not_reportable", "resolved"] | None = None
     description: str | None = Field(default=None, min_length=1, max_length=4000)
-    data_involved: list[str] | None = None
+    data_involved: list[str] | None = Field(default=None, min_length=1)
     affected_people: int | None = Field(default=None, ge=0)
     notified_authority_at: datetime | None = None
 

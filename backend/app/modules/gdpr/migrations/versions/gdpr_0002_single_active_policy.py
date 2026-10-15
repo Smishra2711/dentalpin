@@ -22,6 +22,21 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
+    # Reconcile pre-existing duplicates first: without this, the unique
+    # index below aborts the migration (and container boot, which
+    # migrates on every start) on any database holding two active rows
+    # for one (clinic, category) (#562 ADV-S1-01). Newest wins, the rest
+    # stay as history (inactive) — the same rule the service applies.
+    op.execute(
+        sa.text(
+            "UPDATE retention_policies SET is_active = false "
+            "WHERE is_active = true AND id NOT IN ("
+            "SELECT DISTINCT ON (clinic_id, data_category) id "
+            "FROM retention_policies WHERE is_active = true "
+            "ORDER BY clinic_id, data_category, updated_at DESC, "
+            "created_at DESC, id DESC)"
+        )
+    )
     op.create_index(
         "ix_retention_policies_clinic_category_active",
         "retention_policies",

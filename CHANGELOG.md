@@ -109,8 +109,9 @@ frontend as a Nuxt layer under its own Python package.
   (#562). Two active policies for one (clinic, category) made erasure
   eligibility pick one at random (unordered dict collapse). Creating a
   policy now supersedes its active predecessors in the same transaction
-  (rows stay as history), and reactivating does the same — at most one
-  policy per category is ever active.
+  (rows stay as history, and reactivation is not a path); a partial
+  unique index (`gdpr_0002`, which first reconciles pre-existing
+  duplicates) backstops concurrent creates, answered 409.
 - **The breach register no longer accepts illegal transitions or forged
   stamps** (#562). `DataBreachService.update` took any status in any
   order (a `reported` breach could return to `under_review` keeping a

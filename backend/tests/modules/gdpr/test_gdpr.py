@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 from httpx import AsyncClient
+from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -343,6 +344,66 @@ async def test_announcement_failure_does_not_fail_erasure(
     assert [a["patient_id"] for a in announced] == [str(test_patient.id)]
 
 
+@pytest.mark.asyncio
+async def test_receptionist_cannot_write_breaches(
+    db_session: AsyncSession, client: AsyncClient, auth_headers: dict, test_clinic: Clinic
+):
+    # `receptionist` holds consents.write but NOT breaches.write: one role
+    # proves both gates instead of assuming them (#562 advisory F2).
+    from uuid import uuid4
+
+    from app.core.auth.models import ClinicMembership, User
+    from app.core.auth.service import create_access_token, hash_password
+
+    desk = User(
+        email="desk@example.com",
+        password_hash=hash_password("DeskPass1234"),
+        first_name="Front",
+        last_name="Desk",
+    )
+    db_session.add(desk)
+    await db_session.flush()
+    db_session.add(
+        ClinicMembership(id=uuid4(), user_id=desk.id, clinic_id=test_clinic.id, role="receptionist")
+    )
+    await db_session.commit()
+    desk_headers = {
+        "Authorization": f"Bearer {create_access_token(desk.id, token_version=desk.token_version)}"
+    }
+
+    # Allowed: the gate passes, so the unknown patient 404s (not 403s).
+    ok = await client.post(
+        "/api/v1/gdpr/consents",
+        json={"patient_id": str(uuid4()), "purpose": "sms", "granted": True},
+        headers=desk_headers,
+    )
+    assert ok.status_code == 404
+
+    # Denied: no breaches.write for receptionist.
+    denied = await client.patch(
+        f"/api/v1/gdpr/breaches/{uuid4()}",
+        json={"description": "x"},
+        headers=desk_headers,
+    )
+    assert denied.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_tool_erasure_rejects_unknown_category():
+    from pydantic import ValidationError
+
+    from app.modules.gdpr.tools import ExecuteErasureArgs
+
+    # The closed vocabulary on the DESTRUCTIVE tool boundary: widening
+    # categories to list[str] must fail here first.
+    with pytest.raises(ValidationError):
+        ExecuteErasureArgs(
+            patient_id="12345678-1234-5678-1234-567812345678",
+            categories=["clinical"],
+            rationale=None,
+        )
+
+
 def test_interim_coverage_dedupes_answered_scopes():
     # Pure unit test (no DB): once a contributor answers a scope, the
     # interim row for that scope is suppressed so it never reports twice.
@@ -565,6 +626,55 @@ async def test_breach_create_rejects_empty_data_involved(
 
 
 @pytest.mark.asyncio
+async def test_partial_unique_index_rejects_twin_actives(
+    db_session: AsyncSession, test_clinic: Clinic
+):
+    from sqlalchemy.exc import IntegrityError
+
+    from app.modules.gdpr.models import RetentionPolicy
+
+    # Bypass the service supersede: two committed active rows for one
+    # (clinic, category) must fail at the backstop, proving gdpr_0002
+    # fires (#562 ADV-S1-01). The service 409 handler is reviewed, not
+    # runnable deterministically (it needs a true concurrent twin).
+    db_session.add(
+        RetentionPolicy(clinic_id=test_clinic.id, data_category="email", retention_years=0)
+    )
+    await db_session.commit()
+    db_session.add(
+        RetentionPolicy(clinic_id=test_clinic.id, data_category="email", retention_years=5)
+    )
+    with pytest.raises(IntegrityError):
+        await db_session.commit()
+    await db_session.rollback()
+
+
+@pytest.mark.asyncio
+async def test_breach_update_rejects_empty_data_involved(
+    db_session: AsyncSession, test_clinic: Clinic
+):
+    from app.modules.gdpr.schemas import DataBreachUpdate
+
+    row = await DataBreachService.create(
+        db_session,
+        test_clinic.id,
+        DataBreachCreate(
+            description="Backup exposed",
+            data_involved=["patients"],
+            affected_people=1,
+        ),
+    )
+    # The create-side min_length must also hold on update: PATCH [] would
+    # otherwise wipe the Art. 33(3) nature-of-data from the register.
+    with pytest.raises(ValidationError):
+        DataBreachUpdate(data_involved=[])
+    updated = await DataBreachService.update(
+        db_session, row, DataBreachUpdate(data_involved=["patients", "billing"])
+    )
+    assert updated.data_involved == ["patients", "billing"]
+
+
+@pytest.mark.asyncio
 async def test_consent_http_unknown_patient_404(
     client: AsyncClient, auth_headers: dict, test_clinic: Clinic
 ):
@@ -577,6 +687,7 @@ async def test_consent_http_unknown_patient_404(
         headers=auth_headers,
     )
     assert response.status_code == 404
+    assert response.json()["message"] == "Patient not found"
 
 
 @pytest.mark.asyncio
@@ -603,6 +714,7 @@ async def test_breach_http_illegal_transition_422(
         headers=auth_headers,
     )
     assert response.status_code == 422
+    assert "illegal breach transition" in response.json()["message"]
 
 
 @pytest.mark.asyncio
