@@ -12,6 +12,7 @@ from datetime import UTC, date, datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy import delete, func, select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.erasure.registry import erasure_registry
@@ -226,6 +227,11 @@ class ConsentService:
         return list((await db.execute(stmt)).scalars()), total
 
 
+class RetentionConflictError(ValueError):
+    """A second active policy for one (clinic, category) was committed
+    concurrently. Answered 409 upstream (#562 RET-01, advisory ADV-01)."""
+
+
 class RetentionService:
     @staticmethod
     async def list_active(db: AsyncSession, clinic_id: UUID) -> list[RetentionPolicy]:
@@ -247,7 +253,7 @@ class RetentionService:
 
         At most one policy per (clinic, category) is active at a time:
         creating a new one deactivates its active predecessors in the same
-        transaction (their         rows stay as history). Without this,
+        transaction (their rows stay as history). Without this,
         ``erasure_eligible`` would collapse duplicates nondeterministically
         (#562 RET-01). Changing a policy therefore always means creating a
         new row; deactivation alone is terminal.
@@ -268,7 +274,15 @@ class RetentionService:
             legal_hold_until=payload.legal_hold_until,
         )
         db.add(row)
-        await db.commit()
+        try:
+            await db.commit()
+        except IntegrityError:
+            # True-concurrency twin of the supersede above: the partial
+            # unique index (gdpr_0002) rejected a second active policy.
+            await db.rollback()
+            raise RetentionConflictError(
+                f"an active policy for category {payload.data_category!r} already exists"
+            )
         await db.refresh(row)
         return row
 
@@ -276,21 +290,14 @@ class RetentionService:
     async def update(
         db: AsyncSession, row: RetentionPolicy, payload: RetentionPolicyUpdate
     ) -> RetentionPolicy:
+        # No reactivate path: an inactive row is unreachable via the router
+        # (get_active_by_id 404s), and silently deactivating its siblings
+        # would destroy live config. To change a policy, create a new one:
+        # create() supersedes. (#562 RET-01, advisory ADV-02/03.)
         for field, value in payload.model_dump(exclude_unset=True).items():
+            if field == "is_active" and value is True:
+                continue
             setattr(row, field, value)
-        if payload.is_active is True:
-            # Reactivating must not resurrect a duplicate: supersede the
-            # other active same-category rows first (#562 RET-01).
-            await db.execute(
-                update(RetentionPolicy)
-                .where(
-                    RetentionPolicy.clinic_id == row.clinic_id,
-                    RetentionPolicy.data_category == row.data_category,
-                    RetentionPolicy.is_active.is_(True),
-                    RetentionPolicy.id != row.id,
-                )
-                .values(is_active=False)
-            )
         await db.commit()
         await db.refresh(row)
         return row
@@ -536,6 +543,12 @@ class ErasureService:
         return list((await db.execute(stmt)).scalars()), total
 
 
+class BreachTransitionError(ValueError):
+    """A breach status move outside the transition table. Answered 422
+    upstream (#562 SEC-03). Narrower than ValueError so the router's
+    handler never relabels a database error as a client error."""
+
+
 class DataBreachService:
     @staticmethod
     async def create(db: AsyncSession, clinic_id: UUID, payload: DataBreachCreate) -> DataBreach:
@@ -591,7 +604,8 @@ class DataBreachService:
 
     #: Allowed breach status transitions. Terminal states accept no
     #: further moves; going back (e.g. reported → under_review) is never
-    #: valid — a wrong report is superseded by correcting the record
+    #: valid, while not_reportable → under_review is allowed to retry the
+    #: assessment. A wrong report is superseded by correcting the record
     #: fields, not by rewinding the lifecycle (#562 SEC-03).
     _BREACH_TRANSITIONS: dict[str, set[str]] = {
         "under_review": {"reported", "not_reportable"},
@@ -605,7 +619,9 @@ class DataBreachService:
         if payload.status is not None and payload.status != row.status:
             allowed = DataBreachService._BREACH_TRANSITIONS.get(row.status, set())
             if payload.status not in allowed:
-                raise ValueError(f"illegal breach transition {row.status} -> {payload.status}")
+                raise BreachTransitionError(
+                    f"illegal breach transition {row.status} -> {payload.status}"
+                )
         for field, value in payload.model_dump(exclude_unset=True).items():
             # `notified_authority_at` is stamped by the reported transition,
             # never written directly: an explicit timestamp decoupled from

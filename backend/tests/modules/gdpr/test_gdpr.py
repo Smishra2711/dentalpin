@@ -115,18 +115,16 @@ async def test_consent_grant_withdraw_regrant_keeps_full_trail(
     db_session: AsyncSession, test_clinic: Clinic, test_patient: Patient
 ):
     ctx = SimpleNamespace(db=db_session, clinic_id=test_clinic.id)
+    from app.modules.gdpr.tools import RecordConsentArgs
+
     out = await _record_consent(
         ctx,
-        type(
-            "args",
-            (),
-            {
-                "patient_id": str(test_patient.id),
-                "purpose": "sms",
-                "granted": True,
-                "provided_text": "I accept receiving SMS.",
-            },
-        )(),
+        RecordConsentArgs(
+            patient_id=str(test_patient.id),
+            purpose="sms",
+            granted=True,
+            provided_text="I accept receiving SMS.",
+        ),
     )
     assert "error" not in out
     assert out["granted"] is True
@@ -438,18 +436,16 @@ async def test_consent_tool_reports_missing_patient(db_session: AsyncSession, te
     from uuid import uuid4
 
     ctx = SimpleNamespace(db=db_session, clinic_id=test_clinic.id)
+    from app.modules.gdpr.tools import RecordConsentArgs
+
     out = await _record_consent(
         ctx,
-        type(
-            "args",
-            (),
-            {
-                "patient_id": str(uuid4()),
-                "purpose": "sms",
-                "granted": True,
-                "provided_text": "I accept receiving SMS.",
-            },
-        )(),
+        RecordConsentArgs(
+            patient_id=str(uuid4()),
+            purpose="sms",
+            granted=True,
+            provided_text="I accept receiving SMS.",
+        ),
     )
     assert out == {"error": "patient not found"}
 
@@ -481,9 +477,7 @@ async def test_retention_create_supersedes_same_category(
 
 
 @pytest.mark.asyncio
-async def test_retention_reactivate_supersedes_others(
-    db_session: AsyncSession, test_clinic: Clinic
-):
+async def test_retention_update_ignores_reactivate(db_session: AsyncSession, test_clinic: Clinic):
     from app.modules.gdpr.schemas import RetentionPolicyUpdate
 
     first = await RetentionService.create(
@@ -496,12 +490,15 @@ async def test_retention_reactivate_supersedes_others(
         test_clinic.id,
         RetentionPolicyCreate(data_category="email", retention_years=0),
     )
+    # Reactivation is not a path: an inactive row is unreachable via the
+    # router, and silently deactivating siblings would destroy live
+    # config. The flag is ignored; siblings stay untouched (#562 ADV-02).
     reactivated = await RetentionService.update(
-        db_session, first, RetentionPolicyUpdate(is_active=True)
+        db_session, second, RetentionPolicyUpdate(is_active=True)
     )
     assert reactivated.is_active is True
-    await db_session.refresh(second)
-    assert second.is_active is False
+    await db_session.refresh(first)
+    assert first.is_active is False
 
 
 @pytest.mark.asyncio
@@ -521,7 +518,9 @@ async def test_breach_illegal_transition_raises(db_session: AsyncSession, test_c
     assert updated.reported is True
     # Terminal and backwards moves are rejected: reported -> under_review
     # would leave a stale reported latch (#562 SEC-03).
-    with pytest.raises(ValueError, match="illegal breach transition"):
+    from app.modules.gdpr.service import BreachTransitionError
+
+    with pytest.raises(BreachTransitionError, match="illegal breach transition"):
         await DataBreachService.update(db_session, updated, DataBreachUpdate(status="under_review"))
 
 
@@ -562,6 +561,31 @@ async def test_breach_create_rejects_empty_data_involved(
     # (#562 SEC-05).
     with pytest.raises(ValidationError):
         DataBreachCreate(description="Backup exposed", data_involved=[])
+
+
+@pytest.mark.asyncio
+async def test_breach_record_fields_correctable(db_session: AsyncSession, test_clinic: Clinic):
+    from app.modules.gdpr.schemas import DataBreachUpdate
+
+    # The documented remedy for a wrong report is correcting the record
+    # fields (rewinding the lifecycle stays blocked).
+    row = await DataBreachService.create(
+        db_session,
+        test_clinic.id,
+        DataBreachCreate(
+            description="Backup exposed",
+            data_involved=["patients"],
+            affected_people=1,
+        ),
+    )
+    updated = await DataBreachService.update(
+        db_session,
+        row,
+        DataBreachUpdate(description="Backup exposed (revised)", affected_people=5),
+    )
+    assert updated.description == "Backup exposed (revised)"
+    assert updated.affected_people == 5
+    assert updated.status == "under_review"
 
 
 @pytest.mark.asyncio
@@ -722,12 +746,10 @@ async def test_execute_erasure_tool_reports_missing_patient(
     from app.modules.gdpr.tools import _execute_erasure
 
     ctx = SimpleNamespace(db=db_session, clinic_id=test_clinic.id, agent_id=uuid4())
+    from app.modules.gdpr.tools import ExecuteErasureArgs
+
     out = await _execute_erasure(
         ctx,
-        type(
-            "args",
-            (),
-            {"patient_id": str(uuid4()), "categories": ["email"], "rationale": None},
-        )(),
+        ExecuteErasureArgs(patient_id=str(uuid4()), categories=["email"], rationale=None),
     )
     assert out == {"error": "patient not found"}

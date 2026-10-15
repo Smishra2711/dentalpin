@@ -14,7 +14,13 @@ from .schemas import (
     GdprRequestCreate,
     RetentionPolicyCreate,
 )
-from .service import ConsentService, ErasureService, GdprService, RetentionService
+from .service import (
+    ConsentService,
+    ErasureService,
+    GdprService,
+    RetentionConflictError,
+    RetentionService,
+)
 
 
 class CreateRequestArgs(BaseModel):
@@ -144,13 +150,16 @@ async def _list_consents(ctx: AgentContext, params: ListConsentsArgs) -> dict:
 
 
 async def _create_policy(ctx: AgentContext, params: CreatePolicyArgs) -> dict:
-    row = await RetentionService.create(
-        ctx.db,
-        ctx.clinic_id,
-        RetentionPolicyCreate(
-            data_category=params.data_category, retention_years=params.retention_years
-        ),
-    )
+    try:
+        row = await RetentionService.create(
+            ctx.db,
+            ctx.clinic_id,
+            RetentionPolicyCreate(
+                data_category=params.data_category, retention_years=params.retention_years
+            ),
+        )
+    except RetentionConflictError as exc:
+        return {"error": str(exc)}
     return {
         "id": row.id,
         "data_category": row.data_category,

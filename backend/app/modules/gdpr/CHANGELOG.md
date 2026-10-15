@@ -5,9 +5,10 @@
 - fix(#562 S1): consent writes do a clinic-scoped patient lookup first
   (unknown/foreign ids: 404 on HTTP, error on the tool); creating a
   retention policy supersedes active same-category policies (reactivation
-  too); breach status follows a transition table (illegal moves 422) with
-  the authority timestamp stamped only by reporting; empty
-  `data_involved` rejected.
+  is not a path) with a partial unique index backstop (`gdpr_0002`,
+  concurrent twins answer 409); breach status follows a transition table
+  (illegal moves 422) with the authority timestamp stamped only by
+  reporting; empty `data_involved` rejected.
 - feat(#546, ADR 0038): erasure pulls a core contributor registry instead of
   event-bus fan-out. `gdpr` calls every registered contributor
   (`get_erasure_contributors()`, collected from active modules like

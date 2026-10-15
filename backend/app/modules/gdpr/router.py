@@ -30,11 +30,13 @@ from .schemas import (
     RetentionPolicyUpdate,
 )
 from .service import (
+    BreachTransitionError,
     ConsentService,
     DataBreachService,
     ErasureService,
     ExportService,
     GdprService,
+    RetentionConflictError,
     RetentionService,
 )
 
@@ -174,7 +176,10 @@ async def create_retention_policy(
     _: Annotated[None, Depends(require_permission("gdpr.retention.write"))],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> ApiResponse[RetentionPolicyResponse]:
-    row = await RetentionService.create(db, ctx.clinic_id, data)
+    try:
+        row = await RetentionService.create(db, ctx.clinic_id, data)
+    except RetentionConflictError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))
     return ApiResponse(data=RetentionPolicyResponse.model_validate(row))
 
 
@@ -311,7 +316,7 @@ async def update_breach(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Breach not found")
     try:
         row = await DataBreachService.update(db, row, data)
-    except ValueError as exc:
+    except BreachTransitionError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
     return ApiResponse(data=DataBreachResponse.model_validate(row))
 

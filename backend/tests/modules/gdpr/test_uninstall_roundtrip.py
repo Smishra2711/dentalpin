@@ -1,8 +1,8 @@
 """gdpr round-trip uninstall test.
 
 Install -> uninstall -> reinstall must drop ONLY the gdpr tables and leave
-every other module untouched. The module owns a single revision
-(gdpr_0001), so the branch-scoped downgrade target is ``gdpr@-1``.
+every other module untouched. The module owns two revisions
+(gdpr_0001, gdpr_0002), so the branch-scoped downgrade target is ``gdpr@-2``.
 Marked ``alembic_roundtrip`` and excluded from the default pytest run.
 """
 
@@ -65,7 +65,7 @@ def test_gdpr_uninstall_roundtrip_is_branch_scoped() -> None:
     before = _list_tables()
     assert GDPR_TABLES.issubset(before), "gdpr tables missing after upgrade"
 
-    _alembic("downgrade", "gdpr@-1")
+    _alembic("downgrade", "gdpr@-2")
     after_down = _list_tables()
     assert GDPR_TABLES.isdisjoint(after_down), "gdpr tables still present after downgrade"
 
