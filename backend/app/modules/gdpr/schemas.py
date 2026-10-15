@@ -141,7 +141,7 @@ class ErasureAuditResponse(BaseModel):
 class DataBreachCreate(BaseModel):
     occurred_at: datetime | None = None
     description: str = Field(min_length=1, max_length=4000)
-    data_involved: list[str] = Field(min_length=0)
+    data_involved: list[str] = Field(min_length=1)
     affected_people: int | None = Field(default=None, ge=0)
 
 

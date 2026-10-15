@@ -145,6 +145,8 @@ async def record_consent(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> ApiResponse[ConsentResponse]:
     row = await ConsentService.grant_or_withdraw(db, ctx.clinic_id, data)
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Patient not found")
     return ApiResponse(data=ConsentResponse.model_validate(row))
 
 
@@ -307,7 +309,10 @@ async def update_breach(
     row = await DataBreachService.get(db, ctx.clinic_id, breach_id)
     if not row:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Breach not found")
-    row = await DataBreachService.update(db, row, data)
+    try:
+        row = await DataBreachService.update(db, row, data)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
     return ApiResponse(data=DataBreachResponse.model_validate(row))
 
 

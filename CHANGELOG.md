@@ -47,6 +47,16 @@ frontend as a Nuxt layer under its own Python package.
 
 ### Security
 
+- **A consent could be recorded against another clinic's patient.**
+  `ConsentService.grant_or_withdraw` built the row straight from the
+  payload id with no patient lookup, so any tenant got a 201 against any
+  patient id — and an unknown id surfaced as a `ForeignKeyViolation`,
+  i.e. a 500 for what is a bad request, with the 201/500 split acting as
+  a cross-tenant patient-existence oracle (#562). Both paths now do a
+  clinic-scoped patient lookup first: unknown or foreign ids answer 404
+  on HTTP and `{"error": "patient not found"}` on the agent tool, before
+  anything is written.
+
 - **A budget could be assigned a professional from another clinic.**
   `assigned_professional_id` was a plain FK to `users` with no
   membership check, so a caller naming a user id from a different clinic
@@ -95,6 +105,19 @@ frontend as a Nuxt layer under its own Python package.
 
 ### Fixed
 
+- **GDPR retention policies can no longer disagree with each other**
+  (#562). Two active policies for one (clinic, category) made erasure
+  eligibility pick one at random (unordered dict collapse). Creating a
+  policy now supersedes its active predecessors in the same transaction
+  (rows stay as history), and reactivating does the same — at most one
+  policy per category is ever active.
+- **The breach register no longer accepts illegal transitions or forged
+  stamps** (#562). `DataBreachService.update` took any status in any
+  order (a `reported` breach could return to `under_review` keeping a
+  stale reported latch) and any explicit `notified_authority_at`.
+  Transitions now follow a fixed table (illegal moves answer 422) and
+  the authority timestamp is stamped only by the `reported` transition.
+  An Art. 33 entry with zero data categories is rejected at the schema.
 - **An admin editing another user's clinical note always returned 500.**
   `NoteService.update` fetched the note without eager-loading `author`,
   and `ClinicalNoteResponse` declares that field, so building the

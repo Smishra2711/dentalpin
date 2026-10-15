@@ -114,6 +114,8 @@ async def _record_consent(ctx: AgentContext, params: RecordConsentArgs) -> dict:
             provided_text=params.provided_text,
         ),
     )
+    if row is None:
+        return {"error": "patient not found"}
     return {
         "id": row.id,
         "patient_id": row.patient_id,
