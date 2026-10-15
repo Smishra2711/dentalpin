@@ -94,6 +94,20 @@ contract.
 
 ## Gotchas
 
+- **One version allocator: `BudgetService.next_version`.**
+  `uq_budget_clinic_number_version` covers
+  `(clinic_id, budget_number, version)`, so a new version must come from
+  `max(version)` over the budget number — never from the version of the
+  row being cloned. `clone_to_new_draft` (resend) used
+  `budget.version + 1` while `duplicate_budget` used `max + 1`, so
+  resending a terminal version twice, or resending an old terminal
+  version after a newer one existed, hit the constraint and 500'd with
+  the INSERT in the response body. Both paths go through `next_version`
+  now; the resend route also maps a losing concurrent insert to 409.
+  Note what this does **not** decide: whether reception *should* be able
+  to spawn a second draft from one terminal version is a product
+  question, still open.
+
 - **Budget → treatment_plan is event-driven, never direct.** Don't
   import treatment_plan services or models from here. The reverse
   direction (treatment_plan → budget) is allowed because budget is in
