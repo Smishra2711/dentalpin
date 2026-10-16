@@ -36,7 +36,9 @@ borrador desde la ficha del paciente (acción "Nueva receta").
 - **Emitir** y **Anular** piden confirmación (son irreversibles).
   Al emitir sin número de colegiado guardado verás un aviso (no un bloqueo).
 - Tu **número de colegiado** se configura en Configuración (sección
-  clínica, identidad prescriptora) y queda impresa en el PDF.
+  clínica, identidad prescriptora) y queda impresa en el PDF. La
+  etiqueta sigue al país de la clínica cuando tiene término propio
+  (México: cédula profesional).
 - La cabecera muestra el nombre del paciente con enlace a su ficha.
 - El editor exige al menos una línea, incluye campo de vía y limpia
   `&new=1` de la URL al abrir.

@@ -13,6 +13,22 @@ const { getPrescriberProfile, upsertPrescriberProfile } = usePrescriptions()
 const canWrite = computed(() => can(PERMISSIONS.prescriptions.write))
 const licenseNumber = ref('')
 const isLoading = ref(false)
+const country = useClinicCountry()
+
+/**
+ * Professional terminology follows the clinic country when it has its
+ * own term (MX: cédula profesional); otherwise the UI locale default.
+ * Frontend mirror of the backend hook `label_overrides` seam
+ * (prescriptions/hooks.py): a country module's backend hook governs
+ * PDFs, this governs the settings caption. Extend the map (never the
+ * i18n keys) when another country needs its own term.
+ */
+const LICENSE_LABEL_BY_COUNTRY: Record<string, string> = {
+  MX: 'Cédula profesional'
+}
+const licenseLabel = computed(
+  () => LICENSE_LABEL_BY_COUNTRY[(country.value ?? '').toUpperCase()] ?? t('prescriptions.licenseLabel')
+)
 
 async function refresh() {
   isLoading.value = true
@@ -42,7 +58,7 @@ onMounted(refresh)
       class="h-10"
     />
     <template v-else>
-      <UFormField :label="t('prescriptions.licenseLabel')">
+      <UFormField :label="licenseLabel">
         <UInput
           v-model="licenseNumber"
           :disabled="!canWrite"

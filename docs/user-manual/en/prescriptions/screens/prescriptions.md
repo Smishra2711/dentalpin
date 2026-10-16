@@ -36,7 +36,8 @@ draft from the patient summary ("New prescription" action).
 - **Issue** and **Cancel** ask for confirmation (both are irreversible).
   Issuing without a saved license shows a warning, not a block.
 - Your **license number** lives in Settings (clinical section,
-  prescriber identity) and prints on the PDF.
+  prescriber identity) and prints on the PDF. The caption follows the
+  clinic country when it has its own term (Mexico: cédula profesional).
 - The header shows the patient name with a link back to the record.
 - The editor requires at least one line, includes a route field, and
   clears `&new=1` from the URL on open.
