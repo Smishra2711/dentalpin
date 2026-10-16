@@ -1337,7 +1337,14 @@
       "errorGeneric": "Couldn't create the patient. Retry."
     }
   },
+  "errors": {
+    "loadFailed": "Failed to load",
+    "createFailed": "Failed to create",
+    "updateFailed": "Failed to update",
+    "deleteFailed": "Failed to delete"
+  },
   "common": {
+    "andMore": "+{count} more",
     "save": "Save",
     "add": "Add",
     "cancel": "Cancel",

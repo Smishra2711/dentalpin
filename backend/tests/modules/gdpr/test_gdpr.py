@@ -38,12 +38,27 @@ def erasure_contributors():
     cleared afterwards so contributor state never leaks between tests.
     """
     from app.core.erasure.registry import erasure_registry
+    from app.modules.billing import BillingModule
+    from app.modules.budget import BudgetModule
+    from app.modules.clinical_notes import ClinicalNotesModule
+    from app.modules.documents import DocumentsModule
+    from app.modules.media import MediaModule
     from app.modules.notifications import NotificationsModule
+    from app.modules.patient_timeline import PatientTimelineModule
     from app.modules.recalls import RecallsModule
 
     erasure_registry.clear()
-    erasure_registry.register_from(NotificationsModule())
-    erasure_registry.register_from(RecallsModule())
+    for module in (
+        BillingModule(),
+        BudgetModule(),
+        ClinicalNotesModule(),
+        DocumentsModule(),
+        MediaModule(),
+        NotificationsModule(),
+        PatientTimelineModule(),
+        RecallsModule(),
+    ):
+        erasure_registry.register_from(module)
     yield
     erasure_registry.clear()
 
@@ -191,10 +206,14 @@ async def test_partial_erasure_blanks_identity_and_never_hard_deletes(
     assert coverage["patient_record"] == "erased"
     assert coverage["notifications"] == "erased"
     assert coverage["recalls"] == "erased"
+    # Retention scopes: every one of these holds an email copy, so an
+    # email run reports what each of them keeps (#657).
     assert coverage["patient_timeline"] == "retained"
     assert coverage["budget"] == "retained"
     assert coverage["billing"] == "retained"
-    assert coverage["clinical"] == "retained"
+    assert coverage["clinical_notes"] == "retained"
+    assert coverage["documents"] == "retained"
+    assert coverage["media"] == "retained"
     assert set(coverage) == {
         "patient_record",
         "notifications",
@@ -202,7 +221,9 @@ async def test_partial_erasure_blanks_identity_and_never_hard_deletes(
         "patient_timeline",
         "budget",
         "billing",
-        "clinical",
+        "clinical_notes",
+        "documents",
+        "media",
     }
 
     # Row still exists (never hard-deleted).
@@ -249,10 +270,16 @@ async def test_erasure_retained_when_retention_holds(
     # Nothing was erased, so every scope reports what it kept (#546).
     coverage = {c.scope: c.status for c in result.coverage}
     assert coverage["patient_record"] == "retained"
+    # "clinical" is outside the closed vocabulary, so no scope holds a copy
+    # of it: every contributor reports not_applicable rather than claiming
+    # to retain something this run never looked at (#657).
     assert coverage["notifications"] == "not_applicable"
     assert coverage["patient_timeline"] == "not_applicable"
     assert coverage["budget"] == "not_applicable"
-    assert coverage["clinical"] == "retained"
+    assert coverage["billing"] == "not_applicable"
+    assert coverage["clinical_notes"] == "not_applicable"
+    assert coverage["documents"] == "not_applicable"
+    assert coverage["media"] == "not_applicable"
 
     patient = (
         await db_session.execute(
@@ -342,24 +369,6 @@ async def test_announcement_failure_does_not_fail_erasure(
     # The announcement still went out (to the non-transactional subscriber)
     # even though the db-subscriber raised.
     assert [a["patient_id"] for a in announced] == [str(test_patient.id)]
-
-
-def test_interim_coverage_dedupes_answered_scopes():
-    # Pure unit test (no DB): once a contributor answers a scope, the
-    # interim row for that scope is suppressed so it never reports twice.
-    rows = ErasureService._interim_retained_coverage(["email"], [])
-    assert {r.scope for r in rows} == {
-        "patient_timeline",
-        "budget",
-        "billing",
-        "clinical",
-    }
-    rows = ErasureService._interim_retained_coverage(
-        ["email"], [], answered={"budget", "notifications"}
-    )
-    assert {r.scope for r in rows} == {"patient_timeline", "billing", "clinical"}
-    rows = ErasureService._interim_retained_coverage([], ["clinical"])
-    assert {r.scope: r.status for r in rows}["clinical"] == "retained"
 
 
 @pytest.mark.asyncio
