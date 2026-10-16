@@ -1,6 +1,6 @@
 ---
 module: gdpr
-last_verified_commit: 8b8e9375
+last_verified_commit: 47a008bcc85677e4e45c93b34d7a7e1525e86f29
 ---
 
 # gdpr — overview
