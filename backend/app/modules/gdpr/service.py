@@ -449,11 +449,6 @@ class ErasureService:
         ]
         for contributor in erasure_registry.contributors():
             coverages.append(await contributor.erase(clinic_id, patient_id, erasable, retained, db))
-        coverages.extend(
-            ErasureService._interim_retained_coverage(
-                erasable, retained, answered={c.scope for c in coverages}
-            )
-        )
         await db.commit()
         await db.refresh(log)
         # Announcement only: contributors already ran above. Published after
@@ -485,49 +480,6 @@ class ErasureService:
             retained_categories=retained,
             coverage=coverages,
         )
-
-    @staticmethod
-    def _interim_retained_coverage(
-        erased: list[str], retained: list[str], answered: set[str] | None = None
-    ) -> list[ErasureCoverage]:
-        """Retained-scope rows until their contributor modules land (#546).
-
-        INTERIM, not the contract: these four rows are still hardcoded in
-        ``gdpr`` because their owning modules (patient_timeline, budget,
-        billing, clinical) do not contribute yet. Each row claims only
-        retention under Art. 17(3) — a conservative claim that cannot
-        under-erase — and the follow-up replaces them with contributor
-        answers. The scrubbed scopes (``patient_record`` here,
-        ``notifications``/``recalls`` via the registry) are never hardcoded.
-        """
-        erased_set = set(erased)
-        contact_requested = bool({"email", "phone"} & (erased_set | set(retained)))
-
-        rows = [
-            ErasureCoverage(
-                scope="patient_timeline",
-                status="retained" if contact_requested else "not_applicable",
-                detail="Append-only activity feed keeps communication copies (Art. 17(3)). Interim: contributor lands in follow-up.",
-            ),
-            ErasureCoverage(
-                scope="budget",
-                status="retained" if contact_requested else "not_applicable",
-                detail="Budget estimates/signatures keep the signer's email (Art. 17(3)). Interim: contributor lands in follow-up.",
-            ),
-            ErasureCoverage(
-                scope="billing",
-                status="retained" if contact_requested else "not_applicable",
-                detail="Issued invoices keep a fiscal snapshot (Art. 17(3)). Interim: contributor lands in follow-up.",
-            ),
-            ErasureCoverage(
-                scope="clinical",
-                status="retained",
-                detail="Clinical notes, documents and media are retained as care records. Interim: contributor lands in follow-up.",
-            ),
-        ]
-        # A scope the registry already answered must not be reported twice
-        # once its contributor lands: the contributor's row wins.
-        return [row for row in rows if row.scope not in (answered or set())]
 
     @staticmethod
     async def list_audit(
