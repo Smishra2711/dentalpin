@@ -363,11 +363,14 @@ def test_reminder_link_mint_failure_is_error_not_warning(
     import logging
     from types import SimpleNamespace
 
+    import app.modules.agenda.checkin as _checkin
     import app.modules.notifications.tasks as _tasks
 
     monkeypatch.setattr(settings, "ALLOWED_ORIGINS", "https://clinic.example")
     monkeypatch.setattr(
-        _tasks, "mint_checkin_token", lambda *a, **k: (_ for _ in ()).throw(ValueError("bad key"))
+        _checkin,
+        "mint_checkin_token",
+        lambda *a, **k: (_ for _ in ()).throw(ValueError("bad key")),
     )
     apt = SimpleNamespace(
         id=uuid4(),
