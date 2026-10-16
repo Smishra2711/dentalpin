@@ -10,6 +10,14 @@
   `(clinic_id, prefix)`, so this also fires across series types. Found by
   a generated-request sweep of the write surface.
 
+- feat(#657): owns the `billing` GDPR erasure coverage scope
+  (`get_erasure_contributors()`). An issued invoice keeps its fiscal
+  snapshot unchanged as bookkeeping law requires (Art. 17(3)(b)). The
+  snapshot holds `billing_email` and `billing_tax_id` — the latter is the
+  patient's national id, so `identity` now reports `retained` where the
+  hardcoded row said `not_applicable`; `phone` is not held here and
+  reports `not_applicable`.
+
 - docs(#542): `docs/technical/billing/permissions.md` now documents why `dentist` holds `billing.admin` (series config, draft-only void, clinic billing settings) and corrects the `void` description to draft-only; grants unchanged.
 
 - feat(i18n): Hindi (`hi`) locale: Hindi invoice PDF labels; `Noto Sans Devanagari` in the PDF font stack.

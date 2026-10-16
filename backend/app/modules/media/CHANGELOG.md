@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- feat(#657): owns the `media` GDPR erasure coverage scope
+  (`get_erasure_contributors()`). Imaging, clinical photos and uploaded
+  patient files are retained as care records (Art. 17(3)(c)/(h)). One of
+  the three scopes that replaced `gdpr`'s hardcoded `clinical` row.
+
 - fix: the download `Content-Disposition` filename is sanitized (quotes,
   backslashes and control characters stripped, `document` fallback) — the
   stored name comes from the uploader and must never reach the header

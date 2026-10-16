@@ -63,6 +63,15 @@ that event was never published.
   pass. It is the table's only unique constraint, which is what makes
   labelling the violation safe.
 
+- **GDPR erasure retains the invoice's fiscal snapshot.**
+  `erasure.BillingErasureContributor` owns the `billing` coverage scope
+  (ADR 0038, #657) and writes nothing: an issued document must stay as
+  issued, and an e-invoice already registered with the tax authority
+  cannot be altered at all (Art. 17(3)(b)). It declares `email`
+  (`billing_email`) and `identity` (`billing_tax_id`, the patient's
+  NIF/CIF); `phone` is not held here. Adding a patient contact column to
+  the snapshot means updating that declaration.
+
 - **`BudgetItem.invoiced_quantity` is a derived cache, never a
   counter.** `service.resync_invoiced_quantities` recomputes it from the
   live `invoice_items` (credit-note lines subtract, deleted/voided
