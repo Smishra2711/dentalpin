@@ -27,6 +27,10 @@ frontend as a Nuxt layer under its own Python package.
 
 ### Added
 
+- **Copilot: OpenRouter + Groq LLM provider adapters** over their
+  OpenAI-compatible endpoints (same subclass shape as Gemini;
+  `OPENROUTER_API_KEY` / `GROQ_API_KEY` + per-clinic selection, specs
+  registered from `on_activate`). No bridge, settings or UI change (#332).
 - **Copilot: Gemini LLM provider adapter** over Google's OpenAI-compatible
   endpoint (same wire format and `openai` tool dialect as the OpenAI
   provider; `GEMINI_API_KEY` + per-clinic selection, spec registered from
