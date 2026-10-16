@@ -680,8 +680,9 @@ async def public_appointment_checkin(
     Transitions scheduled/confirmed → checked_in through the canonical
     status machine so events fire. Re-scanning an already checked-in
     appointment returns 200 with the current status (never an error) —
-    the     token stays replayable for its full fifteen minutes, which is
-    defensible for an idempotent ``checked_in`` write and stated here
+    the token stays replayable until it expires (fifteen minutes for
+    counter QRs, end of the clinic-local day for reminder links), which
+    is defensible for an idempotent ``checked_in`` write and stated here
     rather than left implicit; wrong-state tokens answer 422, bad/expired
     tokens 401, unknown appointments 404 (no oracle beyond what the
     token already encodes). Outside the start_time window (two hours
