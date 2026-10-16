@@ -8,7 +8,7 @@ related_permissions: []
 related_paths:
   - backend/app/modules/agenda/frontend/pages/p/check-in/[token].vue
   - backend/app/modules/agenda/router.py
-last_verified_commit: 287d011a3d312210e587caf7518da1c0eae59cb2
+last_verified_commit: 693ea9f45713ec91219886dc89a1cf4d194d0e07
 ---
 
 # Registro con QR (página del paciente)
