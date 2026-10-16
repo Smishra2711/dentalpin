@@ -1337,7 +1337,14 @@
       "errorGeneric": "Nie udało się utworzyć pacjenta. Spróbuj ponownie."
     }
   },
+  "errors": {
+    "loadFailed": "Nie udało się wczytać",
+    "createFailed": "Nie udało się utworzyć",
+    "updateFailed": "Nie udało się zaktualizować",
+    "deleteFailed": "Nie udało się usunąć"
+  },
   "common": {
+    "andMore": "+{count} więcej",
     "save": "Zapisz",
     "add": "Dodaj",
     "cancel": "Anuluj",

@@ -1347,7 +1347,14 @@
       "errorGeneric": "मरीज़ नहीं बनाया जा सका। फिर कोशिश करें।"
     }
   },
+  "errors": {
+    "loadFailed": "लोड करने में विफल",
+    "createFailed": "बनाने में विफल",
+    "updateFailed": "अपडेट करने में विफल",
+    "deleteFailed": "हटाने में विफल"
+  },
   "common": {
+    "andMore": "+{count} और",
     "save": "सहेजें",
     "add": "जोड़ें",
     "cancel": "रद्द करें",
