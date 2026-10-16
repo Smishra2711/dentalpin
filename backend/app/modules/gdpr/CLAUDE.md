@@ -108,6 +108,8 @@ DSRs).
 | `list_gdpr_consents` | READ | `ConsentService.list_consents` | `gdpr.consents.read` |
 | `create_retention_policy` | WRITE | `RetentionService.create` | `gdpr.retention.write` |
 | `execute_partial_erasure` | DESTRUCTIVE | `ErasureService.execute` | `gdpr.requests.write` |
+| `report_breach` | WRITE | `DataBreachService.create` | `gdpr.breaches.write` |
+| `list_breaches` | READ | `DataBreachService.list` | `gdpr.breaches.read` |
 
 All tools filter by `ctx.clinic_id` and return native values (UUID/datetime).
 

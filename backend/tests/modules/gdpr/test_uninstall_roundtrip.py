@@ -1,8 +1,9 @@
 """gdpr round-trip uninstall test.
 
 Install -> uninstall -> reinstall must drop ONLY the gdpr tables and leave
-every other module untouched. The module owns two revisions
-(gdpr_0001, gdpr_0002), so the branch-scoped downgrade target is ``gdpr@-2``.
+every other module untouched. The module owns three revisions
+(gdpr_0001, gdpr_0002, gdpr_0003), so the branch-scoped downgrade target
+is ``gdpr@-3``.
 Marked ``alembic_roundtrip`` and excluded from the default pytest run.
 """
 
@@ -67,7 +68,7 @@ def test_gdpr_uninstall_roundtrip_is_branch_scoped() -> None:
     before = _list_tables()
     assert GDPR_TABLES.issubset(before), "gdpr tables missing after upgrade"
 
-    _alembic("downgrade", "gdpr@-2")
+    _alembic("downgrade", "gdpr@-3")
     after_down = _list_tables()
     assert GDPR_TABLES.isdisjoint(after_down), "gdpr tables still present after downgrade"
 
@@ -104,8 +105,10 @@ def test_gdpr_0002_reconciles_duplicate_actives() -> None:
     """
     _alembic("upgrade", "heads")
     # Drop only the index so duplicates become insertable; tables and any
-    # other data stay exactly as upgrade left them.
-    _alembic("downgrade", "gdpr@-1")
+    # other data stay exactly as upgrade left them. ``@-N`` counts back from
+    # the branch HEAD, so it must track the revision count: three revisions
+    # now means ``-2`` lands on gdpr_0001 (#562 SEC-02 added gdpr_0003).
+    _alembic("downgrade", "gdpr@-2")
 
     clinic_id = uuid.uuid4()
     other_clinic_id = uuid.uuid4()

@@ -62,12 +62,35 @@ Migration `gdpr_0001_initial` on own Alembic branch (`gdpr`), depending on
   a 30-day `deadline_at`.
 - `ConsentService` — `grant_or_withdraw` APPENDS one row per event
   (grant → withdraw → grant = three rows); `list_consents` returns
-  newest-first, so the first row per (patient, purpose) is current.
-- `RetentionService` — active policies that gate erasure.
+  newest-first (created_at + id tiebreak), so the first row per
+  (patient, purpose) is current; `current` returns just that row.
+  Purposes are stored canonical (`strip().lower()`), so "SMS" and
+  "sms " are one purpose, not two. A grant requires the shown text
+  (`provided_text`); withdrawals carry none. Recording a withdrawal
+  publishes `gdpr.consent.withdrawn`, but send paths gate on the
+  independent `do_not_contact` field — the record does not itself
+  stop sends. Wiring withdrawal into the send path is a parked
+  product decision (#562 CONS-02); until it lands, this document is
+  the disclosure.
+- `RetentionService` — active policies that gate erasure. At most
+  one active policy per (clinic, category) (partial unique index,
+  `gdpr_0002`); creating one supersedes its predecessors, which stay
+  as history. Deactivation is terminal by design: to change a policy,
+  create a new one — there is no reactivate path (#562 RET-02).
 - `ErasureService` — `erasure_eligible` splits requested categories into
   erasable (policy expired) vs retained (still under hold); `execute` blanks
   identity PII and writes the audit log; `list_audit`.
-- `DataBreachService` — breach create/list/update.
+- `DataBreachService` — breach create/list/update. Art. 33 authority
+  notification (`notified_authority_at`) is stamped by the transition into
+  `reported`; the Art. 34 subject-notification record
+  (`notified_subjects_at` / `notified_subjects_count`, `gdpr_0003`) is set
+  explicitly, with no auto-stamp rule - whether notifying people is automatic
+  is a parked product decision (#562 SEC-02). Status moves follow
+  `_BREACH_TRANSITIONS`: `under_review` to `reported` or `not_reportable`,
+  `reported` to `resolved` or `not_reportable`, `not_reportable` back to
+  `under_review` to retry. The `reported -> not_reportable` edge covers an
+  authority ruling the report below the threshold after notification; the
+  latches stay set, because the notification happened.
 - `ExportService` — machine-readable portability snapshot.
 
 ## Erasure semantics
