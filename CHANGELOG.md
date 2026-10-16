@@ -11,6 +11,20 @@ frontend as a Nuxt layer under its own Python package.
 
 ## [Unreleased]
 
+### Fixed
+
+- **26 UI strings showed the i18n key instead of a message** (#631).
+  `errors.loadFailed`, `errors.createFailed`, `errors.updateFailed` and
+  `errors.deleteFailed` existed in no locale file, so a clinic saw a toast
+  titled `errors.updateFailed`; `treatment_plan` alone had 21 of the sites.
+  The four keys are now in all 12 host locales, `common.more` became the
+  interpolated `common.andMore` (`+{count} more`), and the one `common.view`
+  tooltip reuses the existing `common.viewDetails`. A new guard,
+  `frontend/tests/i18n/key-resolution.test.ts`, resolves every literal
+  `t('…')` key against the merged English set — the locale-parity test
+  cannot see this class, because a key absent from *every* locale keeps
+  parity perfectly.
+
 ### Added
 
 - **Copilot: OpenRouter + Groq LLM provider adapters** over their

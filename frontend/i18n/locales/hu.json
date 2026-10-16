@@ -1337,7 +1337,14 @@
       "errorGeneric": "Nem sikerült létrehozni a pácienst. Próbálja újra."
     }
   },
+  "errors": {
+    "loadFailed": "Nem sikerült betölteni",
+    "createFailed": "Nem sikerült létrehozni",
+    "updateFailed": "Nem sikerült frissíteni",
+    "deleteFailed": "Nem sikerült törölni"
+  },
   "common": {
+    "andMore": "+{count} további",
     "save": "Mentés",
     "add": "Hozzáadás",
     "cancel": "Mégse",

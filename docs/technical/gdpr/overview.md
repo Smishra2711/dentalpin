@@ -106,10 +106,22 @@ row per scope with a `status` of `erased`, `retained` (legal basis, Art.
 | `patient_record` | identity/contact fields on the patient row | `erased` when any category was erasable |
 | `notifications` | recipient/subject/body/context/failure text on the communication log (contributor) | `erased` when a contact category was erasable |
 | `recalls` | contact-attempt notes (contributor) | `erased` when a contact category was erasable |
-| `patient_timeline` | append-only activity feed (communication copies) | `retained` (Art. 17(3), interim — contributor lands in follow-up) |
-| `budget` | budget estimate/signature records | `retained` (Art. 17(3), interim — contributor lands in follow-up) |
-| `billing` | issued-invoice fiscal snapshot | `retained` (Art. 17(3), interim — contributor lands in follow-up) |
-| `clinical` | clinical notes, documents, media | `retained` (care records) |
+| `patient_timeline` | append-only activity feed (contributor) | `retained` (Art. 17(3)(b)) |
+| `budget` | signer email on signed quotes (contributor) | `retained` (Art. 17(3)(e)); `not_applicable` unless `email` is in the run |
+| `billing` | issued-invoice fiscal snapshot (contributor) | `retained` (Art. 17(3)(b)); `not_applicable` unless `email`/`identity` is in the run |
+| `clinical_notes` | clinical note text (contributor) | `retained` (Art. 17(3)(c)/(h)) |
+| `documents` | generated prescriptions/certificates/referrals (contributor) | `retained` (Art. 17(3)(c)/(h)) |
+| `media` | imaging, clinical photos, uploaded files (contributor) | `retained` (Art. 17(3)(c)/(h)) |
+
+Every row above is now a module-owned contributor (#657) — `gdpr`
+hardcodes none of them. The last three replaced a single `clinical` row:
+there is no `clinical` module, so the three modules that actually hold the
+data own one scope each, and uninstalling `documents` removes its row
+instead of leaving `gdpr` claiming coverage for a module that is gone.
+Retention-only scopes extend `RetainedScopeContributor` and declare the
+erasure categories they hold a copy of, so a run that touches none of them
+reports `not_applicable` rather than claiming to retain data it never
+looked at.
 
 ## Agent tools
 

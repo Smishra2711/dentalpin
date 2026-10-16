@@ -1337,7 +1337,14 @@
       "errorGeneric": "Não foi possível criar o paciente. Tente novamente."
     }
   },
+  "errors": {
+    "loadFailed": "Falha ao carregar",
+    "createFailed": "Falha ao criar",
+    "updateFailed": "Falha ao atualizar",
+    "deleteFailed": "Falha ao eliminar"
+  },
   "common": {
+    "andMore": "+{count} mais",
     "save": "Guardar",
     "add": "Adicionar",
     "cancel": "Cancelar",
