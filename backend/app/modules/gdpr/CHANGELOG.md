@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- refactor(#657): the four interim retained coverage rows
+  (`patient_timeline`, `budget`, `billing`, `clinical`) are gone;
+  `ErasureService._interim_retained_coverage` is deleted. Every coverage
+  row now comes from the module that owns the data, so the registry's
+  own guarantee holds for all of them: uninstall a module and its row
+  disappears instead of `gdpr` claiming coverage for data that is no
+  longer there. The `clinical` row became three (`clinical_notes`,
+  `documents`, `media`) — there is no `clinical` module to own it.
+
 - feat(#546, ADR 0038): erasure pulls a core contributor registry instead of
   event-bus fan-out. `gdpr` calls every registered contributor
   (`get_erasure_contributors()`, collected from active modules like

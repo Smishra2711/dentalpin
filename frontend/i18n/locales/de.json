@@ -1337,7 +1337,14 @@
       "errorGeneric": "Patient konnte nicht angelegt werden. Erneut versuchen."
     }
   },
+  "errors": {
+    "loadFailed": "Laden fehlgeschlagen",
+    "createFailed": "Erstellen fehlgeschlagen",
+    "updateFailed": "Aktualisieren fehlgeschlagen",
+    "deleteFailed": "Löschen fehlgeschlagen"
+  },
   "common": {
+    "andMore": "+{count} weitere",
     "save": "Speichern",
     "add": "Hinzufügen",
     "cancel": "Abbrechen",

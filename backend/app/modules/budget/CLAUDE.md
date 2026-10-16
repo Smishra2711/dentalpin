@@ -108,6 +108,16 @@ contract.
   to spawn a second draft from one terminal version is a product
   question, still open.
 
+- **GDPR erasure retains the signer's email.**
+  `erasure.BudgetErasureContributor` owns the `budget` coverage scope
+  (ADR 0038, #657) and writes nothing: blanking
+  `BudgetSignature.signed_by_email` would cut the signature loose from its
+  `document_hash`, which is what makes the acceptance provable
+  (Art. 17(3)(e)). It declares only the `email` category — there is no
+  phone or national-id column here — so a phone- or identity-only run
+  reports `not_applicable`. Adding a patient contact column to this module
+  means updating that declaration.
+
 - **Budget → treatment_plan is event-driven, never direct.** Don't
   import treatment_plan services or models from here. The reverse
   direction (treatment_plan → budget) is allowed because budget is in

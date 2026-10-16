@@ -13,6 +13,13 @@
   concurrent insert to 409 instead of 500. Found by a generated-request
   sweep of the write surface.
 
+- feat(#657): owns the `budget` GDPR erasure coverage scope
+  (`get_erasure_contributors()`). Signed quotes are retained so the
+  signature stays bound to its document hash (Art. 17(3)(e)). The only
+  patient contact copied here is `BudgetSignature.signed_by_email`, so a
+  phone- or identity-only erasure now reports `not_applicable` instead of
+  the blanket `retained` `gdpr` used to hardcode.
+
 - fix: `PUT /budgets/{id}` now returns the linked `treatment_plan`, like
   `GET`. The detail page replaces its budget with the PUT response, so after
   editing a plan-linked quote it dropped the "lines are managed by the plan"
