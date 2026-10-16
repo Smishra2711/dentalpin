@@ -44,11 +44,14 @@ async function submit(token: string) {
     })
     state.value = 'done'
   } catch (e: unknown) {
-    const detail = (e as { data?: { detail?: { code?: string, starts_at?: string } } })?.data?.detail
-    if (detail?.code === 'too_early') {
-      startsAt.value = detail.starts_at ?? ''
+    // The global HTTP handler stringifies error details, so the window
+    // code travels as `too_early:<HH:MM>` / `window_closed` (ADR 0037).
+    const message = (e as { data?: { message?: string } })?.data?.message ?? ''
+    const [code, time] = message.split(':')
+    if (code === 'too_early') {
+      startsAt.value = time ?? ''
       state.value = 'tooEarly'
-    } else if (detail?.code === 'window_closed') {
+    } else if (code === 'window_closed') {
       state.value = 'tooLate'
     } else {
       state.value = 'invalid'

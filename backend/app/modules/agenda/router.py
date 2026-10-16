@@ -680,14 +680,14 @@ async def public_appointment_checkin(
     Transitions scheduled/confirmed → checked_in through the canonical
     status machine so events fire. Re-scanning an already checked-in
     appointment returns 200 with the current status (never an error) —
-    the token stays replayable for its full fifteen minutes, which is
+    the     token stays replayable for its full fifteen minutes, which is
     defensible for an idempotent ``checked_in`` write and stated here
     rather than left implicit; wrong-state tokens answer 422, bad/expired
     tokens 401, unknown appointments 404 (no oracle beyond what the
     token already encodes). Outside the start_time window (two hours
-    before start until one hour after end) answers 422 with a
-    machine-stable ``code`` (``too_early`` / ``window_closed``) plus the
-    local start time, so the page can message precisely (ADR 0037).
+    before start until one hour after end) answers 422
+    ``too_early:<HH:MM>`` / ``window_closed``, so the page can message
+    precisely (ADR 0037).
     """
     try:
         appointment_id, clinic_id, _source = verify_checkin_token(token)
@@ -704,9 +704,14 @@ async def public_appointment_checkin(
             detail="Appointment not found",
         ) from None
     except CheckinWindowError as e:
+        # The global HTTP handler stringifies details, so the code and
+        # the local start travel in one machine-stable string the page
+        # splits on the first colon (ADR 0037: the page messages
+        # precisely instead of failing silently).
+        detail = e.code if e.code == "window_closed" else f"{e.code}:{e.local_start}"
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail={"code": e.code, "starts_at": e.local_start},
+            detail=detail,
         ) from e
     except (InvalidTransitionError, CabinetRequiredError) as e:
         raise HTTPException(

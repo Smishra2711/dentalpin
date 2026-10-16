@@ -10,6 +10,7 @@ tenant isolation (token from clinic A never touches clinic B).
 
 from __future__ import annotations
 
+import re
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
@@ -287,8 +288,9 @@ async def test_checkin_too_early_is_422_with_code(
     token, _ = mint_checkin_token(world["appointment_id"], world["clinic_id"])
     r = await client.post(f"/api/v1/agenda/public/check-in/{token}")
     assert r.status_code == 422
-    assert r.json()["detail"]["code"] == "too_early"
-    assert r.json()["detail"]["starts_at"]
+    detail = r.json()["message"]
+    assert detail.startswith("too_early:")
+    assert re.fullmatch(r"too_early:\d{2}:\d{2}", detail)
 
 
 @pytest.mark.asyncio
@@ -304,7 +306,7 @@ async def test_checkin_window_closed_is_422_with_code(
     token, _ = mint_checkin_token(world["appointment_id"], world["clinic_id"])
     r = await client.post(f"/api/v1/agenda/public/check-in/{token}")
     assert r.status_code == 422
-    assert r.json()["detail"]["code"] == "window_closed"
+    assert r.json()["message"] == "window_closed"
 
 
 @pytest.mark.asyncio
