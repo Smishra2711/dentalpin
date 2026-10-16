@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- fix(#562 S1): consent writes do a clinic-scoped patient lookup first
+  (unknown/foreign ids: 404 on HTTP, error on the tool); creating a
+  retention policy supersedes active same-category policies (reactivation
+  is not a path) with a partial unique index backstop (`gdpr_0002`,
+  concurrent twins answer 409); breach status follows a transition table
+  (illegal moves 422) with the authority timestamp stamped only by
+  reporting; record fields correctable, explicit nulls on required fields
+  ignored; empty `data_involved` rejected.
+
 - refactor(#657): the four interim retained coverage rows
   (`patient_timeline`, `budget`, `billing`, `clinical`) are gone;
   `ErasureService._interim_retained_coverage` is deleted. Every coverage
