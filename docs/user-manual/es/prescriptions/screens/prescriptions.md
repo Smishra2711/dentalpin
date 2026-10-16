@@ -2,7 +2,7 @@
 module: prescriptions
 screen: prescriptions
 route: /prescriptions
-last_verified_commit: 8ef21830e7947065d2932020e53a4abbee17c0fd
+last_verified_commit: b631b127955584bc7d5350275232ffa9b1abdfa9
 related_endpoints:
   - GET /api/v1/prescriptions/patients/{patient_id}/prescriptions
   - POST /api/v1/prescriptions/patients/{patient_id}/prescriptions
