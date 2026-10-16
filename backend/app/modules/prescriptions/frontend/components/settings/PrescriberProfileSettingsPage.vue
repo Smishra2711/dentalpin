@@ -5,7 +5,7 @@
  */
 import { PERMISSIONS } from '~~/app/config/permissions'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { can } = usePermissions()
 const toast = useToast()
 const { getPrescriberProfile, upsertPrescriberProfile } = usePrescriptions()
@@ -23,11 +23,16 @@ const country = useClinicCountry()
  * PDFs, this governs the settings caption. Extend the map (never the
  * i18n keys) when another country needs its own term.
  */
+// Keyed `COUNTRY:locale` like the backend map, so the caption only
+// changes in the locale that owns the term (a Spanish term never shows
+// inside an English UI) and matches what the PDF prints.
 const LICENSE_LABEL_BY_COUNTRY: Record<string, string> = {
-  MX: 'Cédula profesional'
+  'MX:es': 'Cédula profesional'
 }
 const licenseLabel = computed(
-  () => LICENSE_LABEL_BY_COUNTRY[(country.value ?? '').toUpperCase()] ?? t('prescriptions.licenseLabel')
+  () =>
+    LICENSE_LABEL_BY_COUNTRY[`${(country.value ?? '').toUpperCase()}:${locale.value.split('-')[0]}`]
+    ?? t('prescriptions.licenseLabel')
 )
 
 async function refresh() {
