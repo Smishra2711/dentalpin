@@ -54,6 +54,15 @@ that event was never published.
 
 ## Gotchas
 
+- **A series prefix is unique per clinic, not per series type.**
+  `uq_invoice_series_clinic_prefix` covers `(clinic_id, prefix)`, so a
+  credit-note series cannot borrow an invoice series' prefix. Both
+  `POST /series` and `PUT /series/{id}` catch the `IntegrityError` and
+  return **409** rather than pre-checking with a SELECT — a
+  select-then-insert leaves a window where two concurrent creates both
+  pass. It is the table's only unique constraint, which is what makes
+  labelling the violation safe.
+
 - **GDPR erasure retains the invoice's fiscal snapshot.**
   `erasure.BillingErasureContributor` owns the `billing` coverage scope
   (ADR 0038, #657) and writes nothing: an issued document must stay as

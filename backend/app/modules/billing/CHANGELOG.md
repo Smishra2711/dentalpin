@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- fix: a duplicate invoice-series prefix is a 409 instead of a 500.
+  Neither `POST /series` nor `PUT /series/{id}` caught the
+  `uq_invoice_series_clinic_prefix` violation, so creating a series twice
+  — or renaming one onto a prefix already in use — returned 500 with the
+  raw asyncpg message in the response body. The constraint is
+  `(clinic_id, prefix)`, so this also fires across series types. Found by
+  a generated-request sweep of the write surface.
+
 - feat(#657): owns the `billing` GDPR erasure coverage scope
   (`get_erasure_contributors()`). An issued invoice keeps its fiscal
   snapshot unchanged as bookkeeping law requires (Art. 17(3)(b)). The
