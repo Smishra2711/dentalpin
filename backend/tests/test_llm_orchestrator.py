@@ -374,10 +374,8 @@ def test_salted_round_trip() -> None:
 
 
 def test_factory_rejects_unsupported_provider() -> None:
-    # NOTE: "ollama" is the next planned provider; when it lands, move this
-    # to a name that remains unsupported (same as gemini->groq before it).
     with pytest.raises(LLMConfigError):
-        get_provider("ollama")
+        get_provider("not-a-provider")
 
 
 def test_openai_name_roundtrip() -> None:
