@@ -1135,6 +1135,30 @@ async def test_breach_resolved_flow_and_not_reportable_branch(
 
 
 @pytest.mark.asyncio
+async def test_reported_to_not_reportable_keeps_the_latches(
+    db_session: AsyncSession, test_clinic: Clinic
+):
+    """The edge agreed in the #664 review round: the authority ruled the
+    report below the threshold after notification, so the record moves -
+    but the latches stay, because the notification really happened."""
+    from app.modules.gdpr.schemas import DataBreachCreate, DataBreachUpdate
+    from app.modules.gdpr.service import DataBreachService as _Svc
+
+    row = await _Svc.create(
+        db_session,
+        test_clinic.id,
+        DataBreachCreate(description="Misdirected letter", data_involved=["email"]),
+    )
+    row = await _Svc.update(db_session, row, DataBreachUpdate(status="reported"))
+    assert row.reported is True and row.notified_authority_at is not None
+
+    row = await _Svc.update(db_session, row, DataBreachUpdate(status="not_reportable"))
+    assert row.status == "not_reportable"
+    assert row.reported is True, "the authority notification happened; it stays on the record"
+    assert row.notified_authority_at is not None
+
+
+@pytest.mark.asyncio
 async def test_breach_subject_notification_fields_persist(
     db_session: AsyncSession, test_clinic: Clinic
 ):
@@ -1161,6 +1185,22 @@ async def test_breach_subject_notification_fields_persist(
     )
     assert row.notified_subjects_count == 12
     assert row.notified_subjects_at is not None
+
+    # A late-discovered incident may already have been communicated, so the
+    # record has to be settable at creation too (L4: a persistable field
+    # belongs on both schemas).
+    late = await _Svc.create(
+        db_session,
+        test_clinic.id,
+        DataBreachCreate(
+            description="Discovered in audit",
+            data_involved=["national_id"],
+            notified_subjects_at=datetime(2026, 9, 1, tzinfo=UTC),
+            notified_subjects_count=4,
+        ),
+    )
+    assert late.notified_subjects_count == 4
+    assert late.notified_subjects_at is not None
 
 
 @pytest.mark.asyncio

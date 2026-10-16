@@ -152,6 +152,11 @@ class DataBreachCreate(BaseModel):
     description: str = Field(min_length=1, max_length=4000)
     data_involved: list[str] = Field(min_length=1)
     affected_people: int | None = Field(default=None, ge=0)
+    #: Art. 34 record. Accepted at creation too, because an incident
+    #: discovered late may already have been communicated; still explicit
+    #: operator input, never auto-stamped (#562 SEC-02).
+    notified_subjects_at: datetime | None = None
+    notified_subjects_count: int | None = Field(default=None, ge=0)
 
 
 class DataBreachUpdate(BaseModel):

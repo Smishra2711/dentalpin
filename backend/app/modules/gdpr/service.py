@@ -543,6 +543,8 @@ class DataBreachService:
             description=payload.description,
             data_involved=payload.data_involved,
             affected_people=payload.affected_people,
+            notified_subjects_at=payload.notified_subjects_at,
+            notified_subjects_count=payload.notified_subjects_count,
         )
         db.add(row)
         await db.commit()

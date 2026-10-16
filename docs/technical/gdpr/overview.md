@@ -148,8 +148,9 @@ looked at.
 
 ## Agent tools
 
-Six tools: `create_gdpr_request`, `list_gdpr_requests`, `record_gdpr_consent`,
-`list_gdpr_consents`, `create_retention_policy`, `execute_partial_erasure`.
+Eight tools: `create_gdpr_request`, `list_gdpr_requests`, `record_gdpr_consent`,
+`list_gdpr_consents`, `create_retention_policy`, `execute_partial_erasure`,
+`report_breach`, `list_breaches`.
 Each wraps the matching service method, filters by `ctx.clinic_id`, and
 returns native values (UUID/datetime coerced at the registry).
 
