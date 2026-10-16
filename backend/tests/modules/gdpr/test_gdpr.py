@@ -1232,12 +1232,16 @@ async def test_hold_boundary_today_holds_yesterday_releases(
     db_session: AsyncSession, test_clinic: Clinic, test_patient: Patient
 ):
     """RET-03: a hold through today still holds; yesterday's hold released."""
-    from datetime import date, timedelta
+    from datetime import UTC, datetime, timedelta
 
     from app.modules.gdpr.schemas import RetentionPolicyCreate
     from app.modules.gdpr.service import ErasureService, RetentionService
 
-    today = date.today()
+    # The service measures "today" as the UTC date, so the test must build
+    # its boundary from the same clock. `date.today()` is host-local and
+    # drifts a day in the east-of-utc CI job, which then reads a hold set
+    # for "yesterday" as still in force.
+    today = datetime.now(UTC).date()
     await RetentionService.create(
         db_session,
         test_clinic.id,
