@@ -8,6 +8,7 @@ import logging
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
+from fastapi import HTTPException
 from sqlalchemy import and_, select
 
 from app.database import async_session_maker
@@ -39,8 +40,14 @@ def _reminder_checkin_url(appointment, clinic) -> str | None:
             appointment.id, appointment.clinic_id, source="reminder", ttl_minutes=ttl_minutes
         )
         return build_checkin_url(token)
+    except HTTPException:
+        # No public origin configured: link-less reminders, never a failed sweep.
+        logger.warning("Reminder check-in link skipped: no public origin configured")
+        return None
     except Exception as exc:  # noqa: BLE001
-        logger.warning("Reminder check-in link skipped: %s", exc)
+        # Anything else (bad signing key, clock skew) would go link-less
+        # indefinitely on a WARNING; make a permanent failure visible.
+        logger.error("Reminder check-in link skipped by unexpected error: %s", exc)
         return None
 
 

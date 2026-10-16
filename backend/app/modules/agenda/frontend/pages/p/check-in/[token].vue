@@ -12,6 +12,8 @@
  * a confirm button and only POSTs on press. Missing/unrecognised source
  * fails safe to the confirm path, never auto-submit.
  */
+import { parseCheckinResult } from '../../../utils/checkinResult'
+
 definePageMeta({
   layout: 'public'
 })
@@ -46,12 +48,14 @@ async function submit(token: string) {
   } catch (e: unknown) {
     // The global HTTP handler stringifies error details, so the window
     // code travels as `too_early:<HH:MM>` / `window_closed` (ADR 0037).
+    // parseCheckinResult splits on the FIRST colon: the time itself
+    // contains one, and splitting on every colon drops the minutes.
     const message = (e as { data?: { message?: string } })?.data?.message ?? ''
-    const [code, time] = message.split(':')
-    if (code === 'too_early') {
-      startsAt.value = time ?? ''
+    const parsed = parseCheckinResult(message)
+    if (parsed.code === 'too_early') {
+      startsAt.value = parsed.time
       state.value = 'tooEarly'
-    } else if (code === 'window_closed') {
+    } else if (parsed.code === 'window_closed') {
       state.value = 'tooLate'
     } else {
       state.value = 'invalid'

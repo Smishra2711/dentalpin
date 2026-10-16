@@ -354,3 +354,27 @@ def test_reminder_checkin_url_unit(monkeypatch: pytest.MonkeyPatch) -> None:
     assert url is not None and url.startswith("https://clinic.example/p/check-in/")
     monkeypatch.setattr(settings, "ALLOWED_ORIGINS", "")
     assert _reminder_checkin_url(apt, clinic) is None
+
+
+def test_reminder_link_mint_failure_is_error_not_warning(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A permanently broken minter must not hide behind a WARNING forever (#667)."""
+    import logging
+    from types import SimpleNamespace
+
+    import app.modules.notifications.tasks as _tasks
+
+    monkeypatch.setattr(settings, "ALLOWED_ORIGINS", "https://clinic.example")
+    monkeypatch.setattr(
+        _tasks, "mint_checkin_token", lambda *a, **k: (_ for _ in ()).throw(ValueError("bad key"))
+    )
+    apt = SimpleNamespace(
+        id=uuid4(),
+        clinic_id=uuid4(),
+        start_time=datetime.now(UTC) + timedelta(hours=5),
+    )
+    clinic = SimpleNamespace(timezone="Europe/Madrid")
+    with caplog.at_level(logging.ERROR, logger="app.modules.notifications.tasks"):
+        assert _tasks._reminder_checkin_url(apt, clinic) is None
+    assert any(r.levelno >= logging.ERROR for r in caplog.records)

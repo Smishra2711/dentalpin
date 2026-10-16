@@ -118,6 +118,9 @@ def build_checkin_url(token: str) -> str:
     Single home for the origin logic the staff mint endpoint and the
     reminder sweep share, so a copied link and its QR can never point
     at different hosts. 422 when no http(s) origin is configured.
+    The first origin must be the patient-facing app: on a deployment
+    that lists the API host first, patient links point at the wrong
+    host (deterministic, documented here rather than guessed).
     """
     origins = settings.allowed_origins_list
     if not origins:
