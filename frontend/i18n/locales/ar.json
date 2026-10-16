@@ -1337,7 +1337,14 @@
       "errorGeneric": "تعذر إنشاء المريض. أعد المحاولة."
     }
   },
+  "errors": {
+    "loadFailed": "فشل التحميل",
+    "createFailed": "فشل الإنشاء",
+    "updateFailed": "فشل التحديث",
+    "deleteFailed": "فشل الحذف"
+  },
   "common": {
+    "andMore": "+{count} أخرى",
     "save": "حفظ",
     "add": "إضافة",
     "cancel": "إلغاء",
