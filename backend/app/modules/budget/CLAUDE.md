@@ -104,9 +104,10 @@ contract.
   version after a newer one existed, hit the constraint and 500'd with
   the INSERT in the response body. Both paths go through `next_version`
   now; the resend route also maps a losing concurrent insert to 409.
-  Note what this does **not** decide: whether reception *should* be able
-  to spawn a second draft from one terminal version is a product
-  question, still open.
+  Resending the same terminal version more than once is allowed by
+  product decision (2026-10-16): each resend becomes a new draft version,
+  and the plan link follows the last `budget.superseded`. Don't add a
+  "newer version exists" 409.
 
 - **GDPR erasure retains the signer's email.**
   `erasure.BudgetErasureContributor` owns the `budget` coverage scope
