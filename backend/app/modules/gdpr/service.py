@@ -198,7 +198,7 @@ class ConsentService:
                     "clinic_id": str(clinic_id),
                     "consent_id": str(row.id),
                     "patient_id": str(payload.patient_id),
-                    "purpose": payload.purpose,
+                    "purpose": row.purpose,
                 },
                 db=db,
             )
@@ -209,7 +209,7 @@ class ConsentService:
                     "clinic_id": str(clinic_id),
                     "consent_id": str(row.id),
                     "patient_id": str(payload.patient_id),
-                    "purpose": payload.purpose,
+                    "purpose": row.purpose,
                 },
                 db=db,
             )

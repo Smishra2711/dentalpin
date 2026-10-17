@@ -17,6 +17,13 @@
     reachable under the key a later grant uses (CONS-05). The backfill can
     merge rows that the raw string kept distinct — that collapse is the
     intended single-purpose semantics, not a side effect.
+  - The `gdpr.consent.granted` / `gdpr.consent.withdrawn` events publish the
+    canonical purpose (the stored key), not the raw client string, so a
+    subscriber keyed on `purpose` sees the value the ledger stores (CONS-05).
+  - A blank purpose (`" "`) is 422: it passes `min_length=1` but normalizes
+    to `""`, which would otherwise store an empty key (CONS-05).
+  - Purposes stay an open vocabulary (clinics invent processors); only the
+    spelling is canonical, so no legitimate purpose is ever rejected.
   - Recording a grant without the shown text is 422: without the text
     there is no record of what was consented to (Art. 4(11), CONS-07).
   - `status` / `request_type` filters are closed vocabularies, so a typo

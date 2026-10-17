@@ -1052,6 +1052,52 @@ async def test_consent_grant_without_text_is_422(
 
 
 @pytest.mark.asyncio
+async def test_consent_blank_purpose_is_422(
+    client: AsyncClient, auth_headers: dict, test_clinic: Clinic
+):
+    """CONS-05: a blank purpose passes ``min_length=1`` but normalizes to
+    ``""``; the schema rejects it, so an empty key never enters the ledger."""
+    from uuid import uuid4
+
+    blank = await client.post(
+        "/api/v1/gdpr/consents",
+        json={"patient_id": str(uuid4()), "purpose": "   ", "granted": False},
+        headers=auth_headers,
+    )
+    assert blank.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_consent_event_publishes_canonical_purpose(
+    db_session: AsyncSession, test_clinic: Clinic, test_patient: Patient
+):
+    """CONS-05: the grant event carries the canonical purpose - the same key
+    that is stored and looked up - not the raw client string."""
+    from app.core.events import EventType, event_bus
+
+    seen: list[dict] = []
+
+    async def _recorder(data):
+        seen.append(data)
+
+    event_bus.subscribe(EventType.GDPR_CONSENT_GRANTED, _recorder)
+    try:
+        await ConsentService.grant_or_withdraw(
+            db_session,
+            test_clinic.id,
+            ConsentCreate(
+                patient_id=test_patient.id,
+                purpose="SMS ",
+                granted=True,
+                provided_text="Yes.",
+            ),
+        )
+    finally:
+        event_bus.unsubscribe(EventType.GDPR_CONSENT_GRANTED, _recorder)
+    assert [s["purpose"] for s in seen] == ["sms"]
+
+
+@pytest.mark.asyncio
 async def test_consent_http_grant_withdraw_list_roundtrip(
     client: AsyncClient, auth_headers: dict, test_patient: Patient
 ):

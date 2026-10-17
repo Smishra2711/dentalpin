@@ -26,6 +26,7 @@ Art. 5(2), immutable except for status transitions):
 - `PATCH /api/v1/gdpr/requests/{id}` — transition DSR status
 - `GET /api/v1/gdpr/consents` — list consents (per patient)
 - `POST /api/v1/gdpr/consents` — record consent grant/withdrawal (201)
+- `GET /api/v1/gdpr/consents/current` — latest consent for one (patient, purpose)
 - `GET /api/v1/gdpr/retention` — list active retention policies
 - `POST /api/v1/gdpr/retention` — create a policy (201)
 - `PATCH /api/v1/gdpr/retention/{id}` — update a policy
@@ -53,7 +54,9 @@ Five tables, all `clinic_id`-scoped and indexed on `clinic_id`:
 | `data_breaches` | reportable breach register | 33-34 |
 
 Migration `gdpr_0001_initial` on own Alembic branch (`gdpr`), depending on
-`patients@pat_0003` (the patient FK).
+`patients@pat_0003` (the patient FK). Followed by `gdpr_0002_single_active_policy`,
+`gdpr_0003_subject_notification` (Art. 34 columns) and
+`gdpr_0004_canonical_consent_purpose` (backfills pre-canonical purposes).
 
 ## Service layer
 
@@ -65,7 +68,8 @@ Migration `gdpr_0001_initial` on own Alembic branch (`gdpr`), depending on
   newest-first (created_at + id tiebreak), so the first row per
   (patient, purpose) is current; `current` returns just that row.
   Purposes are stored canonical (`strip().lower()`), so "SMS" and
-  "sms " are one purpose, not two. A grant requires the shown text
+  "sms " are one purpose, not two; `gdpr_0004` backfills the rows written
+  before that rule. A grant requires the shown text
   (`provided_text`); withdrawals carry none. Recording a withdrawal
   publishes `gdpr.consent.withdrawn`, but send paths gate on the
   independent `do_not_contact` field — the record does not itself

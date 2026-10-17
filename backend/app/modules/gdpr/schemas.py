@@ -6,7 +6,7 @@ from datetime import date, datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 # The coverage shape lives in core so contributor modules can return it
 # without depending on the optional gdpr module (ADR 0038); gdpr itself
@@ -59,6 +59,16 @@ class ConsentCreate(BaseModel):
     purpose: str = Field(min_length=1, max_length=100)
     granted: bool = True
     provided_text: str | None = Field(default=None, max_length=4000)
+
+    @field_validator("purpose")
+    @classmethod
+    def _purpose_not_blank(cls, value: str) -> str:
+        """Reject a blank purpose: ``" "`` passes ``min_length=1`` but
+        normalizes to ``""``, which would store an empty consent key in a
+        compliance ledger (#562 CONS-05)."""
+        if not value.strip():
+            raise ValueError("purpose must not be blank")
+        return value
 
     @model_validator(mode="after")
     def _require_text_on_grant(self) -> ConsentCreate:
