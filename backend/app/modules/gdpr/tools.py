@@ -44,7 +44,9 @@ class RecordConsentArgs(BaseModel):
     patient_id: str = Field(description="UUID of the patient")
     purpose: str = Field(description="e.g. sms, email, third_party_sharing")
     granted: bool = True
-    provided_text: str | None = None
+    provided_text: str | None = Field(
+        default=None, description="the consent text shown to the patient; required when granted"
+    )
 
 
 class ListConsentsArgs(BaseModel):

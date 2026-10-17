@@ -11,6 +11,12 @@
   - Consent purposes are canonicalized on write (strip + lowercase), so
     `"SMS"`, `"sms "` and `"sms"` are one purpose instead of three
     (CONS-05).
+  - `gdpr_0004` backfills rows written before that rule: purposes holding
+    the original casing or padding (`"Marketing"`, `"sms "`) are
+    canonicalized in place, so a withdrawal stored pre-canonical is
+    reachable under the key a later grant uses (CONS-05). The backfill can
+    merge rows that the raw string kept distinct — that collapse is the
+    intended single-purpose semantics, not a side effect.
   - Recording a grant without the shown text is 422: without the text
     there is no record of what was consented to (Art. 4(11), CONS-07).
   - `status` / `request_type` filters are closed vocabularies, so a typo
