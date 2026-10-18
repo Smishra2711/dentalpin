@@ -53,7 +53,6 @@ const modulesJsonPath = resolve(__dirname, 'modules.json')
 const localLayers = moduleLayers.filter(layer => !isAbsolute(layer))
 
 export default defineNuxtConfig({
-
   extends: moduleLayers,
 
   modules: [
@@ -79,6 +78,7 @@ export default defineNuxtConfig({
     enabled: process.env.NUXT_DEVTOOLS !== 'false'
   },
   app: {
+    baseURL: '/orident', // Must match the prefix used in Next.js rewrites
     head: {
       title: 'DentalPin',
       link: [
