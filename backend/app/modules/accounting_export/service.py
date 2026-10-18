@@ -21,6 +21,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.csv_safety import csv_cell
 from app.modules.billing.service import InvoiceService
 
 # Non-draft statuses are the export universe. Drafts are not fiscal
@@ -126,8 +127,14 @@ def _fmt(value, separator: str) -> str:
     if isinstance(value, Decimal):
         s = f"{value:.2f}"
         # Spanish Excel pairs ";" with comma decimals; "," with dot.
+        # Returned before the formula guard on purpose: a credit note is a
+        # legitimately negative amount and must stay a number (#611).
         return s.replace(".", ",") if separator == ";" else s
-    return "" if value is None else str(value)
+    if value is None:
+        return ""
+    # Party names and invoice descriptions are free text, and this file goes
+    # straight to the accountant's spreadsheet.
+    return str(csv_cell(str(value)))
 
 
 def to_csv(rows: list[dict], headers: list[str], separator: str = ",") -> bytes:

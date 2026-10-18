@@ -176,6 +176,7 @@ class DocumentService:
                 "media_category": media_category,
                 "media_subtype": media_subtype,
             },
+            db=db,
         )
         if is_image_kind:
             await event_bus.publish(
@@ -190,6 +191,7 @@ class DocumentService:
                     "media_subtype": media_subtype,
                     "captured_at": captured_at.isoformat() if captured_at else None,
                 },
+                db=db,
             )
 
         await db.refresh(document, ["uploader"])
@@ -245,6 +247,27 @@ class DocumentService:
         documents = list(result.scalars().all())
         for doc in documents:
             doc.status = "archived"
+        await db.flush()
+        return len(documents)
+
+    @staticmethod
+    async def unarchive_patient_documents(
+        db: AsyncSession,
+        clinic_id: UUID,
+        patient_id: UUID,
+    ) -> int:
+        """Reverse of :meth:`archive_patient_documents` — restores every
+        archived document of the patient (patient.restored cascade)."""
+        result = await db.execute(
+            select(Document).where(
+                Document.clinic_id == clinic_id,
+                Document.patient_id == patient_id,
+                Document.status == "archived",
+            )
+        )
+        documents = list(result.scalars().all())
+        for doc in documents:
+            doc.status = "active"
         await db.flush()
         return len(documents)
 

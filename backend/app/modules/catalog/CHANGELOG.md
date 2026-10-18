@@ -2,9 +2,16 @@
 
 ## Unreleased
 
+- feat(i18n): Hindi (`hi`) locale: Hindi names for the default VAT types and the seeded catalog (categories, treatments, sessions).
+- chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
+
+- feat(i18n): Telugu (`te`) names for the seeded catalog (categories, treatments, sessions) and the default VAT types.
 - fix(#326): the catalog onboarding rule carries `permission: 'catalog.read'` (module-activation-aware gating).
 
 - refactor(#126): agent-tool name resolution delegates to the shared `app.core.i18n_names.catalog_name` helper; all-empty name dicts now resolve to `None` instead of an empty string.
+
+- feat(i18n): the frontend layer's directional spacing, borders, text alignment and inset positioning now resolve against the document direction (physical→logical CSS utilities, Arabic RTL support).
+
 
 - fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
 

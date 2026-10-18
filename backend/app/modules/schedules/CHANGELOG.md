@@ -2,9 +2,28 @@
 
 ## Unreleased
 
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer.
+- chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
+
+- fix(#590): `ProfessionalHoursService.is_professional` tolerates
+  duplicated membership rows (`.limit(1)` existence read, same fix as
+  #598 for orthodontics). `clinic_memberships` has no unique
+  `(clinic_id, user_id)` constraint, so a duplicate used to 500 with
+  `MultipleResultsFound`.
+- feat(i18n): Telugu (`te`) locale for the module's frontend layer.
+- fix(#522): the clinic-hours and professional-schedule pages defaulted
+  `start_date` / `end_date` and computed "today" from the UTC day. Now use
+  `toISODate`.
+
+- feat(#46): the professional-hours gate resolves flag-aware (`RBAC_FROM_DB`
+  on: custom roles and per-clinic overrides apply; off: static map as before).
+
 - fix(#326): the clinic-hours onboarding rule carries `permission: 'schedules.clinic_hours.read'`.
 
 - feat(#334): Hungarian (hu) locale for the module's frontend layer.
+
+- feat(i18n): Arabic (ar) locale for the module's frontend layer.
+
 - fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
 
 - feat(#131): German (de) locale for the module's frontend layer.

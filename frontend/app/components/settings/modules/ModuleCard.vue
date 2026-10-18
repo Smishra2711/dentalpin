@@ -5,7 +5,6 @@ import { MODULE_STATE_ROLE } from '~/config/severity'
 
 interface Props {
   module: ModuleInfo
-  upgradeAvailable?: boolean
   canWrite: boolean
 }
 
@@ -27,7 +26,7 @@ function camelState(state: string): string {
 }
 
 const canInstall = computed(
-  () => props.module.state === 'uninstalled' && props.module.in_disk
+  () => props.module.state === 'uninstalled' && props.module.in_disk && props.module.installable
 )
 // Show uninstall for any installed, removable module. The backend still
 // enforces reverse-dep checks and Alembic safety, surfacing a 400 with a
@@ -36,7 +35,7 @@ const canUninstall = computed(
   () => props.module.state === 'installed' && props.module.removable
 )
 const canUpgrade = computed(
-  () => props.module.state === 'installed' && props.upgradeAvailable
+  () => props.module.state === 'installed' && props.module.upgrade_available
 )
 const pending = computed(() =>
   ['to_install', 'to_upgrade', 'to_remove'].includes(props.module.state)
@@ -63,6 +62,10 @@ const categoryColor = computed<UiColor>(() =>
             {{ categoryLabel }}
           </UBadge>
           <span class="text-caption text-subtle">v{{ module.version }}</span>
+          <span
+            v-if="module.upgrade_available && module.installed_version"
+            class="text-caption text-subtle"
+          >({{ module.installed_version }} → {{ module.version }})</span>
         </div>
 
         <p
@@ -86,7 +89,7 @@ const categoryColor = computed<UiColor>(() =>
             <code
               v-for="(dep, idx) in module.depends"
               :key="dep"
-              class="ml-1"
+              class="ms-1"
             >{{ dep }}{{ idx < module.depends.length - 1 ? ',' : '' }}</code>
           </span>
           <span
@@ -103,7 +106,7 @@ const categoryColor = computed<UiColor>(() =>
         >
           <UIcon
             name="i-lucide-alert-circle"
-            class="w-4 h-4 inline-block mr-1 align-text-bottom"
+            class="w-4 h-4 inline-block me-1 align-text-bottom"
           />
           {{ module.error_message }}
         </p>

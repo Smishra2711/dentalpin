@@ -69,7 +69,7 @@ const showExpanded = ref(false)
       >
         <UIcon
           :name="getAlertIcon(alert.type)"
-          class="w-3 h-3 mr-1"
+          class="w-3 h-3 me-1"
         />
         {{ alert.title }}
       </UBadge>
@@ -123,7 +123,7 @@ const showExpanded = ref(false)
             >
               <UIcon
                 :name="getAlertIcon(alert.type)"
-                class="w-3.5 h-3.5 mr-1"
+                class="w-3.5 h-3.5 me-1"
               />
               {{ alert.title }}
             </UBadge>
@@ -136,7 +136,7 @@ const showExpanded = ref(false)
           >
             <UIcon
               :name="getAlertIcon(alert.type)"
-              class="w-3.5 h-3.5 mr-1"
+              class="w-3.5 h-3.5 me-1"
             />
             {{ alert.title }}
           </UBadge>
@@ -145,7 +145,7 @@ const showExpanded = ref(false)
           v-if="!showExpanded && alerts.length > 3"
           class="text-caption text-muted self-center"
         >
-          +{{ alerts.length - 3 }} {{ t('common.more') }}
+          {{ t('common.andMore', { count: alerts.length - 3 }) }}
         </span>
       </div>
     </div>

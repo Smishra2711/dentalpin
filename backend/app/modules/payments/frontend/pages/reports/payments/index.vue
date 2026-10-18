@@ -20,6 +20,7 @@ import type {
   AgingBuckets,
   RefundsReport
 } from '~~/app/types'
+import { toISODate } from '~~/app/utils/wallClock'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -43,15 +44,21 @@ interface Range {
   to: string | null
 }
 
-function toIso(d: Date) {
-  return d.toISOString().slice(0, 10)
+/**
+ * `new Date("YYYY-MM-DD")` is UTC midnight per spec, while everything
+ * else here (`setDate`, `toISODate`, `toLocaleDateString`) reads local
+ * fields. Mixing the two frames moves the calendar day by one in one
+ * direction or the other (#522), so date-only strings are parsed local.
+ */
+function parseDateOnly(value: string): Date {
+  return new Date(/^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00:00` : value)
 }
 
 function defaultRange(): Range {
   const to = new Date()
   const from = new Date()
   from.setDate(to.getDate() - 89)
-  return { from: toIso(from), to: toIso(to) }
+  return { from: toISODate(from), to: toISODate(to) }
 }
 
 const range = ref<Range>(defaultRange())
@@ -77,13 +84,17 @@ const dateRangeQuery = computed(() => {
 
 function previousRange(r: Range): Range | null {
   if (!r.from || !r.to) return null
-  const from = new Date(r.from)
-  const to = new Date(r.to)
-  const span = to.getTime() - from.getTime()
-  if (span < 0) return null
-  const prevTo = new Date(from.getTime() - 86_400_000)
-  const prevFrom = new Date(prevTo.getTime() - span)
-  return { from: toIso(prevFrom), to: toIso(prevTo) }
+  const from = parseDateOnly(r.from)
+  const to = parseDateOnly(r.to)
+  // Day counts via setDate, not millisecond arithmetic: a DST boundary
+  // inside the span would otherwise shift the result by a day.
+  const spanDays = Math.round((to.getTime() - from.getTime()) / 86_400_000)
+  if (spanDays < 0) return null
+  const prevTo = new Date(from)
+  prevTo.setDate(prevTo.getDate() - 1)
+  const prevFrom = new Date(prevTo)
+  prevFrom.setDate(prevFrom.getDate() - spanDays)
+  return { from: toISODate(prevFrom), to: toISODate(prevTo) }
 }
 
 const delta = computed(() => {
@@ -222,7 +233,7 @@ const trendRefundsSeries = computed(() => {
 const heroSparkline = computed(() => trendSeries.value.map(p => p.y))
 
 function formatBucketLabel(iso: string): string {
-  const d = new Date(iso)
+  const d = parseDateOnly(iso)
   if (Number.isNaN(d.getTime())) return iso
   const opts: Intl.DateTimeFormatOptions
     = granularity.value === 'day'
@@ -252,7 +263,7 @@ function onMethodClick(method: string) {
 function onTrendPointClick(bucketIso: string) {
   // Single-point drill-down: anchor the list date range to this bucket.
   // Width depends on granularity.
-  const start = new Date(bucketIso)
+  const start = parseDateOnly(bucketIso)
   if (Number.isNaN(start.getTime())) return
   const end = new Date(start)
   if (granularity.value === 'day') end.setDate(start.getDate() + 1)
@@ -261,7 +272,7 @@ function onTrendPointClick(bucketIso: string) {
   end.setDate(end.getDate() - 1)
   navigateTo({
     path: '/payments',
-    query: { date_from: toIso(start), date_to: toIso(end) }
+    query: { date_from: toISODate(start), date_to: toISODate(end) }
   })
 }
 
@@ -473,7 +484,7 @@ const allReportsEmpty = computed(() => {
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
         <button
           type="button"
-          class="text-left rounded-token-md bg-surface border border-default p-3 hover:border-[var(--color-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] transition-colors"
+          class="text-start rounded-token-md bg-surface border border-default p-3 hover:border-[var(--color-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] transition-colors"
           @click="goToPaymentsList()"
         >
           <div class="text-caption text-muted">
@@ -495,7 +506,7 @@ const allReportsEmpty = computed(() => {
 
         <button
           type="button"
-          class="text-left rounded-token-md bg-surface border border-default p-3 hover:border-[var(--color-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] transition-colors"
+          class="text-start rounded-token-md bg-surface border border-default p-3 hover:border-[var(--color-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] transition-colors"
           @click="goToPaymentsList({ has_refunds: 'true' })"
         >
           <div class="text-caption text-muted">

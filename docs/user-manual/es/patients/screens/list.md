@@ -12,7 +12,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/patients/router.py
   - backend/app/modules/patients/frontend/pages/patients/index.vue
-last_verified_commit: 0f30803
+last_verified_commit: 10085df
 screenshots:
   - patients.png
 ---
@@ -26,6 +26,10 @@ buscar, filtrar, abrir la ficha de un paciente o crear uno nuevo.
 
 - **Vista por defecto:** solo pacientes activos. Los archivados quedan
   ocultos; el endpoint de listado no los devuelve por defecto.
+- **Filtro de estado:** los chips seleccionan exactamente lo pedido.
+  *Archivados* por sí solo lista únicamente pacientes archivados; con
+  los dos chips salen ambos. Al limpiar el filtro se quita la
+  restricción, no se vuelve a activos.
 - **Panel de recientes:** la barra lateral muestra los pacientes
   abiertos más recientemente — proviene del endpoint
   `GET /api/v1/patients/recent`.
@@ -65,6 +69,6 @@ buscar, filtrar, abrir la ficha de un paciente o crear uno nuevo.
 
 - **El listado está vacío tras una instalación nueva.** Ejecuta
   `./scripts/seed-demo.sh` para cargar datos de demo.
-- **Un paciente recién creado no aparece.** Comprueba el filtro activo:
-  si activaste el conmutador *Mostrar archivados*, solo se ven filas
-  archivadas.
+- **Un paciente recién creado no aparece.** Comprueba el filtro
+  *Estado*: si solo está seleccionado *Archivados*, las filas activas
+  quedan fuera.

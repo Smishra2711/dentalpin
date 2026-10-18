@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { groupNavigationItems } from '~/utils/navigation'
+
 const { t } = useI18n()
 const auth = useAuth()
 const clinic = useClinic()
@@ -20,9 +22,9 @@ if (import.meta.server) {
 }
 
 watch(
-  () => auth.accessToken.value,
-  (token) => {
-    if (token) ensureLoaded(true)
+  () => auth.isAuthenticated.value,
+  (authed) => {
+    if (authed) ensureLoaded(true)
   }
 )
 
@@ -67,6 +69,39 @@ async function handleLogout() {
 const settingsItem = computed(() => navigationItems.value.find(i => i.to === '/settings'))
 const mainNavItems = computed(() => navigationItems.value.filter(i => i.to !== '/settings'))
 
+// Collapsible sidebar sections (issue #232): headers are expandable,
+// never links. Collapsed map persists in localStorage like the sidebar
+// itself (`sidebar:collapsed`); every section starts expanded. When the
+// sidebar itself is collapsed, labels are hidden anyway so items render
+// flat as before. Loaded in onMounted: the useState initializer runs on
+// the server during SSR and hydrates without re-running, so reading
+// localStorage there would forget the state on every reload.
+const collapsedSections = useState<Record<string, boolean>>('sidebar:nav:collapsed', () => ({}))
+onMounted(() => {
+  try {
+    const saved = JSON.parse(localStorage.getItem('sidebar:nav:collapsed') || '{}')
+    if (saved && typeof saved === 'object') collapsedSections.value = saved
+  } catch {
+    collapsedSections.value = {}
+  }
+})
+const mainNavGroups = computed(() => groupNavigationItems(mainNavItems.value))
+// Flat entries (no section) for the drawer and the expanded sidebar;
+// the collapsed icon-only sidebar renders everything flat.
+const mainNavFlat = computed(() => mainNavGroups.value.flat)
+const sidebarItems = computed(
+  () => isSidebarCollapsed.value ? mainNavItems.value : mainNavFlat.value
+)
+function toggleSection(key: string) {
+  collapsedSections.value = { ...collapsedSections.value, [key]: !collapsedSections.value[key] }
+  if (import.meta.client) {
+    localStorage.setItem('sidebar:nav:collapsed', JSON.stringify(collapsedSections.value))
+  }
+}
+function sectionLabel(key: string): string {
+  return t(`nav.sections.${key}`, key)
+}
+
 // Check if nav item is active
 function isActive(to: string): boolean {
   if (to === '/') {
@@ -91,7 +126,7 @@ function isActive(to: string): boolean {
   <div class="min-h-screen flex bg-canvas">
     <!-- Desktop/tablet sidebar (hidden on mobile) -->
     <aside
-      class="hidden md:flex fixed inset-y-0 left-0 z-50 flex-col bg-surface-muted transition-[width] duration-150 ease-out"
+      class="hidden md:flex fixed inset-y-0 start-0 z-50 flex-col bg-surface-muted transition-[width] duration-150 ease-out"
       :class="isSidebarCollapsed ? 'w-16' : 'w-60'"
     >
       <!-- Logo -->
@@ -119,28 +154,55 @@ function isActive(to: string): boolean {
 
       <!-- Navigation -->
       <nav class="flex-1 px-2 py-2 space-y-1 overflow-y-auto">
-        <NuxtLink
-          v-for="item in mainNavItems"
+        <NavRow
+          v-for="item in sidebarItems"
           :key="item.to"
           :to="item.to"
-          class="group flex items-center gap-3 px-3 py-2 rounded-token-md text-ui transition-colors"
-          :class="[
-            isActive(item.to)
-              ? 'bg-[var(--color-primary-soft)] text-[var(--color-primary-soft-text)]'
-              : 'text-muted hover:bg-surface hover:text-default'
-          ]"
+          :label="item.label"
+          :icon="item.icon"
+          :active="isActive(item.to)"
+          :hide-label="isSidebarCollapsed"
+        />
+        <div
+          v-for="group in mainNavGroups.groups"
+          v-show="!isSidebarCollapsed"
+          :key="group.key"
+          class="contents"
         >
-          <UIcon
-            :name="item.icon"
-            class="w-[18px] h-[18px] shrink-0"
-          />
-          <span
-            v-if="!isSidebarCollapsed"
-            class="truncate"
+          <button
+            type="button"
+            :aria-expanded="!collapsedSections[group.key]"
+            :aria-controls="`nav-section-${group.key}`"
+            class="w-full flex items-center gap-2 px-3 py-3 text-caption text-subtle uppercase tracking-wide hover:text-default"
+            @click="toggleSection(group.key)"
           >
-            {{ item.label }}
-          </span>
-        </NuxtLink>
+            <span
+              :id="`nav-section-${group.key}-label`"
+              class="truncate"
+            >{{ sectionLabel(group.key) }}</span>
+            <UIcon
+              name="i-lucide-chevron-down"
+              class="w-4 h-4 shrink-0 transition-transform"
+              :class="{ 'rotate-180': !collapsedSections[group.key] }"
+            />
+          </button>
+          <div
+            v-show="!collapsedSections[group.key]"
+            :id="`nav-section-${group.key}`"
+            role="region"
+            :aria-labelledby="`nav-section-${group.key}-label`"
+            class="space-y-1"
+          >
+            <NavRow
+              v-for="item in group.items"
+              :key="item.to"
+              :to="item.to"
+              :label="item.label"
+              :icon="item.icon"
+              :active="isActive(item.to)"
+            />
+          </div>
+        </div>
       </nav>
 
       <!-- User section -->
@@ -225,23 +287,55 @@ function isActive(to: string): boolean {
 
           <!-- Navigation -->
           <nav class="flex-1 px-2 py-2 space-y-1 overflow-y-auto">
-            <NuxtLink
-              v-for="item in mainNavItems"
+            <NavRow
+              v-for="item in mainNavFlat"
               :key="item.to"
               :to="item.to"
-              class="group flex items-center gap-3 px-3 py-3 rounded-token-md text-ui transition-colors"
-              :class="[
-                isActive(item.to)
-                  ? 'bg-[var(--color-primary-soft)] text-[var(--color-primary-soft-text)]'
-                  : 'text-muted hover:bg-surface hover:text-default'
-              ]"
+              :label="item.label"
+              :icon="item.icon"
+              :active="isActive(item.to)"
+              padded="roomy"
+            />
+            <div
+              v-for="group in mainNavGroups.groups"
+              :key="group.key"
+              class="contents"
             >
-              <UIcon
-                :name="item.icon"
-                class="w-5 h-5 shrink-0"
-              />
-              <span class="truncate">{{ item.label }}</span>
-            </NuxtLink>
+              <button
+                type="button"
+                :aria-expanded="!collapsedSections[group.key]"
+                :aria-controls="`nav-section-m-${group.key}`"
+                class="w-full flex items-center gap-2 px-3 py-3 text-caption text-subtle uppercase tracking-wide"
+                @click="toggleSection(group.key)"
+              >
+                <span
+                  :id="`nav-section-m-${group.key}-label`"
+                  class="truncate"
+                >{{ sectionLabel(group.key) }}</span>
+                <UIcon
+                  name="i-lucide-chevron-down"
+                  class="w-4 h-4 shrink-0 transition-transform"
+                  :class="{ 'rotate-180': !collapsedSections[group.key] }"
+                />
+              </button>
+              <div
+                v-show="!collapsedSections[group.key]"
+                :id="`nav-section-m-${group.key}`"
+                role="region"
+                :aria-labelledby="`nav-section-m-${group.key}-label`"
+                class="space-y-1"
+              >
+                <NavRow
+                  v-for="item in group.items"
+                  :key="item.to"
+                  :to="item.to"
+                  :label="item.label"
+                  :icon="item.icon"
+                  :active="isActive(item.to)"
+                  padded="roomy"
+                />
+              </div>
+            </div>
           </nav>
 
           <!-- User section -->
@@ -289,7 +383,7 @@ function isActive(to: string): boolean {
     <!-- Main column -->
     <div
       class="flex-1 flex flex-col min-w-0 transition-[margin] duration-150 ease-out"
-      :class="isSidebarCollapsed ? 'md:ml-16' : 'md:ml-60'"
+      :class="isSidebarCollapsed ? 'md:ms-16' : 'md:ms-60'"
     >
       <DemoBanner />
 
@@ -320,7 +414,7 @@ function isActive(to: string): boolean {
         <!-- Clinic name — client-only to avoid SSR/CSR hydration text mismatch
              ("Clínica" placeholder vs loaded clinic name). -->
         <ClientOnly>
-          <div class="ml-3 sm:ml-4 flex items-center gap-2 min-w-0">
+          <div class="ms-3 sm:ms-4 flex items-center gap-2 min-w-0">
             <UIcon
               name="i-lucide-building-2"
               class="w-4 h-4 text-subtle shrink-0"

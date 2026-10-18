@@ -2,11 +2,36 @@
 
 ## Unreleased
 
+- feat(#657): owns the `clinical_notes` GDPR erasure coverage scope
+  (`get_erasure_contributors()`). Notes are retained as health-care
+  records (Art. 17(3)(c)/(h)) and their prose is never redacted. One of
+  the three scopes that replaced `gdpr`'s hardcoded `clinical` row —
+  there is no `clinical` module to own it.
+
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer; Hindi demo seed notes.
+- fix: an admin editing a note written by someone else got a 500.
+  `NoteService.update` did not eager-load `author`, and
+  `ClinicalNoteResponse` declares the field, so building the response
+  lazy-loaded the relationship inside an async session
+  (`MissingGreenlet`). Editing your own note never hit it — the author is
+  the caller, already in the session's identity map — which is why the
+  documented admin-override path shipped broken and untested. `get()`
+  gained the same eager load; it has no callers yet and fed the same
+  response shape.
+
+- chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
+
+- feat(i18n): Telugu (`te`) locale for the module's frontend layer.
+- feat(i18n): Telugu (`te`) demo clinical notes in the seed.
 - chore(#337): imports `AppointmentTreatment` from its new home in treatment_plan (a declared dependency).
 
 - refactor(#126): linked-treatment labels resolve catalog names through the shared `app.core.i18n_names.catalog_name` helper.
 
 - fix(#325): the attachment-owner registration moved from import time to `on_activate()` (ADR 0020).
+
+- feat(i18n): Arabic (ar) locale for the module's frontend layer.
+- feat(i18n): the frontend layer's directional spacing, borders, text alignment and inset positioning now resolve against the document direction (physical→logical CSS utilities, Arabic RTL support).
+
 
 - fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
 

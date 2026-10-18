@@ -55,7 +55,20 @@ class EmailService:
             logger.info("Email service using console provider (testing/disabled mode)")
         elif settings.EMAIL_PROVIDER == "console":
             self._provider = ConsoleProvider()
-            logger.info("Email service using console provider")
+            if settings.ENVIRONMENT == "production":
+                # The console provider prints the whole message — recipient,
+                # name, treatment, amount — at INFO, and reports SUCCESS, so
+                # the outbox marks it sent while the patient receives nothing
+                # (#614). EMAIL_PROVIDER is in no compose file and not in
+                # .env.example, so this is reached by omission, not choice.
+                logger.error(
+                    "EMAIL_PROVIDER=console in production: messages are written to "
+                    "the log instead of being delivered, and patient details end up "
+                    "in it. Set EMAIL_PROVIDER=smtp (see .env.example), or "
+                    "EMAIL_ENABLED=false if this instance is not meant to send mail."
+                )
+            else:
+                logger.info("Email service using console provider")
         elif settings.EMAIL_PROVIDER == "smtp":
             self._provider = SMTPProvider(
                 host=settings.EMAIL_SMTP_HOST,
@@ -320,17 +333,26 @@ class EmailService:
             logger.warning("Jinja2 environment not initialized")
             return None
 
-        # Try locale-specific template first, then fallback to default
+        # Try locale-specific template first, then base locale(if overlay locale),
+        # then fallback to default
         template_paths = [
             f"{locale}/{template_key}.{extension}",
-            f"default/{template_key}.{extension}",
-            f"{template_key}.{extension}",
         ]
+        if locale == "pt-BR":
+            template_paths.append(f"pt/{template_key}.{extension}")
+        template_paths.extend(
+            [
+                f"en/{template_key}.{extension}",
+                f"default/{template_key}.{extension}",
+                f"{template_key}.{extension}",
+            ]
+        )
 
         for template_path in template_paths:
             try:
                 template = self._jinja_env.get_template(template_path)
-                return template.render(context)
+                # base.html reads ``locale`` for ``lang``/``dir``.
+                return template.render({"locale": locale, **context})
             except Exception:
                 continue
 

@@ -11,6 +11,521 @@ frontend as a Nuxt layer under its own Python package.
 
 ## [Unreleased]
 
+### Fixed
+
+- **26 UI strings showed the i18n key instead of a message** (#631).
+  `errors.loadFailed`, `errors.createFailed`, `errors.updateFailed` and
+  `errors.deleteFailed` existed in no locale file, so a clinic saw a toast
+  titled `errors.updateFailed`; `treatment_plan` alone had 21 of the sites.
+  The four keys are now in all 12 host locales, `common.more` became the
+  interpolated `common.andMore` (`+{count} more`), and the one `common.view`
+  tooltip reuses the existing `common.viewDetails`. A new guard,
+  `frontend/tests/i18n/key-resolution.test.ts`, resolves every literal
+  `t('…')` key against the merged English set — the locale-parity test
+  cannot see this class, because a key absent from *every* locale keeps
+  parity perfectly.
+
+### Added
+
+- **Copilot: OpenRouter + Groq LLM provider adapters** over their
+  OpenAI-compatible endpoints (same subclass shape as Gemini;
+  `OPENROUTER_API_KEY` / `GROQ_API_KEY` + per-clinic selection, specs
+  registered from `on_activate`). No bridge, settings or UI change (#332).
+- **Copilot: Gemini LLM provider adapter** over Google's OpenAI-compatible
+  endpoint (same wire format and `openai` tool dialect as the OpenAI
+  provider; `GEMINI_API_KEY` + per-clinic selection, spec registered from
+  `on_activate`). No bridge, settings or UI change (#332).
+- **Hindi (`hi`, हिन्दी) locale** — core app and every module layer,
+  patient email templates, PDF labels (`hi_IN` money/date formatting,
+  Devanagari via Noto Sans Devanagari), and a Hindi demo seed
+  (`--lang hi`): an India GST clinic in New Delhi (GST state 07,
+  GSTIN `07ABCDE1234F1Z2`) with Hindi patient names. `README.hi.md` added.
+  Country-specific compliance modules (`verifactu`, `nav_online`,
+  `sdi_it`, `sistema_ts`) and the Verifactu emails are not translated
+  to Hindi; they fall back to English.
+
+### Changed
+
+- **Upgrade note (production):** `AGENDA_PUBLIC_SECRET_KEY` is now
+  required on the same terms: a production boot without a clean value
+  fails fast instead of signing QR check-in tokens with the staff-JWT
+  `SECRET_KEY`. Set it alongside `BUDGET_PUBLIC_SECRET_KEY` (see its
+  note below) before upgrading.
+
+- Email templates missing in a locale now fall back to the English
+  template instead of rendering nothing.
+
+- **Upgrade note (production):** `BUDGET_PUBLIC_SECRET_KEY` is now
+  required. A production boot without it fails fast with an actionable
+  message instead of signing public budget sessions with the staff-JWT
+  `SECRET_KEY`. Blank, whitespace-only, and whitespace-padded values are
+  also refused, so generate a clean value (e.g. `openssl rand -hex 32`)
+  before upgrading; `docker-compose.prod.yml` and
+  `docker-compose.coolify.yml` now both refuse to start without it.
+
+### Security
+
+- **A consent could be recorded against another clinic's patient.**
+  `ConsentService.grant_or_withdraw` built the row straight from the
+  payload id with no patient lookup, so any tenant got a 201 against any
+  patient id — and an unknown id surfaced as a `ForeignKeyViolation`,
+  i.e. a 500 for what is a bad request, with the 201/500 split acting as
+  a cross-tenant patient-existence oracle (#562). Both paths now do a
+  clinic-scoped patient lookup first: unknown or foreign ids answer 404
+  on HTTP and `{"error": "patient not found"}` on the agent tool, before
+  anything is written.
+
+- **A budget could be assigned a professional from another clinic.**
+  `assigned_professional_id` was a plain FK to `users` with no
+  membership check, so a caller naming a user id from a different clinic
+  had it stored — and the budget then rendered that user's name back. An
+  unknown id surfaced as a `ForeignKeyViolation`, i.e. a 500 for what is
+  a bad request. Both paths now answer 400, on create and on update. The
+  patient on the same route was already checked against the clinic; the
+  professional was not.
+
+- **The backend no longer trusts `X-Forwarded-For` from any peer** (#623).
+  `backend/Dockerfile` and every compose file ran uvicorn with
+  `--forwarded-allow-ips *`; with `*` uvicorn takes the **leftmost**
+  `X-Forwarded-For` entry, which the client writes. The login rate limit
+  keys on `request.client.host` (`get_remote_address`), so a client
+  sending a fresh header per attempt got a fresh bucket per attempt and
+  the limit stopped existing — and the same value is stored as the
+  session's `client_ip`, so the audit trail could be forged with it.
+  The flag is gone; uvicorn now reads `FORWARDED_ALLOW_IPS`, which every
+  compose file sets to loopback plus Docker's address pools and which
+  deployments override for their own proxy chain
+  (`.env.example`, `docs/user-manual/{en,es}/operations.md` §1).
+  Restricted, uvicorn walks the header right-to-left and stops at the
+  first hop outside the list, so the real client is used whether the
+  proxy overwrites the header or appends to it — the append case is
+  spoofable under `*` even behind a proxy. `_client_ip()` no longer
+  re-parses the header, and the backend logs the effective value at
+  startup (error in production if it is still `*`).
+- **Coolify: trust Traefik's 10.0.x networks** (follow-up to #623).
+  `docker-compose.coolify.yml` now defaults `FORWARDED_ALLOW_IPS` to also
+  include `10.0.0.0/8`. Coolify creates its Docker networks there, so the
+  previous default made every client resolve to Traefik's IP and turned
+  the login rate limit global.
+
+- **`allowed_tools` is now enforced, not just declared** (#558).
+  `BaseAgent.allowed_tools` existed with zero enforcement references
+  anywhere in `app/`, while `docs/technical/creating-modules.md` told
+  module authors it was "a hard list — the agent cannot invoke anything
+  outside it". `ToolRegistry.call` now checks it as step 2 of its
+  enforcement order (before guardrails, so a call the agent was never
+  allowed to make cannot consume its rate limit or open an approval
+  request) and audits the refusal as `BLOCKED`. The list reaches the
+  chokepoint through the new `AgentContext.allowed_tools`, where `None`
+  means "no subsetting" — what copilot and other conversational
+  surfaces use, so their behaviour is unchanged — and an empty list
+  permits nothing, which is `BaseAgent`'s default.
+
+### Fixed
+
+- **GDPR retention policies can no longer disagree with each other**
+  (#562). Two active policies for one (clinic, category) made erasure
+  eligibility pick one at random (unordered dict collapse). Creating a
+  policy now supersedes its active predecessors in the same transaction
+  (rows stay as history, and reactivation is not a path); a partial
+  unique index (`gdpr_0002`, which first reconciles pre-existing
+  duplicates) backstops concurrent creates, answered 409.
+- **The breach register no longer accepts illegal transitions or forged
+  stamps** (#562). `DataBreachService.update` took any status in any
+  order (a `reported` breach could return to `under_review` keeping a
+  stale reported latch) and any explicit `notified_authority_at`.
+  Transitions now follow a fixed table (illegal moves answer 422) and
+  the authority timestamp is stamped only by the `reported` transition.
+  An Art. 33 entry with zero data categories is rejected at the schema.
+- **An admin editing another user's clinical note always returned 500.**
+  `NoteService.update` fetched the note without eager-loading `author`,
+  and `ClinicalNoteResponse` declares that field, so building the
+  response lazy-loaded the relationship inside an async session and
+  raised `MissingGreenlet`. Editing your *own* note worked, because the
+  author is the caller and already in the session's identity map — so
+  the only broken path was the documented admin override, and it had no
+  test. Found by exercising every mutating endpoint against a seeded
+  database.
+
+- **The split-host cookie warning told PaaS operators to set a value
+  browsers reject** (#444). `_shared_parent` built `.onrender.com` from
+  `app.onrender.com` + `api.onrender.com` — two labels, so it passed the
+  existing "a public suffix is not a parent" check — and the guard then
+  advised `COOKIE_DOMAIN=.onrender.com`, which the browser drops. The
+  operator restarted the backend and nothing changed. Known hosting
+  suffixes now resolve to no parent, and the remedy for that case points
+  at `NUXT_API_PROXY=true` (shipped in 2.8.0 for exactly this shape)
+  instead of suggesting they go and buy a domain. A real multi-label
+  domain such as `.example.co.uk` is still suggested as before.
+
+- **The help-portal build now fails on a fragment slug collision** and
+  warns about a slug the app can never request (#573, partial). Two
+  screens whose routes collapse to the same slug used to write the same
+  `.html`, last one winning, with nothing to show it had happened — and
+  the obvious fix for the periodontogram route (`{id}` → `[id]`) walks
+  straight into that: it would have silently taken the patient-detail
+  page's help away. The underlying question of how a query-selected
+  sub-view gets its own fragment is still open on #573; this only makes
+  the two failure modes visible.
+
+### Changed
+
+- **Upgrade note (production):** `BUDGET_PUBLIC_SECRET_KEY` is now
+  required. A production boot without it fails fast with an actionable
+  message instead of signing public budget sessions with the staff-JWT
+  `SECRET_KEY`. Blank, whitespace-only, and whitespace-padded values are
+  also refused, so generate a clean value (e.g. `openssl rand -hex 32`)
+  before upgrading; `docker-compose.prod.yml` and
+  `docker-compose.coolify.yml` now both refuse to start without it.
+
+- **GDPR erasure now pulls a contributor registry, not a fan-out** (#546,
+  ADR 0038). `gdpr` calls every registered erasure contributor
+  (`notifications`, `recalls`) inside the erasure transaction and builds
+  the per-scope coverage list (`ErasureCoverage`) from their answers — a
+  scope with no contributor produces no row. `gdpr.erasure.executed` is a
+  post-commit announcement. Fiscal, signature and clinical records stay
+  retained (Art. 17(3)), hardcoded as interim rows until their
+  contributors land. `ErasureResult.coverage_note` is removed in favor of
+  the `coverage` list (no frontend reader affected).
+
+### Tests
+
+- **Every declared scheduled job is now executed by a test** (#629).
+  `test_scheduler_jobs.py` asserted the job *ids* and never called them,
+  which is how the 03:00 auto-close cron shipped querying a column that
+  does not exist and failed silently every night for months (#628).
+  `test_scheduled_jobs_run.py` resolves all 17 declared jobs and runs
+  each against a real (empty) schema — a schema-and-import smoke test,
+  not behaviour coverage, which is what keeps it at ~12s. Confirmed it
+  catches #628's regression when the old query is put back.
+
+- **Four tests read the local clock while the code under test uses UTC**,
+  so they pass in CI (UTC) and fail east of UTC for part of every day —
+  `test_budget_expired_detail_410`, `test_strip_excludes_appointments_on_other_days`,
+  `test_get_odontogram_at_date_returns_empty_state` and
+  `test_opposition_roundtrip`. Each now uses `datetime.now(UTC).date()`,
+  matching the route it asserts against. No product code changed.
+  A new `backend-test-east-of-utc` CI job runs the clock-reading tests
+  under `TZ=Pacific/Kiritimati` (UTC+14), selecting the files at run time
+  so a new test of this shape is covered the day it lands.
+
+- **A typo in a route's permission string now fails CI.** The tool
+  registry already guarded this (`test_every_tool_permission_exists`,
+  "would otherwise silently always-deny"); routes gate on the same
+  strings with no equivalent check, and the consequence is worse — a 403
+  for every user, forever, with nothing logged to say the string was the
+  problem. The tree is clean today (673 literal call sites, 189 distinct,
+  all valid), so `test_route_permissions.py` is purely preventive.
+
+## [2.8.0] - 2026-10-07
+
+### Added
+
+- **Same-origin API proxy for split-domain PaaS hosts** (`NUXT_API_PROXY=true`):
+  the frontend forwards `/api/v1/**` to `NUXT_API_BASE_URL_SERVER`, so
+  deploys on public-suffix hosts (`*.onrender.com`, `*.vercel.app`…) keep
+  host-only session cookies without a custom domain. Off by default (#624). Setup in
+  `docs/user-manual/{en,es}/operations.md` §1.
+- **Telugu (`te`, తెలుగు) locale** (#589 via #617, thanks @tresundios) — core app and every module layer,
+  patient email templates (HTML + TXT), PDF labels, and a Telugu demo
+  seed (`--lang te`): an India GST clinic in Hyderabad, Telangana
+  (state 36) with traditional Telugu patient names. `README.te.md` added.
+- **Brazilian Portuguese (`pt-BR`) as a host-only overlay on `pt`** (#509, #521, thanks @dupotey):
+  small delta locale file, `fallbackLocale` chain `pt-BR → pt → en`, Nuxt UI
+  `pt_br`, communications language + Brazil country preset, PDF Babel `pt_BR`,
+  labels reused from `pt`, email templates falling back `pt-BR → pt`.
+  Only templates with vocabulary deltas live under `backend/templates/email/pt-BR/`).
+- **Orthodontics: installments via plan links** (#578, #270, thanks @lamanji) —
+  link a case to a treatment plan item, generate a down payment + monthly
+  schedule that replaces the pending sessions (total validated), and collect
+  each installment from payments.
+- **`imaging_viewer`** — RVG queue tabs per status with live counts
+  (#587) and the linked sensor identities list with an unlink action
+  (#583), thanks @lamanji.
+- **`leads`** — confirmation before rotating the intake key (#510, thanks
+  @abdd8433).
+- **CI** — `node-image-freshness` job keeps the Dockerfile Node major and
+  the CI pins in step (#581, thanks @lamanji).
+
+### Changed
+
+- **Core migration `0009`: one membership per user per clinic** (#619,
+  thanks @lamanji). Existing duplicate `clinic_memberships` rows are
+  removed, keeping the most recently created one. If you ever had
+  duplicates, check each affected user's role after upgrading.
+- **Rate limiter on by default** outside test runs (`TESTING=true` opts
+  out), `ENVIRONMENT` validated at boot, core migration spine pinned
+  (#604, thanks @lamanji).
+- **Email** — the production compose files forward every `EMAIL_*`
+  setting, and the backend logs an error at startup when production runs
+  the `console` provider (#615, #614, thanks @ZoliQua).
+- **GDPR** — erasure results carry a `coverage_note` stating that only
+  patient-row identity fields are erased (#621, #546, thanks @lamanji).
+
+### Fixed
+
+- **Security** — clinic-scoped clinical getters, sanitized download
+  filenames and repaired copilot guardrails (#596); public budget `/meta`
+  lookup scoped to the budget's clinic (#592); `/health/ready` no longer
+  leaks database error text (#606, thanks @pollychen-lab); CSV exports
+  neutralize spreadsheet formulas everywhere (#613, #611, thanks
+  @ZoliQua); self-demotion and last-admin demotion refused, user list
+  gated on read (#600).
+- **Copilot** — redaction tokens salted per conversation (#601);
+  re-confirming an approved write replays the stored result instead of
+  re-running the tool, and turns have an iteration bound (#603).
+- **Memberships** — duplicate rows no longer 500 membership checks (#598,
+  #599, thanks @lamanji and @Kshot3000).
+- **Module restart** never kills an unsupervised backend (#602).
+- **Reports** — soft-deleted plans no longer counted in the pipeline
+  (#612, #610, thanks @ZoliQua).
+- **`imaging_viewer`** — approving an import whose file vanished marks it
+  as failed instead of leaving it stuck pending (#582).
+- **`leads`** — intake key "last used" in the UI locale (#575); dead
+  availability field and unused keys removed (#618, thanks @abdd8433).
+- **Infra** — pip seeded into the backend venv; empty module layers fail
+  loudly (#595).
+
+### Docs & tests
+
+- Six permission tables filled and migration docstrings corrected
+  (#597); `COOKIE_DOMAIN` cannot be a public suffix (#609); uninstall
+  round-trip tests resolve their downgrade targets (#605).
+
+## [2.7.1] - 2026-10-02
+
+### Fixed
+
+- **Login on plain-HTTP installs** — since 2.7.0 the session cookies
+  were always `Secure` in production, which browsers drop over
+  `http://` on anything but localhost: a LAN install at
+  `http://192.168.x.x` logged in and bounced straight back to `/login`.
+  `Secure` now follows the scheme the browser used
+  (`X-Forwarded-Proto`, else `Origin`); HTTPS deployments are unchanged
+  (#594).
+- **Copilot** — `date_of_birth` is redacted before it reaches the LLM
+  provider (#585, #534, thanks @readyagentsdev).
+- **Dev environment** — the frontend container heals a stale
+  `node_modules` anonymous volume on start (#588, thanks @lamanji).
+
+### Changed
+
+- **`imaging_viewer`** — RVG folder scans report their counts in a
+  summary toast (#580, thanks @lamanji).
+
+### Tests
+
+- Public-route audit with adversarial tenant-scoping pins (#579, thanks
+  @lamanji) and a lint that forbids UTC day-slicing in the UI (#576,
+  #522, thanks @ZoliQua).
+
+## [2.7.0] - 2026-09-30
+
+### Added
+
+- **Twelve new optional modules** (all manual-install from the admin UI):
+  - **`sdi_it`** — Italian FatturaPA/SDI e-invoicing: FPR12 builder,
+    B2B gate, PEC transport with IMAP receipt polling, settings and
+    records pages and an invoice SDI panel (#410, #418, #435, #436,
+    #133, thanks @ZoliQua).
+  - **`sistema_ts`** — Sistema Tessera Sanitaria submission of paid
+    patient invoices, patient opposition and per-item `tipoSpesa`
+    (#437, #442, #134, thanks @ZoliQua).
+  - **`payment_gateways`** + **`razorpay`** — a provider-neutral
+    gateway contract with Razorpay as the first adapter; test/live mode
+    derived from the key prefix (#439, #445, #474, #481, #518, #263,
+    thanks @tresundios and @ZoliQua).
+  - **`sms_gateway`** — SMS delivery through pluggable providers for
+    the notifications SMS channel (#392, #231, thanks @lamanji).
+  - **`leads`** — inbound lead capture and pipeline (#476, #568,
+    thanks @Valeriooooh and @abdd8433).
+  - **`prescriptions`** — clinical prescriptions with compliance hooks
+    and a localized PDF (#465, #490, #269, thanks @lamanji).
+  - **`imaging_viewer`** — in-app DICOM study viewer (OHIF embed) on
+    media documents (#503, #569, thanks @lamanji).
+  - **`imaging_ai`** — on-demand AI segmentation jobs over imaging
+    studies behind a Runner protocol (#504, #570, thanks @lamanji).
+  - **`orthodontics`** — case tracking with monthly controls, slice A
+    (#505, #270, thanks @lamanji).
+  - **`treasury`** — cash and bank accounts with transfers and
+    memo-gated corrections (#463, #491, #502, thanks @lamanji).
+  - **`staff_attendance`** — clock in/out, current state and a daily
+    report (#462, #492, #501, thanks @lamanji).
+  - **`patient_segments`** — clinic-local patient tags for grouping
+    and campaigns (#461, thanks @lamanji).
+- **HttpOnly cookie sessions** with rotating, reuse-detecting refresh
+  tokens and CSRF protection (ADR 0023), a warning when a split-host
+  deploy can never receive the cookies, and session refresh for blob
+  downloads, media streams and copilot (#394, #449, #451, #457, #353,
+  thanks @ZoliQua).
+- **Reports**: financial (aging buckets, issued trend, CSV),
+  patient-stats and operational families (#385, #434, #230, thanks
+  @lamanji).
+- **Agenda QR check-in** with signed short-lived tokens and a public
+  page, from the appointment quick-actions menu; ADR 0037 sets the
+  kiosk self check-in design (#464, #493, #512, thanks @lamanji).
+- **Notifications: built-in WebPush channel** with VAPID (#430, #63,
+  thanks @lamanji).
+- **Sidebar super-sections + Settings super-groups** (#232): module nav
+  items self-place under `clinical`, `lab`, `financials`, `inventory`
+  and `practice`; the Settings rail groups its categories into five
+  labelled super-groups and every settings page gets one back control.
+  Presentation only; copilot's standalone sidebar entry is removed
+  (#429, #467, #488, thanks @lamanji and @ZoliQua).
+- **Settings → Modules**: upgrade/installable signals, text search,
+  per-state filter and pagination synced to the URL (#427, #447, #47,
+  thanks @lamanji and @BabuBahir).
+- **Auth RBAC step 4** (#46): `role_id` writes on membership/user
+  endpoints with flag-aware callers; ADR 0029 (#415, #438, thanks
+  @lamanji).
+- **CSV import** with dry-run for patients and expenses, plus patient
+  restore (#431, thanks @lamanji).
+- **Ops**: `db backup` CLI and a disaster-recovery runbook (#432);
+  opt-in backend error tracking via the Sentry protocol (GlitchTip
+  compatible), DSN-gated and PII-free, with tracing as a separate
+  opt-in (#466, #498, thanks @lamanji).
+- **Copilot**: LLM provider registry (#456, #332, thanks
+  @Aryan-coder-student); WRITE-versus-DESTRUCTIVE tool dispatch rule
+  codified (#516, thanks @lamanji).
+- **Arabic**: email templates and `ar` as a clinic communication
+  language with RTL email layout (#508, from #426 by Haider Habeeb,
+  @dev-7aider); Arabic for the remaining layers and extracted plural
+  rules (#414, #428, #389, thanks @lamanji).
+- Backend startup names `.env` keys that are not app settings instead
+  of dropping them silently, and tolerates non-app keys (#513, #517,
+  thanks @lamanji and @ZoliQua).
+- **ADRs** on country billing positions: Portugal 0027 and France 0028
+  (#408, #409, #412), Germany (#443), Poland and Brazil (#453), United
+  States (#454) and Mexico (#455) (thanks @ZoliQua); 0038 subject export
+  registry for GDPR (#574, #475, thanks @lamanji).
+- `MAINTAINERS.md` with the review bar and merge criteria (#416) and
+  strategy docs (#433, thanks @lamanji).
+
+### Changed
+
+- **License**: Licensor set to Dentared Odontology Services S.L. (#417, #419).
+- **Payments**: recording a payment is split from collecting one
+  through a gateway (#519, #506, thanks @ZoliQua).
+- **Odontogram**: realistic occlusal view and crown profile without
+  root (#364, #48, thanks @Mr-Neutr0n).
+- Frontend Node engines pinned and LF endings enforced for shell/YAML
+  (#478, thanks @lamanji).
+
+### Fixed
+
+- **PDFs render in every UI locale**: invoices (#423, #484, #422),
+  budgets, purchase orders and prescriptions (#450, #487, #441, #485)
+  and managed documents (#525, #524) (thanks @ZoliQua and @lamanji).
+- Hydration mismatches in the settings rail and client-registered slots
+  (#425, #458, #424, thanks @ZoliQua).
+- Date pickers send the local calendar day, not its UTC rendering
+  (#523, #522, thanks @ZoliQua).
+- List filters: a cleared filter stays cleared and the Archived filter
+  lists archived patients alone (#479, #520, #473, thanks @ZoliQua).
+- Odontogram plan dropdown rebuilt on the supported items API (#471,
+  #459, thanks @ZoliQua).
+- Notifications read treatment names from a single
+  `budget_treatments_context` (#528, #527, thanks @ZoliQua).
+- Copilot publishes the data-bus namespace after a confirmed write
+  (#577).
+- Alembic: Windows-safe `version_locations`, guards for leftover dirs
+  and for cross-module FKs without `depends_on` (#472, #477, #511,
+  #572, #507, thanks @ZoliQua and @lamanji).
+- Coolify compose passes the demo flag to backend and frontend (#529).
+- Payroll draft delete actions, single error toast on procurement
+  pages and documents clean-ups (#413, #496, #497, thanks @lamanji).
+- `frontend/modules.json` restored to its canonical form (#584).
+
+## [2.6.0] - 2026-09-07
+
+### Added
+
+- **Six new optional modules** (all manual-install from the admin UI):
+  - **`purchase_orders`** — purchase orders with receiving, quality
+    checks and PDF export (#369, thanks @lamanji), on top of
+    **`supplier_items`** — per-vendor SKU and price links (#368,
+    thanks @lamanji).
+  - **`inventory_reorder`** — reorder suggestions from stock levels
+    and draft PO generation (#377, thanks @lamanji) and
+    **`supplier_ratings`** — delivery/quality metrics plus manual 1–5
+    ratings (#378, thanks @lamanji). The whole supplier suite
+    (roadmap #227) ships a shared five-page frontend layer with
+    locales (#379, thanks @lamanji).
+  - **`gdpr`** — EU 2016/679 compliance: data-subject requests with a
+    30-day SLA, append-only consents, retention policies gating
+    erasure, partial erasure with an immutable audit log, breach
+    register and portability export (#374, #44, thanks @lamanji).
+  - **`payroll`** — admin-only staff payroll with Fernet-encrypted
+    bank/tax data, pay periods with a guarded status machine, entries,
+    monthly reports and a frontend layer; empty draft periods and
+    draft entries can be deleted (#383, #401, #399, #229, #391,
+    thanks @lamanji).
+  - **`nav_online`** — NAV Online Számla 3.0 real-time invoice
+    reporting for Hungary, phase 1: the third `BillingComplianceHook`
+    after `verifactu` and `india_gst`, with a queued worker and no
+    network in the request path (#395, #341, thanks @ZoliQua).
+- **Arabic (`ar`) interface with full RTL support** — core app at exact
+  key parity plus every module layer, MSA register with Latin
+  clinical/financial glosses, `html[dir]` driven from the active locale,
+  Cairo Variable as the Arabic glyph carrier, FDI tooth charts pinned
+  LTR, and phone/email/DNI tokens bidi-isolated so `+1 (212) 555-0007`
+  no longer reverses (#375, #397, #398, #389, thanks @lamanji).
+- **DB-backed, clinic-aware RBAC** (#46): `roles`, `permissions` and
+  per-clinic override tables, a roles management API, a seeder and ADR
+  0024; resolution stays code-based until `RBAC_FROM_DB` is switched on
+  (#400, thanks @lamanji).
+- **Notifications: SMS channel core** — `Channel.SMS` resolving to the
+  patient's E.164 phone, opt-in preferences, preferred-channel ordering
+  with SMS fallback and a per-clinic daily cap; transport arrives with
+  the `sms_gateway` module (#384, #231, thanks @lamanji).
+- **Payments: gateway prerequisites** — `upi`/`netbanking` methods
+  gated on the clinic's server-side country, extension slots for
+  gateway modules, an idempotency key on `record_payment` and a
+  graceful winner-returns response on the concurrent same-key race
+  (#370, #376, #365, thanks @ZoliQua).
+- **Security**: Content-Security-Policy middleware with an inventory,
+  Report-Only rollout and enforcement under e2e (#382, #355); a
+  12-character password floor with ADR 0022 deferring TOTP MFA (#380,
+  #354); and ADR 0023 for HttpOnly cookie sessions with rotating,
+  revocable refresh tokens (#381, #353, thanks @ZoliQua).
+- **ADRs for Italy**: 0025 SDI e-invoicing scope and transport for
+  `sdi_it` (#402, #133) and 0026 Sistema Tessera Sanitaria submission
+  for `sistema_ts` (#403, #134, thanks @ZoliQua).
+
+### Changed
+
+- **Production frontend builds ship one locale chunk per language**
+  instead of one per layer: a local Nuxt module merges every layer's
+  locale files at build time (593 → 335 client chunks, 8.1 → 7.6 MB);
+  dev mode is untouched and `NUXT_I18N_CONSOLIDATE=0` opts out (#406,
+  #322, thanks @ZoliQua).
+- **Physical→logical CSS utilities across the core app and all module
+  layers** for right-to-left readiness: directional spacing
+  (`ml→ms`, `mr→me`, `pl→ps`, `pr→pe`), borders (`border-l/r→s/e`),
+  text alignment (`text-left/right→start/end`), inset positioning
+  (`left/right-*→start/end-*`) and the inline-style equivalents now
+  resolve against the document direction. Identical pixels in LTR;
+  mirrored under `dir="rtl"` (#397, thanks @lamanji).
+- **Reproducible installs**: Python dependencies locked with `uv.lock`,
+  frozen in the Docker image and drift-checked in CI (#371, #356);
+  frontend CI runs `npm ci` so a drifted lockfile fails (#393, #388);
+  frontend and docs-portal images move to `node:22-alpine` pinned by
+  digest (#372, #367, thanks @ZoliQua).
+- **CI guards the frontend prod-build memory budget** (6.8 GB RSS)
+  and per-layer locale parity; the #322 "move host keys into layers"
+  proposal was measured and parked (#330, thanks @ZoliQua).
+
+### Fixed
+
+- Discount-type and state-filter selects crashed on open because an
+  item carried an empty-string value; five call sites now use `null`
+  (#407).
+- External-audit fixes: soft-delete in `patients_clinical`,
+  `ajr_0001`/`mc_0001` migrations ordered after core `0001`, a one-time
+  startup warning on the `SECRET_KEY` fallback, `ANTHROPIC_API_KEY`
+  passed through the prod compose, plus locale and micro-fixes (#386,
+  thanks @lamanji).
+
 ## [2.5.0] - 2026-09-02
 
 ### Added

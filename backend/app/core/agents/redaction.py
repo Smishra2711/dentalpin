@@ -5,10 +5,14 @@ A per-session :class:`SymbolTable` maps real values to stable opaque
 tokens (``NAME_a1b2c3``, ``PHONE_…``, ``PATIENT_…``); outgoing payloads
 are tokenized, assistant output and tool-call arguments are rehydrated.
 
-Tokens are **deterministic** (a short hash of the real value), so the
-same value always maps to the same token. That lets a resumed turn
-rebuild an equivalent table by re-redacting the loaded history — tokens
-the model emitted in an earlier request still restore.
+Tokens are **deterministic per conversation**: a salted hash of the
+real value, so the same value always maps to the same token *within*
+one conversation. That lets a resumed turn rebuild an equivalent table
+by re-redacting the loaded history — tokens the model emitted in an
+earlier request still restore. The salt is per-conversation and stored
+server-side (never in the context blob or logs), so the same patient
+yields unrelated tokens across conversations and no global dictionary
+attack applies (#586).
 
 v1 scope (see ``docs/technical/copilot-agentic-architecture.md`` §2.3):
 
@@ -41,6 +45,7 @@ _NAME_KEYS = {"first_name", "last_name", "full_name", "name", "patient_name"}
 _PHONE_KEYS = {"phone", "mobile", "telephone", "phone_number"}
 _EMAIL_KEYS = {"email", "email_address"}
 _NATIONAL_ID_KEYS = {"dni", "nif", "tax_id", "national_id"}
+_DOB_KEYS = {"date_of_birth", "dob", "birth_date"}
 # UUID-valued reference keys -> kind
 _ID_KIND = {
     "id": "REF",
@@ -57,28 +62,42 @@ for _k in _EMAIL_KEYS:
     _KIND_FOR_KEY[_k] = "EMAIL"
 for _k in _NATIONAL_ID_KEYS:
     _KIND_FOR_KEY[_k] = "NATID"
+for _k in _DOB_KEYS:
+    _KIND_FOR_KEY[_k] = "DOB"
 
 _UUID_RE = re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.IGNORECASE
 )
 
 
-def _token_for(real: str, kind: str) -> str:
-    digest = hashlib.sha1(real.encode("utf-8")).hexdigest()[:6]  # noqa: S324 - non-crypto use
+# 48-bit tokens: birthday collisions stay negligible inside one
+# conversation, unlike the old 24-bit form (#586).
+_TOKEN_HEX_CHARS = 12
+
+
+def _token_for(real: str, kind: str, salt: str | None = None) -> str:
+    material = f"{salt}:{real}" if salt else real
+    digest = hashlib.sha256(material.encode("utf-8")).hexdigest()[:_TOKEN_HEX_CHARS]
     return f"{kind}_{digest}"
 
 
 @dataclass
 class SymbolTable:
-    """Bidirectional, deterministic map between real values and tokens."""
+    """Bidirectional map between real values and per-conversation tokens.
 
+    ``salt`` must be the owning conversation's persisted salt. ``None``
+    reproduces the legacy unsalted scheme and exists for unit tests
+    only — production paths always pass a real salt.
+    """
+
+    salt: str | None = None
     _to_token: dict[str, str] = field(default_factory=dict)
     _to_real: dict[str, str] = field(default_factory=dict)
 
     def tokenize(self, real: str, kind: str) -> str:
         token = self._to_token.get(real)
         if token is None:
-            token = _token_for(real, kind)
+            token = _token_for(real, kind, self.salt)
             self._to_token[real] = token
             self._to_real[token] = real
         return token
@@ -110,9 +129,9 @@ class Redactor:
     leaves the clinic.
     """
 
-    def __init__(self, *, enabled: bool = True) -> None:
+    def __init__(self, *, enabled: bool = True, salt: str | None = None) -> None:
         self.enabled = enabled
-        self.table = SymbolTable()
+        self.table = SymbolTable(salt=salt)
 
     # --- seeding --------------------------------------------------------
 

@@ -29,7 +29,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/payments/frontend/pages/payments/index.vue
   - backend/app/modules/payments/router.py
-last_verified_commit: 1c2db69
+last_verified_commit: 10085df
 ---
 
 # Payment list
@@ -62,8 +62,12 @@ reallocate it, or issue a refund from the same screen.
 
 1. Click **New payment** in the header (or from the budget sidebar
    card on the patient record).
-2. Pick the patient. Choose the method (cash, card, bank transfer,
-   direct debit, insurance, or *other*) and the payment date.
+2. Pick the patient. Choose the method and the payment date. The
+   methods sit in two groups: **Record a payment already received**
+   (cash, card, bank transfer, direct debit, insurance, or *other*)
+   writes the money down as it came in, while **Collect now** starts a
+   collection through an installed gateway. The second group is only
+   there when a gateway module offers a rail for this clinic.
 3. Pick the **Apply to** target: one of the patient's open quotes
    (listed by number and amount) or *Patient credit (on account)*.
    On-account money stays as the patient's credit and **is not applied

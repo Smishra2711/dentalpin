@@ -2,6 +2,83 @@
 
 ## Unreleased
 
+- fix: resending a terminal budget twice returned 500. `clone_to_new_draft`
+  took the new version from the row it was cloning (`version + 1`) while
+  `BudgetService.duplicate_budget` took it from `max(version)`, so the
+  second resend landed on a version that already existed and hit
+  `uq_budget_clinic_number_version` — with the INSERT statement in the
+  response body. The same thing happened on a single resend of an older
+  terminal version once a newer one existed. Both paths now share
+  `BudgetService.next_version`, and the resend route maps a losing
+  concurrent insert to 409 instead of 500. Found by a generated-request
+  sweep of the write surface.
+
+- feat(#657): owns the `budget` GDPR erasure coverage scope
+  (`get_erasure_contributors()`). Signed quotes are retained so the
+  signature stays bound to its document hash (Art. 17(3)(e)). The only
+  patient contact copied here is `BudgetSignature.signed_by_email`, so a
+  phone- or identity-only erasure now reports `not_applicable` instead of
+  the blanket `retained` `gdpr` used to hardcode.
+
+- fix: `PUT /budgets/{id}` now returns the linked `treatment_plan`, like
+  `GET`. The detail page replaces its budget with the PUT response, so after
+  editing a plan-linked quote it dropped the "lines are managed by the plan"
+  notice and showed add/remove controls until a reload.
+- feat(i18n): Hindi (`hi`) locale: Hindi quote PDF labels.
+- fix(security): `assigned_professional_id` is now validated as a
+  professional member of the budget's clinic, on create and on update.
+  It was a bare FK to `users`, so a caller could name any user id: an
+  unknown one failed as a `ForeignKeyViolation` (a 500 for a bad
+  request) and one belonging to **another clinic** was stored and then
+  rendered back with that user's name. The check mirrors
+  `treatment_plan._validate_professional_in_clinic`, whose docstring
+  already names the threat; `agenda` does the same inline. The create
+  route also gained the `ValueError` → 400 mapping the update route
+  already had.
+- fix: the PUT response carried the new `assigned_professional_id` with a
+  stale `assigned_professional` object (null, or the previously assigned
+  doctor), because the post-update reload hit the identity map with the
+  relationship already loaded. The relationship is expired when the FK
+  changes.
+
+- fix(#539): `GET /public/budgets/{token}/meta` no longer discloses
+  patient identity or budget contents before the knowledge factor; it
+  answers with routing state plus the clinic fields the page needs
+  (name, contacts, locale, currency), and the welcome greeting is the
+  generic title. The old clinic-scoped patient-name lookup is gone
+  with the removed query.
+- chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
+
+- fix(#531): the verify permanent lockout stays budget-wide on purpose
+  (10 retained failures lock the token), and the staff `unlock-public`
+  recovery path is now documented in ADR 0006; unlocking also drops
+  the failed-attempt rows so the recovery is not one-shot, and writes
+  a `BudgetHistory` entry for the unlock itself.
+- fix(#538): `BUDGET_PUBLIC_SECRET_KEY` is hard-required in production
+  (missing, blank, short, or whitespace-padded values refuse to boot;
+  dev-only fallback otherwise).
+- feat(#540): public accept/reject decisions are logged to
+  `BudgetAccessLog` with `success=True` (so they do not count towards
+  the lockout), like the signed-PDF download.
+- feat(i18n): Telugu (`te`) quote PDF labels.
+- feat(#509): the quote PDF for `pt-BR` reuses the `pt` labels.
+
+- fix(#522): the "today" and "in N days" markers on the budget list, and the
+  `valid_from` default on the new-budget form, read the UTC day instead of
+  the local one. Now use `toISODate`.
+
+- fix(#485): the quote PDF renders its own labels in all ten host
+  locales instead of falling back to English (or Spanish for `es`);
+  Arabic mirrors the document (`dir="rtl"`) and table headers use
+  logical alignment so they stay above their own column.
+
+- feat(#232): sidebar entry grouped under the Financials header (`nav.section` "financials").
+- fix(#441): `GET /budgets/{id}/pdf`, `/pdf/signed` and `/pdf/preview` accept every UI locale instead of `es|en` only — a de/hu/fr/pt/pl/it/ta/ar UI got a 422 on "Download PDF". Labels fall back to English; amounts and dates use the locale's separators. The locale list now lives in `app/core/pdf_locales.py`, shared with billing.
+
+- fix: the discount-type selects (item modal and global discount in the budget detail page) crashed on open — reka-ui rejects `''` as an item value (`A <ComboboxItem /> must have a value prop that is not an empty string`), which left the modal half-unmounted (`Cannot read properties of null (reading 'parentNode')`). The 'no discount' option now uses `null`.
+
+- feat(i18n): the frontend layer's directional spacing, borders, text alignment and inset positioning now resolve against the document direction (physical→logical CSS utilities, Arabic RTL support).
+
 - fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
 
 - feat(#287): `send_method` accepts `whatsapp` (router/workflow/tools; legacy `send_email` kept); the send modal offers a button per configured manual channel; the public-link wa.me button is secondary ('Open in WhatsApp'); the reminder cron's clinics query no longer references the never-created `clinics.deleted_at` column (it raised on every tick).

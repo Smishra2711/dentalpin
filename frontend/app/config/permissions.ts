@@ -63,7 +63,8 @@ export const PERMISSIONS = {
   reports: {
     billingRead: 'reports.billing.read',
     budgetsRead: 'reports.budgets.read',
-    schedulingRead: 'reports.scheduling.read'
+    schedulingRead: 'reports.scheduling.read',
+    financialRead: 'reports.financial.read'
   },
   documents: {
     read: 'media.documents.read',
@@ -92,7 +93,9 @@ export const PERMISSIONS = {
   },
   admin: {
     clinicRead: 'admin.clinic.read',
-    clinicWrite: 'admin.clinic.write'
+    clinicWrite: 'admin.clinic.write',
+    rolesRead: 'admin.roles.read',
+    rolesWrite: 'admin.roles.write'
   },
   migrationImport: {
     jobRead: 'migration_import.job.read',
@@ -105,6 +108,11 @@ export const PERMISSIONS = {
     recordWrite: 'payments.record.write',
     recordRefund: 'payments.record.refund',
     reportsRead: 'payments.reports.read'
+  },
+  payroll: {
+    read: 'payroll.read',
+    write: 'payroll.write',
+    reportsRead: 'payroll.reports.read'
   },
   verifactu: {
     settingsRead: 'verifactu.settings.read',
@@ -128,9 +136,33 @@ export const PERMISSIONS = {
     settingsRead: 'whatsapp_kapso.settings.read',
     settingsWrite: 'whatsapp_kapso.settings.write'
   },
+  razorpay: {
+    settingsRead: 'razorpay.settings.read',
+    settingsWrite: 'razorpay.settings.write'
+  },
   whatsappWebhook: {
     settingsRead: 'whatsapp_webhook.settings.read',
     settingsWrite: 'whatsapp_webhook.settings.write'
+  },
+  navOnline: {
+    settingsRead: 'nav_online.settings.read',
+    settingsConfigure: 'nav_online.settings.configure',
+    recordsRead: 'nav_online.records.read',
+    queueManage: 'nav_online.queue.manage'
+  },
+  sdiIt: {
+    settingsRead: 'sdi_it.settings.read',
+    settingsConfigure: 'sdi_it.settings.configure',
+    recordsRead: 'sdi_it.records.read',
+    recordsManage: 'sdi_it.records.manage'
+  },
+  sistemaTs: {
+    settingsRead: 'sistema_ts.settings.read',
+    settingsConfigure: 'sistema_ts.settings.configure',
+    documentsRead: 'sistema_ts.documents.read',
+    documentsManage: 'sistema_ts.documents.manage',
+    oppositionRead: 'sistema_ts.opposition.read',
+    oppositionWrite: 'sistema_ts.opposition.write'
   },
   telephony: {
     settingsRead: 'telephony.settings.read',
@@ -199,5 +231,90 @@ export const PERMISSIONS = {
   generatedDocuments: {
     read: 'documents.read',
     write: 'documents.write'
+  },
+  suppliers: {
+    read: 'suppliers.read',
+    write: 'suppliers.write'
+  },
+  supplierItems: {
+    read: 'supplier_items.read',
+    write: 'supplier_items.write'
+  },
+  purchaseOrders: {
+    read: 'purchase_orders.read',
+    write: 'purchase_orders.write'
+  },
+  inventoryReorder: {
+    read: 'inventory_reorder.read',
+    write: 'inventory_reorder.write'
+  },
+  supplierRatings: {
+    read: 'supplier_ratings.read',
+    write: 'supplier_ratings.write'
+  },
+  prescriptions: {
+    read: 'prescriptions.read',
+    write: 'prescriptions.write',
+    issue: 'prescriptions.issue'
+  },
+  patientSegments: {
+    read: 'patient_segments.read',
+    write: 'patient_segments.write'
+  },
+  leads: {
+    read: 'leads.read',
+    write: 'leads.write',
+    settingsRead: 'leads.settings.read',
+    settingsWrite: 'leads.settings.write'
+  },
+  staffAttendance: {
+    read: 'staff_attendance.read',
+    write: 'staff_attendance.write'
+  },
+  treasury: {
+    read: 'treasury.read',
+    write: 'treasury.write'
+  },
+  imagingViewer: {
+    studies: {
+      read: 'imaging_viewer.studies.read',
+      write: 'imaging_viewer.studies.write'
+    },
+    rvg: {
+      read: 'imaging_viewer.rvg.read',
+      write: 'imaging_viewer.rvg.write'
+    }
+  },
+  imagingAi: {
+    jobs: {
+      read: 'imaging_ai.jobs.read',
+      write: 'imaging_ai.jobs.write'
+    }
+  },
+  orthodontics: {
+    casesRead: 'orthodontics.cases.read',
+    casesWrite: 'orthodontics.cases.write',
+    controlsWrite: 'orthodontics.controls.write',
+    settingsManage: 'orthodontics.settings.manage'
+  },
+  medicalReference: {
+    read: 'medical_reference.read',
+    write: 'medical_reference.write'
+  },
+  smsGateway: {
+    settingsWrite: 'sms_gateway.settings.write'
   }
 } as const
+
+/**
+ * Union of every permission string in {@link PERMISSIONS}.
+ *
+ * Registration sites (`SlotEntry.permission`, settings pages, getting
+ * started rules) take this type instead of `string`, so renaming a
+ * permission fails at typecheck instead of silently hiding UI (#557).
+ */
+type DeepPermissionValue<T> = T extends object
+  ? { [K in keyof T]: DeepPermissionValue<T[K]> }[keyof T]
+  : T
+
+export type PermissionValue = DeepPermissionValue<typeof PERMISSIONS>

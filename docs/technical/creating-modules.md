@@ -600,6 +600,14 @@ and namespace every top-level key under your module name
 (e.g. `"inventory": { "nav": { "items": "Items" } }`) to avoid
 collisions with the host and with other modules.
 
+**Locale overlays** (e.g. Brazilian Portuguese `pt-BR`, issue #509) are
+**host-only**. The host ships a small delta file
+(`frontend/i18n/locales/pt-BR.json`) and a `fallbackLocale` chain
+(`pt-BR` → `pt` → `en`). Module layers must **not** add a `pt-BR.json`
+or register `pt-BR` in their `nuxt.config.ts` — missing keys resolve 
+through the base locale messages. Put any module-namespace wording 
+that differs for Brazil in the host overlay.
+
 TypeScript aliases inside layer files: `~~` (rootDir, = host frontend
 root) reaches shared host code. `~` is a trap: Vite rewrites it to the
 layer at build time (`nuxt:layer-aliasing`), but `vue-tsc` maps it to
@@ -638,6 +646,14 @@ the manifest:
             "icon": "i-lucide-box",
             "permission": "inventory.items.read",
             "order": 70,
+            # Optional sidebar grouping (issue #232): items sharing a
+            # `section` render under one collapsible, non-clickable
+            # header. Free-form key — the host never hardcodes section
+            # names. Headers translate via `nav.sections.<key>` with the
+            # raw key as fallback; items without `section` stay flat,
+            # and empty groups collapse on their own (grouping runs
+            # after the permission filter).
+            # "section": "clinical",
         }
     ],
 }
@@ -646,6 +662,26 @@ the manifest:
 The frontend fetches `/api/v1/modules/-/active` at login and renders
 the merged list. Permission filtering runs server-side; i18n resolves
 client-side.
+
+**Canonical section keys (issue #232).** The sidebar ships five stable
+headers — `clinical`, `lab`, `financials`, `inventory`, `practice`
+(translated via `nav.sections.<key>` in the host locales). A new module
+with a sidebar entry **must** self-place under one of them instead of
+staying flat:
+
+| New module surface | `section` |
+|---|---|
+| Patients, recalls, treatment plans, documents, medication/catalog, odontogram/clinical data | `clinical` |
+| Lab work orders | `lab` |
+| Quotes, invoices, payments, expenses, accounting/tax exports, payroll | `financials` |
+| Contacts/suppliers, inventory, purchase orders, reorder suggestions | `inventory` |
+| Reports, staff tasks, activity journal | `practice` |
+
+Modules outside those five clusters (e.g. community integrations such
+as telephony or treatment-consumable mappings) keep their entry flat
+(no `section` key). The top-level entries — dashboard and settings
+(host) and the agenda's Schedule entry — never carry one either: they
+stay flat above the sections.
 
 ### Canonical slots (v1)
 
@@ -667,17 +703,18 @@ Consume:
 <ModuleSlot name="patient.detail.sidebar" :ctx="{ patient }" />
 ```
 
-Register (typically in `frontend/slots.ts` of your layer):
+Register (typically in `frontend/plugins/slots.client.ts` of your layer):
 
 ```ts
 import { defineAsyncComponent } from 'vue'
-import { registerSlot } from '~/composables/useModuleSlots'
+import { registerSlot } from '~~/app/composables/useModuleSlots'
+import { PERMISSIONS } from '~~/app/config/permissions'
 
 registerSlot('patient.detail.sidebar', {
   id: 'inventory.patient.sidebar',   // stable, unique
-  component: defineAsyncComponent(() => import('./components/InventoryWidget.vue')),
+  component: defineAsyncComponent(() => import('../components/InventoryWidget.vue')),
   order: 30,
-  permission: 'inventory.items.read',
+  permission: PERMISSIONS.inventory.read,
   condition: (ctx) => ctx.patient.status === 'active',
 })
 ```
@@ -1041,7 +1078,9 @@ registerSlot('patient.detail.tabs', {
   id: 'my_module.patient.tab',
   component: defineAsyncComponent(() => import('./components/MyTab.vue')),
   order: 50,
-  permission: 'my_module.read',
+  // Reference your module's grant from frontend/app/config/permissions.ts
+  // (add it there first) — never hardcode the string (#557).
+  permission: PERMISSIONS.myModule.read,
 })
 ```
 
@@ -1284,12 +1323,71 @@ Rules:
   the only path where permissions, guardrails, and audit logging run.
 - **Subset tools explicitly.** `allowed_tools` is a hard list — the
   agent cannot invoke anything outside it, even if the registry has
-  other tools.
+  other tools and even if the caller's RBAC grants would allow them.
+  It is enforced at the registry chokepoint (`ToolRegistry.call`, step 2
+  of its enforcement order) and a refusal is audited as `BLOCKED`, so a
+  tool the LLM invents or hallucinates its way into is refused rather
+  than run. Exact qualified names only; there is no wildcard form.
+
+  The list reaches the chokepoint as `AgentContext.allowed_tools`, so
+  **whatever constructs the context for an agent must pass the agent's
+  own list through** (`allowed_tools=MyAgent.allowed_tools`). On the
+  context, `None` is a distinct third state meaning "no subsetting",
+  which is what conversational surfaces such as copilot use — an empty
+  list permits nothing, and `BaseAgent.allowed_tools` defaults to empty
+  so an agent that declares nothing can call nothing.
 - **Pick a mode honestly.** Default to `SUPERVISED` for any agent that
   writes. Only mark `AUTONOMOUS` once you are convinced the guardrails
   + audit story is sufficient for the risk.
 - **No LLM abstraction in core.** Each agent imports its own SDK. Core
   guarantees the contract (tools + registry + audit), nothing else.
+
+### GDPR erasure contributors (ADR 0038)
+
+If your module stores copies of patient contact data (message logs,
+contact-attempt notes, signature emails, …), expose them to GDPR erasure
+through a contributor — never through an event subscription. `gdpr`
+pulls every registered contributor inside the erasure transaction and
+assembles the DSR coverage list from their answers; a scope with no
+contributor produces no row, so an uninstalled module is never reported
+as erased. The `gdpr.erasure.executed` event is announcement-only.
+
+```python
+from app.core.erasure.types import ErasureContributor, ErasureCoverage
+
+
+class MyModuleErasureContributor(ErasureContributor):
+    @property
+    def scope(self) -> str:
+        return "mymodule"
+
+    async def erase(self, clinic_id, patient_id, erased, retained, db):
+        # Redact this module's own copies; filter every query by
+        # clinic_id (and patient_id). No commit. Then report:
+        return ErasureCoverage(scope=self.scope, status="erased", detail="…")
+
+
+class MyModule(BaseModule):
+    def get_erasure_contributors(self) -> list[ErasureContributor]:
+        from .erasure import MyModuleErasureContributor
+
+        return [MyModuleErasureContributor()]
+```
+
+Rules:
+
+- **The contract lives in core** (`app/core/erasure/`). Contributors
+  return `ErasureCoverage` from there — never import `gdpr`, and never
+  add `gdpr` to `manifest.depends`.
+- **`get_erasure_contributors()` is optional** — the default returns
+  `[]`. Override it only when the module holds subject copies.
+- **One scope per contributor**; scopes are unique registry-wide (a
+  duplicate raises at boot).
+- **A raising contributor rolls back the whole erasure.** Fail loudly;
+  never swallow.
+- **Status honesty:** `erased` only when this scope's copies were
+  removed, `retained` with the legal basis in `detail`, otherwise
+  `not_applicable`.
 
 ### Contract checklist for agent-ready modules
 

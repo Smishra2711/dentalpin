@@ -18,6 +18,9 @@ definePageMeta({ middleware: 'auth' })
 const { t, locale } = useI18n()
 const api = useApi()
 const { can } = usePermissions()
+// Passed as `ctx.clinic` to `payments.list.row.meta` — the shape the
+// country-gated slots (india_gst / verifactu / razorpay) already expect.
+const { currentClinic } = useClinic()
 
 interface PatientBrief {
   id: string
@@ -102,6 +105,14 @@ const {
   defaultSort: 'payment_date:desc',
   searchKey: 'q',
   fetcher
+})
+
+// Preselect the patient when deep-linked with ?patient_id= (e.g. the
+// orthodontics "Collect installment" action, issue #270).
+const route = useRoute()
+onMounted(() => {
+  const pid = route.query.patient_id
+  if (typeof pid === 'string' && pid) setFilter('patient_id', pid)
 })
 
 const clinicCountry = useClinicCountry()
@@ -368,6 +379,12 @@ function formatDate(s: string | undefined): string {
                   class="truncate max-w-[160px]"
                   :title="p.reference"
                 >· {{ p.reference }}</span>
+                <!-- Desktop row: gateway badge (the #card template below
+                     carries the same slot for the mobile layout). -->
+                <ModuleSlot
+                  name="payments.list.row.meta"
+                  :ctx="{ payment: p, clinic: currentClinic }"
+                />
               </div>
             </div>
             <div class="shrink-0 hidden sm:flex flex-col items-end gap-0.5 max-w-[200px]">
@@ -379,7 +396,7 @@ function formatDate(s: string | undefined): string {
                 {{ a.amount }} <span class="opacity-60">· {{ a.label }}</span>
               </span>
             </div>
-            <div class="shrink-0 text-right min-w-[100px]">
+            <div class="shrink-0 text-end min-w-[100px]">
               <Money
                 :value="p.amount"
                 strong
@@ -419,10 +436,10 @@ function formatDate(s: string | undefined): string {
                 <!-- Provider badge / settlement state from a gateway module (#365). -->
                 <ModuleSlot
                   name="payments.list.row.meta"
-                  :ctx="{ payment: p }"
+                  :ctx="{ payment: p, clinic: currentClinic }"
                 />
               </div>
-              <div class="text-right shrink-0">
+              <div class="text-end shrink-0">
                 <Money
                   :value="p.amount"
                   strong

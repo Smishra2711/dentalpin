@@ -2,7 +2,7 @@
 module: documents
 screen: documents
 route: /documents
-last_verified_commit: c80c3015
+last_verified_commit: 10085df
 related_endpoints:
   - GET /api/v1/documents
   - POST /api/v1/documents
@@ -36,7 +36,11 @@ by most recent.
 - **Edit** a document's title or content (drafts only).
 - **Generate** — renders the document as a branded PDF with the
   clinic letterhead (name, logo, address, registration number). A
-  generated document appears in the patient timeline.
+  generated document appears in the patient timeline. The PDF's field
+  labels and its title (*Referral letter*, *Medical certificate*, …)
+  follow the language you are using the app in — all ten of them, with
+  Arabic laid out right-to-left. Clinical text you typed is reproduced
+  as written; it is not translated.
 - **Download** — save the generated PDF from a `generated` row.
 - **Archive** (soft-delete) — hides the document from the active list
   but preserves the record for history.

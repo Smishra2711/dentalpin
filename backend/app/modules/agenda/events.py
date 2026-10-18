@@ -22,6 +22,8 @@ _DEFAULT_CABINET_NAME = {
     "fr": "Cabinet 1",
     "pt": "Gabinete 1",
     "ta": "அறை 1",
+    "te": "గది 1",
+    "hi": "कक्ष 1",
 }
 
 

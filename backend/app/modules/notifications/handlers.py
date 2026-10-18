@@ -23,7 +23,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.i18n_names import catalog_name
+from .service import budget_treatments_context
 
 logger = logging.getLogger(__name__)
 
@@ -286,7 +286,7 @@ class NotificationHandlers:
         I/O — so a rolled-back request queues nothing, and the rows this
         reads are the publisher's own (issue #183).
         """
-        from app.modules.budget.models import Budget, BudgetItem
+        from app.modules.budget.models import Budget
         from app.modules.notifications.gateway import NotificationGateway
         from app.modules.patients.models import Patient
 
@@ -322,34 +322,7 @@ class NotificationHandlers:
                 clinic = result.scalar_one_or_none()
 
                 # Get budget items
-                result = await db.execute(
-                    select(BudgetItem).where(BudgetItem.budget_id == budget_id)
-                )
-                items = result.scalars().all()
-
-                # Build treatments list for template
-                treatments = []
-                for item in items:
-                    # Get catalog item name
-                    from app.modules.catalog.models import TreatmentCatalogItem
-
-                    result = await db.execute(
-                        select(TreatmentCatalogItem).where(
-                            TreatmentCatalogItem.id == item.catalog_item_id
-                        )
-                    )
-                    catalog_item = result.scalar_one_or_none()
-                    # ``names`` is a per-locale dict; the model has no
-                    # ``.name`` (latent AttributeError that killed every
-                    # budget_sent enqueue that got this far).
-                    names = (catalog_item.names or {}) if catalog_item else {}
-                    treatments.append(
-                        {
-                            "name": catalog_name(names) or "Tratamiento",
-                            "tooth": item.tooth_number,
-                            "price": float(item.line_total),
-                        }
-                    )
+                treatments = await budget_treatments_context(db, budget_id)
 
                 # Build context
                 context = {

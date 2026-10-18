@@ -3,24 +3,27 @@
 Implements the patient-facing flow described in
 ``docs/adr/0006-budget-public-link-2-factor-auth.md``:
 
-1. ``GET    /api/v1/public/budgets/{token}/meta``      → returns
+1. ``GET    /api/v1/budget/public/budgets/{token}/meta``      → returns
    the auth method the SPA should ask for (or ``none``), the
-   ``locked``/``expired`` flags and the clinic name. No PII.
-2. ``POST   /api/v1/public/budgets/{token}/verify``    → patient
+   ``locked``/``expired`` flags and the clinic fields the page needs.
+   No patient identity, no budget contents (#539).
+2. ``POST   /api/v1/budget/public/budgets/{token}/verify``    → patient
    submits the verification value (phone last 4, DOB, or manual
    code). On success a signed cookie is set, scoped to the token.
-3. ``GET    /api/v1/public/budgets/{token}``           → returns
+3. ``GET    /api/v1/budget/public/budgets/{token}``           → returns
    the budget detail (only with cookie or method=none). Marks the
    budget as viewed on the first call.
-4. ``POST   /api/v1/public/budgets/{token}/accept``    → records
+4. ``POST   /api/v1/budget/public/budgets/{token}/accept``    → records
    acceptance + signature.
-5. ``POST   /api/v1/public/budgets/{token}/reject``    → records
+5. ``POST   /api/v1/budget/public/budgets/{token}/reject``    → records
    rejection.
 
-Rate limits via ``slowapi`` (``5/15minute`` per token, ``20/hour``
-per IP, ``60/minute`` for ``/meta``). Sessions are HS256 JWTs
-signed with ``settings.BUDGET_PUBLIC_SECRET_KEY`` (falls back to
-``SECRET_KEY`` only in dev).
+Rate limits via ``slowapi``: ``60/minute`` for ``/meta``;
+``5/15minute`` per token plus ``20/hour`` per IP for ``/verify``;
+``30/minute`` for detail; ``10/minute`` for ``accept`` and ``reject``;
+and ``10/minute`` per token for the signed-PDF download. Sessions are
+HS256 JWTs signed with ``settings.BUDGET_PUBLIC_SECRET_KEY`` (falls
+back to ``SECRET_KEY`` only in dev).
 """
 
 from __future__ import annotations
@@ -40,6 +43,7 @@ from app.core.auth.router import limiter
 from app.core.schemas import ApiResponse
 from app.database import get_db
 
+from .models import BudgetAccessLog
 from .schemas import BudgetDetailResponse
 from .service import BudgetService
 from .workflow import (
@@ -63,11 +67,21 @@ public_router = APIRouter()
 def _public_secret() -> str:
     """Resolve the secret used to sign public budget session cookies.
 
-    Production deploys must set ``BUDGET_PUBLIC_SECRET_KEY``. In
-    development we fall back to ``SECRET_KEY`` so local runs work
-    without extra setup, but this is logged once on startup.
+    Production deploys must set ``BUDGET_PUBLIC_SECRET_KEY`` — serving
+    public routes without it would sign patient sessions with the
+    staff-JWT key. In development we fall back to ``SECRET_KEY`` so
+    local runs work without extra setup. A blank or whitespace-only
+    value is treated as unset.
     """
-    return settings.BUDGET_PUBLIC_SECRET_KEY or settings.SECRET_KEY
+    key = settings.BUDGET_PUBLIC_SECRET_KEY or ""
+    if key.strip():
+        return key
+    if settings.ENVIRONMENT == "production":
+        raise RuntimeError(
+            "BUDGET_PUBLIC_SECRET_KEY is required in production: refusing to "
+            "sign public budget sessions with the staff-JWT key."
+        )
+    return settings.SECRET_KEY
 
 
 def _cookie_name(token: UUID) -> str:
@@ -128,17 +142,15 @@ class PublicBudgetMeta(BaseModel):
     expired: bool = False
     already_decided: bool = False
     decided_status: str | None = None
-    # Trust + personalization signals.
+    # Trust signals only. Patient identity and budget contents stay
+    # behind verification: they arrive with the cookie-protected detail
+    # response, never on this cookie-less endpoint (#539).
     clinic_name: str | None = None
     clinic_phone: str | None = None
     clinic_email: str | None = None
     clinic_address_line: str | None = None
     clinic_language: str | None = None
     clinic_currency: str | None = None
-    patient_first_name: str | None = None
-    budget_number: str | None = None
-    budget_total: str | None = None
-    valid_until: str | None = None
 
 
 class PublicVerifyBody(BaseModel):
@@ -180,10 +192,9 @@ async def get_public_budget_meta(
     expired = budget.valid_until is not None and budget.valid_until < today
     already_decided = budget.status in {"accepted", "rejected"}
 
-    # Resolve clinic + patient context via raw SQL. Both ``clinics`` and
-    # ``patients`` live in modules already declared in budget.depends so
-    # this is just a denormalised display read — kept as raw SQL to
-    # avoid pulling the full ORM models for one row.
+    # Resolve clinic context via raw SQL against the core ``clinics``
+    # table — kept as raw SQL to avoid pulling the full ORM model for
+    # one row.
     from sqlalchemy import text as _text
 
     clinic_row = (
@@ -209,14 +220,6 @@ async def get_public_budget_meta(
     # Default to Spanish — matches the project's primary user base.
     clinic_language = clinic_language or "es"
 
-    patient_row = (
-        await db.execute(
-            _text("SELECT first_name FROM patients WHERE id = :id"),
-            {"id": budget.patient_id},
-        )
-    ).first()
-    patient_first_name = patient_row.first_name if patient_row else None
-
     method = budget.public_auth_method
     requires_verification = method != "none" and not already_decided
     return ApiResponse(
@@ -233,10 +236,6 @@ async def get_public_budget_meta(
             clinic_address_line=clinic_address_line,
             clinic_language=clinic_language,
             clinic_currency=clinic_currency,
-            patient_first_name=patient_first_name,
-            budget_number=budget.budget_number,
-            budget_total=str(budget.total) if budget.total is not None else None,
-            valid_until=budget.valid_until.isoformat() if budget.valid_until else None,
         )
     )
 
@@ -378,6 +377,14 @@ async def accept_public_budget(
     except Exception as e:
         await db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
+    db.add(
+        BudgetAccessLog(
+            budget_id=budget.id,
+            ip_hash=_hash_ip(request.client.host if request.client else None),
+            success=True,
+            method_attempted="accept",
+        )
+    )
     await db.commit()
     return ApiResponse(
         data=PublicBudgetMeta(
@@ -410,7 +417,7 @@ async def download_public_signed_budget_pdf(
 
     from sqlalchemy import select as _select
 
-    from .models import BudgetAccessLog, BudgetSignature
+    from .models import BudgetSignature
     from .pdf import BudgetPDFService
 
     sig_q = (
@@ -509,6 +516,14 @@ async def reject_public_budget(
     except Exception as e:
         await db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
+    db.add(
+        BudgetAccessLog(
+            budget_id=budget.id,
+            ip_hash=_hash_ip(request.client.host if request.client else None),
+            success=True,
+            method_attempted="reject",
+        )
+    )
     await db.commit()
     return ApiResponse(
         data=PublicBudgetMeta(

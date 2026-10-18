@@ -14,6 +14,7 @@
  */
 
 import type { Component } from 'vue'
+import { PERMISSIONS, type PermissionValue } from '~/config/permissions'
 import type { ApiResponse, OnboardingState } from '~/types'
 
 export type ApiClient = ReturnType<typeof useApi>
@@ -40,7 +41,7 @@ export interface SettingsCategory {
    * AND has no visible page inside it. Pages can still gate themselves
    * independently. Account has no gate (always visible).
    */
-  permission?: string
+  permission?: PermissionValue
 }
 
 /**
@@ -63,8 +64,9 @@ export interface SettingsPageEntry {
    * Permission gate. A string requires that exact permission; an array
    * acts as ``canAny`` (visible if the user holds at least one). When
    * unset, the page is visible to all authenticated roles.
+   * Typed as {@link PermissionValue} so renames fail at typecheck (#557).
    */
-  permission?: string | string[]
+  permission?: PermissionValue | PermissionValue[]
   /** Component mounted at ``/settings/<category>/<path>``. */
   component?: () => Promise<Component | { default: Component }>
   /** External link target — overrides ``component`` when set. */
@@ -80,6 +82,24 @@ export interface SettingsPageEntry {
 export interface VisibleCategory extends SettingsCategory {
   pages: SettingsPageEntry[]
   hasAttention: boolean
+}
+
+export type SettingsSupergroupId
+  = | 'clinicalSetup'
+    | 'clinicalManagement'
+    | 'financialConfiguration'
+    | 'systemAddons'
+    | 'myPreferences'
+
+/**
+ * Presentation-only grouping of the settings rail. The flat category set,
+ * the routes and the search index are untouched — the supergroup only
+ * orders and labels groups of categories in SettingsCategoryNav.
+ */
+export interface SettingsSupergroup {
+  id: SettingsSupergroupId
+  labelKey: string
+  categories: VisibleCategory[]
 }
 
 export interface SearchEntry {
@@ -118,7 +138,7 @@ export interface GettingStartedRule {
    * ``can()`` embeds module-activation, so a rule from a baked-but-
    * uninstalled module neither renders nor fires its ``load`` (#326).
    */
-  permission?: string | string[]
+  permission?: PermissionValue | PermissionValue[]
   /** Guided-mode sequence. Lower first; ties resolve in registration order. */
   order?: number
   /** Optional steps are listed apart and don't count towards progress. */
@@ -154,7 +174,7 @@ const DEFAULT_CATEGORIES: readonly SettingsCategory[] = [
     descriptionKey: 'settings.categories.people.description',
     icon: 'i-lucide-users',
     order: 30,
-    permission: 'admin.users.read'
+    permission: PERMISSIONS.users.read
   },
   {
     id: 'clinical',
@@ -190,7 +210,7 @@ const DEFAULT_CATEGORIES: readonly SettingsCategory[] = [
     descriptionKey: 'settings.categories.modules.description',
     icon: 'i-lucide-blocks',
     order: 80,
-    permission: 'admin.clinic.read'
+    permission: PERMISSIONS.admin.clinicRead
   },
   {
     id: 'account',
@@ -199,6 +219,27 @@ const DEFAULT_CATEGORIES: readonly SettingsCategory[] = [
     icon: 'i-lucide-user-circle',
     order: 90
   }
+]
+
+/** Category → supergroup. Single source of truth for the settings rail. */
+export const CATEGORY_SUPERGROUPS: Record<SettingsCategoryId, SettingsSupergroupId> = {
+  general: 'clinicalSetup',
+  workspace: 'clinicalSetup',
+  people: 'clinicalSetup',
+  clinical: 'clinicalManagement',
+  billing: 'financialConfiguration',
+  communications: 'systemAddons',
+  integrations: 'systemAddons',
+  modules: 'systemAddons',
+  account: 'myPreferences'
+}
+
+export const SUPERGROUP_ORDER: readonly SettingsSupergroupId[] = [
+  'clinicalSetup',
+  'clinicalManagement',
+  'financialConfiguration',
+  'systemAddons',
+  'myPreferences'
 ]
 
 // Module-level (NOT in `useState`) because entries carry async-component
@@ -293,6 +334,18 @@ export function useSettingsRegistry() {
         }
       })
       .sort((a, b) => a.order - b.order)
+  })
+
+  /** Categories grouped for the settings rail; empty groups are dropped. */
+  const supergroups = computed<SettingsSupergroup[]>(() => {
+    const visible = categories.value
+    return SUPERGROUP_ORDER
+      .map(supergroup => ({
+        id: supergroup,
+        labelKey: `settings.supergroups.${supergroup}.label`,
+        categories: visible.filter(cat => CATEGORY_SUPERGROUPS[cat.id] === supergroup)
+      }))
+      .filter(group => group.categories.length > 0)
   })
 
   function findPage(categoryId: SettingsCategoryId, path: string): SettingsPageEntry | null {
@@ -440,6 +493,7 @@ export function useSettingsRegistry() {
 
   return {
     categories,
+    supergroups,
     pagesByCategory,
     findPage,
     findCategory,

@@ -8,8 +8,6 @@ definePageMeta({ layout: 'default' })
 
 const { t } = useI18n()
 const api = useApi()
-const auth = useAuth()
-const config = useRuntimeConfig()
 const toast = useToast()
 const { can } = usePermissions()
 
@@ -64,16 +62,11 @@ async function load() {
 
 onMounted(load)
 
-// Authenticated blob download (JWT goes in a header, so window.open /
-// a plain <a href> would come back 401) — same pattern as
-// accounting_export's useAccountingExport.download().
+// Authenticated blob download (window.open or a plain <a href> would come
+// back 401) — same pattern as accounting_export's download().
 async function exportCsv() {
   try {
-    const res = await fetch(`${config.public.apiBaseUrl}/api/v1/india_gst/reports/export`, {
-      headers: auth.accessToken.value
-        ? { Authorization: `Bearer ${auth.accessToken.value}` }
-        : {}
-    })
+    const res = await api.raw('/api/v1/india_gst/reports/export')
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const blob = await res.blob()
     const blobUrl = URL.createObjectURL(blob)
@@ -167,17 +160,17 @@ async function exportCsv() {
         </template>
         <table class="w-full text-sm">
           <thead>
-            <tr class="text-left text-subtle">
+            <tr class="text-start text-subtle">
               <th class="py-1">
                 {{ t('indiaGst.panel.placeOfSupply') }}
               </th>
-              <th class="py-1 text-right">
+              <th class="py-1 text-end">
                 CGST
               </th>
-              <th class="py-1 text-right">
+              <th class="py-1 text-end">
                 SGST
               </th>
-              <th class="py-1 text-right">
+              <th class="py-1 text-end">
                 IGST
               </th>
             </tr>
@@ -191,13 +184,13 @@ async function exportCsv() {
               <td class="py-1">
                 {{ row.state_name || row.state_code || '-' }}
               </td>
-              <td class="py-1 text-right">
+              <td class="py-1 text-end">
                 {{ row.cgst }}
               </td>
-              <td class="py-1 text-right">
+              <td class="py-1 text-end">
                 {{ row.sgst }}
               </td>
-              <td class="py-1 text-right">
+              <td class="py-1 text-end">
                 {{ row.igst }}
               </td>
             </tr>
@@ -213,7 +206,7 @@ async function exportCsv() {
         </template>
         <table class="w-full text-sm">
           <thead>
-            <tr class="text-left text-subtle">
+            <tr class="text-start text-subtle">
               <th class="py-1">
                 {{ t('indiaGst.panel.documentNumber') }}
               </th>
@@ -223,16 +216,16 @@ async function exportCsv() {
               <th class="py-1">
                 {{ t('indiaGst.panel.placeOfSupply') }}
               </th>
-              <th class="py-1 text-right">
+              <th class="py-1 text-end">
                 {{ t('indiaGst.reports.taxableValue') }}
               </th>
-              <th class="py-1 text-right">
+              <th class="py-1 text-end">
                 CGST
               </th>
-              <th class="py-1 text-right">
+              <th class="py-1 text-end">
                 SGST
               </th>
-              <th class="py-1 text-right">
+              <th class="py-1 text-end">
                 IGST
               </th>
             </tr>
@@ -260,16 +253,16 @@ async function exportCsv() {
               <td class="py-1">
                 {{ row.place_of_supply || '-' }}
               </td>
-              <td class="py-1 text-right">
+              <td class="py-1 text-end">
                 {{ row.taxable_value }}
               </td>
-              <td class="py-1 text-right">
+              <td class="py-1 text-end">
                 {{ row.cgst }}
               </td>
-              <td class="py-1 text-right">
+              <td class="py-1 text-end">
                 {{ row.sgst }}
               </td>
-              <td class="py-1 text-right">
+              <td class="py-1 text-end">
                 {{ row.igst }}
               </td>
             </tr>

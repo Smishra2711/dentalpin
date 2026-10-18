@@ -21,10 +21,14 @@ function pickFile() {
   fileInputRef.value?.click()
 }
 
+const isPreviewableFile = computed(() => file.value?.type.startsWith('image/') ?? false)
+
 function setFile(f: File | null) {
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
   file.value = f
-  previewUrl.value = f ? URL.createObjectURL(f) : null
+  // Object URLs only preview browser-renderable images: a DICOM picked here
+  // would otherwise render as a broken <img> (the input accepts .dcm).
+  previewUrl.value = f && isPreviewableFile.value ? URL.createObjectURL(f) : null
   if (f && !title.value) {
     title.value = f.name.replace(/\.[^.]+$/, '')
   }
@@ -203,13 +207,13 @@ async function submit() {
           {{ t('photoGallery.dropHere', 'Arrastra una foto o haz clic') }}
         </p>
         <p class="text-xs text-muted mt-1">
-          JPG · PNG · HEIC · WebP — {{ t('common.maxFileSize', 'hasta 10 MB') }}
+          JPG · PNG · HEIC · WebP · DICOM — {{ t('common.maxFileSize', 'hasta 10 MB') }}
         </p>
       </div>
       <input
         ref="fileInputRef"
         type="file"
-        accept="image/*"
+        accept="image/*,.dcm,application/dicom"
         capture="environment"
         class="absolute inset-0 cursor-pointer opacity-0"
         @change="onSelect"
@@ -221,10 +225,21 @@ async function submit() {
       class="relative overflow-hidden rounded-xl border border-default bg-elevated"
     >
       <img
-        :src="previewUrl ?? undefined"
+        v-if="previewUrl && isPreviewableFile"
+        :src="previewUrl"
         :alt="file.name"
         class="block max-h-[280px] w-full object-contain bg-checker"
       >
+      <!-- Generic placeholder for non-image files (e.g. DICOM) -->
+      <div
+        v-else
+        class="flex items-center justify-center bg-default px-6 py-8 text-primary-accent"
+      >
+        <UIcon
+          name="i-lucide-file-image"
+          class="h-12 w-12"
+        />
+      </div>
       <div class="flex items-center justify-between gap-3 px-3 py-2 bg-default">
         <div class="min-w-0 flex-1">
           <p class="truncate text-sm font-medium">
@@ -255,7 +270,7 @@ async function submit() {
       <input
         ref="fileInputRef"
         type="file"
-        accept="image/*"
+        accept="image/*,.dcm,application/dicom"
         class="hidden"
         @change="onSelect"
       >

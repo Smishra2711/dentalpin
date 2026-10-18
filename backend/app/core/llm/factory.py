@@ -1,16 +1,108 @@
-"""Provider resolution.
-
-Resolves ``"openai"`` and ``"anthropic"``. Further vendors (Gemini,
-Ollama) slot in here later with no change to callers — the orchestrator
-already speaks neutral types (``base.py``).
-"""
+"""Provider resolution through the process-wide LLM provider registry."""
 
 from __future__ import annotations
 
 from app.config import settings
 from app.core.llm.base import LLMConfigError, Provider
+from app.core.llm.registry import llm_provider_registry
+from app.core.llm.spec import ProviderConfig, ProviderSpec
 
-SUPPORTED_PROVIDERS = ("openai", "anthropic")
+
+def _create_openai(config: ProviderConfig) -> Provider:
+    from app.core.llm.openai_provider import OpenAIProvider
+
+    return OpenAIProvider(api_key=config.api_key or "")
+
+
+def _create_anthropic(config: ProviderConfig) -> Provider:
+    from app.core.llm.anthropic_provider import AnthropicProvider
+
+    return AnthropicProvider(api_key=config.api_key or "")
+
+
+def _create_gemini(config: ProviderConfig) -> Provider:
+    from app.core.llm.gemini_provider import GeminiProvider
+
+    return GeminiProvider(api_key=config.api_key or "")
+
+
+def _create_openrouter(config: ProviderConfig) -> Provider:
+    from app.core.llm.openrouter_provider import OpenRouterProvider
+
+    return OpenRouterProvider(api_key=config.api_key or "")
+
+
+def _create_groq(config: ProviderConfig) -> Provider:
+    from app.core.llm.groq_provider import GroqProvider
+
+    return GroqProvider(api_key=config.api_key or "")
+
+
+OPENAI_SPEC = ProviderSpec(
+    name="openai",
+    label="OpenAI",
+    default_model=settings.COPILOT_MODEL_CHAT_OPENAI,
+    tool_dialect="openai",
+    needs_api_key=True,
+    api_key_setting="OPENAI_API_KEY",
+    factory=_create_openai,
+)
+
+ANTHROPIC_SPEC = ProviderSpec(
+    name="anthropic",
+    label="Anthropic",
+    default_model=settings.COPILOT_MODEL_CHAT_ANTHROPIC,
+    tool_dialect="anthropic",
+    needs_api_key=True,
+    api_key_setting="ANTHROPIC_API_KEY",
+    factory=_create_anthropic,
+)
+
+GEMINI_SPEC = ProviderSpec(
+    name="gemini",
+    label="Gemini",
+    default_model=settings.COPILOT_MODEL_CHAT_GEMINI,
+    tool_dialect="openai",
+    needs_api_key=True,
+    api_key_setting="GEMINI_API_KEY",
+    factory=_create_gemini,
+)
+
+OPENROUTER_SPEC = ProviderSpec(
+    name="openrouter",
+    label="OpenRouter",
+    default_model=settings.COPILOT_MODEL_CHAT_OPENROUTER,
+    tool_dialect="openai",
+    needs_api_key=True,
+    api_key_setting="OPENROUTER_API_KEY",
+    factory=_create_openrouter,
+)
+
+GROQ_SPEC = ProviderSpec(
+    name="groq",
+    label="Groq",
+    default_model=settings.COPILOT_MODEL_CHAT_GROQ,
+    tool_dialect="openai",
+    needs_api_key=True,
+    api_key_setting="GROQ_API_KEY",
+    factory=_create_groq,
+)
+
+
+def get_provider_spec(name: str) -> ProviderSpec:
+    """Return the registered specification for ``name``."""
+    spec = llm_provider_registry.get(name)
+    if spec is None:
+        supported = ", ".join(item.name for item in llm_provider_registry.list()) or "none"
+        raise LLMConfigError(f"Unsupported LLM provider: {name!r} (supported: {supported})")
+    return spec
+
+
+def get_configured_api_key(spec: ProviderSpec) -> str | None:
+    """Return the deployment-level API key configured for ``spec``."""
+    if spec.api_key_setting is None:
+        return None
+    return getattr(settings, spec.api_key_setting)
 
 
 def get_provider(name: str, *, api_key: str | None = None) -> Provider:
@@ -19,16 +111,7 @@ def get_provider(name: str, *, api_key: str | None = None) -> Provider:
     Raises :class:`LLMConfigError` for unsupported names so a clinic can
     never select a provider this deployment cannot serve.
     """
-    if name == "openai":
-        from app.core.llm.openai_provider import OpenAIProvider
+    spec = get_provider_spec(name)
+    resolved_api_key = api_key or get_configured_api_key(spec)
 
-        return OpenAIProvider(api_key=api_key or settings.OPENAI_API_KEY)
-
-    if name == "anthropic":
-        from app.core.llm.anthropic_provider import AnthropicProvider
-
-        return AnthropicProvider(api_key=api_key or settings.ANTHROPIC_API_KEY)
-
-    raise LLMConfigError(
-        f"Unsupported LLM provider: {name!r} (supported: {', '.join(SUPPORTED_PROVIDERS)})"
-    )
+    return spec.factory(ProviderConfig(api_key=resolved_api_key))

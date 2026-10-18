@@ -2,6 +2,7 @@
 import type { Patient, BudgetCreate } from '~~/app/types'
 import { PERMISSIONS } from '~~/app/config/permissions'
 import { errorMessage } from '~~/app/utils/error'
+import { toISODate } from '~~/app/utils/wallClock'
 
 const route = useRoute()
 const router = useRouter()
@@ -32,7 +33,7 @@ const selectedPatient = ref<Patient | null>(null)
 const isCreating = ref(false)
 
 const form = reactive({
-  valid_from: new Date().toISOString().split('T')[0],
+  valid_from: toISODate(new Date()),
   valid_until: '',
   patient_notes: '',
   internal_notes: ''

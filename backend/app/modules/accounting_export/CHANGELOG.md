@@ -2,7 +2,28 @@
 
 ## Unreleased
 
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer.
+- test(#552): branch-scoped uninstall round-trip test (heads, branch downgrade, reinstall).
+
+- fix(#611): party names and descriptions in `facturas.csv` / `cobros.csv`
+  are neutralised against spreadsheet formula injection before the file
+  reaches the accountant. Decimal amounts keep their own formatting path,
+  so a credit note stays a negative number rather than becoming text.
+
+- feat(i18n): Telugu (`te`) locale for the module's frontend layer.
+- fix(#522): every date preset (`currentMonth`, `previousMonth`,
+  `currentQuarter`, `previousQuarter`, `yearToDate`) built its bounds from a
+  local midnight and rendered them with `toISOString()`, i.e. in UTC — so a
+  clinic anywhere east of UTC exported a window starting and ending one day
+  early. `previousMonth` is the default preset, so the wrong range was the
+  one selected on arrival. Now uses `toISODate`.
+
+- feat(#232): sidebar entry grouped under the Financials header (`nav.section` "financials").
 - feat(#334): Hungarian (hu) locale for the module's frontend layer.
+
+- feat(i18n): Arabic (ar) locale for the module's frontend layer.
+- feat(i18n): the frontend layer's directional spacing, borders, text alignment and inset positioning now resolve against the document direction (physical→logical CSS utilities, Arabic RTL support).
+
 - feat(#131): German (de) locale for the module's frontend layer.
 - feat(#144, #132): Polish (pl) and Italian (it) locales for the module's frontend layer.
 

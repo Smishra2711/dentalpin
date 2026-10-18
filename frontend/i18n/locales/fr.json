@@ -35,6 +35,13 @@
     "menu": "Menu",
     "openMenu": "Ouvrir le menu",
     "close": "Fermer",
+    "sections": {
+      "clinical": "Clinique",
+      "lab": "Labo",
+      "financials": "Finances",
+      "inventory": "Inventaire",
+      "practice": "Cabinet"
+    },
     "toggleSidebar": "Basculer la barre latérale",
     "documents": "Documents"
   },
@@ -78,7 +85,7 @@
     "emailRequired": "Saisissez l'email",
     "emailInvalid": "L'email n'est pas valide",
     "passwordRequired": "Saisissez un mot de passe",
-    "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 12 caractères",
     "passwordWeak": "Le mot de passe doit contenir des lettres et des chiffres",
     "passwordMismatch": "Les mots de passe ne correspondent pas",
     "clinicNameRequired": "Saisissez le nom de la clinique",
@@ -819,6 +826,18 @@
   },
   "appointments": {
     "title": "Agenda",
+    "checkin": {
+      "qr": "QR d'enregistrement",
+      "hint": "Le patient scanne ce code pour s'enregistrer. Il expire 15 minutes après sa création.",
+      "copyLink": "Copier le lien d'enregistrement",
+      "openTitle": "Enregistrement à la clinique",
+      "success": "Vous êtes enregistré. Veuillez prendre place.",
+      "invalid": "Ce code d'enregistrement est invalide ou expiré. Demandez-en un nouveau à l'accueil.",
+      "confirm": "Je suis là",
+      "confirmHint": "Appuyez sur le bouton pour confirmer votre arrivée.",
+      "tooEarly": "Il est encore trop tôt pour vous enregistrer. Votre rendez-vous est à {time}.",
+      "tooLate": "L'enregistrement pour ce rendez-vous est fermé. Présentez-vous à l'accueil."
+    },
     "create": "Nouveau rendez-vous",
     "edit": "Modifier le rendez-vous",
     "today": "Aujourd'hui",
@@ -1077,6 +1096,13 @@
         "description": "Votre profil, mot de passe et langue."
       }
     },
+    "supergroups": {
+      "clinicalSetup": { "label": "Configuration clinique" },
+      "clinicalManagement": { "label": "Gestion clinique" },
+      "financialConfiguration": { "label": "Configuration financière" },
+      "systemAddons": { "label": "Système et extensions" },
+      "myPreferences": { "label": "Mes préférences" }
+    },
     "search": {
       "placeholder": "Rechercher dans les paramètres…",
       "empty": "Aucun résultat pour cette recherche.",
@@ -1190,6 +1216,8 @@
       "title": "Modules",
       "subtitle": "Installer, désinstaller et mettre à jour les modules de la clinique.",
       "description": "Gérez les modules actifs dans votre clinique.",
+      "searchPlaceholder": "Rechercher des modules…",
+      "filterState": "État",
       "deps": "Dépendances",
       "noDeps": "Aucune dépendance",
       "state": {
@@ -1313,7 +1341,14 @@
       "errorGeneric": "Impossible de créer le patient. Réessayez."
     }
   },
+  "errors": {
+    "loadFailed": "Échec du chargement",
+    "createFailed": "Échec de la création",
+    "updateFailed": "Échec de la mise à jour",
+    "deleteFailed": "Échec de la suppression"
+  },
   "common": {
+    "andMore": "+{count} de plus",
     "save": "Enregistrer",
     "add": "Ajouter",
     "cancel": "Annuler",
@@ -2194,7 +2229,6 @@
     "public": {
       "title": "Votre devis",
       "intro": "{clinic} vous a envoyé ce devis. Examinez les traitements et choisissez une option.",
-      "greeting": "Bonjour, {name}",
       "subtitle": "Votre plan de traitement personnalisé",
       "budgetNumber": "Devis",
       "issuedOn": "Émis le {date}",
@@ -2419,11 +2453,22 @@
       "whatsappUnavailableHint": "WhatsApp n'est pas disponible tant que le numéro de la clinique n'est pas connecté.",
       "whatsappConnect": "Connecter WhatsApp (Kapso)",
       "noEmail": "Le patient n'a pas d'email enregistré",
-      "noPhone": "Le patient n'a pas de téléphone enregistré"
+      "noPhone": "Le patient n'a pas de téléphone enregistré",
+      "sms": "SMS",
+      "smsUnavailableHint": "Les SMS ne sont pas disponibles tant qu'un fournisseur SMS n'est pas configuré.",
+      "smsConnect": "Configurer",
+      "smsDailyLimitLabel": "Limite quotidienne de SMS",
+      "smsDailyLimitHelp": "Nombre maximal de SMS sortants par jour pour la clinique."
     },
     "channelSent": {
       "email": "Email envoyé avec succès",
-      "whatsapp": "Message WhatsApp envoyé avec succès"
+      "whatsapp": "Message WhatsApp envoyé avec succès",
+      "sms": "Message SMS envoyé avec succès"
+    },
+    "prefs": {
+      "title": "Préférences de notification",
+      "description": "Quels canaux peuvent joindre ce patient. Se désinscrire bloque ce canal même pour les envois forcés.",
+      "saved": "Préférences enregistrées"
     }
   },
   "invoice": {
@@ -2815,6 +2860,10 @@
       "missingNumbers": "Numéros manquants :",
       "noData": "Aucune donnée pour la période sélectionnée",
       "noOverdue": "Aucune facture en retard",
+      "invoiceAging": "Ancienneté des factures",
+      "invoiceAgingDescription": "Totaux émis en souffrance par tranche. Le non échu est à part.",
+      "notDue": "Non échues",
+      "issuedTrend": "Tendance émise",
       "daysOverdue": "jours de retard",
       "vatType": "Type de TVA",
       "base": "Base",

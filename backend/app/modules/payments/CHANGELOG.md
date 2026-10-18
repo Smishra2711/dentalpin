@@ -2,11 +2,44 @@
 
 ## Unreleased
 
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer.
+- chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
+
+- feat(i18n): Telugu (`te`) locale for the module's frontend layer.
+- fix(#522): the payments report mixed two date frames. `new Date("YYYY-MM-DD")`
+  is UTC midnight per spec while `setDate` and `toLocaleDateString` read local
+  fields, so the previous-period range and the trend chart's bucket labels
+  could land a day out. Date-only strings now parse through one local
+  `parseDateOnly`, days are counted with `setDate` rather than millisecond
+  arithmetic (DST-safe), and output goes through `toISODate`.
+
+- fix(#506): the payment modal separates *recording* a payment that already
+  happened from *collecting* one now. The manual methods and the gateway rails
+  sat in one flat row under one label, so nothing said that picking `upi`
+  writes a record while picking a gateway starts a collection. The second
+  group does not render when no gateway module is installed.
+
+- feat(#270): `/payments` honors `?patient_id=` on mount (preselects
+  the patient filter) so sibling modules can deep-link collection
+  (orthodontics "Collect installment").
+- fix(#470 review): `PaymentCreateModal`'s default/"today" date now
+  reads `clinicToday()` (clinic-local calendar date) instead of the
+  browser's UTC date — matches the same clinic-local booking the
+  gateway confirmation path now uses for `payment_date`.
+- feat(#232): sidebar entry grouped under the Financials header (`nav.section` "financials").
+- fix(#365): the two post-merge follow-ups from #370 — two *concurrent* `record_payment` calls with one `idempotency_key` no longer 500 on the unique index (savepoint + `IntegrityError` → the loser adopts the winner's row), and the shared `CollectAmountModal` (budget / invoice collect flows) offers `upi` / `netbanking` behind the same IN gate; `useClinicCountry()` moved to the host so host and layer components share one gate.
+
 - feat(#365): payment-gateway prerequisites — `upi` + `netbanking` methods (IN-gated chip in the create modal, labels in all 9 locales); four `payments.*` extension slots (`collect.actions`, `list.row.meta`, `ledger.row.meta`, `detail.sections`) rendering nothing by default; `idempotency_key` on `record_payment` / `POST /payments` / the agent tool with a per-clinic partial unique index (`pay_0005`). The IN gate also covers the list's method filter (`useClinicCountry`), and the refund modal always offers the source payment's method.
+
+- feat(#263): `payments.create.methods` slot — a gateway module (e.g. `razorpay`) adds its own method chips to `PaymentCreateModal` and, on submit, receives the validated form in its own hand-off panel (`created`/`back` contract). The modal itself never learns about provider waiting/expiry states. `payments.list.row.meta` `ctx` now also carries `clinic` for provider country gating, and the desktop row renders it too (it used to exist only in the mobile card).
 
 - fix(#126): ledger treatment names had a bare es → en fallback — items named only in other locales degraded to nothing; now resolved through the shared `app.core.i18n_names.catalog_name` chain with an any-non-empty catch-all.
 
 - feat(#334): Hungarian (hu) locale for the module's frontend layer.
+
+- feat(i18n): Arabic (ar) locale for the module's frontend layer.
+- feat(i18n): the frontend layer's directional spacing, borders, text alignment and inset positioning now resolve against the document direction (physical→logical CSS utilities, Arabic RTL support).
+
 
 - fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
 

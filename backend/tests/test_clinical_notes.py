@@ -395,3 +395,117 @@ def test_resolve_label_falls_back_to_any_locale():
     assert _resolve_label({"de": "Wurzelbehandlung", "es": "Endodoncia"}) == "Endodoncia"
     assert _resolve_label({"de": ""}) is None
     assert _resolve_label(None) is None
+
+
+# ---------------------------------------------------------------------------
+# Editing someone else's note (the admin-override path)
+# ---------------------------------------------------------------------------
+
+
+async def _note_by_another_user(db_session: AsyncSession, clinic_id, patient_id) -> tuple[str, str]:
+    """A note authored by a *different* user, plus that author's id.
+
+    The distinction is the whole point: a note you wrote yourself has its
+    author in the session's identity map already, so the response builds
+    with no database IO and the bug stays hidden.
+    """
+    from app.core.auth.models import User
+    from app.modules.clinical_notes.models import ClinicalNote
+
+    other = User(
+        id=uuid4(),
+        email=f"other-{uuid4().hex[:8]}@test.com",
+        password_hash="x",
+        first_name="Olivia",
+        last_name="Other",
+        is_active=True,
+    )
+    db_session.add(other)
+    await db_session.flush()
+    db_session.add(
+        ClinicMembership(id=uuid4(), user_id=other.id, clinic_id=clinic_id, role="dentist")
+    )
+    note = ClinicalNote(
+        id=uuid4(),
+        clinic_id=clinic_id,
+        note_type="administrative",
+        owner_type="patient",
+        owner_id=patient_id,
+        body="Written by someone else",
+        author_id=other.id,
+    )
+    db_session.add(note)
+    await db_session.commit()
+    return str(note.id), str(other.id)
+
+
+@pytest.mark.asyncio
+async def test_admin_can_edit_a_note_written_by_someone_else(
+    client: AsyncClient,
+    auth_headers: dict[str, str],
+    db_session: AsyncSession,
+    test_clinic,
+    test_patient,
+):
+    """The documented admin override used to 500.
+
+    ``NoteService.update`` did not eager-load ``author``, and
+    ``ClinicalNoteResponse`` declares the field, so building the response
+    lazy-loaded the relationship inside an async session:
+
+        1 validation error for ClinicalNoteResponse
+        author
+          Error extracting attribute: MissingGreenlet: greenlet_spawn has
+          not been called; can't call await_only() here.
+
+    Editing your *own* note never hit it — the author is the caller, so
+    the relationship resolves from the identity map without IO. That is
+    why this path had no test and shipped broken.
+    """
+    note_id, other_id = await _note_by_another_user(db_session, test_clinic.id, test_patient.id)
+
+    resp = await client.patch(
+        f"/api/v1/clinical_notes/notes/{note_id}",
+        headers=auth_headers,
+        json={"body": "Corrected by the admin"},
+    )
+
+    assert resp.status_code == 200, resp.text
+    data = resp.json()["data"]
+    assert data["body"] == "Corrected by the admin"
+    # The author must survive the edit, and stay the original author.
+    assert data["author_id"] == other_id
+    assert data["author"] is not None, "author relationship was not serialised"
+    assert data["author"]["id"] == other_id
+
+
+@pytest.mark.asyncio
+async def test_author_can_still_edit_their_own_note(
+    client: AsyncClient,
+    auth_headers: dict[str, str],
+    db_session: AsyncSession,
+    test_clinic,
+    test_patient,
+):
+    """The path that always worked, pinned so the eager load does not
+    regress it."""
+    created = await client.post(
+        "/api/v1/clinical_notes/notes",
+        headers=auth_headers,
+        json={
+            "note_type": "administrative",
+            "owner_type": "patient",
+            "owner_id": str(test_patient.id),
+            "body": "Mine",
+        },
+    )
+    assert created.status_code == 201, created.text
+    note_id = created.json()["data"]["id"]
+
+    resp = await client.patch(
+        f"/api/v1/clinical_notes/notes/{note_id}",
+        headers=auth_headers,
+        json={"body": "Mine, edited"},
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["data"]["body"] == "Mine, edited"

@@ -31,8 +31,8 @@ test.describe('invite link', () => {
     const page = await ctx.newPage()
     await page.goto(url)
     await page.waitForLoadState('networkidle') // hydrate before typing
-    await page.locator('input[name="password"]').fill('Invitee123')
-    await page.locator('input[name="passwordConfirm"]').fill('Invitee123')
+    await page.locator('input[name="password"]').fill('Invitee12345')
+    await page.locator('input[name="passwordConfirm"]').fill('Invitee12345')
     await page.getByRole('button', { name: /guardar y entrar|save and sign in/i }).click()
     await page.waitForURL(u => u.pathname === '/', { timeout: 15_000 })
     await expect(page.getByRole('heading', { level: 1 })).toContainText(/Invitada/)
@@ -40,15 +40,17 @@ test.describe('invite link', () => {
     // Link is single use
     await page.goto(url)
     await page.waitForLoadState('networkidle')
-    await page.locator('input[name="password"]').fill('Invitee123')
-    await page.locator('input[name="passwordConfirm"]').fill('Invitee123')
+    await page.locator('input[name="password"]').fill('Invitee12345')
+    await page.locator('input[name="passwordConfirm"]').fill('Invitee12345')
     await page.getByRole('button', { name: /guardar y entrar|save and sign in/i }).click()
     await expect(page.getByRole('alert')).toBeVisible()
     await ctx.close()
 
-    // Cleanup: delete the invitee
-    const token = (await loggedIn.context().cookies()).find(c => c.name === 'access_token')?.value
-    const headers = { Authorization: `Bearer ${token}` }
+    // Cleanup: delete the invitee. The admin session is an HttpOnly
+    // cookie (ADR 0023) the request context already carries; the unsafe
+    // DELETE needs the double-submit CSRF header from the readable cookie.
+    const csrf = (await loggedIn.context().cookies()).find(c => c.name === 'dp_csrf')?.value ?? ''
+    const headers = { 'X-CSRF-Token': csrf }
     const users = await loggedIn.request.get(`${API_BASE}/api/v1/auth/users`, { headers })
     const created = (await users.json()).data.find((u: { email: string }) => u.email === EMAIL)
     if (created) await loggedIn.request.delete(`${API_BASE}/api/v1/auth/users/${created.id}`, { headers })

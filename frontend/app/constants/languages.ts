@@ -3,9 +3,13 @@ export const SUPPORTED_LOCALES = [
   'es',
   'fr',
   'pt',
+  'pt-BR',
   'ta',
+  'te',
+  'hi',
   'de',
   'hu',
   'pl',
-  'it'
+  'it',
+  'ar'
 ] as const

@@ -2,9 +2,20 @@
 
 ## Unreleased
 
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer.
+
+- feat(i18n): Telugu (`te`) locale for the module's frontend layer.
+- Subscribe to `prescription.issued` / `prescription.cancelled` (the
+  prescriptions module publishes both transactionally with `db=db`),
+  so issue/cancel lifecycle lands in the journal.
+
+- feat(#232): sidebar entry grouped under the Practice header (`nav.section` "practice").
 - Subscribe to `document.generated` (the documents module publishes it
   transactionally with `db=db`), so generated PDFs land in the journal
   with the acting user (`created_by`) when known.
+
+- feat(i18n): Arabic (ar) locale for the module's frontend layer.
+
 
 ## 0.1.0 — initial release
 

@@ -94,7 +94,9 @@
       "errPatient": "Seleziona un paziente",
       "errAmount": "Inserisci un importo maggiore di 0",
       "errSum": "La somma delle assegnazioni deve corrispondere all'importo",
-      "errUnknown": "Impossibile registrare il pagamento. Riprova."
+      "errUnknown": "Impossibile registrare il pagamento. Riprova.",
+      "methodRecord": "Registra un pagamento già ricevuto",
+      "methodCollect": "Incassa ora"
     },
     "methods": {
       "cash": "Contanti",

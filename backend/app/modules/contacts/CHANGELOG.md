@@ -2,7 +2,15 @@
 
 ## Unreleased
 
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer.
+- test(#552): branch-scoped uninstall round-trip test (heads, branch downgrade, reinstall).
+
+- feat(i18n): Telugu (`te`) locale for the module's frontend layer.
+- feat(#232): sidebar entry grouped under the Inventory header (`nav.section` "inventory").
 - feat(#334): Hungarian (hu) locale for the module's frontend layer.
+
+- feat(i18n): Arabic (ar) locale for the module's frontend layer.
+
 - feat(#131): German (de) locale for the module's frontend layer.
 
 - feat(#144, #132): Polish (pl) and Italian (it) locales for the module's frontend layer.

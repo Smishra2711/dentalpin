@@ -94,7 +94,9 @@
       "errPatient": "Selecciona un paciente",
       "errAmount": "Introduce un importe mayor que 0",
       "errSum": "La suma de asignaciones debe coincidir con el importe",
-      "errUnknown": "No se pudo registrar el cobro. Intenta de nuevo."
+      "errUnknown": "No se pudo registrar el cobro. Intenta de nuevo.",
+      "methodRecord": "Registrar un cobro ya recibido",
+      "methodCollect": "Cobrar ahora"
     },
     "methods": {
       "cash": "Efectivo",

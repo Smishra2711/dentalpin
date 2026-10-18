@@ -1,0 +1,65 @@
+{
+  "nav": {
+    "imagingViewer": "Imaging"
+  },
+  "imagingViewer": {
+    "list": {
+      "title": "DICOM imaging",
+      "empty": "No viewable studies for this patient yet.",
+      "noPatient": "No patient selected",
+      "noPatientHint": "Select a patient above, or open this page with ?patient_id=..., e.g. from the patient record.",
+      "pickPatient": "Select patient",
+      "unknownPatient": "Unknown patient",
+      "searchPatients": "Search patients",
+      "unknownModality": "Unknown modality",
+      "noStudyDate": "No study date"
+    },
+    "viewer": {
+      "title": "DICOM viewer",
+      "unavailable": "Preview unavailable",
+      "fallbackHint": "The study could not be rendered. Try re-uploading the file.",
+      "visualizationNote": "Visualization aid only - never a diagnosis."
+    },
+    "rvg": {
+      "title": "RVG import queue",
+      "empty": "No imports in this view.",
+      "scanNow": "Scan now",
+      "approveSuggestion": "Approve suggestion",
+      "approveCurrentPatient": "Assign to current patient",
+      "reject": "Reject",
+      "suggested": "Suggested patient (score {score})",
+      "ambiguous": "Ambiguous match - pick the patient explicitly",
+      "noSuggestion": "No match - open with ?patient_id= to assign",
+      "loadFailed": "Could not load the RVG queue.",
+      "scanFailed": "Scan failed. Is the watch folder configured?",
+      "scanSummary": "Scan complete: {scanned} scanned, {created} new, {approved} auto-approved, {failed} failed",
+      "actionFailed": "Action failed. The row may already be decided.",
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "failed": "Failed"
+      },
+      "linksTitle": "Linked sensor identities",
+      "linksEmpty": "No linked sensor identities.",
+      "unlink": "Unlink"
+    },
+    "annotations": {
+      "title": "Annotations",
+      "ruler": "Ruler",
+      "freehand": "Draw",
+      "note": "Note",
+      "notePlaceholder": "Annotation text…",
+      "saveNote": "Save note",
+      "deleteLabel": "Delete annotation",
+      "mm": "{mm} mm",
+      "noSpacing": "no pixel spacing — mm unavailable",
+      "kind_ruler": "Ruler",
+      "kind_freehand": "Drawing",
+      "kind_note": "Note",
+      "loadFailed": "Could not load annotations.",
+      "actionFailed": "Action failed. Please retry.",
+      "aidNote": "Overlays are visualization aids only — never a diagnosis."
+    }
+  }
+}

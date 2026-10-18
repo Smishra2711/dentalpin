@@ -150,7 +150,7 @@
 import { PERMISSIONS } from '~~/app/config/permissions'
 import { errorMessage } from '~~/app/utils/error'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { can } = usePermissions()
 const toast = useToast()
 const { listDocuments, deleteDocument, generateDocument: generateDocumentRequest, downloadDocument: downloadDocumentRequest } = useManagedDocuments()
@@ -246,7 +246,7 @@ function openEditModal(doc: ManagedDocument) {
 
 async function generateDocument(doc: ManagedDocument) {
   try {
-    await generateDocumentRequest(doc.id)
+    await generateDocumentRequest(doc.id, locale.value)
     toast.add({ title: t('documents.messages.generated'), color: 'success' })
     await fetchDocuments()
   } catch (error: unknown) {

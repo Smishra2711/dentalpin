@@ -1,7 +1,19 @@
 """Tests for authentication endpoints."""
 
+from collections.abc import AsyncGenerator
+
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.config import settings
+from app.core.auth.models import User
+from app.core.auth.rbac import invalidate_rbac_cache
+from app.core.auth.seed_rbac import seed_rbac
+from app.core.auth.service import create_access_token
+from app.database import get_db
+from app.main import app
 
 
 @pytest.mark.asyncio
@@ -10,6 +22,35 @@ async def test_health_check(client: AsyncClient) -> None:
     response = await client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "healthy"
+
+
+@pytest.mark.asyncio
+async def test_readiness_check_hides_database_error() -> None:
+    """Readiness failures keep database details out of the public body."""
+
+    class FailingSession:
+        async def execute(self, _query: object) -> None:
+            raise RuntimeError("db.internal:5432 SELECT secret FROM users")
+
+    async def override_get_db() -> AsyncGenerator[FailingSession, None]:
+        yield FailingSession()
+
+    previous_override = app.dependency_overrides.get(get_db)
+    try:
+        app.dependency_overrides[get_db] = override_get_db
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/health/ready")
+    finally:
+        if previous_override is None:
+            app.dependency_overrides.pop(get_db, None)
+        else:
+            app.dependency_overrides[get_db] = previous_override
+
+    assert response.status_code == 503
+    assert response.json() == {"status": "unready", "version": "2.0.0"}
+    assert "db.internal" not in response.text
+    assert "SELECT secret" not in response.text
 
 
 _SETUP_PAYLOAD = {
@@ -71,6 +112,17 @@ async def test_setup_rejected_when_initialized(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_password_floor_is_12(client: AsyncClient) -> None:
+    """#354: length beats composition — 11 characters is rejected even with
+    letters and digits; 12 passes the length gate."""
+    resp = await client.post(
+        "/api/v1/auth/setup", json={**_SETUP_PAYLOAD, "admin_password": "Abcdefghij1"}
+    )
+    assert resp.status_code in (400, 422), resp.text
+    assert "12" in resp.text
+
+
+@pytest.mark.asyncio
 async def test_setup_weak_password(client: AsyncClient) -> None:
     """Weak admin passwords are rejected."""
     response = await client.post(
@@ -121,3 +173,77 @@ async def test_me_without_auth(client: AsyncClient) -> None:
     """Test /me endpoint requires authentication."""
     response = await client.get("/api/v1/auth/me")
     assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_update_user_cannot_change_own_role(
+    client: AsyncClient, auth_headers: dict[str, str], test_clinic
+) -> None:
+    """PUT role on your own membership is rejected (#556)."""
+    me = (await client.get("/api/v1/auth/me", headers=auth_headers)).json()["data"]
+    response = await client.put(
+        f"/api/v1/auth/users/{me['user']['id']}",
+        json={"role": "receptionist"},
+        headers=auth_headers,
+    )
+    assert response.status_code == 400, response.text
+    assert "own role" in response.text
+
+
+@pytest.mark.asyncio
+async def test_update_user_cannot_demote_last_admin(
+    client: AsyncClient,
+    auth_headers: dict[str, str],
+    test_clinic,
+    db_session: AsyncSession,
+) -> None:
+    """A non-admin holding admin.users.write still cannot demote the
+    clinic's sole admin (#556)."""
+    me = (await client.get("/api/v1/auth/me", headers=auth_headers)).json()["data"]
+    settings.RBAC_FROM_DB = True
+    try:
+        invalidate_rbac_cache()
+        await seed_rbac(db_session)
+        created_role = await client.post(
+            "/api/v1/roles",
+            json={"name": "usermanager", "permissions": ["admin.users.write"]},
+            headers=auth_headers,
+        )
+        assert created_role.status_code == 201, created_role.text
+        role = created_role.json()["data"]
+        assert role["name"] == "usermanager"
+        created = await client.post(
+            "/api/v1/auth/users",
+            json={
+                "email": "manager@test.clinic",
+                "password": "Str0ngPassw0rd!!",
+                "first_name": "M",
+                "last_name": "G",
+                "role": "usermanager",
+            },
+            headers=auth_headers,
+        )
+        assert created.status_code == 201, created.text
+        manager = (
+            await db_session.execute(select(User).where(User.email == "manager@test.clinic"))
+        ).scalar_one()
+        token = create_access_token(manager.id, token_version=manager.token_version)
+        response = await client.put(
+            f"/api/v1/auth/users/{me['user']['id']}",
+            json={"role": "receptionist"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 400, response.text
+        assert "last admin" in response.text
+    finally:
+        settings.RBAC_FROM_DB = False
+        invalidate_rbac_cache()
+
+
+@pytest.mark.asyncio
+async def test_list_users_lives_under_read(
+    client: AsyncClient, auth_headers: dict[str, str], test_clinic
+) -> None:
+    """GET /users is gated by admin.users.read, not .write (#556)."""
+    response = await client.get("/api/v1/auth/users", headers=auth_headers)
+    assert response.status_code == 200, response.text

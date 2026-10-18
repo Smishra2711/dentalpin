@@ -32,12 +32,42 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-dental}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-dental_clinic}
       SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
-      BUDGET_PUBLIC_SECRET_KEY: ${BUDGET_PUBLIC_SECRET_KEY:-}
+      # Trusted-proxy set for uvicorn's --proxy-headers (#623). NOT "*":
+      # with "*" uvicorn takes the leftmost X-Forwarded-For entry, which
+      # the client controls, so any peer that can reach this port picks
+      # its own login rate-limit bucket and its own audit IP. Restricted,
+      # uvicorn instead walks the header right-to-left and stops at the
+      # first hop outside this set — the real client — which is correct
+      # whether the proxy overwrites or appends. Covers loopback plus
+      # Docker's default address pools (the proxy container's network).
+      # Swarm/k8s (10.0.0.0/8) or a PaaS edge must set their own value.
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1,::1,172.16.0.0/12,192.168.0.0/16}
+      # `console` logs the whole message and reports it sent (#614).
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-console}
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-true}
+      EMAIL_SMTP_HOST: ${EMAIL_SMTP_HOST:-smtp.gmail.com}
+      EMAIL_SMTP_PORT: ${EMAIL_SMTP_PORT:-587}
+      # Real default, not ${X:-}: an empty value fails pydantic bool parsing
+      # at boot (#604).
+      EMAIL_SMTP_TLS: ${EMAIL_SMTP_TLS:-true}
+      EMAIL_SMTP_USER: ${EMAIL_SMTP_USER:-}
+      EMAIL_SMTP_PASSWORD: ${EMAIL_SMTP_PASSWORD:-}
+      EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS:-noreply@dentalpin.com}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-DentalPin}
+      # Required in production since #538 (config.py refuses to boot
+      # without them): generate each with `openssl rand -hex 32`.
+      BUDGET_PUBLIC_SECRET_KEY: ${BUDGET_PUBLIC_SECRET_KEY:?Set BUDGET_PUBLIC_SECRET_KEY in your .env}
+      AGENDA_PUBLIC_SECRET_KEY: ${AGENDA_PUBLIC_SECRET_KEY:?Set AGENDA_PUBLIC_SECRET_KEY in your .env}
+      SENTRY_DSN: ${SENTRY_DSN:-}
       ENVIRONMENT: production
       ALLOWED_ORIGINS: ${PUBLIC_URL:-http://localhost}
       STORAGE_BACKEND: local
       STORAGE_LOCAL_PATH: /app/storage
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
       # Seeds the demo clinic on first boot. Leave at 0 for a real clinic.
       SEED_ON_STARTUP: ${SEED_ON_STARTUP:-0}
       SEED_LANG: ${SEED_LANG:-es}
@@ -62,6 +92,11 @@ services:
       NUXT_PUBLIC_API_BASE_URL: ${PUBLIC_URL:-http://localhost}
       API_BASE_URL_SERVER: http://backend:8000
       NUXT_PUBLIC_DOCS_URL: ${DOCS_URL:-https://docs.dentalpin.com}
+      # Content-Security-Policy rollout (#355): report | enforce | off.
+      # Report-Only by default; violations are logged by the backend
+      # (`grep "csp violation"`). Flip to enforce once the log is quiet.
+      # See docs/technical/security-csp.md.
+      NUXT_CSP_MODE: ${NUXT_CSP_MODE:-report}
     depends_on:
       backend:
         condition: service_started

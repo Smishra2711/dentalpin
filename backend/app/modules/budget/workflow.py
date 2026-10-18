@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 import bcrypt
-from sqlalchemy import func, select, text
+from sqlalchemy import delete, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.events import EventType, event_bus
@@ -41,7 +41,7 @@ PUBLIC_REJECTION_REASONS: set[str] = {"price", "time", "second_opinion", "other"
 # Lockout / rate-limit policy. See ADR 0006.
 PUBLIC_AUTH_FAIL_LIMIT_WINDOW = 5  # failures inside the rolling window
 PUBLIC_AUTH_FAIL_WINDOW = timedelta(minutes=15)
-PUBLIC_AUTH_TOTAL_FAIL_LOCKOUT = 10  # total failures → permanent token lock
+PUBLIC_AUTH_TOTAL_FAIL_LOCKOUT = 10  # total failures → token lock
 PUBLIC_SESSION_TTL = timedelta(minutes=30)
 
 # Default budget validity period when the clinic has no override.
@@ -685,8 +685,21 @@ class BudgetWorkflowService:
         db: AsyncSession,
         budget: Budget,
     ) -> Budget:
-        """Clear ``public_locked_at`` so the existing token works again."""
+        """Clear ``public_locked_at`` so the existing token works again.
+
+        Also drops the budget's *failed* access rows: the lockout counts
+        retained failures, so without this the next wrong guess would
+        re-lock instantly and the recovery would be one-shot. Success
+        rows (views, downloads, decisions) stay for audit. The staff
+        endpoint records the unlock itself in ``BudgetHistory``.
+        """
         budget.public_locked_at = None
+        await db.execute(
+            delete(BudgetAccessLog).where(
+                BudgetAccessLog.budget_id == budget.id,
+                BudgetAccessLog.success.is_(False),
+            )
+        )
         await db.flush()
         return budget
 
@@ -747,7 +760,7 @@ class BudgetWorkflowService:
         - ``method_mismatch`` — caller used the wrong method.
         - ``invalid`` — wrong value.
 
-        On the 10th total failed attempt the function sets
+        On the 10th retained failed attempt the function sets
         ``public_locked_at`` and returns ``(False, "locked")``.
         """
         if budget.public_locked_at is not None:
@@ -786,6 +799,9 @@ class BudgetWorkflowService:
         await db.flush()
 
         if not ok:
+            # The permanent lockout stays budget-wide on purpose: the token
+            # URL is a secret only the patient holds, so for health data a
+            # staff-recoverable lock beats a weaker brute-force bound (#531).
             total_fail_count = (
                 await db.execute(
                     select(func.count(BudgetAccessLog.id)).where(
@@ -840,7 +856,7 @@ class BudgetWorkflowService:
         cloned_by: UUID,
     ) -> Budget:
         """Clone a finished (rejected/expired/cancelled) budget to a new
-        draft (version+1). Used by reception to "Resend" a budget.
+        draft. Used by reception to "Resend" a budget.
 
         The new draft inherits the line items, valid window and plan
         snapshots; it gets a fresh ``public_token`` and re-resolves the
@@ -856,7 +872,7 @@ class BudgetWorkflowService:
             clinic_id=budget.clinic_id,
             patient_id=budget.patient_id,
             budget_number=budget.budget_number,
-            version=budget.version + 1,
+            version=await BudgetService.next_version(db, budget.clinic_id, budget.budget_number),
             parent_budget_id=budget.id,
             status="draft",
             valid_from=datetime.now(UTC).date(),

@@ -20,6 +20,35 @@ export default withNuxt(
     }
   },
   {
+    // #522: `new Date(y, m, d).toISOString().slice(0, 10)` renders a *local*
+    // midnight in UTC, which is the previous day for every zone ahead of it —
+    // wrong at midday in Madrid, Rome, Warsaw, Budapest and Kolkata, not just
+    // near midnight. That shipped in 32 places before anyone noticed, and a
+    // one-off sweep goes stale the moment a module lands (orthodontics
+    // arrived with #505 carrying two fresh copies). `toISODate(d)` reads the
+    // Y-M-D fields off the Date; `clinicToday(tz)` is the one for "today".
+    name: 'dentalpin/dates/no-utc-day-slicing',
+    files: ['app/**/*.{js,ts,vue}', 'module_layers/*/frontend/**/*.{js,ts,vue}'],
+    rules: {
+      'no-restricted-syntax': ['error',
+        {
+          selector:
+            'CallExpression[callee.object.callee.property.name="toISOString"][callee.property.name="slice"]',
+          message:
+            'Use toISODate(d) from ~~/app/utils/wallClock (or clinicToday(tz) for today). '
+            + 'toISOString() renders the instant in UTC, so a local midnight comes back as the previous day (#522).'
+        },
+        {
+          selector:
+            'CallExpression[callee.object.callee.property.name="toISOString"][callee.property.name="split"]',
+          message:
+            'Use toISODate(d) from ~~/app/utils/wallClock (or clinicToday(tz) for today). '
+            + 'toISOString() renders the instant in UTC, so a local midnight comes back as the previous day (#522).'
+        }
+      ]
+    }
+  },
+  {
     // Python bytecode caches under backend/app/modules would otherwise be
     // traversed when `module_layers` is passed as a lint target.
     ignores: ['module_layers/**/__pycache__/**', 'module_layers/**/migrations/**']

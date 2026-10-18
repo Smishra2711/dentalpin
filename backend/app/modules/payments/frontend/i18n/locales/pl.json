@@ -94,7 +94,9 @@
       "errPatient": "Wybierz pacjenta",
       "errAmount": "Wprowadź kwotę większą niż 0",
       "errSum": "Suma przypisań musi być równa kwocie",
-      "errUnknown": "Nie udało się zarejestrować płatności. Spróbuj ponownie."
+      "errUnknown": "Nie udało się zarejestrować płatności. Spróbuj ponownie.",
+      "methodRecord": "Zarejestruj otrzymaną płatność",
+      "methodCollect": "Pobierz teraz"
     },
     "methods": {
       "cash": "Gotówka",

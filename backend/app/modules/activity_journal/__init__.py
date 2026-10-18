@@ -58,6 +58,14 @@ _SUBSCRIBED = [
     EventType.TREATMENT_PLAN_BUDGET_SYNC_REQUESTED,
     # Documents — generated PDFs (publisher passes db=db).
     EventType.DOCUMENT_GENERATED,
+    # Prescriptions — issue/cancel lifecycle (publisher passes db=db).
+    EventType.PRESCRIPTION_ISSUED,
+    EventType.PRESCRIPTION_CANCELLED,
+    # Staff attendance — clock punches (publisher passes db=db).
+    EventType.STAFF_ATTENDANCE_CLOCKED,
+    # Treasury — transfers and corrections (publisher passes db=db).
+    EventType.TREASURY_TRANSFERRED,
+    EventType.TREASURY_CORRECTED,
 ]
 
 
@@ -87,6 +95,7 @@ class ActivityJournalModule(BaseModule):
             "navigation": [
                 {
                     "label": "nav.journal",
+                    "section": "practice",
                     "icon": "i-lucide-history",
                     "to": "/journal",
                     "permission": "activity_journal.read",

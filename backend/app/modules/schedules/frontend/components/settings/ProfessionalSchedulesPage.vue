@@ -2,6 +2,7 @@
 import type { ProfessionalHours, ProfessionalOverride, ProfessionalOverridePayload, WeekdayShifts } from '../../composables/useProfessionalHours'
 import { PERMISSIONS } from '~~/app/config/permissions'
 import { errorDetail } from '~~/app/utils/error'
+import { toISODate } from '~~/app/utils/wallClock'
 
 const { t } = useI18n()
 const toast = useToast()
@@ -43,8 +44,8 @@ const editingOverride = ref<ProfessionalOverride | null>(null)
 // `null` when building the payload.
 type OverrideForm = Omit<ProfessionalOverridePayload, 'reason'> & { reason: string }
 const overrideForm = ref<OverrideForm>({
-  start_date: new Date().toISOString().slice(0, 10),
-  end_date: new Date().toISOString().slice(0, 10),
+  start_date: toISODate(new Date()),
+  end_date: toISODate(new Date()),
   kind: 'unavailable',
   reason: '',
   shifts: []
@@ -92,7 +93,7 @@ async function save() {
 
 function openAddOverride() {
   editingOverride.value = null
-  const today = new Date().toISOString().slice(0, 10)
+  const today = toISODate(new Date())
   overrideForm.value = {
     start_date: today,
     end_date: today,

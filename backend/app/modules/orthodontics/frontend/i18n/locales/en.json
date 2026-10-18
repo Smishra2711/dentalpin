@@ -1,0 +1,127 @@
+{
+  "orthodontics": {
+    "tab": {
+      "label": "Orthodontics"
+    },
+    "nav": {
+      "title": "Orthodontics"
+    },
+    "appliance": {
+      "brackets_metal": "Metal brackets",
+      "brackets_esthetic": "Esthetic brackets",
+      "self_ligating": "Self-ligating",
+      "aligners": "Aligners",
+      "functional": "Functional",
+      "retention": "Retention"
+    },
+    "status": {
+      "active": "Active",
+      "paused": "Paused",
+      "finished": "Finished",
+      "transferred_out": "Transferred out",
+      "session_pending": "Pending",
+      "session_completed": "Completed"
+    },
+    "inbox": {
+      "title": "Orthodontics",
+      "active": "Active",
+      "overdue": "Overdue control",
+      "unscheduled": "No next control",
+      "finished": "Finished",
+      "new": "New case",
+      "empty": "No cases in this view",
+      "nextDue": "Next control",
+      "monthOf": "Month {x} of ~{n}"
+    },
+    "case": {
+      "new": "New orthodontic case",
+      "appliance": "Appliance",
+      "professional": "Orthodontist",
+      "startDate": "Start date",
+      "estimatedMonths": "Estimated months",
+      "notes": "Diagnosis / objectives",
+      "create": "Open case",
+      "inMouthNow": "In mouth now",
+      "upper": "Upper",
+      "lower": "Lower",
+      "noWire": "No wire recorded",
+      "changeStatus": "Change status",
+      "statusNote": "Reason (optional)",
+      "save": "Save",
+      "none": "No orthodontic case yet"
+    },
+    "control": {
+      "new": "Register control",
+      "wires": "Archwires (no change by default)",
+      "procedures": "Procedures",
+      "proceduresOther": "Other procedures",
+      "hygiene": "Hygiene",
+      "hygiene_good": "Good",
+      "hygiene_fair": "Fair",
+      "hygiene_poor": "Poor",
+      "alignerNumber": "Aligner number",
+      "notes": "Observations / instructions",
+      "nextControl": "Next control",
+      "weeks": "{n} weeks",
+      "noNext": "No next control",
+      "save": "Save control",
+      "history": "Controls",
+      "empty": "No controls yet",
+      "appointment": "Appointment",
+      "session": "Linked session",
+      "sessionHint": "Reference only - collecting happens in Payments."
+    },
+    "card": {
+      "title": "Orthodontics",
+      "noCase": "No active case",
+      "view": "Open"
+    },
+    "photos": {
+      "title": "Photos ({n})",
+      "upload": "Add photo"
+    },
+    "procedures": {
+      "power_chain": "Power chain",
+      "elastics_class_2": "Class II elastics",
+      "elastics_class_3": "Class III elastics",
+      "niti_open_coil": "NiTi open coil",
+      "metal_ligature": "Metal ligature",
+      "ligature_change": "Ligature change",
+      "button_attachment": "Button / attachment",
+      "ipr": "IPR",
+      "bite_turbos": "Bite turbos",
+      "bracket_rebonding": "Bracket rebonding",
+      "expander_activation": "Expander activation",
+      "band_placement": "Band placement",
+      "bracket_removal": "Bracket removal",
+      "retainer_placement": "Retainer placement"
+    },
+    "errors": {
+      "saveFailed": "Could not save. Please try again.",
+      "loadFailed": "Could not load orthodontic data."
+    },
+    "plan": {
+      "title": "Treatment plan",
+      "link": "Link plan",
+      "unlink": "Unlink plan",
+      "noLink": "No plan linked (transfer patients can track without one)",
+      "completed": "{n} completed",
+      "pending": "{n} pending",
+      "generate": "Generate installments",
+      "collect": "Collect installment",
+      "confirmUnlink": "Unlink the treatment plan?",
+      "downPayment": "Down payment",
+      "installmentN": "Installment {n}",
+      "months": "Months",
+      "monthlyAmount": "Monthly amount",
+      "pendingTotal": "Pending total: {n}",
+      "closeSuggested": "Case transferred out with a linked plan: consider closing the plan."
+    },
+    "settings": {
+      "title": "Chip catalogs",
+      "wires": "Archwires (one per line)",
+      "procedures": "Procedures (one per line)",
+      "save": "Save catalogs"
+    }
+  }
+}

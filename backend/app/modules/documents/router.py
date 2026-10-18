@@ -19,6 +19,7 @@ from app.core.auth.dependencies import (
     get_clinic_context,
     require_permission,
 )
+from app.core.pdf_locales import PDF_LOCALE_PATTERN
 from app.core.schemas import ApiResponse, PaginatedApiResponse
 from app.database import get_db
 
@@ -250,7 +251,7 @@ async def generate_document(
     ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
     _: Annotated[None, Depends(require_permission("documents.write"))],
     db: Annotated[AsyncSession, Depends(get_db)],
-    locale: str = Query(default="es", pattern="^(es|en)$"),
+    locale: str = Query(default="es", pattern=PDF_LOCALE_PATTERN),
 ) -> ApiResponse[DocumentResponse]:
     """Generate (render) a document as a branded PDF.
 

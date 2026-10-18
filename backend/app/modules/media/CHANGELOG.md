@@ -2,6 +2,39 @@
 
 ## Unreleased
 
+- fix(#631): the document card's view tooltip used `common.view`, which
+  exists in no locale file, so it rendered the key string; it now reuses
+  `common.viewDetails`, matching the button's own `aria-label`. The
+  before/after pairing toast uses the existing `photoGallery.pair.paired`
+  instead of a hardcoded English default, so it is translated.
+- feat(#657): owns the `media` GDPR erasure coverage scope
+  (`get_erasure_contributors()`). Imaging, clinical photos and uploaded
+  patient files are retained as care records (Art. 17(3)(c)/(h)). One of
+  the three scopes that replaced `gdpr`'s hardcoded `clinical` row.
+
+- fix: the download `Content-Disposition` filename is sanitized (quotes,
+  backslashes and control characters stripped, `document` fallback) — the
+  stored name comes from the uploader and must never reach the header
+  verbatim.
+- fix: gallery and photo-upload preview render a generic placeholder for
+  non-image files (e.g. DICOM) instead of a broken `<img>`.
+- fix: `application/octet-stream` uploads pass validation when the
+  filename ends in `.dcm` (browsers sniff DICOM that way) — the
+  viewer's `DICM` magic check, not the mime, decides radiology.
+  Anything else stays rejected.
+- fix(events): `create_document` publishes `document.uploaded` /
+  `media.photo_uploaded` transactionally (`db=db`, ADR 0019) — any
+  subscriber declaring a `db` handler (e.g. imaging_viewer's DICOM
+  auto-index) previously crashed every photo/X-ray upload with
+  RuntimeError; the index now shares the upload's session.
+- fix(#452): the document list, delete and update go through `useApi` (401 → refresh → retry, CSRF, SSR cookies); the upload stays on `$fetch` for FormData/progress and retries once after `auth.refresh()` on 401, ending the session when the refresh fails.
+
+- fix(#431 review round 3): `unarchive_patient_documents` docstring
+  says every archived document is restored (matches the query).
+- fix(#431 review): `patient.restored` handler reverses the document
+  archive cascade (transactional).
+- feat(i18n): the frontend layer's directional spacing, borders, text alignment and inset positioning now resolve against the document direction (physical→logical CSS utilities, Arabic RTL support).
+
 - fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
 
 - fix(#127): every icon-only button in the module's frontend has an i18n-sourced `aria-label` (screen readers announced them as just "button").

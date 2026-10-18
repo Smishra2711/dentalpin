@@ -93,8 +93,22 @@ export function useManagedDocuments() {
     await api.del<null>(`/api/v1/documents/${id}`)
   }
 
-  async function generateDocument(document_id: string): Promise<ApiResponse<ManagedDocument>> {
-    return api.post<ApiResponse<ManagedDocument>>('/api/v1/documents/generate', { document_id })
+  /**
+   * Render the document as a PDF in `locale`.
+   *
+   * The endpoint used to accept only `es|en` and this call sent nothing,
+   * so every clinic got a Spanish referral letter whatever its language
+   * (#524). It now accepts every host locale, same as the budget and
+   * purchase-order PDFs since #485 — pass the UI locale.
+   */
+  async function generateDocument(
+    document_id: string,
+    locale = 'es'
+  ): Promise<ApiResponse<ManagedDocument>> {
+    return api.post<ApiResponse<ManagedDocument>>(
+      `/api/v1/documents/generate?locale=${encodeURIComponent(locale)}`,
+      { document_id }
+    )
   }
 
   /**
@@ -104,17 +118,7 @@ export function useManagedDocuments() {
    * ``Content-Disposition`` filename preserved.
    */
   async function downloadDocument(document_id: string): Promise<void> {
-    const baseUrl = useRuntimeConfig().public.apiBaseUrl
-    const auth = useAuth()
-
-    const response = await fetch(
-      `${baseUrl}/api/v1/documents/${document_id}/download`,
-      {
-        headers: {
-          Authorization: `Bearer ${auth.accessToken.value}`
-        }
-      }
-    )
+    const response = await api.raw(`/api/v1/documents/${document_id}/download`)
 
     if (!response.ok) {
       const body = await response.json().catch(() => null)

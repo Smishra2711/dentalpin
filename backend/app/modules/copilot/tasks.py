@@ -32,7 +32,7 @@ from app.core.agents.context import AgentContext, AgentMode
 from app.core.agents.service import AgentService
 from app.core.agents.tools.registry import tool_registry
 from app.core.auth.models import ClinicMembership, User
-from app.core.auth.permissions import get_role_permissions
+from app.core.auth.rbac import granted_permissions_for
 from app.core.email.service import EmailService
 from app.core.events import event_bus
 from app.core.events.types import EventType
@@ -51,10 +51,13 @@ _SUBJECT = {
     "fr": "Briefing du jour — {clinic_name}",
     "pt": "Briefing do dia — {clinic_name}",
     "ta": "இன்றைய சுருக்கம் — {clinic_name}",
+    "te": "ఈరోజు సారాంశం — {clinic_name}",
+    "hi": "आज का सारांश — {clinic_name}",
     "de": "Tagesbriefing — {clinic_name}",
     "hu": "Napi összefoglaló — {clinic_name}",
     "pl": "Poranne podsumowanie — {clinic_name}",
     "it": "Briefing del giorno — {clinic_name}",
+    "ar": "الملخص اليومي — {clinic_name}",
 }
 
 
@@ -115,7 +118,7 @@ async def _digest_context(
         session_id=session.id,
         clinic_id=clinic_id,
         mode=AgentMode.AUTONOMOUS,
-        permissions=get_role_permissions(role),
+        permissions=await granted_permissions_for(db, clinic_id, role),
         tools=tool_registry,
         db=db,
         supervisor_id=user.id,

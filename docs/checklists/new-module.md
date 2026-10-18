@@ -54,7 +54,7 @@ Every module is agent-addressable. Expose the operations an AI agent should be a
 - [ ] Each handler **wraps an existing service method** — no business logic duplicated
 - [ ] Each handler filters by `ctx.clinic_id` (multi-tenancy — same rule as routers)
 - [ ] Handlers return **native values** (UUID/Decimal/datetime/Pydantic) — `jsonify` at the chokepoint coerces; no manual `str()`/`.isoformat()`/`float()`
-- [ ] PII fields use redactor-known keys (`full_name`, `phone`, `email`, `dni`, `*_id`) so they tokenize before reaching the cloud
+- [ ] PII fields use redactor-known keys (`full_name`, `phone`, `email`, `dni`, `date_of_birth`, `*_id`) so they tokenize before reaching the cloud
 - [ ] `permissions=[...]` matches the gating RBAC string the HTTP route uses
 - [ ] `category` set conservatively: `WRITE` for mutations, `DESTRUCTIVE` for deletes / irreversible side-effects
 - [ ] `exposes_free_text=True` on any tool returning free prose (excluded from the cloud LLM path under redaction)
@@ -66,6 +66,7 @@ Every module is agent-addressable. Expose the operations an AI agent should be a
 - [ ] `backend/app/modules/<name>/frontend/` exists with `nuxt.config.ts`, `pages/`, `components/`
 - [ ] `manifest["frontend"]["layer_path"] = "frontend"`
 - [ ] Navigation entries declared in `manifest["frontend"]["navigation"]` with namespaced `permission`
+- [ ] Each sidebar entry self-places under one of the canonical `section` keys (`clinical`, `lab`, `financials`, `inventory`, `practice`) per the mapping in `docs/technical/creating-modules.md` §Backend-driven navigation; integration modules that fit no cluster stay flat
 
 ## Tests
 

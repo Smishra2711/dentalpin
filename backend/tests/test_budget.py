@@ -1237,3 +1237,166 @@ async def test_absolute_global_discount_total_and_net_lines_agree(
     assert Decimal(data["total"]) == Decimal("270.00")
     assert Decimal(data["total_discount"]) == Decimal("30.00")
     assert sum(Decimal(i["net_line_total"]) for i in data["items"]) == Decimal(data["total"])
+
+
+@pytest.mark.asyncio
+async def test_budget_pdf_endpoints_accept_every_ui_language(
+    client: AsyncClient, auth_headers: dict, budget_clinic_setup: dict
+):
+    """#441: the pages send the viewer's language, so a locale the app ships
+    must not be refused before the budget is even looked up. A missing budget
+    answers 404 — what matters is that it is not a 422 from validation."""
+    missing = uuid4()
+    for path in (
+        f"/api/v1/budget/budgets/{missing}/pdf",
+        f"/api/v1/budget/budgets/{missing}/pdf/signed",
+        f"/api/v1/budget/budgets/{missing}/pdf/preview",
+    ):
+        for locale in ("es", "en", "de", "hu", "ar"):
+            resp = await client.get(f"{path}?locale={locale}", headers=auth_headers)
+            assert resp.status_code == 404, (path, locale, resp.status_code)
+        assert (await client.get(f"{path}?locale=xx", headers=auth_headers)).status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# assigned_professional_id is a bare FK to users (tenancy)
+# ---------------------------------------------------------------------------
+
+
+async def _foreign_professional(db_session: AsyncSession) -> str:
+    """A professional who is a member of some *other* clinic."""
+    from app.core.auth.models import User
+
+    other_clinic = Clinic(
+        id=uuid4(),
+        name="Other Clinic",
+        tax_id="X99999999",
+        address={"street": "elsewhere", "city": "Vigo"},
+        settings={},
+    )
+    user = User(
+        id=uuid4(),
+        email=f"foreign-{uuid4().hex[:8]}@other.test",
+        password_hash="x",
+        first_name="Foreign",
+        last_name="Professional",
+        is_active=True,
+    )
+    db_session.add_all([other_clinic, user])
+    await db_session.flush()
+    db_session.add(
+        ClinicMembership(
+            id=uuid4(),
+            user_id=user.id,
+            clinic_id=other_clinic.id,
+            role="dentist",
+            is_professional=True,
+        )
+    )
+    await db_session.commit()
+    return str(user.id)
+
+
+async def _draft_budget(client: AsyncClient, auth_headers: dict, setup: dict) -> str:
+    created = await client.post(
+        "/api/v1/budget/budgets",
+        json={"patient_id": setup["patient_id"], "valid_from": "2024-01-01"},
+        headers=auth_headers,
+    )
+    assert created.status_code == 201, created.text
+    return created.json()["data"]["id"]
+
+
+@pytest.mark.asyncio
+async def test_update_rejects_a_professional_from_another_clinic(
+    client: AsyncClient, auth_headers: dict, db_session: AsyncSession, budget_clinic_setup: dict
+):
+    """``assigned_professional_id`` is a plain FK to ``users``, so without a
+    membership check a budget could name — and then render back — a user
+    belonging to a different clinic. It used to answer 200 and persist."""
+    budget_id = await _draft_budget(client, auth_headers, budget_clinic_setup)
+    foreign_id = await _foreign_professional(db_session)
+
+    resp = await client.put(
+        f"/api/v1/budget/budgets/{budget_id}",
+        json={"assigned_professional_id": foreign_id},
+        headers=auth_headers,
+    )
+
+    assert resp.status_code == 400, resp.text
+    assert "Invalid professional" in resp.json()["message"]
+
+    # And nothing was written.
+    after = await client.get(f"/api/v1/budget/budgets/{budget_id}", headers=auth_headers)
+    assert after.json()["data"]["assigned_professional_id"] is None
+
+
+@pytest.mark.asyncio
+async def test_update_rejects_an_unknown_professional_with_400_not_500(
+    client: AsyncClient, auth_headers: dict, budget_clinic_setup: dict
+):
+    """An id that matches no user used to reach the database and come back
+    as a ForeignKeyViolation, i.e. a 500 for what is a bad request."""
+    budget_id = await _draft_budget(client, auth_headers, budget_clinic_setup)
+
+    resp = await client.put(
+        f"/api/v1/budget/budgets/{budget_id}",
+        json={"assigned_professional_id": str(uuid4())},
+        headers=auth_headers,
+    )
+
+    assert resp.status_code == 400, resp.text
+
+
+@pytest.mark.asyncio
+async def test_create_rejects_a_professional_from_another_clinic(
+    client: AsyncClient, auth_headers: dict, db_session: AsyncSession, budget_clinic_setup: dict
+):
+    """The create path takes the same field and had the same gap."""
+    foreign_id = await _foreign_professional(db_session)
+
+    resp = await client.post(
+        "/api/v1/budget/budgets",
+        json={
+            "patient_id": budget_clinic_setup["patient_id"],
+            "valid_from": "2024-01-01",
+            "assigned_professional_id": foreign_id,
+        },
+        headers=auth_headers,
+    )
+
+    assert resp.status_code == 400, resp.text
+
+
+@pytest.mark.asyncio
+async def test_assigning_a_real_professional_returns_the_nested_object(
+    client: AsyncClient, auth_headers: dict, db_session: AsyncSession, budget_clinic_setup: dict
+):
+    """The caller's own user is an admin member; make them a professional
+    and assign them. The PUT response used to carry the new id with a
+    stale ``assigned_professional`` (null, or the previous doctor) because
+    the reload hit the identity map with the relationship already loaded."""
+    from sqlalchemy import update as sa_update
+
+    await db_session.execute(
+        sa_update(ClinicMembership)
+        .where(
+            ClinicMembership.clinic_id == UUID(budget_clinic_setup["clinic_id"]),
+            ClinicMembership.user_id == UUID(budget_clinic_setup["user_id"]),
+        )
+        .values(is_professional=True)
+    )
+    await db_session.commit()
+
+    budget_id = await _draft_budget(client, auth_headers, budget_clinic_setup)
+    resp = await client.put(
+        f"/api/v1/budget/budgets/{budget_id}",
+        json={"assigned_professional_id": budget_clinic_setup["user_id"]},
+        headers=auth_headers,
+    )
+
+    assert resp.status_code == 200, resp.text
+    data = resp.json()["data"]
+    assert data["assigned_professional_id"] == budget_clinic_setup["user_id"]
+    assert data["assigned_professional"] is not None, "stale relationship on the PUT response"
+    assert data["assigned_professional"]["id"] == budget_clinic_setup["user_id"]

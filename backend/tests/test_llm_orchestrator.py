@@ -136,6 +136,33 @@ async def test_simple_text_turn_yields_final_and_usage() -> None:
 
 
 @pytest.mark.asyncio
+async def test_turn_bound_fails_closed_without_budget() -> None:
+    """An endless tool loop ends in BudgetExceeded, not a hang (#536)."""
+    reg = _FakeRegistry({"m.echo": _tool("echo", ToolCategory.READ)})
+    scripts = [[ToolUse(f"t{i}", "m.echo", {}), Done("tool_calls")] for i in range(4)]
+    provider = _FakeProvider(scripts)
+    history = [ProviderMessage(Role.USER, [TextBlock("hi")])]
+
+    events = await _collect(
+        run_turn(
+            ctx=_ctx(reg),
+            provider=provider,
+            system="s",
+            history=history,
+            tool_names=["m.echo"],
+            redactor=Redactor(enabled=False),
+            model="gpt-4.1",
+            budget=None,
+            max_iterations=3,
+        )
+    )
+
+    assert len(provider.calls) == 3
+    assert isinstance(events[-1], BudgetExceeded)
+    assert not any(isinstance(e, Final) for e in events)
+
+
+@pytest.mark.asyncio
 async def test_read_tool_executes_then_answers() -> None:
     reg = _FakeRegistry({"m.echo": _tool("echo", ToolCategory.READ)})
     provider = _FakeProvider(
@@ -282,12 +309,73 @@ def test_redactor_replaces_known_entity_in_free_text() -> None:
     assert "María González" not in redacted[0].content[0].text
 
 
+def test_redactor_tokenizes_date_of_birth() -> None:
+    # get_patient returns date_of_birth as a date; the registry jsonifies
+    # it to an ISO string before the redactor sees it (#534).
+    from datetime import date
+
+    from app.core.agents.tooling import jsonify
+
+    r = Redactor(enabled=True)
+    msg = ProviderMessage(
+        Role.TOOL,
+        [
+            ToolResultBlock(
+                "c1",
+                jsonify(
+                    {
+                        "date_of_birth": date(1985, 3, 14),
+                        "dob": date(1990, 1, 2),
+                        "birth_date": date(2001, 12, 31),
+                    }
+                ),
+            )
+        ],
+    )
+    content = r.redact_outgoing([msg])[0].content[0].content
+    for key in ("date_of_birth", "dob", "birth_date"):
+        assert isinstance(content[key], str) and content[key].startswith("DOB_"), key
+    assert r.rehydrate(content["date_of_birth"]) == "1985-03-14"
+
+
+def test_salted_tokens_are_stable_for_one_salt() -> None:
+    """Turn-to-turn stability: same salt + value rebuilds the same token."""
+    first = Redactor(enabled=True, salt="aa" * 16).table.tokenize("1985-03-14", "DOB")
+    second = Redactor(enabled=True, salt="aa" * 16).table.tokenize("1985-03-14", "DOB")
+    assert first == second
+
+
+def test_salted_tokens_differ_across_salts() -> None:
+    """Cross-conversation unlinkability (#586)."""
+    a = Redactor(enabled=True, salt="aa" * 16).table.tokenize("1985-03-14", "DOB")
+    b = Redactor(enabled=True, salt="bb" * 16).table.tokenize("1985-03-14", "DOB")
+    assert a != b
+
+
+def test_salted_token_is_12_hex() -> None:
+    import re
+
+    token = Redactor(enabled=True, salt="aa" * 16).table.tokenize("600123123", "PHONE")
+    assert re.fullmatch(r"PHONE_[0-9a-f]{12}", token), token
+
+
+def test_salted_round_trip() -> None:
+    r = Redactor(enabled=True, salt="cc" * 16)
+    msg = ProviderMessage(
+        Role.TOOL,
+        [ToolResultBlock("c1", {"full_name": "María González"})],
+    )
+    token = r.redact_outgoing([msg])[0].content[0].content["full_name"]
+    assert token != "María González"
+    assert r.rehydrate(token) == "María González"
+
+
 # --- factory -------------------------------------------------------------
 
 
 def test_factory_rejects_unsupported_provider() -> None:
     with pytest.raises(LLMConfigError):
-        get_provider("gemini")
+        get_provider("not-a-provider")
 
 
 def test_openai_name_roundtrip() -> None:
@@ -327,6 +415,103 @@ def test_anthropic_provider_requires_key() -> None:
 
     with pytest.raises(LLMConfigError):
         AnthropicProvider(api_key="")
+
+
+# --- gemini provider -----------------------------------------------------
+
+
+def test_gemini_provider_requires_key() -> None:
+    from app.core.llm.gemini_provider import GeminiProvider
+
+    with pytest.raises(LLMConfigError, match="GEMINI_API_KEY"):
+        GeminiProvider(api_key="")
+
+
+def test_gemini_provider_targets_compat_endpoint() -> None:
+    # The whole point of the adapter: the openai SDK pointed at Google's
+    # OpenAI-compatible base URL, so the OpenAI wire format is reused as-is.
+    from app.core.llm.gemini_provider import (
+        GEMINI_OPENAI_COMPAT_BASE_URL,
+        GeminiProvider,
+    )
+
+    provider = GeminiProvider(api_key="test-key")
+    assert str(provider._client.base_url) == GEMINI_OPENAI_COMPAT_BASE_URL
+
+
+def test_gemini_spec_shape() -> None:
+    from app.config import settings
+    from app.core.llm.factory import GEMINI_SPEC
+    from app.core.llm.gemini_provider import GeminiProvider
+    from app.core.llm.spec import ProviderConfig
+
+    assert GEMINI_SPEC.name == "gemini"
+    assert GEMINI_SPEC.tool_dialect == "openai"
+    assert GEMINI_SPEC.api_key_setting == "GEMINI_API_KEY"
+    assert GEMINI_SPEC.default_model == settings.COPILOT_MODEL_CHAT_GEMINI
+    provider = GEMINI_SPEC.factory(ProviderConfig(api_key="test-key"))
+    assert isinstance(provider, GeminiProvider)
+
+
+# --- openrouter + groq providers -------------------------------------------
+
+
+def test_openrouter_provider_requires_key() -> None:
+    from app.core.llm.openrouter_provider import OpenRouterProvider
+
+    with pytest.raises(LLMConfigError, match="OPENROUTER_API_KEY"):
+        OpenRouterProvider(api_key="")
+
+
+def test_groq_provider_requires_key() -> None:
+    from app.core.llm.groq_provider import GroqProvider
+
+    with pytest.raises(LLMConfigError, match="GROQ_API_KEY"):
+        GroqProvider(api_key="")
+
+
+def test_openrouter_provider_targets_compat_endpoint() -> None:
+    from app.core.llm.openrouter_provider import (
+        OPENROUTER_BASE_URL,
+        OpenRouterProvider,
+    )
+
+    provider = OpenRouterProvider(api_key="test-key")
+    assert str(provider._client.base_url) == OPENROUTER_BASE_URL
+
+
+def test_groq_provider_targets_compat_endpoint() -> None:
+    from app.core.llm.groq_provider import GROQ_OPENAI_COMPAT_BASE_URL, GroqProvider
+
+    provider = GroqProvider(api_key="test-key")
+    assert str(provider._client.base_url) == GROQ_OPENAI_COMPAT_BASE_URL
+
+
+def test_openrouter_groq_spec_shape() -> None:
+    from app.config import settings
+    from app.core.llm.factory import GROQ_SPEC, OPENROUTER_SPEC
+    from app.core.llm.groq_provider import GroqProvider
+    from app.core.llm.openrouter_provider import OpenRouterProvider
+    from app.core.llm.spec import ProviderConfig
+
+    for spec, cls, key, model in (
+        (
+            OPENROUTER_SPEC,
+            OpenRouterProvider,
+            "OPENROUTER_API_KEY",
+            settings.COPILOT_MODEL_CHAT_OPENROUTER,
+        ),
+        (
+            GROQ_SPEC,
+            GroqProvider,
+            "GROQ_API_KEY",
+            settings.COPILOT_MODEL_CHAT_GROQ,
+        ),
+    ):
+        assert spec.tool_dialect == "openai"
+        assert spec.api_key_setting == key
+        assert spec.default_model == model
+        assert isinstance(spec.factory(ProviderConfig(api_key="test-key")), cls)
 
 
 def test_anthropic_message_mapping_merges_tool_results_into_user_turn() -> None:

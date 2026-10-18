@@ -11,18 +11,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings as app_settings
 from app.core.agents.models import Agent, AgentAuditLog
-from app.core.llm.base import ContentBlock
+from app.core.llm.base import ContentBlock, LLMConfigError
+from app.core.llm.factory import get_configured_api_key, get_provider_spec
 
 from .models import CopilotConversation, CopilotMessage, CopilotNudge, CopilotSettings
 from .serde import content_to_json
 
 # agent_audit_logs.status values that count as a failed tool call.
 _FAILED_STATUSES = ("FAILED", "BLOCKED")
-
-_DEFAULT_MODEL_BY_PROVIDER = {
-    "openai": app_settings.COPILOT_MODEL_CHAT_OPENAI,
-    "anthropic": app_settings.COPILOT_MODEL_CHAT_ANTHROPIC,
-}
 
 
 class CopilotSettingsService:
@@ -33,10 +29,11 @@ class CopilotSettingsService:
         row = await db.get(CopilotSettings, clinic_id)
         if row is not None:
             return CopilotSettingsService._roll_period(row)
+        default_spec = get_provider_spec(app_settings.COPILOT_PROVIDER_DEFAULT)
         row = CopilotSettings(
             clinic_id=clinic_id,
-            provider=app_settings.COPILOT_PROVIDER_DEFAULT,
-            model=app_settings.COPILOT_MODEL_CHAT_OPENAI,
+            provider=default_spec.name,
+            model=default_spec.default_model,
             redaction_enabled=app_settings.COPILOT_REDACTION_DEFAULT,
             period_start=datetime.now(UTC).date().replace(day=1),
         )
@@ -66,19 +63,20 @@ class CopilotSettingsService:
         # Validate only when the caller is changing the provider; otherwise a
         # digest-only PATCH would fail on clinics whose stored provider is
         # "openai" but whose deployment has no key (the digest is no-LLM).
-        if data.get("provider") == "openai" and not app_settings.OPENAI_API_KEY:
-            raise ValueError("OpenAI provider selected but OPENAI_API_KEY is not configured")
-        if data.get("provider") == "anthropic" and not app_settings.ANTHROPIC_API_KEY:
-            raise ValueError("Anthropic provider selected but ANTHROPIC_API_KEY is not configured")
-        # Switching provider without naming a model would leave the other
-        # vendor's model id behind — fall back to the new provider's default.
-        if (
-            data.get("provider")
-            and data["provider"] != row.provider
-            and not data.get("model")
-            and data["provider"] in _DEFAULT_MODEL_BY_PROVIDER
-        ):
-            data = {**data, "model": _DEFAULT_MODEL_BY_PROVIDER[data["provider"]]}
+        provider_name = data.get("provider")
+        if provider_name is not None:
+            try:
+                spec = get_provider_spec(provider_name)
+            except LLMConfigError as exc:
+                raise ValueError(str(exc)) from exc
+            if spec.needs_api_key and not get_configured_api_key(spec):
+                raise ValueError(
+                    f"{spec.label} provider selected but {spec.api_key_setting} is not configured"
+                )
+            # Switching provider without naming a model would leave the other
+            # vendor's model id behind — use the registered provider's default.
+            if provider_name != row.provider and not data.get("model"):
+                data = {**data, "model": spec.default_model}
         for field in (
             "provider",
             "model",
@@ -110,7 +108,7 @@ class CopilotSettingsService:
         """Reject recipient ids that aren't active members of the clinic.
 
         A digest recipient must have a clinic role — the task scopes their
-        email to ``get_role_permissions(role)``. Importing the core
+        email to their effective grant set (flag-aware). Importing the core
         membership model is allowed (it's core, not another module).
         """
         if not user_ids:
@@ -168,8 +166,10 @@ class NudgeService:
     @staticmethod
     async def list_active(db: AsyncSession, clinic_id: UUID, *, role: str) -> list[CopilotNudge]:
         """Pending, non-expired nudges the viewer's role is allowed to act on."""
-        from app.core.auth.permissions import has_permission
+        from app.core.auth.permissions import permission_matches
+        from app.core.auth.rbac import granted_permissions_for
 
+        granted = await granted_permissions_for(db, clinic_id, role)
         rows = (
             (
                 await db.execute(
@@ -189,7 +189,8 @@ class NudgeService:
         return [
             n
             for n in rows
-            if n.required_permission is None or has_permission(role, n.required_permission)
+            if n.required_permission is None
+            or any(permission_matches(n.required_permission, g) for g in granted)
         ]
 
     @staticmethod
@@ -219,7 +220,7 @@ class PendingService:
         from app.core.agents.models import AgentSession
         from app.core.agents.service import AgentService
         from app.core.agents.tools.registry import tool_registry
-        from app.core.auth.permissions import get_role_permissions
+        from app.core.auth.rbac import granted_permissions_for
 
         from .bridge import COPILOT_GUARDRAILS
 
@@ -253,7 +254,7 @@ class PendingService:
             session_id=session.id,
             clinic_id=clinic_id,
             mode=AgentMode.AUTONOMOUS,
-            permissions=get_role_permissions(role),
+            permissions=await granted_permissions_for(db, clinic_id, role),
             tools=tool_registry,
             db=db,
             supervisor_id=user_id,

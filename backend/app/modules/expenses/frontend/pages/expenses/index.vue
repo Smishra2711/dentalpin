@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { PERMISSIONS } from '~~/app/config/permissions'
 import { useExpenses, type Expense, type ExpenseCategory, type ExpenseMonthlyTotal } from '../../composables/useExpenses'
+import { toISODate } from '~~/app/utils/wallClock'
 
 definePageMeta({ middleware: ['auth'] })
 
@@ -79,7 +80,7 @@ const saving = ref(false)
 const form = ref({
   category: 'other' as ExpenseCategory,
   amount: 0,
-  expense_date: new Date().toISOString().slice(0, 10),
+  expense_date: toISODate(new Date()),
   description: ''
 })
 
@@ -93,7 +94,7 @@ async function submit() {
       description: form.value.description || undefined
     })
     showModal.value = false
-    form.value = { category: 'other', amount: 0, expense_date: new Date().toISOString().slice(0, 10), description: '' }
+    form.value = { category: 'other', amount: 0, expense_date: toISODate(new Date()), description: '' }
     await Promise.all([load(), loadMonthlyTotals()])
   } finally {
     saving.value = false

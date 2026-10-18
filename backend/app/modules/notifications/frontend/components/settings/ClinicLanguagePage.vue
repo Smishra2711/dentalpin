@@ -2,9 +2,9 @@
 const { t } = useI18n()
 const { settings, loading, saving, fetch, update } = useCommunicationsSettings()
 
-const language = ref<'es' | 'en' | 'fr' | 'pt' | 'ta' | 'de' | 'hu' | 'pl' | 'it'>('es')
+const language = ref<'es' | 'en' | 'fr' | 'pt' | 'pt-BR' | 'ta' | 'te' | 'hi' | 'de' | 'hu' | 'pl' | 'it' | 'ar'>('es')
 
-const SUPPORTED = ['en', 'fr', 'pt', 'ta', 'de', 'hu', 'pl', 'it'] as const
+const SUPPORTED = ['en', 'fr', 'pt', 'pt-BR', 'ta', 'te', 'hi', 'de', 'hu', 'pl', 'it', 'ar'] as const
 
 watch(settings, (s) => {
   if (s) language.value = (SUPPORTED.includes(s.language as typeof SUPPORTED[number]) ? s.language as typeof language.value : 'es')
@@ -16,12 +16,16 @@ const options = [
   { value: 'es', label: 'Español' },
   { value: 'en', label: 'English' },
   { value: 'fr', label: 'Français' },
-  { value: 'pt', label: 'Português' },
+  { value: 'pt', label: 'Português (PT)' },
+  { value: 'pt-BR', label: 'Português (BR)' },
   { value: 'ta', label: 'தமிழ்' },
+  { value: 'te', label: 'తెలుగు' },
+  { value: 'hi', label: 'हिन्दी' },
   { value: 'de', label: 'Deutsch' },
   { value: 'hu', label: 'Magyar' },
   { value: 'pl', label: 'Polski' },
-  { value: 'it', label: 'Italiano' }
+  { value: 'it', label: 'Italiano' },
+  { value: 'ar', label: 'العربية' }
 ]
 
 async function save() {

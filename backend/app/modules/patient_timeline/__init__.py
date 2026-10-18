@@ -13,6 +13,7 @@ from typing import Any
 
 from fastapi import APIRouter
 
+from app.core.erasure.types import ErasureContributor
 from app.core.events import EventType
 from app.core.plugins import BaseModule
 
@@ -114,4 +115,18 @@ class PatientTimelineModule(BaseModule):
             EventType.TREATMENT_PLAN_ITEM_COMPLETED_WITHOUT_NOTE: (
                 events.on_item_completed_without_note
             ),
+            # Prescriptions (prescriptions module — payload-only, no import).
+            EventType.PRESCRIPTION_ISSUED: events.on_prescription_issued,
+            EventType.PRESCRIPTION_CANCELLED: events.on_prescription_cancelled,
+            # Imaging (imaging_viewer module — payload-only, no import).
+            EventType.IMAGING_STUDY_INDEXED: events.on_imaging_study_indexed,
+            # Orthodontics (orthodontics module — payload-only, no import).
+            EventType.ORTHODONTICS_CASE_CREATED: events.on_ortho_case_created,
+            EventType.ORTHODONTICS_CASE_STATUS_CHANGED: (events.on_ortho_case_status_changed),
+            EventType.ORTHODONTICS_CONTROL_REGISTERED: (events.on_ortho_control_registered),
         }
+
+    def get_erasure_contributors(self) -> list[ErasureContributor]:
+        from .erasure import PatientTimelineErasureContributor
+
+        return [PatientTimelineErasureContributor()]

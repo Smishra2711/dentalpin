@@ -2,6 +2,10 @@
 
 from fastapi import APIRouter
 
+# Runtime (not TYPE_CHECKING) import: this module has no
+# `from __future__ import annotations`, so the override's annotation is
+# evaluated at def time. Cycle-free: core.erasure.types imports no modules.
+from app.core.erasure.types import ErasureContributor
 from app.core.events.types import EventType
 from app.core.plugins import BaseModule
 from app.core.scheduling import ScheduledJob
@@ -14,6 +18,8 @@ from .models import (
     CommunicationMessage,
     NotificationPreference,
     NotificationTemplate,
+    PushSubscribeToken,
+    PushSubscription,
 )
 from .router import router
 
@@ -45,10 +51,31 @@ class NotificationsModule(BaseModule):
             # settings.read: every send surface (appointment modal, quote /
             # invoice send) reads GET /settings to know which channel
             # buttons to render (#287) — write stays admin-only.
-            "dentist": ["preferences.read", "preferences.write", "send", "settings.read"],
+            "dentist": [
+                "preferences.read",
+                "preferences.write",
+                "send",
+                "settings.read",
+                "push.read",
+                "push.write",
+            ],
             "hygienist": [],
-            "assistant": ["preferences.read", "preferences.write", "send", "settings.read"],
-            "receptionist": ["preferences.read", "preferences.write", "send", "settings.read"],
+            "assistant": [
+                "preferences.read",
+                "preferences.write",
+                "send",
+                "settings.read",
+                "push.read",
+                "push.write",
+            ],
+            "receptionist": [
+                "preferences.read",
+                "preferences.write",
+                "send",
+                "settings.read",
+                "push.read",
+                "push.write",
+            ],
         },
         "frontend": {
             "layer_path": "frontend",
@@ -65,6 +92,18 @@ class NotificationsModule(BaseModule):
         from .channels.email_adapter import EmailAdapter
 
         channel_registry.register(EmailAdapter())
+        try:
+            # WebPush needs the locked pywebpush dep (uv.lock; CI
+            # installs .[dev]). Host tooling (manifest/loader gates)
+            # activates modules without it — skip push registration
+            # there. Production behaviour is unchanged: the dep is
+            # always present, and push_adapter itself has no fallback
+            # branch, so a genuinely missing dep fails loudly at this
+            # import, never as a silent degraded send.
+            from .channels.push_adapter import PushAdapter
+        except ImportError:
+            return
+        channel_registry.register(PushAdapter())
 
     def get_models(self) -> list:
         return [
@@ -74,10 +113,23 @@ class NotificationsModule(BaseModule):
             ClinicChannelSettings,
             ClinicSmtpSettings,
             CommunicationMessage,
+            PushSubscribeToken,
+            PushSubscription,
         ]
 
     def get_router(self) -> APIRouter:
-        return router
+        from fastapi import APIRouter
+
+        from .public_router import public_router
+
+        # Compose authenticated + public sub-routers under one mount.
+        # Public endpoints sit under ``/public/push/...`` and carry no
+        # clinic-context dependency — the token is the auth (budget
+        # public_router precedent).
+        combined = APIRouter()
+        combined.include_router(router)
+        combined.include_router(public_router)
+        return combined
 
     def get_tools(self) -> list:
         from . import tools
@@ -112,6 +164,8 @@ class NotificationsModule(BaseModule):
             "preferences.write",  # Edit notification preferences
             "logs.read",  # View email logs
             "send",  # Send emails manually
+            "push.read",  # View push subscriptions
+            "push.write",  # Register/remove push subscriptions
             "settings.read",  # View clinic notification settings
             "settings.write",  # Edit clinic notification settings
         ]
@@ -128,3 +182,8 @@ class NotificationsModule(BaseModule):
             EventType.BUDGET_REMINDER_SENT: NotificationHandlers.on_budget_reminder_sent,
             EventType.INVOICE_SENT: NotificationHandlers.on_invoice_sent,
         }
+
+    def get_erasure_contributors(self) -> list[ErasureContributor]:
+        from .erasure import NotificationsErasureContributor
+
+        return [NotificationsErasureContributor()]

@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+- chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
+
+- fix(#522): `TimelineSlider` compared the last history date against the UTC
+  day, so the "Now" position could fail to merge with today's entry. Now uses
+  `toISODate`.
+
+- fix(#459): the "Add to plan" dropdown in `TreatmentBar` was built from
+  `UDropdownMenuItem`/`Group`/`Separator`, which Nuxt UI does not ship, so
+  its body could only ever resolve to nothing. Rebuilt on the supported
+  `:items` API. The block is unreachable today — nothing passes
+  `treatmentPlans` to the bar — so this changes no shipped screen; it stops
+  the markup from being a trap for whoever wires the selector up.
+
+- i18n(ar): chart grid pinned `dir="ltr"` so FDI tooth numbering stays
+  left-to-right under a right-to-left document (Arabic).
+
+- feat(i18n): the frontend layer's directional spacing, borders, text alignment and inset positioning now resolve against the document direction (physical→logical CSS utilities, Arabic RTL support).
+
+- feat(#48): realistic per-category occlusal outlines (incisor / canine / premolar / molar) with cusp-aware silhouettes; surface fills clipped to the outline; distal (D) sector is a full quad; molar fissures shortened to the central O so they no longer read as a missing-tooth overlay.
+
 - fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
 
 - fix(#101): treatment delete asks for confirmation (names the treatment and tooth); the edit modal stays open with the user's edits when a save fails, and surface edits are actually included in the update payload (they were silently dropped).

@@ -2,7 +2,53 @@
 
 ## Unreleased
 
+- feat(#480, ADR 0037): `source` claim on check-in tokens. Counter QRs
+  (`source=counter`, the staff mint default) auto-submit; mailed reminder
+  links (`source=reminder`, minted by the notification sweep with a
+  clinic-day TTL) require a press, so mail-scanner pre-fetches can no
+  longer check patients in. Missing/unknown sources fail safe to
+  `reminder`. Check-in is only accepted inside the start_time window
+  (two hours before start until one hour after end; 422 `too_early` /
+  `window_closed` with the local start), closing the #464 date-guard
+  follow-up. Public check-ins now note `kiosk-checkin`. ar/hi/ta/te
+  page strings fall back to English (noted).
+- fix(#538): `AGENDA_PUBLIC_SECRET_KEY` is hard-required in production
+  (missing, blank, padded, or short values refuse to boot via the shared
+  `Settings` validator, alongside `BUDGET_PUBLIC_SECRET_KEY`); the
+  dev-only fallback is unchanged.
+- feat(i18n): Hindi (`hi`) locale: Hindi default cabinet name (`कक्ष 1`) for clinics created in `hi`.
+- chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
+
+- fix(#590): `validate_professional_access` tolerates duplicated
+  membership rows (`.limit(1)` existence read, same fix as #598 for
+  orthodontics). `clinic_memberships` has no unique `(clinic_id, user_id)`
+  constraint, so a duplicate used to 500 with `MultipleResultsFound`.
+- feat(i18n): Telugu (`te`) default cabinet name for new clinics.
+- fix(#522): `useCalendarBounds` asked the availability endpoint for the
+  previous day's open hours for clinics east of UTC — the calendar hands it
+  local midnights and it rendered them with `toISOString()`. Now uses
+  `toISODate`.
+
+- Follow-up: QR check-in moved from its own hover button into the
+  Quick-actions dropdown (one icon per card again); the dropdown also
+  renders when QR is the only action (`hasActions || canCheckin`, so
+  transition-less scheduled/confirmed cards keep their QR entry).
+- feat: QR check-in - signed 15-minute tokens mint a QR (or link) that
+  lets patients check themselves in with no account (`POST
+  /appointments/{id}/check-in-token`, `GET .../check-in-qr`,
+  unauthenticated rate-limited `POST /public/check-in/{token}`, public
+  `/p/check-in/<token>` page with `layout: public`). The mint endpoint
+  returns the patient-facing URL built server-side from
+  `ALLOWED_ORIGINS`, so the copied link and the QR can never diverge.
+  Dedicated `AGENDA_PUBLIC_SECRET_KEY` (falls back to `SECRET_KEY`
+  outside production); `note="qr-checkin"` attribution; lean resolve
+  in `AppointmentService.public_checkin`; per-IP + per-token limits.
+  Consumes through the canonical status machine.
+
 - refactor(#337): `AppointmentTreatment` moved to treatment_plan — agenda no longer declares the model or constructs link rows; booking, eager loading and the visit-note lookup go through the planned-work provider, and the last cross-module FK allowlist entry is drained.
+
+- feat(i18n): the frontend layer's directional spacing, borders, text alignment and inset positioning now resolve against the document direction (physical→logical CSS utilities, Arabic RTL support).
+
 
 - fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
 

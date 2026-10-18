@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { PERMISSIONS } from '~~/app/config/permissions'
+import { toISODate } from '~~/app/utils/wallClock'
 import { useAccountingExport, type ExportPreview } from '../composables/useAccountingExport'
 
 definePageMeta({ middleware: ['auth'] })
@@ -14,20 +15,17 @@ if (!can(PERMISSIONS.accountingExport.read)) {
 }
 
 // --- Date presets (computed client-side; backend only takes concrete dates) ---
-function iso(d: Date): string {
-  return d.toISOString().slice(0, 10)
-}
 type Preset = { key: string, range: () => { from: string, to: string } }
 const now = new Date()
 const y = now.getFullYear()
 const m = now.getMonth()
 const q = Math.floor(m / 3)
 const presets: Preset[] = [
-  { key: 'currentMonth', range: () => ({ from: iso(new Date(y, m, 1)), to: iso(new Date(y, m + 1, 0)) }) },
-  { key: 'previousMonth', range: () => ({ from: iso(new Date(y, m - 1, 1)), to: iso(new Date(y, m, 0)) }) },
-  { key: 'currentQuarter', range: () => ({ from: iso(new Date(y, q * 3, 1)), to: iso(new Date(y, q * 3 + 3, 0)) }) },
-  { key: 'previousQuarter', range: () => ({ from: iso(new Date(y, q * 3 - 3, 1)), to: iso(new Date(y, q * 3, 0)) }) },
-  { key: 'yearToDate', range: () => ({ from: iso(new Date(y, 0, 1)), to: iso(now) }) },
+  { key: 'currentMonth', range: () => ({ from: toISODate(new Date(y, m, 1)), to: toISODate(new Date(y, m + 1, 0)) }) },
+  { key: 'previousMonth', range: () => ({ from: toISODate(new Date(y, m - 1, 1)), to: toISODate(new Date(y, m, 0)) }) },
+  { key: 'currentQuarter', range: () => ({ from: toISODate(new Date(y, q * 3, 1)), to: toISODate(new Date(y, q * 3 + 3, 0)) }) },
+  { key: 'previousQuarter', range: () => ({ from: toISODate(new Date(y, q * 3 - 3, 1)), to: toISODate(new Date(y, q * 3, 0)) }) },
+  { key: 'yearToDate', range: () => ({ from: toISODate(new Date(y, 0, 1)), to: toISODate(now) }) },
   { key: 'custom', range: () => ({ from: dateFrom.value, to: dateTo.value }) }
 ]
 const presetOptions = computed(() =>
@@ -116,7 +114,7 @@ const invoiceCols = ['numero', 'fecha_emision', 'cliente', 'nif', 'base', 'cuota
             >
           </UFormField>
         </template>
-        <div class="flex gap-2 w-full sm:w-auto sm:ml-auto">
+        <div class="flex gap-2 w-full sm:w-auto sm:ms-auto">
           <UButton
             icon="i-lucide-eye"
             variant="soft"
@@ -186,7 +184,7 @@ const invoiceCols = ['numero', 'fecha_emision', 'cliente', 'nif', 'base', 'cuota
       >
         <table class="w-full text-sm">
           <thead>
-            <tr class="text-left text-subtle">
+            <tr class="text-start text-subtle">
               <th
                 v-for="c in invoiceCols"
                 :key="c"

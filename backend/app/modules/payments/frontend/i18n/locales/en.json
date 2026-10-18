@@ -94,7 +94,9 @@
       "errPatient": "Select a patient",
       "errAmount": "Enter an amount greater than 0",
       "errSum": "Allocation sum must equal the amount",
-      "errUnknown": "Could not record the payment. Try again."
+      "errUnknown": "Could not record the payment. Try again.",
+      "methodRecord": "Record a payment already received",
+      "methodCollect": "Collect now"
     },
     "methods": {
       "cash": "Cash",

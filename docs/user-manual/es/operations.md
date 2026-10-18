@@ -16,6 +16,48 @@ Cubre los comandos que ejecuta un operador — no los internos de Python.
 - Repositorio de DentalPin clonado (o artefactos de despliegue equivalentes).
 - `.env` rellenado con `POSTGRES_PASSWORD`, `SECRET_KEY`, etc.
 - Un stack en marcha: `docker compose up -d`.
+- **¿La aplicación y la API en hosts distintos?** Entonces deben ser
+  hermanos de un mismo dominio padre y `.env` debe fijar `COOKIE_DOMAIN` a
+  ese padre (`COOKIE_DOMAIN=.example.com` para `app.example.com` +
+  `api.example.com`). Sin eso las cookies de sesión son de host único, las
+  páginas renderizadas en el servidor no ven la sesión, cada recarga
+  cierra la sesión del usuario y toda escritura falla con "CSRF token
+  missing" porque la aplicación tampoco puede leer la cookie `dp_csrf`.
+  El backend avisa en el log con el valor a poner.
+  El dominio padre tiene que ser tuyo. Dominios de hosting como
+  `onrender.com`, `vercel.app`, `herokuapp.com` o `sslip.io` son sufijos
+  públicos: el navegador trata cada subdominio como un sitio distinto y
+  rechaza `COOKIE_DOMAIN=.onrender.com`, así que el login responde 200 y
+  `/auth/me` 401. Pon un dominio propio en ambos servicios, o sírvelos
+  desde un único origen.
+- **¿Sin dominio propio (Render, Railway, Vercel…)?** Deja que el frontend
+  haga de proxy de `/api/v1` hacia el backend: el navegador solo habla con
+  el origen de la aplicación y las cookies quedan ligadas a ese host. En el
+  servicio **frontend**: `NUXT_API_PROXY=true`,
+  `NUXT_PUBLIC_API_BASE_URL=https://<host-app>` (la URL de la propia
+  aplicación) y `NUXT_API_BASE_URL_SERVER=https://<host-api>`. En el
+  **backend**: `ALLOWED_ORIGINS=https://<host-app>`, `ENVIRONMENT=production`,
+  `COOKIE_DOMAIN` vacío y `FORWARDED_ALLOW_IPS` (más abajo): el host de la
+  API sigue accesible directamente, así que aquí esta variable importa.
+- **`FORWARDED_ALLOW_IPS` — qué proxies pueden fijar la IP del cliente.**
+  El límite de intentos de login y el `client_ip` de la sesión salen los
+  dos de `X-Forwarded-For`, una cabecera que el cliente puede escribir.
+  uvicorn solo la lee de los pares que figuren en esta lista, y recorre
+  la cabecera de derecha a izquierda tomando como cliente real la primera
+  dirección que *no* esté en la lista. Hay que listar por tanto todos los
+  saltos entre el navegador y el backend: si falta uno, ese salto pasa a
+  ser el "cliente" y todas las peticiones que vengan detrás comparten un
+  único cubo de límite. Nunca `*`: eso se fía de cualquier par y entonces
+  toma la entrada más a la izquierda, la que escribió quien llama, así
+  que cualquiera que alcance el puerto elige su propio cubo y su propia
+  IP de auditoría. El valor por defecto
+  (`127.0.0.1,::1,172.16.0.0/12,192.168.0.0/16`) cubre los rangos de
+  Docker, que es lo correcto para compose y Coolify. En Swarm o
+  Kubernetes añadir `10.0.0.0/8`. Con el proxy anterior el salto más
+  cercano es el contenedor *frontend* y el borde de la plataforma queda
+  entre él y el navegador, así que ambos rangos deben constar. El backend
+  registra el valor efectivo al arrancar: conviene leer esa línea tras
+  cualquier cambio de despliegue, porque los dos errores son silenciosos.
 
 Comprobación rápida:
 
@@ -232,9 +274,19 @@ docker compose exec -T db psql -U dental -d dental_clinic \
 El esquema debe existir previamente (reinstala primero el módulo y
 después restaura los datos).
 
-Para copias de la base de datos completa usa tu flujo habitual de
-Postgres (pg_dump, restauración a un punto en el tiempo, etc.) — el
-sistema de módulos no lo sustituye.
+### Copia completa (base de datos + archivos)
+
+```bash
+docker compose exec -T backend python -m app.cli db backup
+```
+
+Genera `full_<fecha>.dump` (toda la base de datos) y
+`storage_<fecha>.tar.gz` (documentos, radiografías, importaciones) en
+`storage/backups/`. Programa este comando cada noche y copia los
+archivos fuera del servidor: una copia en el mismo disco no es una
+copia de seguridad. Procedimiento completo de restauración,
+migración de hardware y verificación mensual: la guía
+`docs/workflows/backup-restore.md`.
 
 ---
 
@@ -339,6 +391,9 @@ DELETE FROM alembic_version;
 | Página de módulo comunitario 404 | Falta la ruta de la capa en `modules.json` | `./bin/dentalpin modules sync-frontend` + reconstruir el frontend |
 | Desinstalación bloqueada: "no Alembic branch" | Módulo legacy de la Fase A | No soportado; esperar a la Fase B |
 | Desinstalación bloqueada: "required by ..." | Existe una dependencia inversa | Desinstalar primero los dependientes, o `--force` |
+| Sesión cerrada en cada recarga, aunque navegar funciona | Aplicación y API en hosts distintos con `COOKIE_DOMAIN` vacío: las cookies de sesión nunca llegan a la aplicación | Fijar `COOKIE_DOMAIN` al dominio padre compartido (p. ej. `.example.com`) y reiniciar el backend |
+| Cada guardado responde `403 CSRF token missing or invalid`, aunque leer funciona | La misma causa: la aplicación no puede leer la cookie `dp_csrf`, así que nunca envía la cabecera `X-CSRF-Token` | La misma solución: fijar `COOKIE_DOMAIN` al dominio padre compartido |
+| El login responde 200, luego `/auth/me` 401 y vuelve a la pantalla de login | Aplicación y API en un dominio de hosting que es sufijo público (`*.onrender.com`, `*.vercel.app`…): el navegador rechaza las cookies | Poner un dominio propio en ambos (`app.example.com` + `api.example.com`) y fijar `COOKIE_DOMAIN=.example.com`, o activar el proxy de mismo origen del frontend (`NUXT_API_PROXY=true`, §1) |
 
 ---
 
@@ -355,3 +410,48 @@ docker compose logs backend --tail 100
 
 Para reportes de seguridad contacta con los mantenedores en privado en
 lugar de abrir un issue público.
+
+---
+
+## 13. Interfaz de gestión de módulos (`/settings/modules`)
+
+Todo lo descrito en §§2–6 también está disponible como página web de
+administración — sin necesidad de acceso a la terminal. Abre
+**Ajustes → Módulos** (`/settings/modules`).
+
+- **Permisos:** ver la página requiere `admin.clinic.read`; los botones
+  Instalar / Desinstalar / Actualizar / Aplicar requieren
+  `admin.clinic.write`. Otros roles ven un mensaje de acceso denegado.
+- **Lista de módulos:** todos los módulos descubiertos con su estado
+  (`installed`, `uninstalled`, `to_install`, `to_upgrade`,
+  `to_remove`, `disabled`, `error`), versión, insignia de categoría
+  (oficial/comunitario), dependencias y resumen.
+- **Buscar y paginar:** la lista tiene un buscador y un filtro por
+  estado (instalado / desinstalado / pendiente / deshabilitado /
+  error), y muestra veinte módulos por página. La consulta
+  (`?q=…`, `?states=…`, `?page=…`) está sincronizada con la URL, por lo
+  que una vista filtrada puede guardarse en marcadores o enlazarse.
+- **Instalar:** disponible para módulos desinstalados e instalables
+  presentes en disco. El modal de confirmación muestra la cadena
+  transitiva de dependencias que se programará.
+- **Actualizar:** disponible para módulos instalados cuyo manifiesto en
+  disco difiere de la versión instalada (se muestra como
+  "instalada → en disco"). El modal programa la actualización; como
+  las instalaciones, necesita Aplicar + reinicio (abajo) para
+  ejecutarse. La alcanzabilidad de dependencias la impone Instalar,
+  no esta señal.
+- **Desinstalar:** disponible para módulos instalados y removibles. El
+  modal avisa de la copia de seguridad `pg_dump` automática (§8).
+  Cuando dependencias inversas bloquean la eliminación, el error se
+  muestra en el propio modal con opción de reintentar forzando.
+- **Aplicar cambios:** las operaciones programadas quedan pendientes
+  hasta pulsar **Aplicar**. El backend se reinicia, la página consulta
+  `GET /-/status` hasta que `pending=[]` y refresca la lista y la barra
+  lateral. Un aviso superior muestra siempre los módulos pendientes.
+- **Aviso de diagnóstico:** cuando `GET /-/doctor` reporta huérfanos,
+  dependencias faltantes, errores de manifiesto o módulos en error, un
+  aviso los resume al inicio de la página.
+- **Panel de detalle:** por módulo, datos clave (estado, categoría,
+  fecha de instalación, revisiones), el mensaje de error si lo hay, el
+  registro reciente de operaciones (migrate → seed → lifecycle →
+  finalize por operación) y el manifiesto en bruto.

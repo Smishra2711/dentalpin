@@ -2,9 +2,57 @@
 
 ## Unreleased
 
+- feat(#332): OpenRouter + Groq LLM provider adapters, same subclass shape
+  as Gemini over their OpenAI-compatible endpoints (`OPENROUTER_API_KEY` /
+  `GROQ_API_KEY` + per-provider default models, specs registered from
+  `on_activate`). No bridge, settings or UI change.
+- feat(#332): Gemini LLM provider adapter over Google's OpenAI-compatible
+  endpoint (same wire format and `openai` tool dialect as `OpenAIProvider`;
+  `GEMINI_API_KEY` + `COPILOT_MODEL_CHAT_GEMINI`, spec registered from
+  `on_activate`). No bridge, settings or UI change: selection and
+  validation are registry-driven.
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer; Hindi subject for the morning digest email.
+- test(#552): branch-scoped uninstall round-trip test (heads, branch downgrade, reinstall).
+- chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
+
+- fix(#532): re-confirming an approved write replays the stored result
+  instead of executing the tool again (retry/double-click safe).
+- fix(#586): redaction tokens are salted per conversation
+  (`copilot_conversations.redaction_salt`, minted on first use, never
+  logged) and widened to 12 hex chars. Same value maps to unrelated
+  tokens across conversations; dictionary attacks over low-cardinality
+  fields (e.g. birth dates) no longer apply to the token holder.
+- feat(i18n): Telugu (`te`) locale for the module's frontend layer.
+- feat(i18n): Telugu (`te`) morning-digest email subject.
+- fix: a confirmed write tool now publishes its module namespace on the data
+  bus. The confirmation stream only returns `tool_result` (no `tool_call`), so
+  the old lookup of a tool message never matched and no page refetched (#568).
+
+- feat: Arabic subject for the morning digest email ("الملخص اليومي", same
+  wording as the `ar/` template title; from #426 by @dev-7aider).
+
+- Dropped the unused `nav.copilot` locale key (sidebar entry removed in #467).
+
+- feat(#232): no standalone sidebar entry — the assistant launcher is the app-overlay floating button; manifest `navigation` is empty.
+- fix(#452): the chat stream refreshes the session once and replays the turn when the first response is a 401; a failed refresh shows `copilot.sessionExpired` (all locales) and ends the session instead of dropping `HTTP 401` into the chat.
+
+- refactor(#332): resolve LLM providers through a process-wide registry;
+  Copilot registers the existing OpenAI and Anthropic specifications from
+  `on_activate()` so only an installed module affects runtime. Settings and
+  the bridge now read default models, API-key requirements and tool dialects
+  from the registered specification instead of provider-name branches.
+
+- feat(#46): history scoping, nudge visibility, and agent-context grant sets
+  resolve flag-aware (`RBAC_FROM_DB` on: custom roles and per-clinic
+  overrides apply to chat, digest, pendientes, and tool calls).
+
 - feat(#343): morning-digest subject line localized for all 9 communication languages (was es/en with es fallback).
 
 - feat(#332): Anthropic joins OpenAI as a live LLM provider — per-clinic `copilot_settings.provider = "anthropic"` streams chat turns through `AnthropicProvider` (`app/core/llm/anthropic_provider.py`). The bridge now passes the provider-matching tool-schema dialect to the orchestrator, settings-save rejects `anthropic` when `ANTHROPIC_API_KEY` is missing, and switching provider without naming a model falls back to that provider's default (`COPILOT_MODEL_CHAT_ANTHROPIC`).
+
+- feat(i18n): Arabic (ar) locale for the module's frontend layer.
+- feat(i18n): the frontend layer's directional spacing, borders, text alignment and inset positioning now resolve against the document direction (physical→logical CSS utilities, Arabic RTL support).
+
 
 - fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
 

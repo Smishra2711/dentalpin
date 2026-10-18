@@ -1,4 +1,11 @@
-FROM python:3.11-slim
+# Pinned by digest (#356): a tagged release rebuilds on exactly this base.
+# Refresh deliberately (docker manifest inspect python:3.11-slim), not
+# implicitly on every build.
+FROM python:3.11-slim@sha256:9534e5a8e315485d4061ed659af0fd78a284c015f9b73661b41d6bab25604534
+
+# uv (pinned) resolves from the committed lockfile — two builds of the
+# same commit install byte-identical dependency sets.
+COPY --from=ghcr.io/astral-sh/uv:0.12.9 /uv /uvx /bin/
 
 WORKDIR /app
 
@@ -16,12 +23,28 @@ RUN apt-get update && apt-get install -y \
     fonts-noto-core \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY pyproject.toml ./
-RUN pip install --no-cache-dir .
+# Install Python dependencies from the lockfile (#356). The venv lives
+# outside /app so a dev bind-mount of ./backend can't shadow it.
+# --frozen: fail instead of silently re-resolving when uv.lock is stale.
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_NO_CACHE=1 \
+    PATH="/opt/venv/bin:$PATH"
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
 
-# Copy application code
+# Copy application code, then install the project itself on top of the
+# already-cached dependency layer.
 COPY . .
+RUN uv sync --frozen --no-dev
+
+# Seed pip into the venv (#571). uv seeds no pip and ensurepip is absent
+# from the slim base, so without this any in-container `pip install`
+# lands in the system python, invisible to the /opt/venv interpreter
+# that runs the app and the tests. Pinned like the uv binary above;
+# refresh deliberately. Must run before USER appuser (writes /opt/venv).
+RUN uv pip install --python /opt/venv/bin/python "pip==26.2.1"
 
 # Create non-root user and storage directory
 RUN useradd -m -u 1000 appuser \
@@ -34,4 +57,11 @@ USER appuser
 EXPOSE 8000
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*"]
+# No --forwarded-allow-ips flag on purpose (#623). Without it uvicorn
+# reads $FORWARDED_ALLOW_IPS, so the trusted-proxy set is deployment
+# configuration instead of a baked-in "*". With "*" uvicorn takes the
+# LEFTMOST X-Forwarded-For entry, which the client writes, so anyone who
+# can reach this port picks their own rate-limit bucket and audit IP.
+# uvicorn's own fallback is "127.0.0.1,::1"; every compose file here sets
+# a value that also covers the proxy container's network.
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]

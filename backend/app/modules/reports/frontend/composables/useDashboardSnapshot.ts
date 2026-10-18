@@ -13,6 +13,7 @@
  * gracefully (useApi 403s are caught silently here).
  */
 import { useReports } from './useReports'
+import { toISODate } from '~~/app/utils/wallClock'
 import type {
   AppointmentFunnel,
   FirstVisitsSummary,
@@ -53,15 +54,11 @@ export interface DashboardState {
   aging: CardState<PaymentsAgingBuckets>
 }
 
-function toIso(d: Date): string {
-  return d.toISOString().slice(0, 10)
-}
-
 function defaultRange(): DashboardRange {
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const first = new Date(today.getFullYear(), today.getMonth(), 1)
-  return { from: toIso(first), to: toIso(today) }
+  return { from: toISODate(first), to: toISODate(today) }
 }
 
 /** Previous range of the same length, ending the day before `from`. */
@@ -73,7 +70,7 @@ function previousRange(range: DashboardRange): DashboardRange {
   prevTo.setDate(prevTo.getDate() - 1)
   const prevFrom = new Date(prevTo)
   prevFrom.setDate(prevFrom.getDate() - (days - 1))
-  return { from: toIso(prevFrom), to: toIso(prevTo) }
+  return { from: toISODate(prevFrom), to: toISODate(prevTo) }
 }
 
 function pct(curr: number, prev: number): number | null {

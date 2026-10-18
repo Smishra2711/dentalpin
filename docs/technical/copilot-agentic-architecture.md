@@ -3,6 +3,14 @@
 Status: **plan / not yet implemented**. This is the technical/architecture plan for the `copilot` module and the core agentic primitives it sits on. It is the implementation contract for the design approved in the design phase. Companion: the ADRs listed in §13.
 
 > **Scope cut (owner):** v1 = thin vertical slice + **mandatory PHI redaction** + **OpenAI provider only**. The `Provider` protocol stays vendor-agnostic so Anthropic plugs in later with zero changes below `app/core/llm/`. Deferred: Anthropic provider, RAG/pgvector, proactive/scheduled agents, self-hosted/Ollama provider, admin dashboards. Rationale in the design phase; not repeated here.
+>
+> **Drift note (2026-09, audit DOCS-01):** this page is the frozen v1-design
+> record — the scope cut above is historical. `AnthropicProvider` and
+> `GeminiProvider` have since landed in `backend/app/core/llm/`; the factory
+> now resolves active provider specifications through a process-wide
+> registry. Copilot registers the built-in OpenAI, Anthropic, Gemini,
+> OpenRouter and Groq specifications from `CopilotModule.on_activate()` per
+> ADR 0020. RAG/Ollama remain deferred as stated.
 
 ---
 
@@ -10,7 +18,7 @@ Status: **plan / not yet implemented**. This is the technical/architecture plan 
 
 | Layer | Where | New / changed |
 |---|---|---|
-| **A — core engine** (reusable by any agent surface) | `app/core/agents/`, `app/core/llm/` | `Provider` protocol + **`OpenAIProvider`** + provider factory (Anthropic later); `orchestrator.py` (provider-agnostic tool loop); `redaction.py` (PHI boundary); one optional field on `Tool`. |
+| **A — core engine** (reusable by any agent surface) | `app/core/agents/`, `app/core/llm/` | `Provider` protocol + OpenAI/Anthropic adapters + provider registry-backed factory; `orchestrator.py` (provider-agnostic tool loop); `redaction.py` (PHI boundary); one optional field on `Tool`. |
 | **B — tool contract** (owned by each domain module) | `app/modules/<m>/tools.py` | `get_tools()` wraps that module's own services. v1 backfill: `patients`, `agenda`. Elevated to a documented module obligation. |
 | **C — copilot surface** (thin consumer) | `app/modules/copilot/` + Nuxt layer | Conversation persistence, SSE chat, per-clinic settings/budget, drawer + `/copilot` page. `depends: []`. |
 
@@ -34,11 +42,15 @@ The whole point of this sub-package is that **the orchestrator never knows which
   - `ProviderEvent` union (vendor-agnostic): `TextDelta`, `ToolUse(id, name, input)`, `Usage(input_tokens, output_tokens)`, `Done(stop_reason)`.
 - `openai_provider.py` — `OpenAIProvider` over the `openai` SDK (`client.chat.completions.create(..., stream=True)` or the Responses API). Tool schemas via `tool_to_openai_schema()` (`app/core/agents/tools/schema.py:28`). Maps OpenAI streaming deltas → `ProviderEvent`: assembles fragmented `tool_calls` deltas (id/name/arguments arrive in pieces) into a single `ToolUse`; reads usage from the final chunk (`stream_options={"include_usage": True}`).
 - `anthropic_provider.py` — `AnthropicProvider` over the `anthropic` SDK (`client.messages.create(..., stream=True)`), tool schemas via `tool_to_anthropic_schema()` (`app/core/agents/tools/schema.py:19`). Same single-tool posture (`disable_parallel_tool_use`); tool results are serialized as `tool_result` blocks merged into the next `user` turn; dotted tool names map `.` ↔ `-` (Anthropic's name charset, same trick as OpenAI).
-- `factory.py` — `get_provider(name: str) -> Provider` resolving `"openai"` and `"anthropic"` (raise a clear "unsupported provider" error for anything else; further vendors slot in later). The bridge passes the provider-matching `dialect` to `registry.schemas_for(...)` and the chosen `model` string.
-- **Resolution order:** per-clinic `copilot_settings.provider` (defaults to `"openai"`) + `.model` override the global defaults in `app/config.py`. The providers read `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`; a provider with no key configured is rejected at settings-save time so a clinic can't select a provider the deployment can't serve.
+- `gemini_provider.py` — `GeminiProvider(OpenAIProvider)` over Google's OpenAI-compatible endpoint (`.../v1beta/openai/`) through the `openai` SDK: identical wire format and `openai` tool dialect, no new dependency. Free-tier API keys from AI Studio work; the operator accepts Google's data-use terms there, and the mandatory PHI redactor still runs upstream.
+- `openrouter_provider.py` / `groq_provider.py` — same subclass shape over `https://openrouter.ai/api/v1` and `https://api.groq.com/openai/v1`: gateway and hosted open-weight models behind the same OpenAI wire format, still no new dependency. Keys and billing live on the operator's accounts; redaction still upstream. OpenRouter is a gateway, not a single subprocessor: it routes each request to whichever upstream serves the model id, so the operator must set the account's data policy (no prompt logging/training) in OpenRouter before enabling it for a clinic.
+- `spec.py` / `registry.py` — `ProviderSpec` is the single source for a provider's default model, tool-schema dialect and deployment API-key setting. `ProviderRegistry` stores active specs process-wide; `CopilotModule.on_activate()` registers OpenAI, Anthropic, Gemini, OpenRouter and Groq only while the module is installed (ADR 0020).
+- `factory.py` — `get_provider(name: str) -> Provider` resolves the active spec through the registry and calls `spec.factory(config)`. Unknown or inactive providers raise a clear `LLMConfigError`; adding a registered provider does not require another factory branch.
+- **Resolution order:** per-clinic `copilot_settings.provider` + `.model` override the registered spec defaults. Settings-save reads `spec.needs_api_key` and `spec.api_key_setting`; the bridge reads `spec.tool_dialect`, so provider policy is not duplicated in Copilot call sites.
+- Tier, capability and redaction-policy metadata remains in the #332 design brief and will be added with the settings/redaction consumers that enforce it, avoiding unused duplicate sources of truth in this initial registry slice.
 - Deps: `openai>=1.40` and `anthropic>=0.40` in `backend/pyproject.toml`.
 
-Redaction, budget, audit, and the inline-confirm pause are all **upstream of the provider** and therefore vendor-agnostic — adding Anthropic changed nothing outside `app/core/llm/` beyond the dialect hint and settings validation.
+Redaction, budget, audit, and the inline-confirm pause are all **upstream of the provider** and therefore vendor-agnostic — adding Anthropic, Gemini, OpenRouter and Groq changed nothing outside `app/core/llm/` beyond the dialect hint and settings validation.
 
 ### 2.2 Orchestrator (`app/core/agents/orchestrator.py`)
 The reusable tool-use loop. **No HTTP / SSE / copilot knowledge.** Signature sketch:
@@ -66,7 +78,7 @@ The orchestrator calls `ctx.tools.call()` for execution, so guardrails + RBAC + 
 The PHI boundary. Per-session `SymbolTable` mapping real value ↔ stable opaque token (`PATIENT_7a3f`, `PHONE_22b1`, `EMAIL_…`, `APPT_…`). API: `redact_outgoing(payload) -> payload'`, `rehydrate(text) -> text'`, `resolve_tool_args(args) -> args'`.
 
 **v1 coverage (mandatory, honest about its edges):**
-- **Structured tool inputs/results** — key-based redaction over the JSON: a PII key denylist (`first_name`, `last_name`, `full_name`, `phone`, `mobile`, `email`, `dni`, `nif`) plus UUID-valued `*_id` fields known to reference patients/appointments → tokenized; the same value always maps to the same token within a session (so the model can reason about "the same patient").
+- **Structured tool inputs/results** — key-based redaction over the JSON: a PII key denylist (`first_name`, `last_name`, `full_name`, `phone`, `mobile`, `email`, `dni`, `nif`, `date_of_birth`) plus UUID-valued `*_id` fields known to reference patients/appointments → tokenized; the same value always maps to the same token within a session (so the model can reason about "the same patient").
 - **Seeded context entities** — the names/ids in `context_jsonb` are pre-loaded into the symbol table at session start.
 - **User free text** — substring replacement of entities already in the symbol table. **Known gap:** a name typed by the user for an entity not yet loaded cannot be caught without NER. Documented; NER is a later milestone.
 - **Free-text-returning tools** (e.g. a future "summarize history") carry `Tool.exposes_free_text=True` (new optional field, default `False`) and are **excluded from the cloud path** in v1 — the registry filters them out of `tool_names` when redaction is on. None of the v1 tools (§3) return free prose, so v1 ships clean.
@@ -75,7 +87,7 @@ The PHI boundary. Per-session `SymbolTable` mapping real value ↔ stable opaque
 `Tool` gains exactly one optional field: `exposes_free_text: bool = False`. No other change to the frozen dataclass.
 
 ### 2.4 Config (`app/config.py`)
-Add `OPENAI_API_KEY: str = ""`, `COPILOT_PROVIDER_DEFAULT: str = "openai"`, `COPILOT_MODEL_CHAT_OPENAI: str = "gpt-4.1"`, `COPILOT_MAX_TOKENS: int = 4096`, `COPILOT_REDACTION_DEFAULT: bool = True`. Per-clinic `copilot_settings` overrides provider and model. (`ANTHROPIC_API_KEY` + Anthropic model default are added when that provider lands.)
+Add `OPENAI_API_KEY: str = ""`, `COPILOT_PROVIDER_DEFAULT: str = "openai"`, `COPILOT_MODEL_CHAT_OPENAI: str = "gpt-5.4-mini"`, `COPILOT_MAX_TOKENS: int = 4096`, `COPILOT_REDACTION_DEFAULT: bool = True`. Per-clinic `copilot_settings` overrides provider and model. (`ANTHROPIC_API_KEY` + Anthropic model default landed with that provider; `GEMINI_API_KEY` + Gemini model default with #332; `OPENROUTER_API_KEY` / `GROQ_API_KEY` + OpenRouter and Groq model defaults with #332.)
 
 ---
 
@@ -134,6 +146,22 @@ Additions since v1, newest last:
 | `billing` | `list_invoices`, `get_invoice` (invoice axis only, `include_payments=False`) | READ | `billing.read` |
 | `payments` | `record_payment` | WRITE | `payments.record.write` |
 | `payments` | `patient_payment_history` (collection axis only) | READ | `payments.record.read` |
+| `notifications` | `send_notification` | WRITE | `notifications.send` |
+
+#### Tool-category bar for patient-facing dispatches (issue #387)
+
+A tool is `DESTRUCTIVE` when either of the following is true:
+
+1. It bypasses the recipient's per-type delivery preference with `force_send=True`.
+2. It enters or depends on a persisted domain state that has no return path.
+
+The two triggers are independent: one is enough.
+
+- `send_budget` meets both. `BudgetWorkflowService.send_budget` moves an eligible budget out of `draft`, and the resulting `budget.sent` handler, `NotificationHandlers.on_budget_sent`, forces the staff-selected channel while bypassing the automatic-send gate.
+- The `invoice.sent` notification path meets the first trigger and operates only after the invoice has left draft: invoices must already be issued, partial, or paid, and drafts or voided invoices are rejected. The relevant join is `NotificationHandlers.on_invoice_sent`.
+- `send_notification` meets neither trigger under its current wrapper: it does not pass `force_send`, and it does not enter or depend on an irreversible domain-state transition. It therefore remains `WRITE`.
+
+Today's notification dispatch interval is 45 seconds, and there is no route for recalling a queued `CommunicationMessage`. Do not document delivery as recallable.
 
 #### Playbooks (composite capabilities — decision record)
 
@@ -260,7 +288,7 @@ Backend (`pytest`, fixtures `client`/`auth_headers`/`db_session`/`test_clinic` f
 - **Inline confirm** — drive the orchestrator with a fake provider that emits a `book_appointment` tool_use: assert the turn **suspends** with `confirmation_required` and **no** appointment row exists; POST confirm → row created + audit row; POST reject → no row, audit reflects skip.
 - **Redaction** — assert no raw `full_name`/`phone`/`email`/patient-UUID appears in the payload handed to the fake provider; assert displayed tokens are rehydrated; assert a tool flagged `exposes_free_text` is excluded from `tool_names` when redaction is on.
 - **Budget** — over-limit `copilot_settings` → orchestrator yields `budget_exceeded`, provider never called.
-- **Provider abstraction** — run the orchestrator turn against a fake provider emitting the neutral `ProviderEvent` sequence; assert redaction/confirm/audit behave purely on neutral types (proves Anthropic will drop in later untouched). Assert `factory.get_provider` raises on unsupported names and `settings` PATCH rejects a provider whose API key is unset.
+- **Provider abstraction** — run the orchestrator turn against a fake provider emitting the neutral `ProviderEvent` sequence; assert redaction/confirm/audit behave purely on neutral types (proves new providers drop in later untouched). Assert `factory.get_provider` raises on unsupported names and `settings` PATCH rejects a provider whose API key is unset.
 - **Uninstall round-trip** — install → converse → uninstall leaves core agent tables + other modules intact (`test_uninstall_roundtrip.py` pattern).
 
 Manual: `docker-compose up`, login `admin@demo.clinic`, `Cmd+K`, run an Ask ("pacientes que se llamen María") and an Act ("agenda revisión a María mañana 10:00" → confirm card → confirm → booked).
@@ -315,11 +343,13 @@ tokenization means under GDPR.
    `expenses` (grep `exposes_free_text=True`); those tools are simply
    unavailable to the model while redaction is on.
 
-5. **Deterministic tokens** — the same real value always maps to the
-   same token (`SHA-1(real)[:6]`, unsalted), within a session *and*
-   across sessions, so the model can reason about "the same patient"
-   across turns without seeing the real value, and a resumed
-   conversation can rebuild its symbol table by re-redacting history.
+5. **Deterministic-per-conversation tokens** — the same real value
+   always maps to the same token *within one conversation*
+   (`SHA-256(salt:real)[:12]`, salted per conversation), so the model
+   can reason about "the same patient" across turns without seeing the
+   real value, and a resumed conversation can rebuild its symbol table
+   by re-redacting history. The salt lives on the conversation row
+   (never in the context blob or logs) and is minted on first use.
 
 ### What is NOT guaranteed
 
@@ -330,23 +360,19 @@ tokenization means under GDPR.
    values only; novel identifiers pass through to the provider in
    cleartext.  NER is deferred to a later milestone.
 
-2. **Anonymization** — tokens are deterministic short hashes, not
-   random nonces.  This is **pseudonymization** under GDPR Article
-   4(5), not anonymization.  A party that possesses the symbol table
-   (i.e. the DentalPin server) can reverse every token.  There is no
-   secret or salt in the hash: the cloud provider receives only the
-   tokenized form and holds no table, but a party with a candidate
-   list (common names, phone-number ranges) can confirm a guess by
-   hashing it.  Tokens reduce identifiability; they do not remove it.
+2. **Anonymization** — tokens are salted hashes, not random nonces.
+   This is **pseudonymization** under GDPR Article 4(5), not
+   anonymization.  A party that possesses the symbol table plus the
+   conversation salt (i.e. the DentalPin server) can reverse every
+   token.  The cloud provider receives only the tokenized form and
+   holds neither table nor salt, so dictionary attacks over the
+   value space do not apply to it (#586).
 
-3. **Cross-session correlation** — because tokens are unsalted and
-   deterministic, the same patient yields the same token in every
-   conversation, every session and every clinic on the server.  A cloud
-   provider observing many sessions can therefore link a token across
-   conversations and build frequency patterns.  The per-session symbol
-   table bounds what the server rehydrates, not what the provider can
-   correlate.  A per-clinic salt would confine correlation to one
-   clinic without breaking resume; it is not implemented.
+3. **Cross-session correlation** — tokens are salted per conversation,
+   so the same patient yields unrelated tokens in different
+   conversations: a provider observing many sessions cannot link them
+   or build frequency patterns.  (Pre-salt history is real-valued
+   server-side, so there is nothing to migrate.)
 
 ### GDPR and deployment guidance
 

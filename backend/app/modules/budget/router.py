@@ -7,11 +7,13 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import Response
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth.dependencies import ClinicContext, get_clinic_context, require_permission
 from app.core.events import event_bus
 from app.core.events.types import EventType
+from app.core.pdf_locales import PDF_LOCALE_PATTERN
 from app.core.schemas import ApiResponse, PaginatedApiResponse
 from app.database import get_db
 
@@ -142,7 +144,15 @@ async def create_budget(
             detail="Patient not found",
         )
 
-    budget = await BudgetService.create_budget(db, ctx.clinic_id, ctx.user_id, data.model_dump())
+    # Same 400 mapping the update route already has: the service raises
+    # ValueError for a professional who is not a member of this clinic,
+    # and that is a bad request, not a server fault.
+    try:
+        budget = await BudgetService.create_budget(
+            db, ctx.clinic_id, ctx.user_id, data.model_dump()
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
     # Reload with relationships
     budget = await BudgetService.get_budget(db, ctx.clinic_id, budget.id, include_items=True)
@@ -169,9 +179,12 @@ async def update_budget(
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-    # Reload with relationships
+    # Reload with relationships. The detail page replaces its budget with
+    # this response, so it must carry the plan link like GET does.
     budget = await BudgetService.get_budget(db, ctx.clinic_id, budget.id, include_items=True)
-    return ApiResponse(data=BudgetDetailResponse.model_validate(budget))
+    response_data = BudgetDetailResponse.model_validate(budget)
+    response_data.treatment_plan = await lookup_linked_plan(db, ctx.clinic_id, budget.id)
+    return ApiResponse(data=response_data)
 
 
 @router.delete("/budgets/{budget_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -529,9 +542,12 @@ async def resend_budget(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> ApiResponse[BudgetResponse]:
     """Clone a finished (rejected/expired/cancelled) budget to a
-    fresh draft (version+1) with a brand-new public token. Reception
-    can then edit and send the new draft. The linked plan's
-    ``budget_id`` follows the new version via ``budget.superseded``."""
+    fresh draft with a brand-new public token. Reception can then edit
+    and send the new draft. The new version is the next free one for the
+    budget number (``BudgetService.next_version``), not the cloned row's
+    version + 1 — a terminal version stays resendable after a newer
+    version exists. The linked plan's ``budget_id`` follows the new
+    version via ``budget.superseded``."""
     budget = await BudgetService.get_budget(db, ctx.clinic_id, budget_id, include_items=True)
     if not budget:
         raise HTTPException(status_code=404, detail="Budget not found")
@@ -540,7 +556,18 @@ async def resend_budget(
             status_code=400,
             detail="Only rejected, expired or cancelled budgets can be resent",
         )
-    new_budget = await BudgetWorkflowService.clone_to_new_draft(db, budget, ctx.user_id)
+    try:
+        new_budget = await BudgetWorkflowService.clone_to_new_draft(db, budget, ctx.user_id)
+    except IntegrityError as e:
+        # Backstop for the narrow race the max-version lookup cannot
+        # close: two resends of the same budget number in flight both
+        # read the same max and one loses ``uq_budget_clinic_number_version``.
+        # Honest 409 instead of a 500 carrying the statement text.
+        await db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="Another version of this budget was created concurrently; retry",
+        ) from e
     plan_ref = await BudgetWorkflowService._lookup_plan(db, budget)
     response = ApiResponse(data=BudgetResponse.model_validate(new_budget))
 
@@ -624,7 +651,18 @@ async def unlock_public_link(
     budget = await BudgetService.get_budget(db, ctx.clinic_id, budget_id, include_items=True)
     if not budget:
         raise HTTPException(status_code=404, detail="Budget not found")
+    was_locked = budget.public_locked_at is not None
     budget = await BudgetWorkflowService.unlock_public(db, budget)
+    await BudgetHistoryService.add_entry(
+        db,
+        clinic_id=ctx.clinic_id,
+        budget_id=budget.id,
+        action="public_lock_cleared",
+        changed_by=ctx.user_id,
+        previous_state={"locked": was_locked},
+        new_state={"locked": False},
+        notes="Cleared failed public verification attempts while clearing the link lock.",
+    )
     return ApiResponse(data=BudgetResponse.model_validate(budget))
 
 
@@ -732,7 +770,7 @@ async def download_budget_pdf(
     ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
     _: Annotated[None, Depends(require_permission("budget.read"))],
     db: Annotated[AsyncSession, Depends(get_db)],
-    locale: str = Query(default="es", pattern="^(es|en)$"),
+    locale: str = Query(default="es", pattern=PDF_LOCALE_PATTERN),
 ) -> Response:
     """Download budget as PDF."""
     budget = await BudgetService.get_budget(db, ctx.clinic_id, budget_id, include_items=True)
@@ -766,7 +804,7 @@ async def download_signed_budget_pdf(
     ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
     _: Annotated[None, Depends(require_permission("budget.read"))],
     db: Annotated[AsyncSession, Depends(get_db)],
-    locale: str = Query(default="es", pattern="^(es|en)$"),
+    locale: str = Query(default="es", pattern=PDF_LOCALE_PATTERN),
 ) -> Response:
     """Download the signed PDF for an accepted budget.
 
@@ -859,7 +897,7 @@ async def preview_budget_pdf(
     ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
     _: Annotated[None, Depends(require_permission("budget.read"))],
     db: Annotated[AsyncSession, Depends(get_db)],
-    locale: str = Query(default="es", pattern="^(es|en)$"),
+    locale: str = Query(default="es", pattern=PDF_LOCALE_PATTERN),
 ) -> Response:
     """Preview budget PDF (with watermark for drafts)."""
     budget = await BudgetService.get_budget(db, ctx.clinic_id, budget_id, include_items=True)

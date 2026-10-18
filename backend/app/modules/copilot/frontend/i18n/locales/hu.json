@@ -1,7 +1,4 @@
 {
-  "nav": {
-    "copilot": "IA"
-  },
   "copilot": {
     "title": "IA",
     "open": "IA megnyitása",
@@ -177,6 +174,7 @@
     },
     "budgetExceeded": "Elérte a havi IA-használati keretet.",
     "error": "Hiba történt.",
+    "sessionExpired": "A munkamenet lejárt. A folytatáshoz jelentkezz be újra.",
     "page": {
       "title": "IA",
       "subtitle": "Az Ön rendelőasszisztense, az Ön jogosultságaihoz igazítva."

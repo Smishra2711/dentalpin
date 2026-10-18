@@ -25,13 +25,17 @@ from .schemas import (
     ManualSendResponse,
     NotificationPreferenceResponse,
     NotificationPreferenceUpdate,
+    PushSubscribeTokenCreate,
+    PushSubscribeTokenResponse,
+    PushSubscriptionCreate,
+    PushSubscriptionResponse,
     SmtpSettingsResponse,
     SmtpSettingsUpdate,
     SmtpTestRequest,
     TestEmailRequest,
     TestEmailResponse,
 )
-from .service import NotificationService
+from .service import NotificationService, budget_treatments_context
 
 router = APIRouter()
 
@@ -238,6 +242,7 @@ def _settings_response(
         clinic_id=settings.clinic_id,
         preferred_channel=settings.preferred_channel,
         fallback_enabled=settings.fallback_enabled,
+        sms_daily_limit=settings.sms_daily_limit,
         manual_channels=list(settings.manual_channels or []),
         settings=settings.settings,
         available_channels=available_channels,
@@ -470,7 +475,7 @@ async def send_notification(
                 detail="budget_id is required for budget notifications",
             )
 
-        from app.modules.budget.models import Budget, BudgetItem
+        from app.modules.budget.models import Budget
 
         result = await db.execute(
             select(Budget).where(
@@ -497,27 +502,7 @@ async def send_notification(
 
         # Get budget items for budget_sent
         if data.notification_type == "budget_sent":
-            result = await db.execute(select(BudgetItem).where(BudgetItem.budget_id == budget.id))
-            items = result.scalars().all()
-
-            treatments = []
-            for item in items:
-                from app.modules.catalog.models import TreatmentCatalogItem
-
-                result = await db.execute(
-                    select(TreatmentCatalogItem).where(
-                        TreatmentCatalogItem.id == item.catalog_item_id
-                    )
-                )
-                catalog_item = result.scalar_one_or_none()
-                treatments.append(
-                    {
-                        "name": catalog_item.name if catalog_item else "Tratamiento",
-                        "tooth": item.tooth_number,
-                        "price": float(item.line_total),
-                    }
-                )
-            context["treatments"] = treatments
+            context["treatments"] = await budget_treatments_context(db, budget.id)
 
         # Use patient from budget if not provided
         if not patient:
@@ -528,11 +513,14 @@ async def send_notification(
                 patient_email = patient.email
 
     if data.channels:
-        # Recipient per requested channel: phone for WhatsApp, email for
-        # email. A phone-only patient must not 400 on a WhatsApp send.
+        # Recipient per requested channel: phone for WhatsApp/SMS, email
+        # for email, the patient itself for push (the gateway checks the
+        # subscriptions). A phone-only patient must not 400 on a
+        # WhatsApp/SMS send (issue #392 review).
         has_recipient = any(
-            (channel == "whatsapp" and patient is not None and patient.phone)
+            (channel in ("whatsapp", "sms") and patient is not None and patient.phone)
             or (channel == "email" and patient_email)
+            or (channel == "push" and patient is not None)
             for channel in data.channels
         )
         if not has_recipient:
@@ -797,3 +785,115 @@ async def test_email_connection(
             provider=result.provider,
         )
     )
+
+
+# ============================================================================
+# WebPush Subscriptions (T6)
+# ============================================================================
+
+
+@router.post(
+    "/push/subscriptions",
+    response_model=ApiResponse[PushSubscriptionResponse],
+    status_code=status.HTTP_201_CREATED,
+)
+async def register_push_subscription(
+    data: PushSubscriptionCreate,
+    ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
+    _: Annotated[None, Depends(require_permission("notifications.push.write"))],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> ApiResponse[PushSubscriptionResponse]:
+    """Register (or refresh) a patient's browser subscription. Upserts on
+    (clinic, endpoint): re-subscribing the same browser refreshes keys."""
+    from .push import PushSubscriptionService
+
+    try:
+        row = await PushSubscriptionService.subscribe(
+            db,
+            ctx.clinic_id,
+            data.patient_id,
+            data.endpoint,
+            data.keys.model_dump(),
+            user_agent=data.user_agent,
+        )
+    except LookupError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Patient not found")
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
+    return ApiResponse(data=PushSubscriptionResponse.model_validate(row))
+
+
+@router.get(
+    "/push/subscriptions",
+    response_model=ApiResponse[list[PushSubscriptionResponse]],
+)
+async def list_push_subscriptions(
+    patient_id: UUID,
+    ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
+    _: Annotated[None, Depends(require_permission("notifications.push.read"))],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> ApiResponse[list[PushSubscriptionResponse]]:
+    """List a patient's push subscriptions (keys never leave the server)."""
+    from .push import PushSubscriptionService
+
+    rows = await PushSubscriptionService.list_for_patient(db, ctx.clinic_id, patient_id)
+    return ApiResponse(data=[PushSubscriptionResponse.model_validate(i) for i in rows])
+
+
+@router.delete("/push/subscriptions/{subscription_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_push_subscription(
+    subscription_id: UUID,
+    ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
+    _: Annotated[None, Depends(require_permission("notifications.push.write"))],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> None:
+    from .push import PushSubscriptionService
+
+    if not await PushSubscriptionService.unsubscribe(db, ctx.clinic_id, subscription_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found")
+
+
+@router.get("/push/vapid-public-key", response_model=ApiResponse[dict])
+async def get_vapid_public_key(
+    ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
+    _: Annotated[None, Depends(require_permission("notifications.push.read"))],
+) -> ApiResponse[dict]:
+    """Serve the deployment's VAPID public key for PushManager.subscribe."""
+    from .channels.vapid import vapid_public_key
+
+    public_key = vapid_public_key()
+    if not public_key:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="WebPush is not configured (DENTALPIN_VAPID_PRIVATE_KEY)",
+        )
+    return ApiResponse(data={"public_key": public_key})
+
+
+# ============================================================================
+# Patient subscribe flow (T6): staff mints a single-use token here; the
+# patient's browser redeems it through the PUBLIC router
+# (./public_router.py) — no staff auth, the token is the auth, same
+# shape as budget public links (ADR 0006).
+# ============================================================================
+
+
+@router.post(
+    "/push/subscribe-tokens",
+    response_model=ApiResponse[PushSubscribeTokenResponse],
+    status_code=status.HTTP_201_CREATED,
+)
+async def mint_push_subscribe_token(
+    data: PushSubscribeTokenCreate,
+    ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
+    _: Annotated[None, Depends(require_permission("notifications.push.write"))],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> ApiResponse[PushSubscribeTokenResponse]:
+    """Mint a single-use subscribe token for a patient (staff only)."""
+    from .push import PushSubscribeTokenService
+
+    try:
+        row = await PushSubscribeTokenService.mint(db, ctx.clinic_id, data.patient_id)
+    except LookupError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Patient not found")
+    return ApiResponse(data=PushSubscribeTokenResponse.model_validate(row))

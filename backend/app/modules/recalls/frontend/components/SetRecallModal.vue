@@ -168,7 +168,7 @@ function close() {
               :key="r.value"
               type="button"
               :aria-pressed="reason === r.value"
-              class="flex items-center gap-2 px-3 py-2 rounded-token-md border text-sm text-left transition-colors"
+              class="flex items-center gap-2 px-3 py-2 rounded-token-md border text-sm text-start transition-colors"
               :class="reason === r.value
                 ? 'border-primary bg-primary/10 text-primary-accent'
                 : 'border-default bg-default hover:bg-elevated text-default'"
@@ -260,7 +260,7 @@ function close() {
           />
           <p
             v-if="note.length > 400"
-            class="text-caption text-dimmed mt-1 text-right tnum"
+            class="text-caption text-dimmed mt-1 text-end tnum"
           >
             {{ note.length }} / 500
           </p>

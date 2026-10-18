@@ -2,6 +2,34 @@
 
 ## Unreleased
 
+- feat(#657): owns the `documents` GDPR erasure coverage scope
+  (`get_erasure_contributors()`). Issued prescriptions, certificates and
+  referrals are retained as clinical records (Art. 17(3)(c)/(h)). The
+  module is `auto_install: False`, so a clinic that never installed it no
+  longer sees a coverage claim for it at all — previously `gdpr`'s
+  hardcoded `clinical` row covered these documents unconditionally.
+
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer; Hindi document PDF labels.
+- chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
+
+- feat(i18n): Telugu (`te`) locale for the module's frontend layer.
+- feat(i18n): Telugu (`te`) labels for the managed-document PDF.
+- feat(#509): the managed-document PDF for `pt-BR` reuses the `pt` labels.
+
+- fix(#524): the managed-document PDF renders in every host locale.
+  `_LABELS` held only `es`/`en`, the endpoint's pattern was `^(es|en)$`
+  and the frontend sent no `locale` at all — so every clinic, in every
+  language, got Spanish referral letters and medical certificates with
+  no way to change it. Eight label sets added (overlapping terms lifted
+  verbatim from the prescriptions and billing sets so a clinic's
+  paperwork reads consistently), `PDF_LOCALE_PATTERN` on the endpoint,
+  `dir="rtl"` for Arabic as billing already does, and the page now
+  passes the UI locale.
+
+- Follow-up: drop dead `TEMPLATE_MAP` (service.py) / `_DOC_NAMES`
+  (pdf.py); roundtrip test docstring states the real `depends_on`.
+- feat(#232): sidebar entry grouped under the Clinical header (`nav.section` "clinical").
+- feat(i18n): Arabic (`ar`) locale for the module's frontend layer.
 - feat(#228): Initial documents module — prescriptions, medical
   certificates, referral letters and radiology requests as branded PDFs.
 - CRUD under `/api/v1/documents/` with patient/type/status filters,

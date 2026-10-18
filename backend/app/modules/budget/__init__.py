@@ -9,6 +9,7 @@ from fastapi import APIRouter
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.erasure.types import ErasureContributor
 from app.core.events.types import EventType
 from app.core.plugins import BaseModule
 from app.core.scheduling import ScheduledJob
@@ -60,6 +61,7 @@ class BudgetModule(BaseModule):
             "navigation": [
                 {
                     "label": "nav.budgets",
+                    "section": "financials",
                     "icon": "i-lucide-file-text",
                     "to": "/budgets",
                     "permission": "budget.read",
@@ -280,3 +282,8 @@ class BudgetModule(BaseModule):
 
         await BudgetService._recalculate_totals(db, budget)
         logger.info("Synced plan %s with budget %s", plan_id, budget_id_raw)
+
+    def get_erasure_contributors(self) -> list[ErasureContributor]:
+        from .erasure import BudgetErasureContributor
+
+        return [BudgetErasureContributor()]

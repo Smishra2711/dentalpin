@@ -1,0 +1,127 @@
+{
+  "orthodontics": {
+    "tab": {
+      "label": "Kieferorthopädie"
+    },
+    "nav": {
+      "title": "Kieferorthopädie"
+    },
+    "appliance": {
+      "brackets_metal": "Metallbrackets",
+      "brackets_esthetic": "Ästhetische Brackets",
+      "self_ligating": "Selbstligierend",
+      "aligners": "Aligner",
+      "functional": "Funktional",
+      "retention": "Retention"
+    },
+    "status": {
+      "active": "Aktiv",
+      "paused": "Pausiert",
+      "finished": "Abgeschlossen",
+      "transferred_out": "Überwiesen",
+      "session_pending": "Ausstehend",
+      "session_completed": "Abgeschlossen"
+    },
+    "inbox": {
+      "title": "Kieferorthopädie",
+      "active": "Aktiv",
+      "overdue": "Überfällige Kontrolle",
+      "unscheduled": "Keine nächste Kontrolle",
+      "finished": "Abgeschlossen",
+      "new": "Neuer Fall",
+      "empty": "Keine Fälle in dieser Ansicht",
+      "nextDue": "Nächste Kontrolle",
+      "monthOf": "Monat {x} von ~{n}"
+    },
+    "case": {
+      "new": "Neuer kieferorthopädischer Fall",
+      "appliance": "Apparatur",
+      "professional": "Kieferorthopäde",
+      "startDate": "Startdatum",
+      "estimatedMonths": "Voraussichtliche Monate",
+      "notes": "Diagnose / Ziele",
+      "create": "Fall eröffnen",
+      "inMouthNow": "Derzeit im Mund",
+      "upper": "Oberkiefer",
+      "lower": "Unterkiefer",
+      "noWire": "Kein Bogen dokumentiert",
+      "changeStatus": "Status ändern",
+      "statusNote": "Grund (optional)",
+      "save": "Speichern",
+      "none": "Noch kein KFO-Fall"
+    },
+    "control": {
+      "new": "Kontrolle erfassen",
+      "wires": "Bögen (standardmäßig unverändert)",
+      "procedures": "Maßnahmen",
+      "proceduresOther": "Weitere Maßnahmen",
+      "hygiene": "Mundhygiene",
+      "hygiene_good": "Gut",
+      "hygiene_fair": "Mittelmäßig",
+      "hygiene_poor": "Schlecht",
+      "alignerNumber": "Aligner-Nummer",
+      "notes": "Befund / Anweisungen",
+      "nextControl": "Nächste Kontrolle",
+      "weeks": "{n} Wochen",
+      "noNext": "Keine nächste Kontrolle",
+      "save": "Kontrolle speichern",
+      "history": "Kontrollen",
+      "empty": "Noch keine Kontrollen",
+      "appointment": "Termin",
+      "session": "Verknüpfte Sitzung",
+      "sessionHint": "Nur Referenz - Inkasso erfolgt unter Zahlungen."
+    },
+    "card": {
+      "title": "Kieferorthopädie",
+      "noCase": "Kein aktiver Fall",
+      "view": "Öffnen"
+    },
+    "photos": {
+      "title": "Fotos ({n})",
+      "upload": "Foto hinzufügen"
+    },
+    "procedures": {
+      "power_chain": "Power Chain",
+      "elastics_class_2": "Klasse-II-Gummizüge",
+      "elastics_class_3": "Klasse-III-Gummizüge",
+      "niti_open_coil": "NiTi-Druckfeder",
+      "metal_ligature": "Drahtligatur",
+      "ligature_change": "Ligaturwechsel",
+      "button_attachment": "Knöpfchen / Attachment",
+      "ipr": "Approximale Schmelzreduktion (IPR)",
+      "bite_turbos": "Aufbisse",
+      "bracket_rebonding": "Bracket-Neubefestigung",
+      "expander_activation": "Aktivierung der Dehnschraube",
+      "band_placement": "Bandanpassung",
+      "bracket_removal": "Bracketentfernung",
+      "retainer_placement": "Retainer-Eingliederung"
+    },
+    "errors": {
+      "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+      "loadFailed": "KFO-Daten konnten nicht geladen werden."
+    },
+    "plan": {
+      "title": "Behandlungsplan",
+      "link": "Plan verknüpfen",
+      "unlink": "Plan trennen",
+      "noLink": "Kein Plan verknüpft (überwiesene Patienten können auch ohne Plan betreut werden)",
+      "completed": "{n} abgeschlossen",
+      "pending": "{n} offen",
+      "generate": "Raten erzeugen",
+      "collect": "Rate einziehen",
+      "confirmUnlink": "Behandlungsplan trennen?",
+      "downPayment": "Anzahlung",
+      "installmentN": "Rate {n}",
+      "months": "Monate",
+      "monthlyAmount": "Monatsbetrag",
+      "pendingTotal": "Offener Gesamtbetrag: {n}",
+      "closeSuggested": "Fall mit verknüpftem Plan überwiesen: Erwägen Sie, den Plan zu schließen."
+    },
+    "settings": {
+      "title": "Chip-Kataloge",
+      "wires": "Bögen (einer pro Zeile)",
+      "procedures": "Maßnahmen (eine pro Zeile)",
+      "save": "Kataloge speichern"
+    }
+  }
+}

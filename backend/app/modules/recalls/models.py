@@ -139,7 +139,8 @@ class Recall(Base, TimestampMixin):
 class RecallContactAttempt(Base):
     """One row per outbound contact attempt for a recall.
 
-    Append-only — never updated, never soft-deleted. ``attempted_at`` is
+    Append-only — never updated, never soft-deleted, except a GDPR erasure
+    that clears ``note`` (#546). ``attempted_at`` is
     server-set so the log is monotonic regardless of client clock skew.
     """
 

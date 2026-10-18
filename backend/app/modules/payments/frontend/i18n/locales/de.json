@@ -94,7 +94,9 @@
       "errPatient": "Wählen Sie einen Patienten aus",
       "errAmount": "Geben Sie einen Betrag größer als 0 ein",
       "errSum": "Die Summe der Zuordnungen muss dem Betrag entsprechen",
-      "errUnknown": "Die Zahlung konnte nicht erfasst werden. Bitte versuchen Sie es erneut."
+      "errUnknown": "Die Zahlung konnte nicht erfasst werden. Bitte versuchen Sie es erneut.",
+      "methodRecord": "Bereits erhaltene Zahlung erfassen",
+      "methodCollect": "Jetzt einziehen"
     },
     "methods": {
       "cash": "Bar",

@@ -51,6 +51,16 @@ dependencies = [
     "anthropic>=0.40",
     # telephony module: E.164 normalization of caller numbers (issue #64).
     "phonenumbers>=8.13",
+    # imaging_viewer (study index + PNG render) and imaging_ai (pano
+    # DICOM→PNG input, nnU-Net volume stacking) both need pydicom pixel
+    # ops + numpy; declared so installs get full functionality.
+    "pydicom>=3.0",
+    "numpy>=1.26",
+    # Error tracking: Sentry SDK (also speaks to self-hosted GlitchTip).
+    # Only activated when SENTRY_DSN is set; see setup_error_tracking.
+    "sentry-sdk>=2.0.0",
+    # WebPush channel (notifications): push delivery to patient browsers.
+    "pywebpush>=1.14.0",
 ]
 
 [project.optional-dependencies]
@@ -100,7 +110,27 @@ whatsapp_kapso = "app.modules.whatsapp_kapso:WhatsappKapsoModule"
 documents = "app.modules.documents:DocumentsModule"
 whatsapp_webhook = "app.modules.whatsapp_webhook:WhatsappWebhookModule"
 telephony = "app.modules.telephony:TelephonyModule"
+nav_online = "app.modules.nav_online:NavOnlineModule"
+sdi_it = "app.modules.sdi_it:SdiItModule"
+sistema_ts = "app.modules.sistema_ts:SistemaTsModule"
 suppliers = "app.modules.suppliers:SuppliersModule"
+supplier_items = "app.modules.supplier_items:SupplierItemsModule"
+purchase_orders = "app.modules.purchase_orders:PurchaseOrdersModule"
+gdpr = "app.modules.gdpr:GdprModule"
+inventory_reorder = "app.modules.inventory_reorder:InventoryReorderModule"
+supplier_ratings = "app.modules.supplier_ratings:SupplierRatingsModule"
+payroll = "app.modules.payroll:PayrollModule"
+prescriptions = "app.modules.prescriptions:PrescriptionsModule"
+payment_gateways = "app.modules.payment_gateways:PaymentGatewaysModule"
+razorpay = "app.modules.razorpay:RazorpayModule"
+sms_gateway = "app.modules.sms_gateway:SmsGatewayModule"
+patient_segments = "app.modules.patient_segments:PatientSegmentsModule"
+leads = "app.modules.leads:LeadsModule"
+staff_attendance = "app.modules.staff_attendance:StaffAttendanceModule"
+treasury = "app.modules.treasury:TreasuryModule"
+imaging_viewer = "app.modules.imaging_viewer:ImagingViewerModule"
+imaging_ai = "app.modules.imaging_ai:ImagingAiModule"
+orthodontics = "app.modules.orthodontics:OrthodonticsModule"
 
 [tool.setuptools.packages.find]
 where = ["."]

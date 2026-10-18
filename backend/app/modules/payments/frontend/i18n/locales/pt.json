@@ -94,7 +94,9 @@
       "errPatient": "Selecione um paciente",
       "errAmount": "Introduza um montante superior a 0",
       "errSum": "A soma das afetações tem de ser igual ao montante",
-      "errUnknown": "Não foi possível registar o pagamento. Tente novamente."
+      "errUnknown": "Não foi possível registar o pagamento. Tente novamente.",
+      "methodRecord": "Registar um pagamento já recebido",
+      "methodCollect": "Cobrar agora"
     },
     "methods": {
       "cash": "Numerário",

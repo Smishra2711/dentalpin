@@ -2,6 +2,7 @@
 import type { BudgetListItem, BudgetStatus, ApiResponse, PaginatedResponse } from '~~/app/types'
 import { PERMISSIONS } from '~~/app/config/permissions'
 import { errorMessage } from '~~/app/utils/error'
+import { toISODate } from '~~/app/utils/wallClock'
 
 /**
  * /budgets — list page.
@@ -64,13 +65,13 @@ const defaults: BudgetListFilters = {
 const summaries = ref<Record<string, BudgetPaymentSummary | null>>({})
 
 function todayIso(): string {
-  return new Date().toISOString().slice(0, 10)
+  return toISODate(new Date())
 }
 
 function inDaysIso(days: number): string {
   const d = new Date()
   d.setDate(d.getDate() + days)
-  return d.toISOString().slice(0, 10)
+  return toISODate(d)
 }
 
 async function fetcher(q: {

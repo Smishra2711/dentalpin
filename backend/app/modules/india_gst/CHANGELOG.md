@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer; Hindi name for the `GST 18%` VAT type; India demo seed supports a New Delhi (state 07) clinic.
+
+- refactor(#611): `_csv_cell` moved to `app/core/csv_safety.py` and is now
+  shared. This module solved formula injection first; the other exports
+  did not pick it up until #611. No behaviour change here.
+
+- feat(i18n): Telugu (`te`) locale for the module's frontend layer.
+- feat(i18n): Telugu (`te`) name for the GST 18% VAT type. The Telugu demo (`--lang te`) is an India GST clinic in Hyderabad, Telangana (state 36, GSTIN `36ABCDE1234F1Z1`).
+- feat(#232): sidebar entry grouped under the Financials header (`nav.section` "financials").
+- feat(i18n): Arabic (ar) locale for the module's frontend layer.
+- feat(i18n): the frontend layer's directional spacing, borders, text alignment and inset positioning now resolve against the document direction (physical→logical CSS utilities, Arabic RTL support).
+
 - fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
 
 - feat(#144, #132): Polish (pl) and Italian (it) locales for the module's frontend layer.

@@ -10,17 +10,25 @@ the ``patients_clinical`` module after Fase B.4.
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth.dependencies import ClinicContext, get_clinic_context, require_permission
 from app.core.schemas import ApiResponse, PaginatedApiResponse
 from app.database import get_db
 
+from .csv_import import (
+    CsvImportError,
+    find_duplicate_lines,
+    import_patients,
+    read_upload_limited,
+    validate_patient_csv,
+)
 from .schemas import (
     PatientCreate,
     PatientExtendedResponse,
     PatientExtendedUpdate,
+    PatientImportReport,
     PatientResponse,
     PatientUpdate,
 )
@@ -53,6 +61,7 @@ async def list_patients(
     city: str | None = Query(default=None, max_length=100),
     do_not_contact: bool | None = Query(default=None),
     include_archived: bool = Query(default=False),
+    status: list[str] | None = Query(default=None),
     sort: str | None = Query(default=None, max_length=50),
 ) -> PaginatedApiResponse[PatientResponse]:
     """List patients with optional search + filters.
@@ -71,6 +80,7 @@ async def list_patients(
         city=city,
         do_not_contact=do_not_contact,
         include_archived=include_archived,
+        statuses=status,
         sort=sort,
     )
     return PaginatedApiResponse(
@@ -97,6 +107,51 @@ async def create_patient(
         db, ctx.clinic_id, data.model_dump(exclude_unset=True)
     )
     return ApiResponse(data=PatientResponse.model_validate(patient))
+
+
+@router.post(
+    "/import.csv",
+    response_model=ApiResponse[PatientImportReport],
+    status_code=status.HTTP_200_OK,
+)
+async def import_patients_csv(
+    file: Annotated[UploadFile, File()],
+    ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
+    _: Annotated[None, Depends(require_permission("patients.write"))],
+    db: Annotated[AsyncSession, Depends(get_db)],
+    dry_run: bool = Query(default=True),
+    allow_duplicates: bool = Query(default=False),
+) -> ApiResponse[PatientImportReport]:
+    """Import patients from CSV. Dry-run (default) validates only; with
+    ``dry_run=false`` valid rows are created and per-row events fire.
+    Rows matching an existing patient are reported as duplicates and
+    skipped unless ``allow_duplicates`` is set."""
+    try:
+        content = await read_upload_limited(file)
+        valid, errors, total, lines = validate_patient_csv(content)
+    except CsvImportError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
+    duplicates = await find_duplicate_lines(db, ctx.clinic_id, valid, lines)
+    dup_lines = {d["row"] for d in duplicates}
+    created = 0
+    skipped = 0
+    if not dry_run and valid:
+        to_create = [
+            row for row, line in zip(valid, lines) if allow_duplicates or line not in dup_lines
+        ]
+        skipped = len(valid) - len(to_create)
+        patients = await import_patients(db, ctx.clinic_id, to_create)
+        created = len(patients)
+    return ApiResponse(
+        data=PatientImportReport(
+            total=total,
+            valid=len(valid),
+            created=created,
+            skipped=skipped,
+            errors=errors,
+            duplicates=duplicates,
+        )
+    )
 
 
 @router.get("/{patient_id}", response_model=ApiResponse[PatientResponse])
@@ -150,6 +205,27 @@ async def delete_patient(
             detail="Patient not found",
         )
     await PatientService.archive_patient(db, patient)
+
+
+@router.post(
+    "/{patient_id}/restore",
+    response_model=ApiResponse[PatientResponse],
+)
+async def restore_patient(
+    patient_id: UUID,
+    ctx: Annotated[ClinicContext, Depends(get_clinic_context)],
+    _: Annotated[None, Depends(require_permission("patients.write"))],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> ApiResponse[PatientResponse]:
+    """Restore a soft-archived patient. No-op when already active."""
+    patient = await PatientService.get_patient(db, ctx.clinic_id, patient_id)
+    if not patient:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Patient not found",
+        )
+    patient = await PatientService.restore_patient(db, patient)
+    return ApiResponse(data=PatientResponse.model_validate(patient))
 
 
 # --- Extended info ------------------------------------------------------

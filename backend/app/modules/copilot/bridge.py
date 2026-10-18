@@ -9,6 +9,7 @@ the router frames as SSE. Provider is injectable for tests.
 
 from __future__ import annotations
 
+import secrets
 from collections.abc import AsyncIterator
 from uuid import UUID
 
@@ -21,7 +22,7 @@ from app.core.agents.redaction import Redactor
 from app.core.agents.tools.registry import tool_registry
 from app.core.auth.permissions import permission_matches
 from app.core.llm.base import ProviderMessage, Role, TextBlock, ToolResultBlock, ToolUseBlock
-from app.core.llm.factory import get_provider
+from app.core.llm.factory import get_provider, get_provider_spec
 
 from .models import CopilotConversation, CopilotSettings
 from .serde import message_from_row
@@ -118,11 +119,27 @@ def _build_context(
 
 def _dialect_for(provider_name: str) -> str:
     """Tool-schema dialect for the conversation's provider."""
-    return "anthropic" if provider_name == "anthropic" else "openai"
+    return get_provider_spec(provider_name).tool_dialect
 
 
-def _redactor_for(conv: CopilotConversation, settings_row: CopilotSettings) -> Redactor:
-    r = Redactor(enabled=settings_row.redaction_enabled)
+async def _ensure_redaction_salt(db: AsyncSession, conv: CopilotConversation) -> str:
+    """Per-conversation token salt (#586), persisted beside the context.
+
+    Generated once on first redactor build and never rotated: tokens the
+    model saw in earlier turns must keep resolving. Stored as a column,
+    never inside the context blob (which is seeded and logged) and never
+    emitted anywhere.
+    """
+    if not conv.redaction_salt:
+        conv.redaction_salt = secrets.token_hex(16)
+        await db.flush()
+    return conv.redaction_salt
+
+
+def _redactor_for(
+    conv: CopilotConversation, settings_row: CopilotSettings, salt: str | None
+) -> Redactor:
+    r = Redactor(enabled=settings_row.redaction_enabled, salt=salt)
     r.seed(conv.context)
     return r
 
@@ -158,7 +175,8 @@ async def drive_turn(
     history.append(user_msg)
 
     provider = provider or get_provider(conv.provider)
-    redactor = _redactor_for(conv, settings_row)
+    salt = await _ensure_redaction_salt(db, conv)
+    redactor = _redactor_for(conv, settings_row, salt)
     budget = ClinicBudgetGuard(settings_row, conv)
     ctx = _build_context(
         db=db,
@@ -204,9 +222,11 @@ async def resume_turn(
     pending = _find_pending(history, call_id)
     if pending is None:
         return
+    already = _find_result(history, call_id)
 
     provider = provider or get_provider(conv.provider)
-    redactor = _redactor_for(conv, settings_row)
+    salt = await _ensure_redaction_salt(db, conv)
+    redactor = _redactor_for(conv, settings_row, salt)
     budget = ClinicBudgetGuard(settings_row, conv)
     ctx = _build_context(
         db=db,
@@ -218,17 +238,25 @@ async def resume_turn(
     )
 
     if approve:
-        res = await ctx.tools.call(ctx, pending.name, pending.input)
-        payload = res.data if res.ok else {"error": res.error}
-        is_error = not res.ok
-        yield ToolCallFinished(call_id, pending.name, res.ok, payload)
+        if already is not None:
+            # Idempotent re-confirm (#532): a retry or double click
+            # replays the stored result instead of re-executing the
+            # write. Nothing is appended — the original result is
+            # already in history and persisted.
+            yield ToolCallFinished(call_id, pending.name, not already.is_error, already.content)
+        else:
+            res = await ctx.tools.call(ctx, pending.name, pending.input)
+            payload = res.data if res.ok else {"error": res.error}
+            is_error = not res.ok
+            yield ToolCallFinished(call_id, pending.name, res.ok, payload)
+            tool_msg = ProviderMessage(Role.TOOL, [ToolResultBlock(call_id, payload, is_error)])
+            history.append(tool_msg)
+            await ConversationService.append_message(db, conv, role="tool", blocks=tool_msg.content)
     else:
         payload = {"status": "cancelled_by_user"}
-        is_error = False
-
-    tool_msg = ProviderMessage(Role.TOOL, [ToolResultBlock(call_id, payload, is_error)])
-    history.append(tool_msg)
-    await ConversationService.append_message(db, conv, role="tool", blocks=tool_msg.content)
+        tool_msg = ProviderMessage(Role.TOOL, [ToolResultBlock(call_id, payload, False)])
+        history.append(tool_msg)
+        await ConversationService.append_message(db, conv, role="tool", blocks=tool_msg.content)
 
     start = len(history)
     async for ev in run_turn(
@@ -252,6 +280,17 @@ def _find_pending(history: list[ProviderMessage], call_id: str) -> ToolUseBlock 
         if msg.role is Role.ASSISTANT:
             for block in msg.content:
                 if isinstance(block, ToolUseBlock) and block.id == call_id:
+                    return block
+    return None
+
+
+def _find_result(history: list[ProviderMessage], call_id: str) -> ToolResultBlock | None:
+    # Oldest first: reject appends "cancelled" markers under the same id,
+    # and a later approve must replay the execution result, not a marker.
+    for msg in history:
+        if msg.role is Role.TOOL:
+            for block in msg.content:
+                if isinstance(block, ToolResultBlock) and block.tool_call_id == call_id:
                     return block
     return None
 

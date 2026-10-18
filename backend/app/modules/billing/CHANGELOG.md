@@ -2,9 +2,50 @@
 
 ## Unreleased
 
+- fix: a duplicate invoice-series prefix is a 409 instead of a 500.
+  Neither `POST /series` nor `PUT /series/{id}` caught the
+  `uq_invoice_series_clinic_prefix` violation, so creating a series twice
+  — or renaming one onto a prefix already in use — returned 500 with the
+  raw asyncpg message in the response body. The constraint is
+  `(clinic_id, prefix)`, so this also fires across series types. Found by
+  a generated-request sweep of the write surface.
+
+- feat(#657): owns the `billing` GDPR erasure coverage scope
+  (`get_erasure_contributors()`). An issued invoice keeps its fiscal
+  snapshot unchanged as bookkeeping law requires (Art. 17(3)(b)). The
+  snapshot holds `billing_email` and `billing_tax_id` — the latter is the
+  patient's national id, so `identity` now reports `retained` where the
+  hardcoded row said `not_applicable`; `phone` is not held here and
+  reports `not_applicable`.
+
+- docs(#542): `docs/technical/billing/permissions.md` now documents why `dentist` holds `billing.admin` (series config, draft-only void, clinic billing settings) and corrects the `void` description to draft-only; grants unchanged.
+
+- feat(i18n): Hindi (`hi`) locale: Hindi invoice PDF labels; `Noto Sans Devanagari` in the PDF font stack.
+- chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
+
+- feat(i18n): Telugu (`te`) invoice PDF labels; `Noto Sans Telugu` joins the PDF font stack.
+- feat(#509): invoice PDF accepts `pt-BR`; captions reuse the `pt` labels.
+
+- feat(#422): invoice PDF labels for every UI locale (fr/pt/de/hu/pl/it/ar, lifted from the layer `invoice.*` strings so PDF and screen agree); Arabic renders `dir="rtl"`.
+- feat(#232): sidebar entry grouped under the Financials header (`nav.section` "financials").
+- refactor(#441): `PDF_LOCALES` / `PDF_LOCALE_PATTERN` / the Babel locale map moved to `app/core/pdf_locales.py` so budget can share them without depending on billing. No behaviour change.
+
+- fix: `GET /invoices/{id}/pdf` (and `/pdf/preview`) accept every UI locale instead of `es|en|ta` only — a pt/pl/it/de/hu/fr/ar UI got a 422 on "Download PDF". Labels fall back to English until translated (#422); amounts and dates use the locale's separators.
+
+- fix: invoice send options exclude SMS via the shared
+  `documentButtonsForPatient` composable (documents travel over
+  email/WhatsApp only); the predicate lives in notifications so every
+  document surface filters identically (issue #392).
+- fix: `regenerate_after_party_change` results are persisted — `compliance_data` is reassigned instead of updated in place (plain JSONB does not track mutation), so the regenerated record shows on the invoice after a billing-party edit.
+
+- fix: the discount-type select in the invoice item modals crashed on open — reka-ui rejects `''` as an item value; the 'no discount' option now uses `null`.
+
 - fix(#326): the invoice-series onboarding rule carries `permission: 'billing.read'` — it no longer renders or fires its load for a clinic where billing isn't active.
 
 - refactor(#126): invoice-line descriptions resolve catalog names through the shared `app.core.i18n_names.catalog_name` helper (same chain, one source of truth).
+
+- feat(i18n): the frontend layer's directional spacing, borders, text alignment and inset positioning now resolve against the document direction (physical→logical CSS utilities, Arabic RTL support).
+
 
 - fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
 

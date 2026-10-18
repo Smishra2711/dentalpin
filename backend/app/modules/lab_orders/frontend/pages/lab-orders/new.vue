@@ -2,6 +2,7 @@
 import { PERMISSIONS } from '~~/app/config/permissions'
 import type { Patient } from '~/types'
 import { useLabOrders, type WorkType, type ImpressionType, type Shade, VITA_CLASSICAL_SHADES } from '../../composables/useLabOrders'
+import { toISODate } from '~~/app/utils/wallClock'
 
 definePageMeta({ middleware: ['auth'] })
 
@@ -24,7 +25,7 @@ const form = ref({
   impression_type: undefined as ImpressionType | undefined,
   antagonist_info: '',
   shade: undefined as Shade | undefined,
-  sent_date: new Date().toISOString().slice(0, 10),
+  sent_date: toISODate(new Date()),
   expected_date: '',
   notes: ''
 })

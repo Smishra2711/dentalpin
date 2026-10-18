@@ -21,6 +21,7 @@ from app.core.auth.dependencies import (
     get_clinic_context,
     require_permission,
 )
+from app.core.csv_safety import csv_row
 from app.core.schemas import ApiResponse, PaginatedApiResponse
 from app.database import get_db
 
@@ -221,18 +222,22 @@ async def export_csv(
         ]
     )
     for recall, patient in rows:
+        # Patient names arrive through the public lead intake and the note
+        # is free text (#611); counts stay numbers.
         writer.writerow(
-            [
-                recall.due_month.isoformat(),
-                f"{patient.first_name} {patient.last_name}".strip(),
-                patient.phone or "",
-                recall.reason,
-                recall.priority,
-                recall.status,
-                recall.contact_attempt_count,
-                str(recall.assigned_professional_id or ""),
-                (recall.reason_note or "").replace("\n", " "),
-            ]
+            csv_row(
+                [
+                    recall.due_month.isoformat(),
+                    f"{patient.first_name} {patient.last_name}".strip(),
+                    patient.phone or "",
+                    recall.reason,
+                    recall.priority,
+                    recall.status,
+                    recall.contact_attempt_count,
+                    str(recall.assigned_professional_id or ""),
+                    (recall.reason_note or "").replace("\n", " "),
+                ]
+            )
         )
     buf.seek(0)
     return StreamingResponse(

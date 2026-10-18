@@ -18,11 +18,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const { pairPhotos, unpair } = usePhotos()
 
-const config = useRuntimeConfig()
-const auth = useAuth()
-const apiBaseUrl = computed(() =>
-  import.meta.server ? config.apiBaseUrlServer : config.public.apiBaseUrl
-)
+const api = useApi()
 
 const index = ref(0)
 
@@ -52,12 +48,9 @@ const partnerBlobUrl = ref<string | null>(null)
 
 async function fetchBlob(path: string): Promise<string | null> {
   try {
-    const response = await $fetch<Blob>(path, {
-      baseURL: apiBaseUrl.value,
-      headers: { Authorization: `Bearer ${auth.accessToken.value}` },
-      responseType: 'blob'
-    })
-    return URL.createObjectURL(response)
+    const response = await api.raw(path)
+    if (!response.ok) return null
+    return URL.createObjectURL(await response.blob())
   } catch {
     return null
   }
@@ -212,7 +205,7 @@ function toggleCompare() {
           <button
             v-if="index > 0 && !comparing"
             type="button"
-            class="absolute left-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-black/40 p-2 text-white hover:bg-black/60 sm:block"
+            class="absolute start-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-black/40 p-2 text-white hover:bg-black/60 sm:block"
             :aria-label="t('common.previous')"
             @click="prev"
           >
@@ -228,7 +221,7 @@ function toggleCompare() {
             class="grid h-full w-full grid-cols-1 gap-2 p-2 sm:grid-cols-2"
           >
             <figure class="relative flex flex-col items-center">
-              <span class="absolute top-2 left-2 z-10 rounded bg-primary px-2 py-0.5 text-[11px] font-semibold text-inverted shadow">
+              <span class="absolute top-2 start-2 z-10 rounded bg-primary px-2 py-0.5 text-[11px] font-semibold text-inverted shadow">
                 {{ current?.media_subtype === 'after'
                   ? t('photoGallery.compare.after', 'Después')
                   : t('photoGallery.compare.before', 'Antes') }}
@@ -242,7 +235,7 @@ function toggleCompare() {
               >
             </figure>
             <figure class="relative flex flex-col items-center">
-              <span class="absolute top-2 left-2 z-10 rounded bg-primary px-2 py-0.5 text-[11px] font-semibold text-inverted shadow">
+              <span class="absolute top-2 start-2 z-10 rounded bg-primary px-2 py-0.5 text-[11px] font-semibold text-inverted shadow">
                 {{ partner?.media_subtype === 'before'
                   ? t('photoGallery.compare.before', 'Antes')
                   : t('photoGallery.compare.after', 'Después') }}
@@ -286,7 +279,7 @@ function toggleCompare() {
           <button
             v-if="index < documents.length - 1 && !comparing"
             type="button"
-            class="absolute right-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-black/40 p-2 text-white hover:bg-black/60 sm:block"
+            class="absolute end-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-black/40 p-2 text-white hover:bg-black/60 sm:block"
             :aria-label="t('common.next')"
             @click="next"
           >
@@ -416,7 +409,7 @@ function toggleCompare() {
             >
               <UIcon
                 name="i-lucide-link"
-                class="mr-1 inline h-3.5 w-3.5"
+                class="me-1 inline h-3.5 w-3.5"
               />
               {{ t('photoGallery.pair.pair', 'Emparejar antes/después') }}
             </button>

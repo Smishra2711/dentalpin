@@ -18,6 +18,8 @@ Usage:
     docker-compose exec -T backend python scripts/seed_demo.py              # English
     docker-compose exec -T backend python scripts/seed_demo.py --lang es    # Spanish
     docker-compose exec -T backend python scripts/seed_demo.py --lang ta    # Tamil, India GST demo
+    docker-compose exec -T backend python scripts/seed_demo.py --lang hi    # Hindi, India GST demo (New Delhi)
+    docker-compose exec -T backend python scripts/seed_demo.py --lang te    # Telugu, India GST demo
     docker-compose exec -T backend python scripts/seed_demo.py --lang en --country in
         # English UI, India GST demo (Chennai clinic, GSTIN, CGST/SGST/IGST invoices)
 
@@ -33,6 +35,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.auth.models import Clinic, ClinicMembership, User
+from app.core.auth.rbac import resolve_role_id
 from app.core.auth.service import hash_password
 from app.database import async_session_maker
 from app.modules.agenda.models import Appointment
@@ -75,6 +78,7 @@ from app.seeds.demo_data import (
     generate_odontogram_data,
     generate_treatment_plans_data,
     get_clinic_data,
+    get_india_gst_fixture,
     get_patients_data,
     get_users_data,
     set_country,
@@ -203,6 +207,9 @@ async def seed_clinic(db: AsyncSession) -> Clinic:
 
 async def seed_users(db: AsyncSession, password_hash: str) -> list[User]:
     """Create demo users with their clinic memberships."""
+    from app.core.auth.seed_rbac import seed_rbac
+
+    await seed_rbac(db)
     users: list[User] = []
     for user_data in get_users_data():
         user = User(
@@ -224,6 +231,7 @@ async def seed_users(db: AsyncSession, password_hash: str) -> list[User]:
                 user_id=user_data["id"],
                 clinic_id=CLINIC_ID,
                 role=user_data["role"],
+                role_id=await resolve_role_id(db, CLINIC_ID, user_data["role"]),
             )
         )
         print(f"  Created user: {user.email} ({user_data['role']})")
@@ -618,11 +626,13 @@ async def seed_india_gst_invoice_breakdown(db: AsyncSession, invoice_ids: list) 
 async def seed_india_gst(db: AsyncSession) -> dict:
     """Create India GST settings, GST 18% VAT type, and SAC defaults.
 
-    Only called when ``LANG == "ta"`` and the ``india_gst`` module is
-    installed. Mirrors what a clinic admin would do via the settings UI:
+    Only called for an India demo (``ta``/``te``, or ``--country in``) when
+    the ``india_gst`` module is installed. Mirrors what a clinic admin
+    would do via the settings UI:
 
-    1. Create ``IndiaGstSettings`` with a Tamil Nadu GSTIN and
-       ``clinic_state="33"``.
+    1. Create ``IndiaGstSettings`` with the home-state GSTIN — Tamil Nadu
+       (``clinic_state="33"``), or Telangana (``"36"``) for Telugu,
+       or Delhi ``07`` for Hindi.
     2. Get-or-create the ``GST 18%`` VAT type (via the service layer).
     3. Auto-configure SAC 999312 on every catalog item missing one.
     4. Re-assign all catalog items from the exempt (0%) VAT type to
@@ -637,14 +647,15 @@ async def seed_india_gst(db: AsyncSession) -> dict:
 
     # 1 — IndiaGstSettings
     settings = await get_or_create_settings(db, CLINIC_ID)
-    settings.trade_name = "Chennai Dental Care"
-    settings.gstin = "33ABCDE1234F1Z7"
+    fixture = get_india_gst_fixture()
+    settings.trade_name = fixture["trade_name"]
+    settings.gstin = fixture["gstin"]
     settings.registration_type = "regular"
-    settings.clinic_state = "33"
+    settings.clinic_state = fixture["clinic_state"]
     settings.show_gstin_on_invoice = True
     settings.show_sac_on_invoice = True
     await db.flush()
-    print("  Created India GST settings (GSTIN: 33ABCDE1234F1Z7, TN)")
+    print(f"  Created India GST settings (GSTIN: {fixture['gstin']}, {fixture['label']})")
 
     # 2 — GST 18% VAT type
     await IndiaGstCatalogService.ensure_gst_vat_type(db, CLINIC_ID)
@@ -702,13 +713,15 @@ Examples:
   python scripts/seed_demo.py --lang en              # English (explicit)
   python scripts/seed_demo.py --lang fr              # French
   python scripts/seed_demo.py --lang ta              # Tamil, India GST demo
+  python scripts/seed_demo.py --lang te              # Telugu, India GST demo (Hyderabad)
+  python scripts/seed_demo.py --lang hi              # Hindi, India GST demo (New Delhi)
   python scripts/seed_demo.py --lang en --country in # English, India GST demo
         """,
     )
     parser.add_argument(
         "--lang",
         "-l",
-        choices=["en", "es", "fr", "ta"],
+        choices=["en", "es", "fr", "ta", "te", "hi"],
         default="en",
         help="Language for demo data (default: en)",
     )
@@ -719,8 +732,8 @@ Examples:
         help=(
             "Country variant (default: generic). 'in' seeds the India GST "
             "clinic (Chennai, GSTIN, CGST/SGST/IGST invoices) in the chosen "
-            "--lang; currently only supported with --lang en (--lang ta "
-            "already implies it)."
+            "--lang; currently only supported with --lang en (--lang ta / te / hi"
+            "already imply it)."
         ),
     )
     return parser.parse_args()
@@ -728,16 +741,23 @@ Examples:
 
 async def main(lang: str = "en", country: str = "generic") -> None:
     """Seed the full demo clinical workflow."""
-    if country == "in" and lang not in ("en", "ta"):
+    if country == "in" and lang not in ("en", "ta", "te", "hi"):
         raise SystemExit(
-            f"--country in is not supported with --lang {lang} yet — use --lang en or --lang ta."
+            f"--country in is not supported with --lang {lang} yet — use --lang en, ta, te or hi."
         )
 
     set_language(lang)
     set_country(country)
-    lang_names = {"en": "English", "es": "Spanish", "fr": "French", "ta": "Tamil"}
+    lang_names = {
+        "en": "English",
+        "es": "Spanish",
+        "fr": "French",
+        "ta": "Tamil",
+        "te": "Telugu",
+        "hi": "Hindi",
+    }
     lang_name = lang_names.get(lang, lang)
-    if country == "in" and lang != "ta":
+    if country == "in" and lang not in ("ta", "te", "hi"):
         lang_name += " (India GST demo)"
 
     print("\n" + "=" * 60)
@@ -772,11 +792,11 @@ async def main(lang: str = "en", country: str = "generic") -> None:
             catalog_map = await _load_catalog_map(db)
 
             # India GST demo data — only when the module is installed and
-            # the demo is India-flagged (Tamil locale, or English + --country
+            # the demo is India-flagged (Tamil/Telugu locale, or English + --country
             # in). Must run after the catalog seed so SAC defaults and VAT
             # reassignment have items to act on, and before invoices so the
             # catalog_map reflects the GST 18% VAT type.
-            is_india_demo = lang == "ta" or country == "in"
+            is_india_demo = lang in ("ta", "te", "hi") or country == "in"
             if is_india_demo and await _module_is_installed(db, "india_gst"):
                 print(f"\n[opt] Creating India GST demo data (module installed, {lang_name})...")
                 gst_stats = await seed_india_gst(db)

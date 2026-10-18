@@ -2,7 +2,28 @@
 
 ## Unreleased
 
+- feat(#546, ADR 0038): expose a `RecallsErasureContributor` instead of
+  subscribing to `gdpr.erasure.executed`; `gdpr` pulls it inside the
+  erasure transaction. Same per-channel note clearing (recall and
+  `reason_note` stay) and the contributor reports its own coverage row.
+  Transactional.
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer; Hindi demo seed contact attempts.
+- chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
+
+- fix(#611): the recall CSV export no longer emits live spreadsheet
+  formulas. Patient names arrive through the public lead intake and
+  `reason_note` is free text; both are now apostrophe-prefixed when they
+  start with a formula character. As a side effect, `+34…` phone numbers
+  stop being formula cells in Excel.
+
+- feat(i18n): Telugu (`te`) locale for the module's frontend layer.
+- feat(i18n): Telugu (`te`) demo recall notes in the seed.
+- feat(#232): sidebar entry grouped under the Clinical header (`nav.section` "clinical").
 - fix(#126): de/it/pl locale parity with en (confirms.cancel / confirms.done).
+
+- feat(i18n): Arabic (ar) locale for the module's frontend layer.
+- feat(i18n): the frontend layer's directional spacing, borders, text alignment and inset positioning now resolve against the document direction (physical→logical CSS utilities, Arabic RTL support).
+
 
 - fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
 

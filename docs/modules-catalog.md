@@ -11,7 +11,7 @@ Maintained by `backend/scripts/generate_catalogs.py`. CI fails if a manifest cha
 | Module | Version | Category | Depends | Install | Removable | Permissions | Emits | Consumes | FE layer |
 |--------|---------|----------|---------|---------|-----------|-------------|-------|----------|----------|
 | `accounting_export` | 0.1.0 | official | billing, payments | manual | yes | 2 | 0 | 0 | yes |
-| `activity_journal` | 0.1.0 | community | — | manual | yes | 1 | 0 | 26 | yes |
+| `activity_journal` | 0.1.0 | community | — | manual | yes | 1 | 0 | 31 | yes |
 | `agenda` | 0.4.0 | official | patients, catalog, odontogram | auto | no | 4 | 11 | 1 | yes |
 | `billing` | 0.1.0 | official | patients, catalog, budget, payments | auto | no | 3 | 3 | 3 | yes |
 | `budget` | 0.1.0 | official | patients, catalog, odontogram | auto | no | 5 | 9 | 3 | yes |
@@ -21,29 +21,49 @@ Maintained by `backend/scripts/generate_catalogs.py`. CI fails if a manifest cha
 | `copilot` | 0.1.0 | official | — | auto | yes | 5 | 3 | 1 | yes |
 | `documents` | 0.1.0 | official | patients | manual | yes | 2 | 1 | 0 | yes |
 | `expenses` | 0.1.0 | community | — | manual | yes | 2 | 0 | 0 | yes |
+| `gdpr` | 0.1.0 | official | patients | manual | yes | 9 | 6 | 0 | no |
+| `imaging_ai` | 0.1.0 | official | media, patients | manual | yes | 2 | 2 | 0 | yes |
+| `imaging_viewer` | 0.1.0 | official | media, patients | manual | yes | 4 | 2 | 2 | yes |
 | `india_gst` | 0.1.0 | official | billing, catalog | manual | yes | 4 | 0 | 0 | yes |
 | `integrations` | 0.1.0 | official | patients | manual | yes | 4 | 0 | 8 | no |
 | `inventory` | 0.2.0 | community | — | manual | yes | 2 | 1 | 0 | yes |
+| `inventory_reorder` | 0.1.0 | official | contacts, inventory, suppliers, supplier_items, purchase_orders | manual | yes | 2 | 0 | 0 | no |
 | `lab_orders` | 0.1.0 | community | patients, contacts | manual | yes | 2 | 1 | 0 | yes |
-| `media` | 0.2.0 | official | patients | auto | no | 4 | 7 | 1 | yes |
+| `leads` | 0.1.0 | community | patients, recalls | manual | yes | 4 | 0 | 0 | yes |
+| `media` | 0.2.0 | official | patients | auto | no | 4 | 7 | 2 | yes |
 | `medical_reference` | 0.4.0 | community | patients_clinical, patients | manual | yes | 2 | 0 | 0 | yes |
 | `medication_catalog` | 0.1.0 | community | — | manual | yes | 2 | 0 | 1 | yes |
 | `migration_import` | 0.1.0 | official | patients, patients_clinical, clinical_notes, agenda, schedules, recalls, catalog, budget, odontogram, treatment_plan, billing, payments, media | manual | yes | 4 | 5 | 0 | yes |
-| `notifications` | 0.1.0 | official | patients, agenda, budget, billing, catalog | auto | no | 8 | 7 | 7 | yes |
+| `nav_online` | 0.1.0 | official | billing | manual | yes | 4 | 0 | 0 | yes |
+| `notifications` | 0.1.0 | official | patients, agenda, budget, billing, catalog | auto | no | 10 | 7 | 7 | yes |
 | `odontogram` | 0.3.0 | official | patients, catalog | auto | no | 4 | 7 | 0 | yes |
+| `orthodontics` | 0.1.0 | official | patients, agenda, media, recalls, treatment_plan | manual | yes | 4 | 3 | 0 | yes |
 | `patient_relationships` | 0.2.0 | community | patients | manual | yes | 2 | 0 | 0 | yes |
-| `patient_timeline` | 0.1.0 | official | patients | auto | no | 1 | 0 | 35 | yes |
-| `patients` | 0.1.0 | official | — | auto | no | 2 | 3 | 0 | yes |
+| `patient_segments` | 0.1.0 | community | patients | manual | yes | 2 | 0 | 0 | yes |
+| `patient_timeline` | 0.1.0 | official | patients | auto | no | 1 | 0 | 41 | yes |
+| `patients` | 0.1.0 | official | — | auto | no | 2 | 4 | 0 | yes |
 | `patients_clinical` | 0.1.0 | official | patients | auto | no | 4 | 1 | 0 | yes |
+| `payment_gateways` | 0.1.0 | official | patients, budget, payments | manual | yes | 0 | 0 | 0 | no |
 | `payments` | 0.1.0 | official | patients, budget | auto | no | 4 | 3 | 2 | yes |
+| `payroll` | 0.1.0 | official | — | manual | yes | 3 | 2 | 0 | yes |
 | `periodontogram` | 0.1.0 | official | patients, odontogram | manual | yes | 2 | 1 | 2 | yes |
+| `prescriptions` | 0.1.0 | official | patients, patients_clinical, medical_reference | manual | yes | 3 | 2 | 0 | yes |
+| `purchase_orders` | 0.1.0 | official | contacts, inventory, suppliers | manual | yes | 2 | 3 | 0 | yes |
+| `razorpay` | 0.1.0 | official | payment_gateways | manual | yes | 2 | 0 | 0 | yes |
 | `recall_reminders` | 0.1.0 | community | recalls, notifications, patients | manual | yes | 0 | 0 | 1 | yes |
 | `recalls` | 0.1.0 | official | patients, agenda | auto | yes | 3 | 4 | 5 | yes |
-| `reports` | 0.1.0 | official | patients, agenda, catalog, budget, billing, payments | auto | no | 3 | 0 | 0 | yes |
+| `reports` | 0.2.0 | official | patients, agenda, catalog, budget, billing, payments, treatment_plan | auto | no | 6 | 0 | 0 | yes |
 | `schedules` | 0.1.0 | official | agenda | auto | yes | 8 | 0 | 4 | yes |
+| `sdi_it` | 0.1.0 | official | billing | manual | yes | 4 | 0 | 0 | yes |
+| `sistema_ts` | 0.1.0 | official | billing, patients, catalog, payments | manual | yes | 6 | 0 | 0 | yes |
+| `sms_gateway` | 0.1.0 | community | notifications | manual | yes | 2 | 0 | 0 | yes |
+| `staff_attendance` | 0.1.0 | community | — | manual | yes | 2 | 1 | 0 | yes |
 | `staff_tasks` | 0.1.0 | community | — | manual | yes | 2 | 2 | 0 | yes |
+| `supplier_items` | 0.1.0 | official | contacts, inventory, suppliers | manual | yes | 2 | 0 | 0 | no |
+| `supplier_ratings` | 0.1.0 | official | contacts, purchase_orders | manual | yes | 2 | 0 | 0 | no |
 | `suppliers` | 0.1.0 | official | contacts | manual | yes | 2 | 0 | 0 | no |
 | `telephony` | 0.1.0 | community | patients | manual | yes | 4 | 5 | 0 | yes |
+| `treasury` | 0.1.0 | community | — | manual | yes | 2 | 2 | 0 | yes |
 | `treatment_consumables` | 0.1.0 | community | catalog, inventory | manual | yes | 2 | 0 | 1 | yes |
 | `treatment_plan` | 0.1.0 | official | patients, agenda, odontogram, catalog, budget, media | auto | no | 5 | 13 | 7 | yes |
 | `verifactu` | 0.1.0 | official | billing, catalog | manual | yes | 5 | 1 | 2 | yes |
@@ -104,7 +124,12 @@ Append-only staff activity log recorded from module events.
   - `patient.created`
   - `payment.allocated`
   - `payment.refunded`
+  - `prescription.cancelled`
+  - `prescription.issued`
   - `recall.created`
+  - `staff_attendance.clocked`
+  - `treasury.corrected`
+  - `treasury.transferred`
   - `treatment_plan.budget_sync_requested`
   - `treatment_plan.item_session_completed`
   - `treatment_plan.treatment_added`
@@ -316,6 +341,77 @@ Fixed/recurring office expense tracking with monthly category totals.
 - **Events consumed:** —
 - **Module CLAUDE.md:** [`backend/app/modules/expenses/CLAUDE.md`](../backend/app/modules/expenses/CLAUDE.md)
 
+### `gdpr` — v0.1.0
+
+Data-subject rights, consents, retention and breach reporting (GDPR).
+
+- **Author:** DentalPin Core Team
+- **License:** BSL-1.1
+- **Category:** official
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `patients`
+- **Frontend layer:** —
+- **Permissions:**
+  - `gdpr.audit.read`
+  - `gdpr.breaches.read`
+  - `gdpr.breaches.write`
+  - `gdpr.consents.read`
+  - `gdpr.consents.write`
+  - `gdpr.requests.read`
+  - `gdpr.requests.write`
+  - `gdpr.retention.read`
+  - `gdpr.retention.write`
+- **Events emitted:**
+  - `gdpr.breach.reported`
+  - `gdpr.consent.granted`
+  - `gdpr.consent.withdrawn`
+  - `gdpr.erasure.executed`
+  - `gdpr.request.created`
+  - `gdpr.request.status_changed`
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/gdpr/CLAUDE.md`](../backend/app/modules/gdpr/CLAUDE.md)
+
+### `imaging_ai` — v0.1.0
+
+On-demand AI segmentation jobs over imaging studies.
+
+- **Author:** DentalPin Core Team
+- **License:** BSL-1.1
+- **Category:** official
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `media`, `patients`
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `imaging_ai.jobs.read`
+  - `imaging_ai.jobs.write`
+- **Events emitted:**
+  - `imaging.ai_job_confirmed`
+  - `imaging.ai_job_done`
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/imaging_ai/CLAUDE.md`](../backend/app/modules/imaging_ai/CLAUDE.md)
+
+### `imaging_viewer` — v0.1.0
+
+In-app DICOM study viewer (PNG render) indexed on media documents.
+
+- **Author:** DentalPin Core Team
+- **License:** BSL-1.1
+- **Category:** official
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `media`, `patients`
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `imaging_viewer.rvg.read`
+  - `imaging_viewer.rvg.write`
+  - `imaging_viewer.studies.read`
+  - `imaging_viewer.studies.write`
+- **Events emitted:**
+  - `imaging.study_indexed`
+- **Events consumed:**
+  - `media.photo_uploaded`
+  - `patient.archived`
+- **Module CLAUDE.md:** [`backend/app/modules/imaging_viewer/CLAUDE.md`](../backend/app/modules/imaging_viewer/CLAUDE.md)
+
 ### `india_gst` — v0.1.0
 
 CGST/SGST/IGST GST billing compliance for Indian clinics.
@@ -380,6 +476,23 @@ Stock list with cost tracking, movement ledger, audit trail and consumable auto-
 - **Events consumed:** —
 - **Module CLAUDE.md:** [`backend/app/modules/inventory/CLAUDE.md`](../backend/app/modules/inventory/CLAUDE.md)
 
+### `inventory_reorder` — v0.1.0
+
+Reorder suggestions from 90-day usage and supplier lead times; generates draft purchase orders.
+
+- **Author:** lamanji
+- **License:** BSL-1.1
+- **Category:** official
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `contacts`, `inventory`, `suppliers`, `supplier_items`, `purchase_orders`
+- **Frontend layer:** —
+- **Permissions:**
+  - `inventory_reorder.read`
+  - `inventory_reorder.write`
+- **Events emitted:** —
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/inventory_reorder/CLAUDE.md`](../backend/app/modules/inventory_reorder/CLAUDE.md)
+
 ### `lab_orders` — v0.1.0
 
 Track lab work orders per patient — from sent to received.
@@ -397,6 +510,25 @@ Track lab work orders per patient — from sent to received.
   - `lab_order.status_changed`
 - **Events consumed:** —
 - **Module CLAUDE.md:** [`backend/app/modules/lab_orders/CLAUDE.md`](../backend/app/modules/lab_orders/CLAUDE.md)
+
+### `leads` — v0.1.0
+
+Inbound leads from external forms: new enquiries become leads, known patients become recalls.
+
+- **Author:** Valeriooooh
+- **License:** BSL-1.1
+- **Category:** community
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `patients`, `recalls`
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `leads.read`
+  - `leads.settings.read`
+  - `leads.settings.write`
+  - `leads.write`
+- **Events emitted:** —
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/leads/CLAUDE.md`](../backend/app/modules/leads/CLAUDE.md)
 
 ### `media` — v0.2.0
 
@@ -423,6 +555,7 @@ Patient documents, photos, X-rays + polymorphic attachments.
   - `media.photo_uploaded`
 - **Events consumed:**
   - `patient.archived`
+  - `patient.restored`
 - **Module CLAUDE.md:** [`backend/app/modules/media/CLAUDE.md`](../backend/app/modules/media/CLAUDE.md)
 
 ### `medical_reference` — v0.4.0
@@ -484,6 +617,25 @@ Importa datos de pacientes, citas, presupuestos, pagos y documentos desde un arc
 - **Events consumed:** —
 - **Module CLAUDE.md:** [`backend/app/modules/migration_import/CLAUDE.md`](../backend/app/modules/migration_import/CLAUDE.md)
 
+### `nav_online` — v0.1.0
+
+NAV Online Számla — valós idejű számlaadat-szolgáltatás (HU).
+
+- **Author:** DentalPin Core Team
+- **License:** BSL-1.1
+- **Category:** official
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `billing`
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `nav_online.queue.manage`
+  - `nav_online.records.read`
+  - `nav_online.settings.configure`
+  - `nav_online.settings.read`
+- **Events emitted:** —
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/nav_online/CLAUDE.md`](../backend/app/modules/nav_online/CLAUDE.md)
+
 ### `notifications` — v0.1.0
 
 Email templates, preferences, SMTP, event-driven sending.
@@ -498,6 +650,8 @@ Email templates, preferences, SMTP, event-driven sending.
   - `notifications.logs.read`
   - `notifications.preferences.read`
   - `notifications.preferences.write`
+  - `notifications.push.read`
+  - `notifications.push.write`
   - `notifications.send`
   - `notifications.settings.read`
   - `notifications.settings.write`
@@ -547,6 +701,28 @@ Dental charting, tooth state, clinical treatments.
 - **Events consumed:** —
 - **Module CLAUDE.md:** [`backend/app/modules/odontogram/CLAUDE.md`](../backend/app/modules/odontogram/CLAUDE.md)
 
+### `orthodontics` — v0.1.0
+
+Orthodontic case tracking — monthly controls, wires, photo evolution.
+
+- **Author:** DentalPin Core Team
+- **License:** BSL-1.1
+- **Category:** official
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `patients`, `agenda`, `media`, `recalls`, `treatment_plan`
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `orthodontics.cases.read`
+  - `orthodontics.cases.write`
+  - `orthodontics.controls.write`
+  - `orthodontics.settings.manage`
+- **Events emitted:**
+  - `orthodontics.case_created`
+  - `orthodontics.case_status_changed`
+  - `orthodontics.control_registered`
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/orthodontics/CLAUDE.md`](../backend/app/modules/orthodontics/CLAUDE.md)
+
 ### `patient_relationships` — v0.2.0
 
 Patient family relationships (Lien de Parentée).
@@ -563,6 +739,23 @@ Patient family relationships (Lien de Parentée).
 - **Events emitted:** —
 - **Events consumed:** —
 - **Module CLAUDE.md:** [`backend/app/modules/patient_relationships/CLAUDE.md`](../backend/app/modules/patient_relationships/CLAUDE.md)
+
+### `patient_segments` — v0.1.0
+
+Clinic-local patient tags for grouping and campaigns.
+
+- **Author:** DentalPin Core Team
+- **License:** BSL-1.1
+- **Category:** community
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `patients`
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `patient_segments.read`
+  - `patient_segments.write`
+- **Events emitted:** —
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/patient_segments/CLAUDE.md`](../backend/app/modules/patient_segments/CLAUDE.md)
 
 ### `patient_timeline` — v0.1.0
 
@@ -598,6 +791,7 @@ Patient timeline — unified activity log.
   - `clinical_notes.plan_created`
   - `clinical_notes.treatment_created`
   - `document.uploaded`
+  - `imaging.study_indexed`
   - `invoice.issued`
   - `invoice.paid`
   - `media.pair_created`
@@ -606,7 +800,12 @@ Patient timeline — unified activity log.
   - `notification.reply_received`
   - `notification.sent`
   - `odontogram.treatment.performed`
+  - `orthodontics.case_created`
+  - `orthodontics.case_status_changed`
+  - `orthodontics.control_registered`
   - `patient.medical_updated`
+  - `prescription.cancelled`
+  - `prescription.issued`
   - `treatment_plan.closed`
   - `treatment_plan.confirmed`
   - `treatment_plan.created`
@@ -631,6 +830,7 @@ Patient identity: name, contact, demographics, status.
 - **Events emitted:**
   - `patient.archived`
   - `patient.created`
+  - `patient.restored`
   - `patient.updated`
 - **Events consumed:** —
 - **Module CLAUDE.md:** [`backend/app/modules/patients/CLAUDE.md`](../backend/app/modules/patients/CLAUDE.md)
@@ -654,6 +854,21 @@ Normalized medical history, allergies, medications, emergency contacts.
   - `patient.medical_updated`
 - **Events consumed:** —
 - **Module CLAUDE.md:** [`backend/app/modules/patients_clinical/CLAUDE.md`](../backend/app/modules/patients_clinical/CLAUDE.md)
+
+### `payment_gateways` — v0.1.0
+
+Provider-neutral payment gateway contract, registry, and PaymentRequest lifecycle.
+
+- **Author:** DentalPin Core Team
+- **License:** BSL-1.1
+- **Category:** official
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `patients`, `budget`, `payments`
+- **Frontend layer:** —
+- **Permissions:** —
+- **Events emitted:** —
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/payment_gateways/CLAUDE.md`](../backend/app/modules/payment_gateways/CLAUDE.md)
 
 ### `payments` — v0.1.0
 
@@ -679,6 +894,26 @@ Patient-centric collections, allocations to budgets / on-account, refunds, patie
   - `treatment_plan.item_session_completed`
 - **Module CLAUDE.md:** [`backend/app/modules/payments/CLAUDE.md`](../backend/app/modules/payments/CLAUDE.md)
 
+### `payroll` — v0.1.0
+
+Staff payroll with encrypted bank/tax data, periods, entries and reports.
+
+- **Author:** lamanji
+- **License:** BSL-1.1
+- **Category:** official
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** —
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `payroll.read`
+  - `payroll.reports.read`
+  - `payroll.write`
+- **Events emitted:**
+  - `payroll.period.status_changed`
+  - `payroll.profile.updated`
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/payroll/CLAUDE.md`](../backend/app/modules/payroll/CLAUDE.md)
+
 ### `periodontogram` — v0.1.0
 
 SEPA periodontal charting — snapshots, probing sites, BoP/PI/CAL indices.
@@ -698,6 +933,63 @@ SEPA periodontal charting — snapshots, probing sites, BoP/PI/CAL indices.
   - `odontogram.treatment.performed`
   - `patient.archived`
 - **Module CLAUDE.md:** [`backend/app/modules/periodontogram/CLAUDE.md`](../backend/app/modules/periodontogram/CLAUDE.md)
+
+### `prescriptions` — v0.1.0
+
+Clinical prescriptions with per-country compliance hooks.
+
+- **Author:** DentalPin Core Team
+- **License:** BSL-1.1
+- **Category:** official
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `patients`, `patients_clinical`, `medical_reference`
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `prescriptions.issue`
+  - `prescriptions.read`
+  - `prescriptions.write`
+- **Events emitted:**
+  - `prescription.cancelled`
+  - `prescription.issued`
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/prescriptions/CLAUDE.md`](../backend/app/modules/prescriptions/CLAUDE.md)
+
+### `purchase_orders` — v0.1.0
+
+Purchase orders with receiving, quality checks and PDF export.
+
+- **Author:** lamanji
+- **License:** BSL-1.1
+- **Category:** official
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `contacts`, `inventory`, `suppliers`
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `purchase_orders.read`
+  - `purchase_orders.write`
+- **Events emitted:**
+  - `purchase_order.created`
+  - `purchase_order.received`
+  - `purchase_order.status_changed`
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/purchase_orders/CLAUDE.md`](../backend/app/modules/purchase_orders/CLAUDE.md)
+
+### `razorpay` — v0.1.0
+
+Razorpay payment gateway — UPI, QR, cards, and payment links for India clinics.
+
+- **Author:** DentalPin Core Team
+- **License:** BSL-1.1
+- **Category:** official
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `payment_gateways`
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `razorpay.settings.read`
+  - `razorpay.settings.write`
+- **Events emitted:** —
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/razorpay/CLAUDE.md`](../backend/app/modules/razorpay/CLAUDE.md)
 
 ### `recall_reminders` — v0.1.0
 
@@ -742,7 +1034,7 @@ Patient recalls: schedule call-backs, work the monthly call list, log attempts, 
   - `treatment_plan.treatment_completed`
 - **Module CLAUDE.md:** [`backend/app/modules/recalls/CLAUDE.md`](../backend/app/modules/recalls/CLAUDE.md)
 
-### `reports` — v0.1.0
+### `reports` — v0.2.0
 
 Cross-module reporting: billing, budgets, scheduling.
 
@@ -750,11 +1042,14 @@ Cross-module reporting: billing, budgets, scheduling.
 - **License:** BSL-1.1
 - **Category:** official
 - **Install policy:** installable=True · auto_install=True · removable=False
-- **Depends:** `patients`, `agenda`, `catalog`, `budget`, `billing`, `payments`
+- **Depends:** `patients`, `agenda`, `catalog`, `budget`, `billing`, `payments`, `treatment_plan`
 - **Frontend layer:** `frontend`
 - **Permissions:**
   - `reports.billing.read`
   - `reports.budgets.read`
+  - `reports.financial.read`
+  - `reports.operational.read`
+  - `reports.patient_stats.read`
   - `reports.scheduling.read`
 - **Events emitted:** —
 - **Events consumed:** —
@@ -787,6 +1082,81 @@ Clinic + professional operating hours, overrides, availability, and occupancy an
   - `clinic.created`
 - **Module CLAUDE.md:** [`backend/app/modules/schedules/CLAUDE.md`](../backend/app/modules/schedules/CLAUDE.md)
 
+### `sdi_it` — v0.1.0
+
+FatturaPA / SDI — fatturazione elettronica B2B per l'Italia.
+
+- **Author:** DentalPin Core Team
+- **License:** BSL-1.1
+- **Category:** official
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `billing`
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `sdi_it.records.manage`
+  - `sdi_it.records.read`
+  - `sdi_it.settings.configure`
+  - `sdi_it.settings.read`
+- **Events emitted:** —
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/sdi_it/CLAUDE.md`](../backend/app/modules/sdi_it/CLAUDE.md)
+
+### `sistema_ts` — v0.1.0
+
+Sistema Tessera Sanitaria — invio delle spese sanitarie dei pazienti (IT).
+
+- **Author:** DentalPin Core Team
+- **License:** BSL-1.1
+- **Category:** official
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `billing`, `patients`, `catalog`, `payments`
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `sistema_ts.documents.manage`
+  - `sistema_ts.documents.read`
+  - `sistema_ts.opposition.read`
+  - `sistema_ts.opposition.write`
+  - `sistema_ts.settings.configure`
+  - `sistema_ts.settings.read`
+- **Events emitted:** —
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/sistema_ts/CLAUDE.md`](../backend/app/modules/sistema_ts/CLAUDE.md)
+
+### `sms_gateway` — v0.1.0
+
+SMS delivery for notifications via pluggable providers.
+
+- **Author:** lamanji
+- **License:** BSL-1.1
+- **Category:** community
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `notifications`
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `sms_gateway.settings.read`
+  - `sms_gateway.settings.write`
+- **Events emitted:** —
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/sms_gateway/CLAUDE.md`](../backend/app/modules/sms_gateway/CLAUDE.md)
+
+### `staff_attendance` — v0.1.0
+
+Clock in/out events, current state, and daily pairing report.
+
+- **Author:** DentalPin Core Team
+- **License:** BSL-1.1
+- **Category:** community
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** —
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `staff_attendance.read`
+  - `staff_attendance.write`
+- **Events emitted:**
+  - `staff_attendance.clocked`
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/staff_attendance/CLAUDE.md`](../backend/app/modules/staff_attendance/CLAUDE.md)
+
 ### `staff_tasks` — v0.1.0
 
 Staff handoff board — internal tasks and handoffs between team members.
@@ -805,6 +1175,40 @@ Staff handoff board — internal tasks and handoffs between team members.
   - `staff_task.status_changed`
 - **Events consumed:** —
 - **Module CLAUDE.md:** [`backend/app/modules/staff_tasks/CLAUDE.md`](../backend/app/modules/staff_tasks/CLAUDE.md)
+
+### `supplier_items` — v0.1.0
+
+Links inventory items to suppliers (multi-vendor, SKU and price).
+
+- **Author:** lamanji
+- **License:** BSL-1.1
+- **Category:** official
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `contacts`, `inventory`, `suppliers`
+- **Frontend layer:** —
+- **Permissions:**
+  - `supplier_items.read`
+  - `supplier_items.write`
+- **Events emitted:** —
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/supplier_items/CLAUDE.md`](../backend/app/modules/supplier_items/CLAUDE.md)
+
+### `supplier_ratings` — v0.1.0
+
+Automatic delivery/quality metrics from PO history plus a manual 1-5 communication rating per supplier.
+
+- **Author:** lamanji
+- **License:** BSL-1.1
+- **Category:** official
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** `contacts`, `purchase_orders`
+- **Frontend layer:** —
+- **Permissions:**
+  - `supplier_ratings.read`
+  - `supplier_ratings.write`
+- **Events emitted:** —
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/supplier_ratings/CLAUDE.md`](../backend/app/modules/supplier_ratings/CLAUDE.md)
 
 ### `suppliers` — v0.1.0
 
@@ -846,6 +1250,25 @@ CTI: aviso en pantalla de llamadas entrantes + registro de llamadas.
   - `call.unknown_caller`
 - **Events consumed:** —
 - **Module CLAUDE.md:** [`backend/app/modules/telephony/CLAUDE.md`](../backend/app/modules/telephony/CLAUDE.md)
+
+### `treasury` — v0.1.0
+
+Cash/bank accounts, transfers, and manual corrections.
+
+- **Author:** DentalPin Core Team
+- **License:** BSL-1.1
+- **Category:** community
+- **Install policy:** installable=True · auto_install=False · removable=True
+- **Depends:** —
+- **Frontend layer:** `frontend`
+- **Permissions:**
+  - `treasury.read`
+  - `treasury.write`
+- **Events emitted:**
+  - `treasury.corrected`
+  - `treasury.transferred`
+- **Events consumed:** —
+- **Module CLAUDE.md:** [`backend/app/modules/treasury/CLAUDE.md`](../backend/app/modules/treasury/CLAUDE.md)
 
 ### `treatment_consumables` — v0.1.0
 

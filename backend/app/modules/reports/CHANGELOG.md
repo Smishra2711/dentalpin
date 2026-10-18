@@ -2,6 +2,43 @@
 
 ## Unreleased
 
+- chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
+
+- fix(#611): report CSVs run every cell through `csv_cell`. Professional
+  names and address areas reach those rows from user data, and a value
+  starting with `=`, `+`, `-` or `@` is executed by Excel/LibreOffice on
+  open. Decimal totals and counts are untouched — the guard is
+  type-aware.
+- fix(#610): the operational report's `plan_pipeline` counted soft-deleted
+  treatment plans. `TreatmentPlan` carries `deleted_at` and the owning
+  module filters it on every read; this aggregate did not, so a deleted
+  plan went on being reported as work in progress. The sibling billing
+  report already applies the same filter in twelve places.
+
+- fix(#522): the billing, budgets and scheduling report pages, the home
+  dashboard snapshot and the week-glance panel all built their ranges from
+  local midnights and sent them as UTC, so every clinic east of UTC saw a
+  window shifted one day back — "This month" starting on the last day of the
+  previous month, "Last year" missing 31 December. Now use `toISODate`.
+
+- feat(#232): sidebar entry grouped under the Practice header (`nav.section` "practice").
+- feat(#230): patient-stats + operational families. `GET
+  /patients/demographics` (age bands, gender, area with explicit
+  unknowns), `/patients/visits` (new-vs-returning + frequency) and
+  `/operational/productivity` (completed per professional/cabinet +
+  plan pipeline), all with `?format=csv`; `patient_stats_report` +
+  `operational_report` copilot tools; manual index en+es.
+- feat(#230): financial family (reports v0.2.0). `GET
+  /billing/aging` (outstanding buckets 0-30/31-60/61-90/90+, invoice
+  axis only) + `GET /billing/issued-trend` (monthly issued totals),
+  both with `?format=csv`; new `reports.financial.read` (+ reserved
+  `patient_stats.read`/`operational.read` with the approved role
+  mapping); `financial_report` copilot tool (invoice axis only);
+  invoice-aging + issued-trend sections on `/reports/billing` (the
+  dashboard receivables card keeps its earned-paid definition);
+  off-books guard test pins the family source to the invoice
+  axis.
+- feat(i18n): the frontend layer's directional spacing, borders, text alignment and inset positioning now resolve against the document direction (physical→logical CSS utilities, Arabic RTL support).
 - fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
 
 - fix(#101): report dashboards render an error banner with Retry on fetch failure instead of 0 € / empty charts (shared fetch-failed flag across the 24 fetchers + dashboard snapshot).

@@ -6,6 +6,7 @@ import {
   type TaskPriority,
   type TaskStatus
 } from '../../composables/useStaffTasks'
+import { toISODate } from '~~/app/utils/wallClock'
 
 definePageMeta({ middleware: ['auth'] })
 
@@ -95,7 +96,7 @@ function formatDate(iso: string | null | undefined): string {
 
 function isOverdue(task: StaffTask): boolean {
   if (!task.due_date || task.status === 'done' || task.status === 'cancelled') return false
-  return task.due_date < new Date().toISOString().slice(0, 10)
+  return task.due_date < toISODate(new Date())
 }
 
 async function updateStatus(id: string, status: TaskStatus) {

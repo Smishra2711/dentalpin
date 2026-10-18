@@ -9,29 +9,26 @@ interface Props {
 const props = defineProps<Props>()
 defineEmits<{ open: [Document], select: [Document] }>()
 
-const config = useRuntimeConfig()
-const auth = useAuth()
-
-const apiBaseUrl = computed(() =>
-  import.meta.server ? config.apiBaseUrlServer : config.public.apiBaseUrl
-)
+const api = useApi()
 
 // Build a fully-qualified, auth-aware thumb URL. The server returns a
 // relative `/api/v1/...` path; we render it with an Authorization header
 // via a fetched blob URL so <img> works without exposing credentials.
 const thumbBlobUrl = ref<string | null>(null)
 
+// Only browser-renderable images go through <img>: anything else (DICOM,
+// PDF, …) gets the generic icon placeholder, never a broken image.
+const isPreviewable = computed(() => props.document.mime_type?.startsWith('image/') ?? false)
+
 async function loadThumb() {
+  if (!isPreviewable.value) return
   const path = props.document.thumb_url ?? props.document.full_url
   if (!path) return
   try {
-    const response = await $fetch<Blob>(path, {
-      baseURL: apiBaseUrl.value,
-      headers: { Authorization: `Bearer ${auth.accessToken.value}` },
-      responseType: 'blob'
-    })
+    const response = await api.raw(path)
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
     if (thumbBlobUrl.value) URL.revokeObjectURL(thumbBlobUrl.value)
-    thumbBlobUrl.value = URL.createObjectURL(response)
+    thumbBlobUrl.value = URL.createObjectURL(await response.blob())
   } catch {
     thumbBlobUrl.value = null
   }
@@ -58,7 +55,7 @@ const subtypeLabel = computed(() => props.document.media_subtype ?? props.docume
     @click="$emit('open', document)"
   >
     <img
-      v-if="thumbBlobUrl"
+      v-if="thumbBlobUrl && isPreviewable"
       :src="thumbBlobUrl"
       :alt="document.title"
       loading="lazy"
@@ -85,7 +82,7 @@ const subtypeLabel = computed(() => props.document.media_subtype ?? props.docume
     <!-- Pair badge -->
     <span
       v-if="document.paired_document_id"
-      class="absolute top-1.5 right-1.5 rounded bg-primary/90 px-1.5 py-0.5 text-[10px] font-medium text-white"
+      class="absolute top-1.5 end-1.5 rounded bg-primary/90 px-1.5 py-0.5 text-[10px] font-medium text-white"
     >
       <UIcon
         name="i-lucide-link"

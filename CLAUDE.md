@@ -26,7 +26,7 @@ DentalPin is built as independent modules under `backend/app/modules/<name>/` wi
 - Respect module isolation. Do **not** create cross-module dependencies that are not declared in the module's `manifest.depends`.
 - Prefer the **event bus** for cross-module reactions. Direct service-to-service imports across modules are forbidden unless the target is in `depends`.
 - Cross-module FKs are allowed **only** when the target is in `depends`. CI rejects migrations otherwise.
-- Each module owns its Alembic branch (`branch_labels = ("<name>",)`). Never thread one module's revisions through another's chain — uninstall safety depends on it (issue #56).
+- Each module owns its Alembic branch (`branch_labels = ("<name>",)`). Never thread one module's revisions through another's chain — uninstall safety depends on it (issue #56). Legacy exception (#555): the `clinical` module predates the branch contract (`legacy: True`, `removable: False`, migrations stay on the main linear chain); the removable gate in `manifest_validator.py` only constrains `removable: True` modules.
 - Permissions are namespaced: a module returns `resource.action` from `get_permissions()`; the registry prefixes with the module name.
 
 **Before adding a feature, read `docs/technical/creating-modules.md`** — it is the source of truth for module structure, lifecycle, manifest, slots, events, tools/agents, and migrations.
@@ -47,7 +47,7 @@ DentalPin is built as independent modules under `backend/app/modules/<name>/` wi
 | New endpoint | Document under the gating permission's row in `docs/technical/<module>/permissions.md`. Bump `last_verified_commit` on every screen MD whose `related_endpoints` covers it. |
 | New event published or consumed | Add to `EventType` in `backend/app/core/events/types.py`. Add row to `docs/technical/<module>/events.md`. Re-run `generate_catalogs.py`. Document publisher payload in module CLAUDE.md. |
 | New permission | Return from `get_permissions()` (no module prefix). List in `manifest.role_permissions`. Add row to `docs/technical/<module>/permissions.md`. Add to `frontend/app/config/permissions.ts` if user-facing. |
-| New agent-exposed capability | Declare a `Tool` in `backend/app/modules/<name>/tools.py` and return it from the module's `get_tools()`. **Wrap an existing service method — never duplicate business logic.** Filter by `ctx.clinic_id`. Set `permissions=[...]` to the gating RBAC string the HTTP route uses, and `category` conservatively (`WRITE` for mutations, `DESTRUCTIVE` for deletes/irreversible side-effects). Set `exposes_free_text=True` if the result is free prose (it is then excluded from the cloud LLM path under redaction). **Return native values (UUID/Decimal/datetime/Pydantic) — `jsonify` at the registry chokepoint coerces them; don't hand-`str()`/`.isoformat()`/`float()`.** Name PII fields with redactor-known keys (`full_name`, `phone`, `email`, `dni`, `*_id`) so they tokenize. Document it under "Tools exposed" in the module CLAUDE.md. See [`docs/technical/copilot-agentic-architecture.md`](./docs/technical/copilot-agentic-architecture.md) §3. |
+| New agent-exposed capability | Declare a `Tool` in `backend/app/modules/<name>/tools.py` and return it from the module's `get_tools()`. **Wrap an existing service method — never duplicate business logic.** Filter by `ctx.clinic_id`. Set `permissions=[...]` to the gating RBAC string the HTTP route uses, and `category` conservatively (`WRITE` for mutations, `DESTRUCTIVE` for deletes/irreversible side-effects). Set `exposes_free_text=True` if the result is free prose (it is then excluded from the cloud LLM path under redaction). **Return native values (UUID/Decimal/datetime/Pydantic) — `jsonify` at the registry chokepoint coerces them; don't hand-`str()`/`.isoformat()`/`float()`.** Name PII fields with redactor-known keys (`full_name`, `phone`, `email`, `dni`, `date_of_birth`, `*_id`) so they tokenize. Document it under "Tools exposed" in the module CLAUDE.md. See [`docs/technical/copilot-agentic-architecture.md`](./docs/technical/copilot-agentic-architecture.md) §3. |
 | Touched a screen's behaviour or visuals | Update the matching screen MD in **both** `docs/user-manual/{en,es}/<module>/screens/`. Refresh screenshots if visuals changed. Bump `last_verified_commit` in each locale. |
 | Architectural decision | Copy `docs/adr/TEMPLATE.md` → `docs/adr/NNNN-title.md`. |
 | New domain term (ES↔EN) | Append to `docs/glossary.md`. |
@@ -99,6 +99,7 @@ Decision tree + folder descriptions: [`docs/README.md`](./docs/README.md).
 docker-compose up
 docker-compose exec backend python -m pytest -v
 cd backend && ruff check . && ruff format --check .
+cd backend && uv lock                    # after changing dependencies in pyproject.toml — uv.lock is what Docker installs (#356); CI fails on drift
 cd frontend && npm run lint
 cd frontend && npm run typecheck:layers   # vue-tsc over host + all module layers (stop the frontend container first; modules.json is auto-restored, and CI guards it — see #264)
 
@@ -106,6 +107,8 @@ cd frontend && npm run typecheck:layers   # vue-tsc over host + all module layer
 ./scripts/reset-db.sh        # drop, dentalpin db upgrade (core + installed modules)
 ./scripts/seed-demo.sh       # demo clinic, users, sample data
 ./scripts/seed-demo.sh --lang ta                  # + India GST demo (Tamil UI; module must be installed)
+./scripts/seed-demo.sh --lang te                  # + India GST demo (Telugu UI, Hyderabad/Telangana; module must be installed)
+./scripts/seed-demo.sh --lang hi                  # + India GST demo (Hindi UI, New Delhi; module must be installed)
 ./scripts/seed-demo.sh --lang en --country in      # + India GST demo (English UI) — see docs/modules/india_gst.md §3.5
 
 # Demo login
@@ -183,7 +186,7 @@ Composables:
 |------------|---------|
 | `useAuth` | `user`, `permissions`, `login()`, `logout()` |
 | `usePermissions` | `can()`, `canAny()`, `isAdmin` |
-| `useApi` | HTTP client with auth + token refresh |
+| `useApi` | HTTP client — session cookies (HttpOnly, ADR 0023) + CSRF header + refresh/retry; `raw()` for blob downloads |
 | `useClinic` | `currentClinic`, `cabinets` |
 | `useModules` | Navigation (filtered by permissions) |
 | `useUsers` | User management (admin) |
@@ -378,6 +381,7 @@ DEMO_MODE=false           # public demo: blocks user edits/removal + module life
 
 - **"relation does not exist"** / tables wiped after tests: `./scripts/reset-db.sh` then `./scripts/seed-demo.sh`. Manual fallback: `DELETE FROM alembic_version;` then `python -m app.cli db upgrade`.
 - **Frontend changes not showing**: `docker-compose up -d --build frontend`.
+- **Traceless SSR death / stale Node image** (#581): an old anonymous `node_modules` volume or image can shadow the fresh lockfile (exactly one file missing is enough). Rebuild with `docker compose up -d --build frontend`; CI pins the Node major (`node-image-freshness`).
 - **Permission denied but should have access**: check `clinic_memberships` row, exact permission string, `/me` payload, then re-login.
 
 ---

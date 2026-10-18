@@ -96,7 +96,15 @@ async function fetcher(q: {
   if (q.filters.do_not_contact !== null) {
     params.set('do_not_contact', q.filters.do_not_contact ? 'true' : 'false')
   }
-  if (q.filters.status.includes('archived')) params.set('include_archived', 'true')
+  // The chips map straight onto the API's ``status`` filter, so picking
+  // "Archived" alone returns archived patients alone (#473). An empty
+  // selection means "no status restriction" and needs ``include_archived``,
+  // because with no status list the API still hides archived rows.
+  if (q.filters.status.length) {
+    for (const value of q.filters.status) params.append('status', value)
+  } else {
+    params.set('include_archived', 'true')
+  }
   if (patientIdsIntersect) {
     for (const id of patientIdsIntersect) params.append('patient_ids', id)
   }
@@ -161,7 +169,10 @@ const sortOptions = computed(() => [
 
 const activeFilterCount = computed(() => {
   let n = 0
-  if (filters.value.status.length && filters.value.status.join(',') !== 'active') n++
+  // Any selection other than the default changes the result set —
+  // including the empty one, which now widens it to archived patients
+  // too, so it has to count as a filter rather than read as "none".
+  if (filters.value.status.join(',') !== 'active') n++
   if (filters.value.city) n++
   if (filters.value.do_not_contact !== null) n++
   if (filters.value.with_debt) n++
@@ -359,10 +370,10 @@ function patientCity(p: Patient): string {
                 />
               </div>
               <div class="text-caption text-subtle truncate">
-                <span v-if="patientCity(patient)">{{ patientCity(patient) }} · </span>{{ patient.phone || patient.email || '—' }}
+                <span v-if="patientCity(patient)">{{ patientCity(patient) }} · </span><span dir="ltr">{{ patient.phone || patient.email || '—' }}</span>
               </div>
             </div>
-            <div class="shrink-0 flex items-center gap-3 ml-auto">
+            <div class="shrink-0 flex items-center gap-3 ms-auto">
               <ModuleSlot
                 name="patients.list.row.financial"
                 :ctx="{ patient_id: patient.id, summary: debtSummaries[patient.id] ?? null }"
@@ -394,7 +405,7 @@ function patientCity(p: Patient): string {
                   />
                 </div>
                 <div class="text-caption text-subtle truncate">
-                  {{ patient.phone || patient.email || '—' }}
+                  <span dir="ltr">{{ patient.phone || patient.email || '—' }}</span>
                 </div>
               </div>
               <StatusBadge

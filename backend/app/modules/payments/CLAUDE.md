@@ -100,7 +100,8 @@ nothing. Country gating is the gateway's `condition` (same as
 | Slot | Where | `ctx` |
 |---|---|---|
 | `payments.collect.actions` | next to "New payment" (payments page), "Cobrar" (`PatientPaymentsPanel`, both buttons), "Collect" (`BudgetPaymentsCard`) | `{ patient?, budget?, prefer_invoice_id? }` — each host passes what it has |
-| `payments.list.row.meta` | payments list row, under the date · method line | `{ payment }` |
+| `payments.create.methods` | inside `PaymentCreateModal`'s own "Collect now" group, below the manual method chips (the group and its heading render only when `resolve()` returns an entry for the modal's ctx, #506) — the module component renders its own `.method-chip` buttons (the style is unscoped for that) and calls `ctx.select({ id, label, panel, panelProps? })`; on submit the modal validates patient/amount/allocations as usual and swaps its body for `panel` (props `form = { patient_id, patient_name, amount, allocations }` + `panelProps`), which emits `created(payment)` or `back`. Waiting/expiry/retries belong to the panel, never to the modal | `{ clinic, selectedId, select }` |
+| `payments.list.row.meta` | payments list row, under the date · method line | `{ payment, clinic }` |
 | `payments.ledger.row.meta` | patient ledger row, under the meta line | `{ entry }` |
 | `payments.detail.sections` | payments list row, above the refund action (there is no dedicated detail view yet — this is its stand-in) | `{ payment }` |
 
@@ -135,7 +136,12 @@ the public endpoints.
   hit returns the existing payment *before* any validation — the
   caller's retry gets the original row, allocations untouched. Unique
   per clinic via a partial index (`NOT NULL` only); `None`/empty never
-  collides.
+  collides. Two *concurrent* calls both miss that pre-check — the INSERT
+  runs in a savepoint and the `IntegrityError` loser re-reads and returns
+  the winner's row, so a gateway webhook retry storm is always safe.
+- **`useClinicCountry()` lives in the host** (`frontend/app/composables`),
+  not this layer: the shared `CollectAmountModal` needs the same IN gate
+  and host components can't import from a layer.
 
 - **No `is_voided` flag.** Total reverso is `Refund(amount=Payment.amount)`.
   Don't reintroduce the legacy flag — the report stack relies on

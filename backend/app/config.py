@@ -1,11 +1,62 @@
 """Application configuration via environment variables."""
 
 import warnings
+from pathlib import Path
+from typing import ClassVar
 
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 MIN_SECRET_KEY_LENGTH = 32
+
+# Prefixes and names the root .env legitimately carries for its other two
+# readers (docker compose interpolation, Nuxt). Anything outside this set
+# that is not a Settings field is almost certainly a misspelled app
+# setting, which ``extra="ignore"`` would otherwise swallow in silence.
+FOREIGN_ENV_PREFIXES = ("POSTGRES_", "NUXT_", "DENTALPIN_", "SEED_", "COMPOSE_", "VITE_")
+# FORWARDED_ALLOW_IPS is uvicorn's, not ours (#623): uvicorn reads it
+# directly when --forwarded-allow-ips is absent, so it belongs in the
+# templates without being a Settings field.
+FOREIGN_ENV_KEYS = frozenset({"API_BASE_URL", "PUBLIC_URL", "PATH", "PWD", "FORWARDED_ALLOW_IPS"})
+
+
+def unknown_env_keys(env_file: str | Path, declared: set[str]) -> list[str]:
+    """Keys set in ``env_file`` that are neither app settings nor foreign.
+
+    Pure and path-relative so it can be tested without constructing a
+    ``Settings``; returns [] when the file is absent, which is the normal
+    case in a container (no .env, only injected variables).
+    """
+    path = Path(env_file)
+    if not path.is_file():
+        return []
+    # pydantic-settings matches .env keys case-insensitively (case_sensitive=False).
+    declared_ci = {name.lower() for name in declared}
+    found: list[str] = []
+    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key = line.split("=", 1)[0].strip()
+        if key.startswith("export "):
+            key = key[len("export ") :].strip()
+        if not key or key.lower() in declared_ci or key in FOREIGN_ENV_KEYS:
+            continue
+        if key.startswith(FOREIGN_ENV_PREFIXES):
+            continue
+        found.append(key)
+    return sorted(set(found))
+
+
+def warn_unknown_env_keys(env_file: str | Path, declared: set[str]) -> None:
+    unknown = unknown_env_keys(env_file, declared)
+    if unknown:
+        warnings.warn(
+            f"{env_file} sets keys this application does not declare: "
+            f"{', '.join(unknown)}. They are ignored. If one of them is a misspelled "
+            "setting, its value is not being applied.",
+            stacklevel=2,
+        )
 
 
 class Settings(BaseSettings):
@@ -18,12 +69,35 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    # Session cookies (ADR 0023) are host-only by default, which is what a
+    # single-host deployment and the e2e stack need. Split-host topologies
+    # (app on demo.example.com, API on api-demo.example.com) set the shared
+    # parent domain, e.g. ".example.com", so the browser sends the cookies
+    # to both hosts and the app can read ``dp_csrf``.
+    COOKIE_DOMAIN: str = ""
+    # Sistema Tessera Sanitaria (sistema_ts module): the *test* service
+    # (invioSS730pTest) presents a certificate issued by the private "Sogei
+    # Certification Authority Test", which no public trust store carries, so
+    # TLS verification fails until the operator points this at a PEM bundle
+    # holding that CA (downloadable from the Sistema TS portal). Production
+    # (invioSS730p) chains to a public CA and needs nothing. Empty = the
+    # default certifi bundle.
+    SISTEMA_TS_CA_BUNDLE: str = ""
+    # Presenting a refresh token revoked less than this many seconds ago
+    # (two tabs refreshing at once, a Nuxt error re-render) answers with the
+    # live successor instead of burning the family (#421). 0 disables.
+    REFRESH_REUSE_GRACE_SECONDS: int = 30
     ALGORITHM: str = "HS256"
     # Independent secret used to sign the public-budget verification
     # cookies (ADR 0006). Falls back to ``SECRET_KEY`` for local/dev
     # convenience, but production deploys must set it explicitly so a
     # leak of one key does not compromise the other.
     BUDGET_PUBLIC_SECRET_KEY: str = ""
+    # Independent secret used to sign QR check-in tokens (agenda). Falls
+    # back to ``SECRET_KEY`` for local/dev convenience, but production
+    # deploys must set it explicitly so a printed token never shares a
+    # key with the session tokens.
+    AGENDA_PUBLIC_SECRET_KEY: str = ""
 
     # Environment
     ENVIRONMENT: str = "development"
@@ -36,8 +110,37 @@ class Settings(BaseSettings):
     LOGIN_RATE_LIMIT: str = "5/minute"
     REGISTER_RATE_LIMIT: str = "3/hour"
 
+    # Leads module — public intake endpoint (/api/v1/leads/public/intake).
+    # Only the request size ceiling lives here: it is an operator concern, not
+    # a business decision. The daily cap is a per-clinic leads_settings column
+    # edited at Settings → Integrations → "Formulario web" — deliberately not
+    # an env var (two sources of truth guarantee a support call where the UI
+    # says 200 and the process says 50).
+    LEADS_INTAKE_MAX_BODY_KB: int = 8
+
     # Testing
     TESTING: bool = False
+    # RBAC source of truth. When False (default), permission checks use the
+    # legacy static grant map and custom roles cannot be assigned. When True,
+    # require_permission resolves through the DB-backed, clinic-aware tables
+    # (roles/role_permissions/permissions/clinic_role_overrides, issue #46)
+    # populated by the seed_rbac seeder at every boot.
+    RBAC_FROM_DB: bool = False
+
+    # Error tracking (Sentry protocol; self-hosted GlitchTip speaks it too).
+    # Unset by default — the app runs without any error reporter. Set
+    # SENTRY_DSN in the environment (never committed) to enable. No patient
+    # data is attached: send_default_pii stays off and URLs are scrubbed,
+    # see setup_error_tracking. Performance tracing is a separate opt-in
+    # (0.0 = off): spans carry SQL statement text.
+    SENTRY_DSN: str = ""
+    SENTRY_TRACES_SAMPLE_RATE: float = 0.0
+
+    # WebPush (notifications push channel). One VAPID pair per deployment:
+    # set DENTALPIN_VAPID_PRIVATE_KEY (PEM, env only) + DENTALPIN_VAPID_SUBJECT
+    # (mailto contact). Unset = push channel resolves nothing.
+    DENTALPIN_VAPID_PRIVATE_KEY: str = ""
+    DENTALPIN_VAPID_SUBJECT: str = "mailto:admin@localhost"
 
     # Module system
     DENTALPIN_DEV_MODULE_SCAN: bool = True  # Fallback filesystem scan for dev
@@ -85,14 +188,20 @@ class Settings(BaseSettings):
     EMAIL_FROM_ADDRESS: str = "noreply@dentalpin.com"
     EMAIL_FROM_NAME: str = "DentalPin"
 
-    # Copilot / agentic layer (app/core/llm/). OpenAI and Anthropic are
-    # the live providers; per-clinic `copilot_settings` overrides
-    # provider + model.
+    # Copilot / agentic layer (app/core/llm/). OpenAI, Anthropic, Gemini,
+    # OpenRouter and Groq are the live providers; per-clinic
+    # `copilot_settings` overrides provider + model.
     OPENAI_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
+    GEMINI_API_KEY: str = ""
+    OPENROUTER_API_KEY: str = ""
+    GROQ_API_KEY: str = ""
     COPILOT_PROVIDER_DEFAULT: str = "openai"
     COPILOT_MODEL_CHAT_OPENAI: str = "gpt-5.4-mini"
     COPILOT_MODEL_CHAT_ANTHROPIC: str = "claude-sonnet-5"
+    COPILOT_MODEL_CHAT_GEMINI: str = "gemini-3.5-flash"
+    COPILOT_MODEL_CHAT_OPENROUTER: str = "meta-llama/llama-3.3-70b-instruct"
+    COPILOT_MODEL_CHAT_GROQ: str = "llama-3.3-70b-versatile"
     COPILOT_MAX_TOKENS: int = 4096
     COPILOT_REDACTION_DEFAULT: bool = True
 
@@ -124,7 +233,102 @@ class Settings(BaseSettings):
             warnings.warn(message, stacklevel=2)
         return self
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    #: Public-session signing keys that must never fall back to the
+    #: staff-JWT key in production (#538).
+    PUBLIC_SECRET_KEYS: ClassVar[tuple[str, ...]] = (
+        "BUDGET_PUBLIC_SECRET_KEY",
+        "AGENDA_PUBLIC_SECRET_KEY",
+    )
+
+    @model_validator(mode="after")
+    def _validate_public_secret_keys(self) -> "Settings":
+        """Require dedicated public-session keys in production (#538).
+
+        Patient-facing sessions (public budget links, QR check-in tokens)
+        must never be signed with the staff-JWT key, so a production boot
+        with a missing, blank, padded, or short public key fails here with
+        an actionable message instead of serving the first patient a 500
+        from a request-time check.
+        """
+        if self.ENVIRONMENT != "production":
+            return self
+        for name in self.PUBLIC_SECRET_KEYS:
+            key = getattr(self, name, "") or ""
+            stripped_key = key.strip()
+            if not key:
+                raise ValueError(
+                    f"{name} is required in production: refusing to start with "
+                    "public sessions bound to the staff-JWT SECRET_KEY."
+                )
+            if not stripped_key:
+                raise ValueError(
+                    f"{name} must not be blank or whitespace in production: "
+                    "refusing to start with a signing key that has no entropy."
+                )
+            if key != stripped_key:
+                raise ValueError(
+                    f"{name} must not have leading or trailing whitespace in "
+                    "production: validation and signing must see the same value."
+                )
+            if len(stripped_key) < MIN_SECRET_KEY_LENGTH:
+                raise ValueError(
+                    f"{name} must be at least {MIN_SECRET_KEY_LENGTH} characters "
+                    "(see .env.example: openssl rand -hex 32)."
+                )
+        return self
+
+    #: Valid ENVIRONMENT values (#530). Anything else (a typo like
+    #: "prod", "staging") fails fast at boot instead of silently
+    #: degrading production-only behavior (docs, secure cookies,
+    #: limiters) to development defaults.
+    VALID_ENVIRONMENTS: ClassVar[tuple[str, ...]] = ("development", "test", "production")
+
+    @model_validator(mode="after")
+    def _validate_environment(self) -> "Settings":
+        """Reject unknown ENVIRONMENT values at boot."""
+        if self.ENVIRONMENT not in self.VALID_ENVIRONMENTS:
+            raise ValueError(
+                f"ENVIRONMENT must be one of {list(self.VALID_ENVIRONMENTS)}, "
+                f"got {self.ENVIRONMENT!r}."
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _warn_about_unknown_env_keys(self) -> "Settings":
+        """Name keys in ``.env`` that look like misspelled app settings.
+
+        ``extra="ignore"`` is required because the root ``.env`` is shared
+        with docker compose and Nuxt, but it also means a typo in an app
+        setting is dropped without a word: write ``SENTRY_DNS`` and
+        ``SENTRY_DSN`` stays empty, so error tracking is silently off and
+        nothing says why. Boot still succeeds; this only reports, once,
+        that a key was not recognised.
+        """
+        env_file = self.model_config.get("env_file")
+        if env_file:
+            warn_unknown_env_keys(env_file, set(type(self).model_fields))
+        return self
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        # The root .env serves three masters: docker compose interpolates it,
+        # Nuxt reads NUXT_* from it, and this model reads it. pydantic-settings
+        # v2 defaults to extra="forbid", so every key that exists for the other
+        # two consumers made ``import app.config`` fail for anyone running the
+        # backend locally — and .env.example itself ships four such keys
+        # (POSTGRES_DB / POSTGRES_USER / POSTGRES_PASSWORD / API_BASE_URL), so
+        # the documented `cp .env.example .env` + local-backend path was broken
+        # on a clean checkout, not just on a customised .env.
+        #
+        # The container path is unaffected: it has no .env, only env vars
+        # compose injects, and every one of those is a field here. Required
+        # fields stay required and the production SECRET_KEY check is
+        # untouched; only unknown keys are tolerated. The trade-off is that a
+        # typo in an app setting is now ignored instead of raising, which is
+        # the lesser failure next to not booting at all.
+        extra="ignore",
+    )
 
 
 settings = Settings()

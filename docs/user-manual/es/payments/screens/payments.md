@@ -29,7 +29,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/payments/frontend/pages/payments/index.vue
   - backend/app/modules/payments/router.py
-last_verified_commit: 1c2db69
+last_verified_commit: 10085df
 ---
 
 # Listado de cobros
@@ -63,8 +63,12 @@ registra un cobro nuevo, se reasigna o se emite un reembolso.
 
 1. Pulsa **Nuevo cobro** en la cabecera (o desde la tarjeta de
    presupuesto en la ficha del paciente).
-2. Elige el paciente. Selecciona método (efectivo, tarjeta,
-   transferencia, débito, seguro u *otro*) y la fecha del cobro.
+2. Elige el paciente. Selecciona método y fecha del cobro. Los
+   métodos van en dos grupos: **Registrar un cobro ya recibido**
+   (efectivo, tarjeta, transferencia, débito, seguro u *otro*) anota
+   el dinero tal como entró, y **Cobrar ahora** inicia el cobro por
+   una pasarela instalada. El segundo grupo solo aparece si un módulo
+   de pasarela ofrece una vía para esta clínica.
 3. Elige el **Destino**: un presupuesto abierto del paciente (lista
    con número e importe) o *A cuenta del paciente*. Un cobro *a
    cuenta* queda como saldo del paciente y **no se imputa a ninguna

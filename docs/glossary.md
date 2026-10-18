@@ -28,6 +28,7 @@ ADRs) for the full story.
 | Dentist | Dentista | Role with full clinical access. |
 | Assistant | Asistente | Operative role; full patient + appointment access, no clinical writes. |
 | Receptionist | Recepcionista | Front-desk role; patients + appointments. |
+| Prescription | Receta | A clinical medication order: draft → issued → cancelled, with prescriber snapshot, safety warnings and locale-aware PDF. No hard deletes. |
 
 ## Imaging (issue #55)
 
@@ -45,6 +46,7 @@ ADRs) for the full story.
 | Bitewing | Bitewing / Aleta de mordida | Inter-proximal X-ray showing crowns + alveolar crests. |
 | Cephalometric | Cefalométrica | Lateral or postero-anterior skull X-ray (`cephalometric_lateral` / `cephalometric_pa`). |
 | CBCT | CBCT / TC de haz cónico | Cone-beam computed tomography. |
+| DICOM | DICOM | Digital Imaging and Communications in Medicine — the standard file/protocol format for radiology studies. |
 | Before / After | Antes / Después | Paired clinical photos linked via `paired_document_id`. |
 | Attachment | Adjunto | A `MediaAttachment` row linking a Document to an arbitrary owner (`patient`, `treatment`, `plan`, `plan_item`, `appointment_treatment`, `clinical_note`). |
 | Owner registry | Registro de dueños | The `media.attachment_registry` global. Each consumer module registers its own `owner_type` strings + a resolver. See ADR 0007. |
@@ -79,6 +81,18 @@ ADRs) for the full story.
 | Credit note | Factura rectificativa | An invoice correction document. |
 | Payment | Pago | Money received against an invoice. Can be partial. |
 | Catalog | Catálogo | Module that holds priced services and products. |
+
+## Payment gateways (India)
+
+| EN (code) | ES (UI) | Definition |
+|---|---|---|
+| Payment gateway | Pasarela de pago | A provider (Razorpay first; PhonePe/Stripe planned) that collects money electronically on the clinic's behalf. See `payment_gateways`/`razorpay` modules, ADR 0029. |
+| Payment request | Solicitud de pago | The pre-payment async lifecycle of one gateway collection attempt (`payment_gateways.PaymentRequest`) — never itself a source of financial truth; becomes one only once it links to a real `Payment` at confirmation. |
+| Gateway refund request | Solicitud de reembolso de pasarela | The async lifecycle of one gateway refund attempt (`payment_gateways.GatewayRefundRequest`) — a core `Refund` is created only once the provider reports completion. |
+| UPI | UPI | Unified Payments Interface — India's real-time bank-to-bank payment rail (the most common Indian consumer instant-payment method). |
+| QR collection | Cobro por QR | A dynamic QR code the patient scans with any UPI app to pay a fixed amount. |
+| Payment link | Enlace de pago | A hosted Razorpay checkout URL sent to the patient instead of collecting in person. |
+| Netbanking | Netbanking | India-specific direct online-banking payment method, distinct from a generic bank transfer. |
 
 ## Compliance (ES)
 
@@ -123,3 +137,28 @@ ADRs) for the full story.
 | Agent | A `BaseAgent` subclass a module ships, registered via `get_agents()`. |
 | Reference module | A module marked as canonical example others should copy. Today: `patients` (foundational), `schedules` (removable, isolation-critical), `treatment_plan` (heavy deps). |
 | Frontend layer | The `frontend/` subdir inside a backend module. Loaded as a Nuxt layer. |
+| Arco / Archwire | The orthodontic wire currently in mouth per arch (upper/lower). Selected from the clinic chip catalog in each control. |
+| Cadeneta / Power chain | Elastic chain procedure chip in orthodontic controls. |
+| Mensualidad / Installment | Monthly orthodontics payment collected through treatment-plan sessions (slice-b). |
+| Aparatologia / Appliance | Orthodontic appliance type (metal/esthetic/self-ligating brackets, aligners, functional, retention). |
+
+## Leads (inbound enquiries)
+
+| EN (code) | ES (UI) | Definition |
+|---|---|---|
+| Lead | Solicitud entrante | An inbound enquiry from the clinic website form that matched no existing patient. Owned by the `leads` module and worked on `/leads`; convertible into a patient. |
+| Intake (web form intake) | Entrada del formulario web | The unauthenticated `POST /api/v1/leads/public/intake` endpoint the clinic website posts enquiries to. |
+| Intake key | Clave del formulario web | The per-clinic secret (`lk_…`) sent in the `X-Lead-Key` header — one per clinic, stored hashed, shown once when rotated. It **is** the authentication of the intake endpoint. |
+| Matched enquiry → recall | Consulta de paciente conocido → Recordatorios | An enquiry whose phone **or** email already belongs to a non-archived patient: it never becomes a lead, it queues a call-back in Recalls. |
+| Convert (a lead) | Convertir (una solicitud) | Turning a lead into a patient record from the convert drawer; the lead is kept with `status="converted"` and linked to the patient it produced. |
+| Availability days | Días disponibles | The days an enquirer can be called, stored as `mon`..`sun` codes (`leads.availability_days`) and shown to staff as a week strip. Structured, not free text: the website form sends codes. |
+| Availability slot | Franja horaria | Optional preference inside those days — `morning`, `afternoon` or `evening` (`leads.availability_slot`). Absent means "any time". |
+| Daily intake cap | Límite diario de solicitudes | Per-clinic ceiling on enquiries accepted per day (`leads_settings.daily_cap`, `0` = unlimited), edited at Settings → Integrations → *Formulario web*. |
+| Honeypot | Campo trampa | The hidden `website` field of the intake form: filled in means a bot, and the submission is accepted silently and never stored. |
+
+## Locales (i18n)
+
+| Code    | Variant              | Notes                                                                                                                                                                                     |
+|---------|----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `pt`    | European Portuguese  | Full locale across host + every module layer. Babel `pt_PT` on PDFs.                                                                                                                      |
+| `pt-BR` | Brazilian Portuguese | Host-only **overlay** on `pt` (#509): `frontend/i18n/locales/pt-BR.json` contains only differing keys. Missing keys fall back through `pt` then `en`. Modules do not ship a `pt-BR.json`. |

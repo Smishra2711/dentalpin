@@ -14,10 +14,13 @@ export default defineNuxtConfig({
       { code: 'fr', file: 'fr.json' },
       { code: 'pt', file: 'pt.json' },
       { code: 'ta', file: 'ta.json' },
+      { code: 'te', file: 'te.json' },
+      { code: 'hi', file: 'hi.json' },
       { code: 'de', file: 'de.json' },
       { code: 'pl', file: 'pl.json' },
       { code: 'it', file: 'it.json' },
-      { code: 'hu', file: 'hu.json' }
+      { code: 'hu', file: 'hu.json' },
+      { code: 'ar', file: 'ar.json' }
     ],
     langDir: 'locales'
   }

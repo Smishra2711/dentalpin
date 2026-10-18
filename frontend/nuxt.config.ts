@@ -100,6 +100,12 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // Server-side only (for SSR inside Docker)
     apiBaseUrlServer: process.env.API_BASE_URL_SERVER || 'http://backend:8000',
+    // Content-Security-Policy mode for the Nitro middleware (#355):
+    // off | report | enforce — overridden at runtime by NUXT_CSP_MODE.
+    cspMode: process.env.NUXT_CSP_MODE || 'off',
+    // Same-origin /api/v1 proxy to apiBaseUrlServer for split-domain PaaS
+    // hosts — see server/routes/api/v1/[...path].ts. NUXT_API_PROXY=true.
+    apiProxy: process.env.NUXT_API_PROXY || 'false',
     public: {
       // Client-side (browser)
       apiBaseUrl: process.env.API_BASE_URL || 'http://localhost:8000',
@@ -161,12 +167,16 @@ export default defineNuxtConfig({
       { code: 'en', name: 'English', file: 'en.json' },
       { code: 'es', name: 'Español', file: 'es.json' },
       { code: 'fr', name: 'Français', file: 'fr.json' },
-      { code: 'pt', name: 'Português', file: 'pt.json' },
+      { code: 'pt', language: 'pt-PT', name: 'Português (PT)', file: 'pt.json' },
+      { code: 'pt-BR', language: 'pt-BR', name: 'Português (BR)', file: 'pt-BR.json' },
       { code: 'ta', name: 'தமிழ்', file: 'ta.json' },
+      { code: 'te', name: 'తెలుగు', file: 'te.json' },
+      { code: 'hi', name: 'हिन्दी', file: 'hi.json' },
       { code: 'de', name: 'Deutsch', file: 'de.json' },
       { code: 'hu', name: 'Magyar', file: 'hu.json' },
       { code: 'pl', name: 'Polski', file: 'pl.json' },
-      { code: 'it', name: 'Italiano', file: 'it.json' }
+      { code: 'it', name: 'Italiano', file: 'it.json' },
+      { code: 'ar', name: 'العربية', file: 'ar.json', dir: 'rtl' }
     ],
     defaultLocale: 'en',
     lazy: true,

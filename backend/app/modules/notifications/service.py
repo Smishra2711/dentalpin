@@ -8,6 +8,7 @@ from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.email import EmailResult, email_service
+from app.core.i18n_names import catalog_name
 
 from .channels import channel_registry
 from .models import (
@@ -373,7 +374,12 @@ class NotificationService:
         """Update notification settings for a clinic."""
         settings = await NotificationService.get_or_create_clinic_settings(db, clinic_id)
 
-        for field in ("preferred_channel", "fallback_enabled", "manual_channels"):
+        for field in (
+            "preferred_channel",
+            "fallback_enabled",
+            "manual_channels",
+            "sms_daily_limit",
+        ):
             if data.get(field) is not None:
                 setattr(settings, field, data[field])
 
@@ -671,3 +677,59 @@ class NotificationService:
         )
 
         return await email_service.send(message)
+
+
+async def budget_treatments_context(db: AsyncSession, budget_id: UUID) -> list[dict]:
+    """The ``treatments`` table every locale's ``budget_sent.html`` renders.
+
+    Lived twice — once in ``handlers.py`` for the event-driven enqueue and
+    once in ``router.py`` for the manual send. The copies diverged: #287
+    fixed the handler's ``catalog_item.name`` (the model has no such
+    attribute, only a per-locale ``names`` dict) and left the router's
+    alone, so manual ``budget_sent`` raised ``AttributeError`` for any
+    budget with items (#527). One implementation cannot drift from itself.
+
+    Catalog names are fetched in a single ``IN`` query rather than one per
+    line — a treatment plan commonly carries 5-30 of them.
+    """
+    from app.modules.budget.models import BudgetItem
+    from app.modules.catalog.models import TreatmentCatalogItem
+
+    items = (
+        (
+            await db.execute(
+                select(BudgetItem)
+                .where(BudgetItem.budget_id == budget_id)
+                .order_by(BudgetItem.display_order)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    if not items:
+        return []
+
+    catalog_ids = {item.catalog_item_id for item in items if item.catalog_item_id}
+    names_by_id: dict[UUID, dict] = {}
+    if catalog_ids:
+        rows = (
+            (
+                await db.execute(
+                    select(TreatmentCatalogItem.id, TreatmentCatalogItem.names).where(
+                        TreatmentCatalogItem.id.in_(catalog_ids)
+                    )
+                )
+            )
+            .tuples()
+            .all()
+        )
+        names_by_id = {row_id: names or {} for row_id, names in rows}
+
+    return [
+        {
+            "name": catalog_name(names_by_id.get(item.catalog_item_id, {})) or "Tratamiento",
+            "tooth": item.tooth_number,
+            "price": float(item.line_total),
+        }
+        for item in items
+    ]

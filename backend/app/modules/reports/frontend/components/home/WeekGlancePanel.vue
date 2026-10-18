@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { SchedulingSummary } from '../../composables/useReports'
 import type { BillingSummary } from '~~/app/types'
+import { toISODate } from '~~/app/utils/wallClock'
 
 defineProps<{ ctx?: unknown }>()
 
@@ -17,10 +18,6 @@ const previous = ref<{ sched: SchedulingSummary | null, bill: BillingSummary | n
   bill: null
 })
 
-function isoDate(d: Date): string {
-  return d.toISOString().split('T')[0] as string
-}
-
 async function load() {
   const now = new Date()
   const end = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -32,10 +29,10 @@ async function load() {
   prevStart.setDate(prevEnd.getDate() - 6)
 
   const [cs, cb, ps, pb] = await Promise.all([
-    fetchSchedulingSummary(isoDate(start), isoDate(end)),
-    fetchBillingSummary(isoDate(start), isoDate(end)),
-    fetchSchedulingSummary(isoDate(prevStart), isoDate(prevEnd)),
-    fetchBillingSummary(isoDate(prevStart), isoDate(prevEnd))
+    fetchSchedulingSummary(toISODate(start), toISODate(end)),
+    fetchBillingSummary(toISODate(start), toISODate(end)),
+    fetchSchedulingSummary(toISODate(prevStart), toISODate(prevEnd)),
+    fetchBillingSummary(toISODate(prevStart), toISODate(prevEnd))
   ])
 
   current.value = { sched: cs, bill: cb }

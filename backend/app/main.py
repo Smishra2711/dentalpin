@@ -1,6 +1,7 @@
 """FastAPI application entry point."""
 
 import logging
+import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Annotated
@@ -17,10 +18,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.core.auth.router import limiter
 from app.core.auth.router import router as auth_router
+from app.core.auth.router_roles import router as roles_router
 from app.core.log_context import (
     new_request_id,
     reset_request_context,
     set_request_context,
+    setup_error_tracking,
     setup_logging,
 )
 from app.core.plugins.loader import mount_modules, register_discovered
@@ -40,6 +43,37 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # during startup / module install also carries the bound fields
     # (defaults to ``-`` outside a request).
     setup_logging()
+
+    # Security posture (audit SEC-01): a production boot without
+    # BUDGET_PUBLIC_SECRET_KEY already fails in app.config's Settings
+    # validation, so there is nothing left to warn about here.
+    # Trusted-proxy posture (#623). uvicorn resolves request.client.host
+    # from X-Forwarded-For only for peers in FORWARDED_ALLOW_IPS; "*"
+    # trusts every peer and then takes the client-controlled leftmost
+    # entry, which hands the caller its own login rate-limit bucket and
+    # its own audit IP. Logged unconditionally because the effective
+    # value is the only way to tell a correct deploy from a silently
+    # per-proxy one, and escalated in production.
+    forwarded_allow_ips = os.environ.get("FORWARDED_ALLOW_IPS", "127.0.0.1,::1")
+    if forwarded_allow_ips.strip() in ("*", '"*"'):
+        log = logger.error if settings.ENVIRONMENT == "production" else logger.warning
+        log(
+            "FORWARDED_ALLOW_IPS is '*': every peer is trusted with "
+            "X-Forwarded-For, so the login rate limit and session client_ip "
+            "can be set by the caller. Set it to the proxy's address or "
+            "network (see .env.example)."
+        )
+    else:
+        logger.info("Trusting proxy headers from: %s", forwarded_allow_ips)
+
+    # Error tracking is DSN-gated (SENTRY_DSN env, never committed) and
+    # never raises — boot continues unreported when unconfigured.
+    setup_error_tracking(
+        dsn=settings.SENTRY_DSN,
+        traces_sample_rate=settings.SENTRY_TRACES_SAMPLE_RATE,
+        environment=settings.ENVIRONMENT,
+        release=app.version,
+    )
 
     # Startup — discover everything, settle DB state, then mount only what
     # is installed (issue #91). Order matters: the processor may install or
@@ -72,6 +106,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info(
         "Mounted %d/%d modules: %s", len(mounted), len(discovered), [m.name for m in mounted]
     )
+
+    # Seed the RBAC tables from the static grant map + installed modules so
+    # the roles API always has a populated catalog and DB-backed checks
+    # (require_permission / /me under settings.RBAC_FROM_DB, issue #46) have
+    # a source of truth. Idempotent and cheap, so it runs regardless of the flag.
+    try:
+        from app.core.auth.seed_rbac import seed_rbac
+
+        async with async_session_maker() as session:
+            await seed_rbac(session)
+    except Exception:
+        logger.exception("RBAC seeding failed at startup")
 
     # Initialize scheduler for background jobs (active modules only)
     init_scheduler()
@@ -198,6 +244,7 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 
 # Mount auth router
 app.include_router(auth_router, prefix="/api/v1")
+app.include_router(roles_router, prefix="/api/v1")
 
 # Mount module management router (install/uninstall/upgrade/restart).
 from app.core.plugins.router import router as modules_router  # noqa: E402
@@ -208,6 +255,11 @@ app.include_router(modules_router, prefix="/api/v1")
 from app.core.agents.router import router as agents_router  # noqa: E402
 
 app.include_router(agents_router, prefix="/api/v1")
+
+# CSP violation report sink (issue #355) — public, rate-limited, log-only.
+from app.core.security.router import router as security_router  # noqa: E402
+
+app.include_router(security_router, prefix="/api/v1")
 
 
 @app.get("/health")
@@ -242,7 +294,7 @@ async def readiness_check(
         logger.error("Readiness check failed: %s", exc)
         return JSONResponse(
             status_code=503,
-            content={"status": "unready", "version": "2.0.0", "error": str(exc)},
+            content={"status": "unready", "version": "2.0.0"},
         )
     return JSONResponse(content={"status": "ready", "version": "2.0.0"})
 

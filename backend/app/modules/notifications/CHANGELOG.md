@@ -2,6 +2,97 @@
 
 ## Unreleased
 
+- feat(#480, ADR 0037): the appointment reminder sweep mints a
+  `source=reminder` check-in token (valid until the end of the
+  appointment's clinic-local day) and passes `checkin_url` into the
+  reminder context; the email templates render it as a button when
+  present (de/fr/it/pt/hu/pl translated; ar/hi/ta/te English fallback).
+  A missing public origin degrades to a link-less reminder instead of
+  failing the sweep. No new dependency: `notifications` already
+  depends on `agenda`.
+- feat(#546, ADR 0038): expose a `NotificationsErasureContributor` instead of
+  subscribing to `gdpr.erasure.executed`; `gdpr` pulls it inside the
+  erasure transaction. Same redaction (recipient, subject, body, template
+  context, failure text; unsent rows cancelled) and the contributor
+  reports its own coverage row. Transactional.
+- feat(i18n): Hindi (`hi`) locale for the module's frontend layer; Hindi option in the clinic communication-language picker.
+- chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
+
+- feat(i18n): Telugu (`te`) locale (`notifications-te.json`) and Telugu (తెలుగు) in the clinic communications-language picker.
+- feat(#509): communication-language picker offers both Português (Portugal) `pt`
+  and Português (Brasil) `pt-BR`.
+
+- fix(#527): a manual `budget_sent` send no longer raises
+  `AttributeError`. `router.py` read `catalog_item.name`; the model has
+  no such attribute, only a per-locale `names` dict — and because
+  `budget_items.catalog_item_id` is a non-nullable FK with no
+  `ON DELETE`, the `else "Tratamiento"` branch that would have survived
+  is unreachable, so *every* budget with lines hit it. #287 fixed the
+  identical block in `handlers.py` and left this copy behind.
+- perf(#527): both copies fetched one catalog row per budget line. The
+  shared `budget_treatments_context()` they now call resolves every name
+  in a single `IN` query — a treatment plan commonly carries 5-30 lines.
+
+- feat: `العربية` in the clinic communication-language selector (templates
+  from #426 by @dev-7aider).
+- fix(#63 maintainer review): `notif_0008` seeds system push templates
+  (title + body, es/en, one per notification type, `smg_0002` shape) —
+  without a `channel='push'` row every template-kind push failed at
+  dispatch with "empty body"; manual send (`POST /send`) accepts
+  `channels: ["push"]` (the recipient pre-check knew only phone/email);
+  `test_clinic_channels_sms_fallback_order` pins VAPID unset so a
+  configured runner no longer appends `push` to the expected order.
+- fix(#63 review round 3): dropped the `ImportError` fallback (plain
+  top-level `webpush` import, no runtime branch); `_fit_payload`
+  re-serialises with `ensure_ascii=False` (accented bodies stay under
+  the 3990-byte cap) with a regression test; cross-clinic HTTP test
+  now asserts B's row is invisible/untouchable from A; sign-path
+  test runs the real `webpush_async` (only HTTP stubbed) to cover
+  `Vapid.sign`; token minting documented as API-only (en+es);
+  `push-sw.js` moved into the module layer `frontend/public/`.
+- fix(#63 review round 2): cached `Vapid` instance (PEM strings fail
+  deserialization); schema-level `https://` validators; hard
+  `webpush` import; atomic single-use redeem returning
+  `{subscribed: true}`; budget-mirror rate limits on the public
+  router; 3990-byte wire cap; SW ready-gate + payload URL
+  forwarding; HTTP cross-clinic + pruning-isolation tests.
+- fix(#63 review): patient subscribe flow end to end — staff-minted
+  single-use tokens (`notif_0007`, 24 h expiry) redeemed by the
+  browser at `/p/push/<token>` (public page + `push-sw.js` service
+  worker, auth middleware exemption); async `webpush_async` send
+  (10 s timeout, 24 h TTL, 4 KB cap); `https://`-only endpoints;
+  settings-backed VAPID; `push:<n>` log recipients; top-level
+  `webpush` import with `status_code` pruning; model/migration index
+  parity; unused TS permission mirror dropped; cross-clinic tests.
+- fix: the "connect WhatsApp" / "configure SMS" hints on the settings page
+  link to `/settings/integrations/<page>` (the registry route); the bare
+  `/settings/<page>` form 404s.
+
+- feat(#231 PR2): SMS in the UI. `sms` joins the `NotificationChannel`
+  union, `CHANNEL_ORDER`, and the settings page (preferred select +
+  manual checkbox + unconfigured hint, all gated by adapter
+  availability); new `PatientNotificationPrefs` card on the patient
+  summary (email/WhatsApp/SMS opt-out toggles over the preferences
+  API). Host locale keys added in all 9 languages.
+
+- feat(#231 PR1): SMS channel core support. `Channel.SMS` enum;
+  `_resolve_channel` SMS branch (destination = patient E.164 phone,
+  `sms_enabled` opt-out honoured even on force_send, text-only so both
+  template and session kinds resolve); `sms` in the ordered
+  preferred/fallback channel list (replaces the hardcoded
+  email/whatsapp pair); per-clinic `sms_daily_limit` (default 100/day,
+  skips with `sms_rate_limited`); `sms_enabled` + `sms_opt_in_at` on
+  preferences and `preferred_channel` accepting `sms`
+  (`notif_0005_sms_channel`). An exhausted cap falls through to the
+  next channel in the order (fallback) and only skips with
+  `sms_rate_limited` when nothing else is viable; inbound rows never
+  consume the cap; `sms_daily_limit` is echoed back by `/settings`.
+- feat: WebPush channel (T6) — `PushAdapter` + `notification_push_subscriptions`
+  table (`notif_0006`, chained on the SMS `notif_0005`) + `push_enabled`
+  preference + `push.read`/`push.write`
+  permissions + subscription endpoints + VAPID public-key endpoint. One VAPID
+  pair per deployment (`DENTALPIN_VAPID_PRIVATE_KEY`, env only). Dead
+  endpoints (410/404) prune on send. Browser service worker is a follow-up.
 - fix(#326): the SMTP onboarding rule carries `permission: 'notifications.settings.read'`.
 
 - refactor(#126): budget_sent treatment names resolve through the shared `app.core.i18n_names.catalog_name` helper (was es → en → first value).
@@ -11,6 +102,10 @@
 - feat(#334): Hungarian (hu) locale for the module's frontend layer.
 
 - fix(#325): the built-in EmailAdapter registers from `on_activate()` instead of at import in `channels/registry.py` (ADR 0020); activation order still guarantees email precedes vendor channels.
+
+- feat(i18n): Arabic (ar) locale for the module's frontend layer.
+- feat(i18n): the frontend layer's directional spacing, borders, text alignment and inset positioning now resolve against the document direction (physical→logical CSS utilities, Arabic RTL support).
+
 
 - fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
 

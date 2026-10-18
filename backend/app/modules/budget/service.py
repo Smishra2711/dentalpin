@@ -8,6 +8,7 @@ from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
+from app.core.auth.models import ClinicMembership
 from app.core.list_query import parse_sort
 from app.modules.catalog.models import TreatmentCatalogItem, VatType
 
@@ -243,6 +244,37 @@ class BudgetItemService:
         item.line_total = taxable + item.line_tax
 
 
+async def _validate_professional_in_clinic(
+    db: AsyncSession, clinic_id: UUID, user_id: UUID
+) -> None:
+    """Confirm ``user_id`` is a professional member of ``clinic_id``.
+
+    A budget's ``assigned_professional_id`` is a plain FK to ``users``,
+    so without this check any user id the caller can name is accepted:
+    an unknown one fails as an IntegrityError (a 500), and one belonging
+    to **another clinic** is stored and then rendered back with that
+    user's name.
+
+    Deliberately the same shape as
+    ``treatment_plan.service._validate_professional_in_clinic``, whose
+    docstring already names the threat ("avoid leaking users across
+    tenants"); ``agenda`` checks the same thing inline. Raises
+    ``ValueError`` so the routers map it to 400, which is what they
+    already do for the other validation errors here.
+    """
+    result = await db.execute(
+        select(ClinicMembership.id)
+        .where(
+            ClinicMembership.clinic_id == clinic_id,
+            ClinicMembership.user_id == user_id,
+            ClinicMembership.is_professional.is_(True),
+        )
+        .limit(1)
+    )
+    if result.scalar_one_or_none() is None:
+        raise ValueError("Invalid professional for this clinic")
+
+
 class BudgetService:
     """Service for budget operations."""
 
@@ -424,6 +456,11 @@ class BudgetService:
 
         # Extract items data
         items_data = data.pop("items", [])
+
+        # Reject a professional who is not a member of this clinic before
+        # the FK gets a chance to decide (#tenancy).
+        if data.get("assigned_professional_id"):
+            await _validate_professional_in_clinic(db, clinic_id, data["assigned_professional_id"])
 
         # Create budget
         budget = Budget(
@@ -611,9 +648,22 @@ class BudgetService:
         }
 
         # Update fields
+        new_professional = data.get("assigned_professional_id")
+        if new_professional:
+            await _validate_professional_in_clinic(db, budget.clinic_id, new_professional)
+
         for key, value in data.items():
             if value is not None and hasattr(budget, key):
                 setattr(budget, key, value)
+
+        # The caller reloads the budget to build the response, but this
+        # instance is already in the identity map with
+        # ``assigned_professional`` loaded from before the change, so the
+        # reload returned the stale value (null, or the previous doctor)
+        # while the id field showed the new one. Expire it so the reload
+        # actually fetches the newly-assigned professional.
+        if new_professional:
+            db.expire(budget, ["assigned_professional"])
 
         # Recalculate totals (in case discount changed)
         await BudgetService._recalculate_totals(db, budget)
@@ -726,27 +776,44 @@ class BudgetService:
         )
 
     @staticmethod
+    async def next_version(db: AsyncSession, clinic_id: UUID, budget_number: str) -> int:
+        """Next free version for a budget number inside a clinic.
+
+        ``uq_budget_clinic_number_version`` covers
+        ``(clinic_id, budget_number, version)``, so a new version has to
+        come from the **highest existing** version, never from the version
+        of the row being cloned: an older terminal version can be resent
+        while a newer draft already exists, and `version + 1` then lands
+        on a number that is taken. Both version-creating paths
+        (:meth:`duplicate_budget` and
+        ``BudgetWorkflowService.clone_to_new_draft``) go through here so
+        they cannot drift apart again.
+        """
+        result = await db.execute(
+            select(func.max(Budget.version)).where(
+                Budget.clinic_id == clinic_id,
+                Budget.budget_number == budget_number,
+            )
+        )
+        return (result.scalar_one_or_none() or 0) + 1
+
+    @staticmethod
     async def duplicate_budget(
         db: AsyncSession,
         source_budget: Budget,
         created_by: UUID,
     ) -> Budget:
         """Create a new version of a budget."""
-        # Get the latest version for this budget number
-        result = await db.execute(
-            select(func.max(Budget.version)).where(
-                Budget.clinic_id == source_budget.clinic_id,
-                Budget.budget_number == source_budget.budget_number,
-            )
+        next_version = await BudgetService.next_version(
+            db, source_budget.clinic_id, source_budget.budget_number
         )
-        max_version = result.scalar_one_or_none() or 0
 
         # Create new budget
         new_budget = Budget(
             clinic_id=source_budget.clinic_id,
             patient_id=source_budget.patient_id,
             budget_number=source_budget.budget_number,
-            version=max_version + 1,
+            version=next_version,
             parent_budget_id=source_budget.id,
             status="draft",
             valid_from=date.today(),

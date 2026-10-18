@@ -167,10 +167,19 @@ export function useCopilot() {
     if (card) card.resolved = decision
     pending.value = null
     busy.value = true
+    // The confirmed call only streams back a ``tool_result`` (no
+    // ``tool_call``), so success is read off that event, not a tool message.
+    let wrote = false
     await stream(
       `/api/v1/copilot/sessions/${conversationId.value}/confirmations/${callId}`,
       { decision },
-      { onEvent: handle, onError: m => handle('error', { detail: m }) }
+      {
+        onEvent: (event, data) => {
+          if (event === 'tool_result' && data.call_id === callId && data.ok) wrote = true
+          handle(event, data)
+        },
+        onError: m => handle('error', { detail: m })
+      }
     )
     busy.value = false
     phase.value = null
@@ -180,11 +189,8 @@ export function useCopilot() {
     // namespace on the data bus so its page can refetch. Tool names are
     // ``{module}.{tool}`` — forward the module namespace, never a hardcoded
     // consumer, so copilot stays decoupled from every module.
-    const tool = messages.value.find(
-      (m): m is ToolUiMessage => m.kind === 'tool' && m.callId === callId
-    )
-    if (decision === 'confirm' && tool?.status === 'done') {
-      const namespace = tool.name.split('.')[0]
+    if (wrote && card) {
+      const namespace = card.name.split('.')[0]
       if (namespace) dataBus.publish(namespace)
     }
   }

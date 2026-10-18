@@ -35,9 +35,14 @@ class PatientsClinicalService:
     # --- Medical context (1:1) -----------------------------------------
 
     @staticmethod
-    async def get_medical_context(db: AsyncSession, patient_id: UUID) -> MedicalContext | None:
+    async def get_medical_context(
+        db: AsyncSession, clinic_id: UUID, patient_id: UUID
+    ) -> MedicalContext | None:
         result = await db.execute(
-            select(MedicalContext).where(MedicalContext.patient_id == patient_id)
+            select(MedicalContext).where(
+                MedicalContext.clinic_id == clinic_id,
+                MedicalContext.patient_id == patient_id,
+            )
         )
         return result.scalar_one_or_none()
 
@@ -49,7 +54,7 @@ class PatientsClinicalService:
         data: dict[str, Any],
         user_id: UUID | None,
     ) -> MedicalContext:
-        existing = await PatientsClinicalService.get_medical_context(db, patient_id)
+        existing = await PatientsClinicalService.get_medical_context(db, clinic_id, patient_id)
         now = datetime.now(UTC)
 
         if existing is None:
@@ -75,7 +80,9 @@ class PatientsClinicalService:
     @staticmethod
     async def list_allergies(db: AsyncSession, patient_id: UUID) -> list[Allergy]:
         result = await db.execute(
-            select(Allergy).where(Allergy.patient_id == patient_id).order_by(Allergy.created_at)
+            select(Allergy)
+            .where(Allergy.patient_id == patient_id, Allergy.status == "active")
+            .order_by(Allergy.created_at)
         )
         return list(result.scalars())
 
@@ -89,8 +96,10 @@ class PatientsClinicalService:
         return allergy
 
     @staticmethod
-    async def get_allergy(db: AsyncSession, allergy_id: UUID) -> Allergy | None:
-        result = await db.execute(select(Allergy).where(Allergy.id == allergy_id))
+    async def get_allergy(db: AsyncSession, clinic_id: UUID, allergy_id: UUID) -> Allergy | None:
+        result = await db.execute(
+            select(Allergy).where(Allergy.clinic_id == clinic_id, Allergy.id == allergy_id)
+        )
         return result.scalar_one_or_none()
 
     @staticmethod
@@ -102,7 +111,8 @@ class PatientsClinicalService:
 
     @staticmethod
     async def delete_allergy(db: AsyncSession, allergy: Allergy) -> None:
-        await db.delete(allergy)
+        # Soft-delete: the row stays for history; lists exclude it.
+        allergy.status = "archived"
         await db.flush()
 
     # --- Medication ----------------------------------------------------
@@ -111,7 +121,7 @@ class PatientsClinicalService:
     async def list_medications(db: AsyncSession, patient_id: UUID) -> list[Medication]:
         result = await db.execute(
             select(Medication)
-            .where(Medication.patient_id == patient_id)
+            .where(Medication.patient_id == patient_id, Medication.status == "active")
             .order_by(Medication.created_at)
         )
         return list(result.scalars())
@@ -126,8 +136,14 @@ class PatientsClinicalService:
         return med
 
     @staticmethod
-    async def get_medication(db: AsyncSession, medication_id: UUID) -> Medication | None:
-        result = await db.execute(select(Medication).where(Medication.id == medication_id))
+    async def get_medication(
+        db: AsyncSession, clinic_id: UUID, medication_id: UUID
+    ) -> Medication | None:
+        result = await db.execute(
+            select(Medication).where(
+                Medication.clinic_id == clinic_id, Medication.id == medication_id
+            )
+        )
         return result.scalar_one_or_none()
 
     @staticmethod
@@ -139,7 +155,8 @@ class PatientsClinicalService:
 
     @staticmethod
     async def delete_medication(db: AsyncSession, med: Medication) -> None:
-        await db.delete(med)
+        # Soft-delete: the row stays for history; lists exclude it.
+        med.status = "archived"
         await db.flush()
 
     # --- Systemic disease ----------------------------------------------
@@ -148,7 +165,7 @@ class PatientsClinicalService:
     async def list_systemic_diseases(db: AsyncSession, patient_id: UUID) -> list[SystemicDisease]:
         result = await db.execute(
             select(SystemicDisease)
-            .where(SystemicDisease.patient_id == patient_id)
+            .where(SystemicDisease.patient_id == patient_id, SystemicDisease.status == "active")
             .order_by(SystemicDisease.created_at)
         )
         return list(result.scalars())
@@ -163,8 +180,14 @@ class PatientsClinicalService:
         return disease
 
     @staticmethod
-    async def get_systemic_disease(db: AsyncSession, disease_id: UUID) -> SystemicDisease | None:
-        result = await db.execute(select(SystemicDisease).where(SystemicDisease.id == disease_id))
+    async def get_systemic_disease(
+        db: AsyncSession, clinic_id: UUID, disease_id: UUID
+    ) -> SystemicDisease | None:
+        result = await db.execute(
+            select(SystemicDisease).where(
+                SystemicDisease.clinic_id == clinic_id, SystemicDisease.id == disease_id
+            )
+        )
         return result.scalar_one_or_none()
 
     @staticmethod
@@ -178,7 +201,8 @@ class PatientsClinicalService:
 
     @staticmethod
     async def delete_systemic_disease(db: AsyncSession, disease: SystemicDisease) -> None:
-        await db.delete(disease)
+        # Soft-delete: the row stays for history; lists exclude it.
+        disease.status = "archived"
         await db.flush()
 
     # --- Surgical history ----------------------------------------------
@@ -187,7 +211,7 @@ class PatientsClinicalService:
     async def list_surgical_history(db: AsyncSession, patient_id: UUID) -> list[SurgicalHistory]:
         result = await db.execute(
             select(SurgicalHistory)
-            .where(SurgicalHistory.patient_id == patient_id)
+            .where(SurgicalHistory.patient_id == patient_id, SurgicalHistory.status == "active")
             .order_by(SurgicalHistory.created_at)
         )
         return list(result.scalars())
@@ -202,8 +226,14 @@ class PatientsClinicalService:
         return surgery
 
     @staticmethod
-    async def get_surgical_history(db: AsyncSession, surgery_id: UUID) -> SurgicalHistory | None:
-        result = await db.execute(select(SurgicalHistory).where(SurgicalHistory.id == surgery_id))
+    async def get_surgical_history(
+        db: AsyncSession, clinic_id: UUID, surgery_id: UUID
+    ) -> SurgicalHistory | None:
+        result = await db.execute(
+            select(SurgicalHistory).where(
+                SurgicalHistory.clinic_id == clinic_id, SurgicalHistory.id == surgery_id
+            )
+        )
         return result.scalar_one_or_none()
 
     @staticmethod
@@ -217,7 +247,8 @@ class PatientsClinicalService:
 
     @staticmethod
     async def delete_surgical_history(db: AsyncSession, surgery: SurgicalHistory) -> None:
-        await db.delete(surgery)
+        # Soft-delete: the row stays for history; lists exclude it.
+        surgery.status = "archived"
         await db.flush()
 
     # --- Emergency contact (1:1) ---------------------------------------
@@ -240,12 +271,15 @@ class PatientsClinicalService:
         else:
             for k, v in data.items():
                 setattr(existing, k, v)
+            # Revive: the PK is patient_id, so an archived row is reused.
+            existing.status = "active"
         await db.flush()
         return existing
 
     @staticmethod
     async def delete_emergency_contact(db: AsyncSession, contact: EmergencyContact) -> None:
-        await db.delete(contact)
+        # Soft-delete: the row stays for history; upserts revive it.
+        contact.status = "archived"
         await db.flush()
 
     # --- Legal guardian (1:1) ------------------------------------------
@@ -268,20 +302,23 @@ class PatientsClinicalService:
         else:
             for k, v in data.items():
                 setattr(existing, k, v)
+            # Revive: the PK is patient_id, so an archived row is reused.
+            existing.status = "active"
         await db.flush()
         return existing
 
     @staticmethod
     async def delete_legal_guardian(db: AsyncSession, guardian: LegalGuardian) -> None:
-        await db.delete(guardian)
+        # Soft-delete: the row stays for history; upserts revive it.
+        guardian.status = "archived"
         await db.flush()
 
     # --- Aggregated views ----------------------------------------------
 
     @staticmethod
-    async def build_medical_history(db: AsyncSession, patient_id: UUID) -> dict:
+    async def build_medical_history(db: AsyncSession, clinic_id: UUID, patient_id: UUID) -> dict:
         """Return the legacy JSONB-shaped medical history payload."""
-        context = await PatientsClinicalService.get_medical_context(db, patient_id)
+        context = await PatientsClinicalService.get_medical_context(db, clinic_id, patient_id)
         allergies = await PatientsClinicalService.list_allergies(db, patient_id)
         medications = await PatientsClinicalService.list_medications(db, patient_id)
         diseases = await PatientsClinicalService.list_systemic_diseases(db, patient_id)
@@ -315,9 +352,9 @@ class PatientsClinicalService:
         }
 
     @staticmethod
-    async def compute_alerts(db: AsyncSession, patient_id: UUID) -> list[dict]:
+    async def compute_alerts(db: AsyncSession, clinic_id: UUID, patient_id: UUID) -> list[dict]:
         """Compute active alerts from normalized clinical rows."""
-        context = await PatientsClinicalService.get_medical_context(db, patient_id)
+        context = await PatientsClinicalService.get_medical_context(db, clinic_id, patient_id)
         allergies = await PatientsClinicalService.list_allergies(db, patient_id)
         diseases = await PatientsClinicalService.list_systemic_diseases(db, patient_id)
 
@@ -406,8 +443,9 @@ class PatientsClinicalService:
         """Replace allergies/medications/diseases/surgeries and context atomically.
 
         The frontend form submits the whole block, mirroring the old
-        JSONB shape. The backend wipes and reinserts the per-row tables
-        so the result is deterministic.
+        JSONB shape. Superseded rows are archived (never hard-deleted, so
+        the clinical history survives every save) and the submitted set is
+        inserted fresh, so the result stays deterministic.
         """
         for table_cls, key in (
             (Allergy, "allergies"),
@@ -417,7 +455,7 @@ class PatientsClinicalService:
         ):
             existing = await db.execute(select(table_cls).where(table_cls.patient_id == patient_id))
             for row in existing.scalars():
-                await db.delete(row)
+                row.status = "archived"
 
         for row in payload.get("allergies", []):
             db.add(Allergy(clinic_id=clinic_id, patient_id=patient_id, **row))

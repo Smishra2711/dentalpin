@@ -9,6 +9,8 @@
  *
  * v-model returns ``{ from: string | null, to: string | null }``.
  */
+import { toISODate } from '~/utils/wallClock'
+
 interface Range {
   from: string | null
   to: string | null
@@ -56,10 +58,6 @@ watch(
   { deep: true }
 )
 
-function toIso(d: Date): string {
-  return d.toISOString().slice(0, 10)
-}
-
 function applyPreset(preset: 'today' | 'last7' | 'last30' | 'thisMonth' | 'thisQuarter' | 'thisYear') {
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -86,7 +84,7 @@ function applyPreset(preset: 'today' | 'last7' | 'last30' | 'thisMonth' | 'thisQ
       from = new Date(today.getFullYear(), 0, 1)
       break
   }
-  draft.value = { from: toIso(from), to: toIso(to) }
+  draft.value = { from: toISODate(from), to: toISODate(to) }
 }
 
 function apply() {

@@ -9,6 +9,7 @@
  * - Keyboard navigation (←/→/Home/End)
  * - Touch/drag support
  */
+import { toISODate } from '~~/app/utils/wallClock'
 
 const props = defineProps<{
   dates: Array<{ date: string, change_count: number }>
@@ -36,7 +37,7 @@ const isDragging = ref(false)
 /** Whether last date in array is today (merges with"Now" position) */
 const lastDateIsToday = computed(() => {
   const lastDate = props.dates.at(-1)?.date
-  const today = new Date().toISOString().slice(0, 10)
+  const today = toISODate(new Date())
   return lastDate === today
 })
 
@@ -246,7 +247,7 @@ onUnmounted(() => {
       <span class="flex items-center text-sm font-medium text-muted">
         <UIcon
           name="i-lucide-history"
-          class="w-4 h-4 mr-1"
+          class="w-4 h-4 me-1"
         />
         {{ t('odontogram.timeline.title') }}
       </span>
@@ -278,7 +279,7 @@ onUnmounted(() => {
       @keydown="handleKeydown"
     >
       <!-- Background line -->
-      <div class="absolute top-4 left-0 right-0 h-1 bg-surface-sunken  rounded-full" />
+      <div class="absolute top-4 start-0 end-0 h-1 bg-surface-sunken  rounded-full" />
 
       <!-- Date markers -->
       <div

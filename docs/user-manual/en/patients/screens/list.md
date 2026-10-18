@@ -12,7 +12,7 @@ related_permissions:
 related_paths:
   - backend/app/modules/patients/router.py
   - backend/app/modules/patients/frontend/pages/patients/index.vue
-last_verified_commit: 0f30803
+last_verified_commit: 10085df
 screenshots:
   - patients.png
 ---
@@ -26,6 +26,10 @@ filter, open a patient's detail page, or create a new patient.
 
 - **Default view:** active patients only. Archived patients are hidden;
   the list endpoint never returns them by default.
+- **Status filter:** the chips pick exactly what you ask for. *Archived*
+  on its own lists archived patients only; both chips lists both.
+  Clearing the filter drops the restriction rather than falling back to
+  active.
 - **Recent panel:** the sidebar quick-access list shows the patients you
   opened most recently — backed by the `GET /api/v1/patients/recent`
   endpoint.
@@ -65,6 +69,5 @@ filter, open a patient's detail page, or create a new patient.
 
 - **The list is empty after a fresh install.** Run `./scripts/seed-demo.sh`
   to load demo data.
-- **A patient I just created is missing.** Check the active filter — if
-  you accidentally toggled the *Show archived* switch, only archived
-  rows appear.
+- **A patient I just created is missing.** Check the *Status* filter —
+  if only *Archived* is selected, active rows are excluded.

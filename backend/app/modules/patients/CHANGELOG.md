@@ -2,7 +2,40 @@
 
 ## Unreleased
 
+- chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
+
+- fix(#473): `GET /patients` takes a repeatable `status` query
+  parameter, so the Archived chip lists archived patients *alone*. The
+  boolean `include_archived` could only ever say "active" or "active and
+  archived", so archived-only was not expressible and the chip returned
+  active rows too. `include_archived` still applies when no `status` is
+  given, which keeps every existing caller on its current behaviour.
+
+- fix(#473): clearing the status filter no longer springs back to
+  Active, and an empty selection now means "no status restriction"
+  (archived included) instead of silently staying filtered to active.
+  The cleared state counts towards the active-filter badge, since it
+  does change the result set.
+
+- feat(#232): sidebar entry grouped under the Clinical header (`nav.section` "clinical").
+- fix(#431 review round 3): intra-file repeats report
+  `matched_on: "same_file"` with a null `patient_id` (documented
+  en+es).
+- fix(#431 review): `patient.restored` event (reverses the media
+  archive cascade); duplicate detection (national id, else email +
+  birth date) with `allow_duplicates` commit flag; `,`/`;` sniffing
+  + DD/MM/YYYY dates; bounded upload reads; CSV agent tool dropped
+  (HTTP-only).
+- feat: CSV patient import — `POST /patients/import.csv` (dry-run default,
+  commit with `dry_run=false`). Validation
+  reuses `PatientCreate`; unknown columns ignored, 1000 rows / 1 MiB caps.
+- feat: `POST /patients/{id}/restore` — restore a soft-archived patient
+  (no-op when active; publishes `patient.restored`).
+
 - fix(#326): the first-patient onboarding rule carries `permission: 'patients.read'`.
+
+- feat(i18n): the frontend layer's directional spacing, borders, text alignment and inset positioning now resolve against the document direction (physical→logical CSS utilities, Arabic RTL support).
+
 
 - fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
 

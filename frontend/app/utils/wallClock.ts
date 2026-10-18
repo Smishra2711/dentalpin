@@ -51,3 +51,39 @@ export function clinicNow(timeZone: string | null | undefined): Date {
     return now
   }
 }
+
+/**
+ * A `Date` rendered as the calendar day it holds, `YYYY-MM-DD`.
+ *
+ * `d.toISOString().slice(0, 10)` renders the same *instant* in UTC, so a
+ * Date built from local parts — `new Date(y, m, 1)`, i.e. local midnight
+ * — comes back as the **previous** day for every zone ahead of UTC
+ * (#522). That is not a near-midnight race: it is wrong at every hour of
+ * every day in Madrid, Rome, Warsaw, Budapest and Kolkata. Read the
+ * fields off the Date instead, the way `clinicToday` already does.
+ *
+ * Feed it Dates that are in local frame. A `YYYY-MM-DD` string parsed
+ * with `new Date(s)` is **UTC** midnight per spec, so parse those as
+ * ``new Date(`${s}T00:00:00`)`` before passing them here, or the two
+ * frames cancel out in one direction and double up in the other.
+ */
+export function toISODate(d: Date): string {
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
+
+/**
+ * Today's date in the clinic's timezone, as `YYYY-MM-DD` — for
+ * `<input type="date">` v-model and API payloads like `payment_date`
+ * (#439/#445 review follow-up). `clinicNow(tz).toISOString()` would
+ * re-shift the wall-clock Date through the *browser's own* offset and
+ * silently roll to the wrong calendar day near local midnight when the
+ * device and the clinic disagree — read the Y-M-D fields directly off
+ * the wall-clock Date instead. Falls back to the browser's own local
+ * date when the timezone is unknown (same fallback as `clinicNow`).
+ */
+export function clinicToday(timeZone: string | null | undefined): string {
+  return toISODate(clinicNow(timeZone))
+}

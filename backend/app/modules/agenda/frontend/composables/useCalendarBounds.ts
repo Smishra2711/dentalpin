@@ -9,6 +9,7 @@
  */
 import { useScheduleAvailability } from './useScheduleAvailability'
 import { parseIsoParts } from '../utils/date'
+import { toISODate } from '~~/app/utils/wallClock'
 
 const DEFAULT_START = 8
 const DEFAULT_END = 21
@@ -22,8 +23,10 @@ export function useCalendarBounds() {
   const { fetchOpenRanges } = useScheduleAvailability()
 
   async function compute(range: { start: Date, end: Date }): Promise<CalendarBounds> {
-    const isoStart = range.start.toISOString().slice(0, 10)
-    const isoEnd = range.end.toISOString().slice(0, 10)
+    // The calendar hands us local midnights; toISOString would render
+    // them in UTC and ask the API for the previous day (#522).
+    const isoStart = toISODate(range.start)
+    const isoEnd = toISODate(range.end)
     const open = await fetchOpenRanges({ start: isoStart, end: isoEnd })
     if (!open || open.length === 0) {
       return { startHour: DEFAULT_START, endHour: DEFAULT_END }

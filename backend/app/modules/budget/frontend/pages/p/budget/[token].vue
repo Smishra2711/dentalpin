@@ -4,8 +4,8 @@
  * ``/p/budget/<token>`` and bypasses the global auth middleware
  * (see ``frontend/app/middleware/auth.global.ts``).
  *
- * Conversion-optimised UI: clinic identity hero, personalised
- * greeting, itemised treatment list, prominent total, trust signals
+ * Conversion-optimised UI: clinic identity hero, generic welcome
+ * heading, itemised treatment list, prominent total, trust signals
  * and three CTAs (accept · doubts · reject) with a sticky bar on
  * mobile so the primary action is always reachable.
  */
@@ -233,8 +233,9 @@ const reasonOptions = computed(() => [
 ])
 
 const greeting = computed(() => {
-  const name = meta.value?.patient_first_name
-  return name ? t('budget.public.greeting', { name }) : t('budget.public.title')
+  // No personalization here by design: /meta carries no patient identity
+  // (#539), so the welcome heading is always the generic title.
+  return t('budget.public.title')
 })
 </script>
 
@@ -423,7 +424,7 @@ const greeting = computed(() => {
           >
             <UIcon
               name="i-lucide-calendar-clock"
-              class="w-4 h-4 inline-block mr-1"
+              class="w-4 h-4 inline-block me-1"
             />
             {{ t('budget.public.validUntil', { date: formatDate(budget.valid_until) }) }}
           </p>
@@ -757,10 +758,10 @@ const greeting = computed(() => {
 
 .container {
   max-width: 720px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 16px;
-  padding-right: 16px;
+  margin-inline-start: auto;
+  margin-inline-end: auto;
+  padding-inline-start: 16px;
+  padding-inline-end: 16px;
 }
 
 /* ----- Hero --------------------------------------------------------- */
@@ -929,7 +930,7 @@ const greeting = computed(() => {
 }
 
 .treatments-money {
-  text-align: right;
+  text-align: end;
   flex-shrink: 0;
 }
 
@@ -943,7 +944,7 @@ const greeting = computed(() => {
   font-weight: 400;
   font-size: 0.85em;
   opacity: 0.6;
-  margin-right: 0.35rem;
+  margin-inline-end: 0.35rem;
 }
 
 .treatments-total {

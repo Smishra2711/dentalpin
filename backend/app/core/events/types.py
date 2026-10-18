@@ -24,6 +24,7 @@ class EventType:
     PATIENT_CREATED = "patient.created"
     PATIENT_UPDATED = "patient.updated"
     PATIENT_ARCHIVED = "patient.archived"
+    PATIENT_RESTORED = "patient.restored"
     PATIENT_MEDICAL_UPDATED = "patient.medical_updated"
 
     # Appointment events
@@ -163,6 +164,27 @@ class EventType:
     # timeline can render the comparison inline.
     PAIR_CREATED = "media.pair_created"
     PAIR_REMOVED = "media.pair_removed"
+    # A media document was indexed as a viewable DICOM study. Payload:
+    # (study_id, clinic_id, patient_id, document_id, study_uid).
+    # Consumed by patient_timeline for audit entries.
+    IMAGING_STUDY_INDEXED = "imaging.study_indexed"
+    # An AI segmentation job reached a terminal state. Payload:
+    # (job_id, clinic_id, patient_id, status).
+    IMAGING_AI_JOB_DONE = "imaging.ai_job_done"
+    # A clinician confirmed AI draft artifacts for review. Payload:
+    # (job_id, clinic_id, patient_id, confirmed_by).
+    IMAGING_AI_JOB_CONFIRMED = "imaging.ai_job_confirmed"
+
+    # Orthodontics (issue #270, slice-a). Payloads carry clinic_id,
+    # case_id, patient_id. Consumed by patient_timeline.
+    ORTHODONTICS_CASE_CREATED = "orthodontics.case_created"
+    ORTHODONTICS_CASE_STATUS_CHANGED = "orthodontics.case_status_changed"
+    ORTHODONTICS_CONTROL_REGISTERED = "orthodontics.control_registered"
+
+    # Clinical prescriptions (issue #269). Payload: (prescription_id,
+    # clinic_id, patient_id). Consumed by patient_timeline.
+    PRESCRIPTION_ISSUED = "prescription.issued"
+    PRESCRIPTION_CANCELLED = "prescription.cancelled"
 
     # Treatment plan events
     TREATMENT_PLAN_CREATED = "treatment_plan.created"
@@ -287,6 +309,28 @@ class EventType:
     STAFF_TASK_CREATED = "staff_task.created"
     STAFF_TASK_STATUS_CHANGED = "staff_task.status_changed"
 
+    # Staff attendance events (staff_attendance module — clock in/out).
+    # STAFF_ATTENDANCE_CLOCKED fires on every punch, published in the
+    # same transaction (ADR 0019, db=db). Payload: (clinic_id, event_id,
+    # user_id, kind, created_by).
+    STAFF_ATTENDANCE_CLOCKED = "staff_attendance.clocked"
+
+    # Purchase order events (purchase_orders module — procurement execution
+    # layer, roadmap #227). PUBLISHED in the same transaction as the change
+    # (ADR 0019). No bundled subscriber today; `inventory_reorder` (#227-4)
+    # and `supplier_ratings` (#227-5) are expected to subscribe without
+    # importing purchase_orders.
+    PURCHASE_ORDER_CREATED = "purchase_order.created"
+    PURCHASE_ORDER_STATUS_CHANGED = "purchase_order.status_changed"
+    PURCHASE_ORDER_RECEIVED = "purchase_order.received"
+
+    # Treasury events (treasury module — cash/bank movements).
+    # Published in the same transaction (ADR 0019, db=db). Payload:
+    # (clinic_id, account_id, amount, created_by); transfers also carry
+    # group_id, corrections carry direction + memo.
+    TREASURY_TRANSFERRED = "treasury.transferred"
+    TREASURY_CORRECTED = "treasury.corrected"
+
     # Telephony events (telephony module — CTI screen-pop + call log,
     # issue #64). Fired by the inbound CTI webhook after normalization
     # and caller→patient matching. Payload: (clinic_id, call_log_id,
@@ -300,3 +344,28 @@ class EventType:
     CALL_ENDED = "call.ended"
     CALL_MISSED = "call.missed"
     CALL_UNKNOWN_CALLER = "call.unknown_caller"
+
+    # GDPR compliance events (gdpr module — data-subject rights, issue #44).
+    # Published by the gdpr module's services so optional subscribers
+    # (patient_timeline / notifications / audit exports) react to rights
+    # lifecycle without importing gdpr models.
+    # Payload: (clinic_id, request_id, patient_id, request_type).
+    GDPR_REQUEST_CREATED = "gdpr.request.created"
+    # Payload: (clinic_id, request_id, patient_id, from_status, to_status,
+    # changed_by).
+    GDPR_REQUEST_STATUS_CHANGED = "gdpr.request.status_changed"
+    # Consent grant / withdrawal. Payload:
+    # (clinic_id, consent_id, patient_id, purpose).
+    GDPR_CONSENT_GRANTED = "gdpr.consent.granted"
+    GDPR_CONSENT_WITHDRAWN = "gdpr.consent.withdrawn"
+    # Partial erasure executed. Payload: (clinic_id, patient_id, request_id,
+    # erased_categories, retained_categories).
+    GDPR_ERASURE_EXECUTED = "gdpr.erasure.executed"
+    # Breach reported. Payload: (clinic_id, breach_id, affected_people).
+    GDPR_BREACH_REPORTED = "gdpr.breach.reported"
+
+    # Payroll events (payroll module — admin-only compliance data).
+    # Payloads are masked: profile events carry ids only, never amounts
+    # or bank/tax values (plaintext or ciphertext).
+    PAYROLL_PROFILE_UPDATED = "payroll.profile.updated"
+    PAYROLL_PERIOD_STATUS_CHANGED = "payroll.period.status_changed"

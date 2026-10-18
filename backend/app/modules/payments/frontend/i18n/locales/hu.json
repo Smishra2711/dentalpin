@@ -94,7 +94,9 @@
       "errPatient": "Válasszon pácienst",
       "errAmount": "Adjon meg 0-nál nagyobb összeget",
       "errSum": "A hozzárendelések összegének meg kell egyeznie a befizetés összegével",
-      "errUnknown": "A befizetést nem sikerült rögzíteni. Próbálja újra."
+      "errUnknown": "A befizetést nem sikerült rögzíteni. Próbálja újra.",
+      "methodRecord": "Már beérkezett fizetés rögzítése",
+      "methodCollect": "Beszedés most"
     },
     "methods": {
       "cash": "Készpénz",

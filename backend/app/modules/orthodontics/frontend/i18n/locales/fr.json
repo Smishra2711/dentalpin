@@ -1,0 +1,127 @@
+{
+  "orthodontics": {
+    "tab": {
+      "label": "Orthodontie"
+    },
+    "nav": {
+      "title": "Orthodontie"
+    },
+    "appliance": {
+      "brackets_metal": "Brackets métalliques",
+      "brackets_esthetic": "Brackets esthétiques",
+      "self_ligating": "Auto-ligaturants",
+      "aligners": "Aligneurs",
+      "functional": "Fonctionnel",
+      "retention": "Contention"
+    },
+    "status": {
+      "active": "Actif",
+      "paused": "En pause",
+      "finished": "Terminé",
+      "transferred_out": "Transféré",
+      "session_pending": "En attente",
+      "session_completed": "Terminée"
+    },
+    "inbox": {
+      "title": "Orthodontie",
+      "active": "Actifs",
+      "overdue": "Contrôle en retard",
+      "unscheduled": "Sans prochain contrôle",
+      "finished": "Terminés",
+      "new": "Nouveau cas",
+      "empty": "Aucun cas dans cette vue",
+      "nextDue": "Prochain contrôle",
+      "monthOf": "Mois {x} sur ~{n}"
+    },
+    "case": {
+      "new": "Nouveau cas orthodontique",
+      "appliance": "Appareil",
+      "professional": "Orthodontiste",
+      "startDate": "Date de début",
+      "estimatedMonths": "Mois estimés",
+      "notes": "Diagnostic / objectifs",
+      "create": "Ouvrir le cas",
+      "inMouthNow": "En bouche actuellement",
+      "upper": "Supérieur",
+      "lower": "Inférieur",
+      "noWire": "Aucun arc enregistré",
+      "changeStatus": "Changer le statut",
+      "statusNote": "Motif (facultatif)",
+      "save": "Enregistrer",
+      "none": "Aucun cas d'orthodontie"
+    },
+    "control": {
+      "new": "Enregistrer un contrôle",
+      "wires": "Arcs (inchangés par défaut)",
+      "procedures": "Actes",
+      "proceduresOther": "Autres actes",
+      "hygiene": "Hygiène",
+      "hygiene_good": "Bonne",
+      "hygiene_fair": "Moyenne",
+      "hygiene_poor": "Mauvaise",
+      "alignerNumber": "Numéro d'aligneur",
+      "notes": "Observations / consignes",
+      "nextControl": "Prochain contrôle",
+      "weeks": "{n} semaines",
+      "noNext": "Sans prochain contrôle",
+      "save": "Enregistrer le contrôle",
+      "history": "Contrôles",
+      "empty": "Aucun contrôle pour l'instant",
+      "appointment": "Rendez-vous",
+      "session": "Séance liée",
+      "sessionHint": "Référence uniquement - l'encaissement se fait dans Paiements."
+    },
+    "card": {
+      "title": "Orthodontie",
+      "noCase": "Aucun cas actif",
+      "view": "Ouvrir"
+    },
+    "photos": {
+      "title": "Photos ({n})",
+      "upload": "Ajouter une photo"
+    },
+    "procedures": {
+      "power_chain": "Chaînette élastique",
+      "elastics_class_2": "Élastiques classe II",
+      "elastics_class_3": "Élastiques classe III",
+      "niti_open_coil": "Ressort ouvert NiTi",
+      "metal_ligature": "Ligature métallique",
+      "ligature_change": "Changement de ligatures",
+      "button_attachment": "Bouton / taquet",
+      "ipr": "Stripping (IPR)",
+      "bite_turbos": "Cales occlusales",
+      "bracket_rebonding": "Recollage de bracket",
+      "expander_activation": "Activation du disjoncteur",
+      "band_placement": "Pose de bagues",
+      "bracket_removal": "Dépose des brackets",
+      "retainer_placement": "Pose de contention"
+    },
+    "errors": {
+      "saveFailed": "Échec de l'enregistrement. Veuillez réessayer.",
+      "loadFailed": "Impossible de charger les données d'orthodontie."
+    },
+    "plan": {
+      "title": "Plan de traitement",
+      "link": "Lier le plan",
+      "unlink": "Dissocier le plan",
+      "noLink": "Aucun plan lié (les patients transférés peuvent être suivis sans plan)",
+      "completed": "{n} terminées",
+      "pending": "{n} en attente",
+      "generate": "Générer les échéances",
+      "collect": "Encaisser l'échéance",
+      "confirmUnlink": "Dissocier le plan de traitement ?",
+      "downPayment": "Acompte",
+      "installmentN": "Mensualité {n}",
+      "months": "Mois",
+      "monthlyAmount": "Montant mensuel",
+      "pendingTotal": "Total en attente : {n}",
+      "closeSuggested": "Cas transféré avec un plan lié : envisagez de clore le plan."
+    },
+    "settings": {
+      "title": "Catalogues de chips",
+      "wires": "Arcs (un par ligne)",
+      "procedures": "Actes (un par ligne)",
+      "save": "Enregistrer les catalogues"
+    }
+  }
+}

@@ -2,11 +2,38 @@
 
 ## Unreleased
 
+- chore(#557): slot/settings permission gates now reference PERMISSIONS constants (no behavior change).
+
+- refactor: the nine `event_bus.publish` call sites that named their event
+  with a string literal now use the matching `EventType` constant
+  (`treatment_plan.created`, `.status_changed`, `.treatment_added`,
+  `.treatment_removed`, `.treatment_completed`,
+  `.budget_sync_requested`). Identical strings, so no behaviour change —
+  but a typo in a literal publishes to nobody and raises nothing, and
+  this module was the only one still publishing that way. A new guard,
+  `tests/test_event_name_constants.py`, fails on any literal publish
+  under `app/`.
+
+- fix: `auto_close_expired_plans` (the daily 03:00 cron) raised
+  `UndefinedColumnError` on its first statement and closed nothing, ever.
+  It selected clinics with `WHERE deleted_at IS NULL` and `clinics` has no
+  such column. Now an ORM query, so a missing column is a test failure
+  rather than a 03:00 log line. Two tests execute the job — the existing
+  scheduler test only asserted its id.
+
+- fix(#590): the professional-membership validation tolerates duplicated
+  membership rows (`.limit(1)` existence read, same fix as #598 for
+  orthodontics). `clinic_memberships` has no unique `(clinic_id, user_id)`
+  constraint, so a duplicate used to 500 with `MultipleResultsFound`.
+- feat(#232): sidebar entry grouped under the Clinical header (`nav.section` "clinical").
 - refactor(#337): owns `AppointmentTreatment` (`appointment_treatments`) — the NOT NULL planned-item FK always made it the plan's visit bridge; the model's backref installs `Appointment.treatments`, the provider gained `attach_planned_items`/`visit_note_row`, and all three of the table's FKs are now declarable. No schema migration; future ALTERs live on the tp branch.
 
 - refactor(#126): plan-item names resolve catalog names through the shared `app.core.i18n_names.catalog_name` helper.
 
 - fix(#325): the attachment-owner and planned-work registrations moved from import time to `on_activate()` (ADR 0020) — they now go live only while the module is installed.
+
+- feat(i18n): the frontend layer's directional spacing, borders, text alignment and inset positioning now resolve against the document direction (physical→logical CSS utilities, Arabic RTL support).
+
 
 - fix(#101): the module's frontend adopts the useApi error contract — 400/409/422 failures the UI used to swallow now toast the backend's message; calls whose surrounding code already presents the error pass `errorToast: false` (single toast), and hand-built error reads use the shared `errorMessage`/`errorDetail` helpers.
 

@@ -94,7 +94,9 @@
       "errPatient": "Sélectionnez un patient",
       "errAmount": "Saisissez un montant supérieur à 0",
       "errSum": "La somme des allocations doit être égale au montant",
-      "errUnknown": "Impossible d'enregistrer le paiement. Réessayez."
+      "errUnknown": "Impossible d'enregistrer le paiement. Réessayez.",
+      "methodRecord": "Enregistrer un paiement déjà reçu",
+      "methodCollect": "Encaisser maintenant"
     },
     "methods": {
       "cash": "Espèces",

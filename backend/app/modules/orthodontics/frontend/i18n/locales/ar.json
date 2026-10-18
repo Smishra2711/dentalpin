@@ -1,0 +1,127 @@
+{
+  "orthodontics": {
+    "tab": {
+      "label": "تقويم الأسنان"
+    },
+    "nav": {
+      "title": "تقويم الأسنان"
+    },
+    "appliance": {
+      "brackets_metal": "حاصرات معدنية",
+      "brackets_esthetic": "حاصرات تجميلية",
+      "self_ligating": "ذاتي الربط",
+      "aligners": "مقومات شفافة",
+      "functional": "وظيفي",
+      "retention": "تثبيت"
+    },
+    "status": {
+      "active": "نشط",
+      "paused": "متوقف مؤقتًا",
+      "finished": "منتهٍ",
+      "transferred_out": "محوَّل",
+      "session_pending": "معلقة",
+      "session_completed": "مكتملة"
+    },
+    "inbox": {
+      "title": "تقويم الأسنان",
+      "active": "نشط",
+      "overdue": "متابعة متأخرة",
+      "unscheduled": "لا توجد متابعة قادمة",
+      "finished": "منتهٍ",
+      "new": "حالة جديدة",
+      "empty": "لا توجد حالات في هذا العرض",
+      "nextDue": "المتابعة القادمة",
+      "monthOf": "الشهر {x} من ~{n}"
+    },
+    "case": {
+      "new": "حالة تقويم أسنان جديدة",
+      "appliance": "الجهاز",
+      "professional": "أخصائي تقويم الأسنان",
+      "startDate": "تاريخ البدء",
+      "estimatedMonths": "الأشهر المقدرة",
+      "notes": "التشخيص / الأهداف",
+      "create": "فتح الحالة",
+      "inMouthNow": "في الفم حاليًا",
+      "upper": "علوي",
+      "lower": "سفلي",
+      "noWire": "لا يوجد قوس مسجل",
+      "changeStatus": "تغيير الحالة",
+      "statusNote": "السبب (اختياري)",
+      "save": "حفظ",
+      "none": "لا توجد حالة تقويم بعد"
+    },
+    "control": {
+      "new": "تسجيل متابعة",
+      "wires": "أقواس (لا تغيير افتراضيًا)",
+      "procedures": "الإجراءات",
+      "proceduresOther": "إجراءات أخرى",
+      "hygiene": "النظافة",
+      "hygiene_good": "جيدة",
+      "hygiene_fair": "متوسطة",
+      "hygiene_poor": "ضعيفة",
+      "alignerNumber": "رقم المقوم الشفاف",
+      "notes": "ملاحظات / تعليمات",
+      "nextControl": "المتابعة القادمة",
+      "weeks": "{n} أسابيع",
+      "noNext": "لا توجد متابعة قادمة",
+      "save": "حفظ المتابعة",
+      "history": "المتابعات",
+      "empty": "لا توجد متابعات بعد",
+      "appointment": "الموعد",
+      "session": "جلسة مرتبطة",
+      "sessionHint": "للمرجع فقط - يتم التحصيل في المدفوعات."
+    },
+    "card": {
+      "title": "تقويم الأسنان",
+      "noCase": "لا توجد حالة نشطة",
+      "view": "فتح"
+    },
+    "photos": {
+      "title": "الصور ({n})",
+      "upload": "إضافة صورة"
+    },
+    "procedures": {
+      "power_chain": "سلسلة مطاطية",
+      "elastics_class_2": "مطاطات الصنف الثاني",
+      "elastics_class_3": "مطاطات الصنف الثالث",
+      "niti_open_coil": "نابض فتح NiTi",
+      "metal_ligature": "ربطة معدنية",
+      "ligature_change": "تغيير الأربطة",
+      "button_attachment": "زر / ملحق",
+      "ipr": "تقليل المينا بين السنين (IPR)",
+      "bite_turbos": "رافعات العضة",
+      "bracket_rebonding": "إعادة لصق الحاصرة",
+      "expander_activation": "تفعيل جهاز التوسيع",
+      "band_placement": "تركيب الأطواق",
+      "bracket_removal": "إزالة الحاصرات",
+      "retainer_placement": "تركيب المثبت"
+    },
+    "errors": {
+      "saveFailed": "تعذر الحفظ. يرجى المحاولة مرة أخرى.",
+      "loadFailed": "تعذر تحميل بيانات التقويم."
+    },
+    "plan": {
+      "title": "خطة العلاج",
+      "link": "ربط الخطة",
+      "unlink": "إلغاء ربط الخطة",
+      "noLink": "لا توجد خطة مرتبطة (يمكن متابعة المرضى المحوَّلين بدون خطة)",
+      "completed": "{n} مكتملة",
+      "pending": "{n} معلقة",
+      "generate": "إنشاء الأقساط",
+      "collect": "تحصيل القسط",
+      "confirmUnlink": "إلغاء ربط خطة العلاج؟",
+      "downPayment": "الدفعة الأولى",
+      "installmentN": "القسط {n}",
+      "months": "الأشهر",
+      "monthlyAmount": "المبلغ الشهري",
+      "pendingTotal": "الإجمالي المعلّق: {n}",
+      "closeSuggested": "تم تحويل الحالة مع خطة مرتبطة: يُنصح بإغلاق الخطة."
+    },
+    "settings": {
+      "title": "كتالوجات الشرائح",
+      "wires": "أقواس (واحد في كل سطر)",
+      "procedures": "الإجراءات (واحد في كل سطر)",
+      "save": "حفظ الكتالوجات"
+    }
+  }
+}

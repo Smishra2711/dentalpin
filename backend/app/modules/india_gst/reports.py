@@ -21,6 +21,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.csv_safety import csv_cell
+
 from .constants import state_name
 from .models import IndiaGstInvoiceItem
 from .schemas import GstReportSummaryResponse, GstReportTransactionRow
@@ -209,16 +211,6 @@ async def list_transactions(
     return rows, total
 
 
-def _csv_cell(value: str) -> str:
-    """Neutralize spreadsheet formula injection: Excel/Sheets execute
-    cells starting with = + - @ (or tab/CR). Values here include
-    user-entered GSTINs and document prefixes, so prefix a ``'``.
-    """
-    if value and value[0] in ("=", "+", "-", "@", "\t", "\r"):
-        return f"'{value}"
-    return value
-
-
 async def build_export_csv(
     db: AsyncSession, clinic_id: UUID, *, date_from: date | None, date_to: date | None
 ) -> bytes:
@@ -232,14 +224,14 @@ async def build_export_csv(
         writer.writerow(
             [
                 r.issue_date or "",
-                _csv_cell(r.gst_document_number or ""),
-                _csv_cell(r.recipient_gstin or ""),
-                _csv_cell(r.place_of_supply or ""),
+                csv_cell(r.gst_document_number or ""),
+                csv_cell(r.recipient_gstin or ""),
+                csv_cell(r.place_of_supply or ""),
                 f"{r.taxable_value:.2f}",
                 f"{r.cgst:.2f}",
                 f"{r.sgst:.2f}",
                 f"{r.igst:.2f}",
-                _csv_cell(r.status),
+                csv_cell(r.status),
                 "yes" if r.is_credit_note else "no",
             ]
         )

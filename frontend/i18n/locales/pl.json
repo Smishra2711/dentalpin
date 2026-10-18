@@ -35,6 +35,13 @@
     "menu": "Menu",
     "openMenu": "Otwórz menu",
     "close": "Zamknij",
+    "sections": {
+      "clinical": "Kliniczne",
+      "lab": "Lab",
+      "financials": "Finanse",
+      "inventory": "Magazyn",
+      "practice": "Gabinet"
+    },
     "toggleSidebar": "Przełącz pasek boczny",
     "documents": "Dokumenty"
   },
@@ -78,7 +85,7 @@
     "emailRequired": "Podaj adres e-mail",
     "emailInvalid": "Adres e-mail jest nieprawidłowy",
     "passwordRequired": "Podaj hasło",
-    "passwordTooShort": "Hasło musi mieć co najmniej 8 znaków",
+    "passwordTooShort": "Hasło musi mieć co najmniej 12 znaków",
     "passwordWeak": "Hasło musi zawierać litery i cyfry",
     "passwordMismatch": "Hasła nie są zgodne",
     "clinicNameRequired": "Podaj nazwę gabinetu",
@@ -819,6 +826,18 @@
   },
   "appointments": {
     "title": "Terminarz",
+    "checkin": {
+      "qr": "Kod QR meldowania",
+      "hint": "Pacjent skanuje ten kod, aby się zameldować. Wygasa 15 minut po utworzeniu.",
+      "copyLink": "Kopiuj link meldowania",
+      "openTitle": "Meldowanie w klinice",
+      "success": "Zameldowano. Proszę usiąść.",
+      "invalid": "Ten kod meldowania jest nieprawidłowy lub wygasł. Poproś recepcję o nowy.",
+      "confirm": "Jestem na miejscu",
+      "confirmHint": "Naciśnij przycisk, aby potwierdzić przybycie.",
+      "tooEarly": "Jest jeszcze za wcześnie na zameldowanie. Twoja wizyta jest o {time}.",
+      "tooLate": "Meldowanie na tę wizytę jest już zamknięte. Zgłoś się do recepcji."
+    },
     "create": "Nowa wizyta",
     "edit": "Edytuj wizytę",
     "today": "Dzisiaj",
@@ -1077,6 +1096,13 @@
         "description": "Twój profil, hasło i język."
       }
     },
+    "supergroups": {
+      "clinicalSetup": { "label": "Ustawienia kliniczne" },
+      "clinicalManagement": { "label": "Zarządzanie kliniką" },
+      "financialConfiguration": { "label": "Konfiguracja finansowa" },
+      "systemAddons": { "label": "System i dodatki" },
+      "myPreferences": { "label": "Moje preferencje" }
+    },
     "search": {
       "placeholder": "Szukaj w ustawieniach…",
       "empty": "Brak wyników dla tego wyszukiwania.",
@@ -1190,6 +1216,8 @@
       "title": "Moduły",
       "subtitle": "Instaluj, odinstalowuj i aktualizuj moduły gabinetu.",
       "description": "Zarządzaj modułami aktywnymi w Twoim gabinecie.",
+      "searchPlaceholder": "Szukaj modułów…",
+      "filterState": "Stan",
       "deps": "Zależności",
       "noDeps": "Brak zależności",
       "state": {
@@ -1313,7 +1341,14 @@
       "errorGeneric": "Nie udało się utworzyć pacjenta. Spróbuj ponownie."
     }
   },
+  "errors": {
+    "loadFailed": "Nie udało się wczytać",
+    "createFailed": "Nie udało się utworzyć",
+    "updateFailed": "Nie udało się zaktualizować",
+    "deleteFailed": "Nie udało się usunąć"
+  },
   "common": {
+    "andMore": "+{count} więcej",
     "save": "Zapisz",
     "add": "Dodaj",
     "cancel": "Anuluj",
@@ -2194,7 +2229,6 @@
     "public": {
       "title": "Twój kosztorys",
       "intro": "{clinic} przesyła Ci ten kosztorys. Zapoznaj się z zabiegami i wybierz opcję.",
-      "greeting": "Dzień dobry, {name}",
       "subtitle": "Twój spersonalizowany plan leczenia",
       "budgetNumber": "Kosztorys",
       "issuedOn": "Wystawiono {date}",
@@ -2419,11 +2453,22 @@
       "whatsappUnavailableHint": "WhatsApp będzie dostępny po podłączeniu numeru kliniki.",
       "whatsappConnect": "Połącz WhatsApp (Kapso)",
       "noEmail": "Pacjent nie ma e-maila w kartotece",
-      "noPhone": "Pacjent nie ma telefonu w kartotece"
+      "noPhone": "Pacjent nie ma telefonu w kartotece",
+      "sms": "SMS",
+      "smsUnavailableHint": "SMS będą dostępne po skonfigurowaniu dostawcy SMS.",
+      "smsConnect": "Konfiguruj",
+      "smsDailyLimitLabel": "Dzienny limit SMS",
+      "smsDailyLimitHelp": "Maksymalna liczba wychodzących SMS dziennie dla kliniki."
     },
     "channelSent": {
       "email": "E-mail wysłany pomyślnie",
-      "whatsapp": "Wiadomość WhatsApp wysłana pomyślnie"
+      "whatsapp": "Wiadomość WhatsApp wysłana pomyślnie",
+      "sms": "Wiadomość SMS wysłana pomyślnie"
+    },
+    "prefs": {
+      "title": "Preferencje powiadomień",
+      "description": "Jakimi kanałami można kontaktować się z tym pacjentem. Rezygnacja blokuje kanał nawet przy wysyłkach wymuszonych.",
+      "saved": "Zapisano preferencje"
     }
   },
   "invoice": {
@@ -2815,6 +2860,10 @@
       "missingNumbers": "Brakujące numery:",
       "noData": "Brak danych dla wybranego okresu",
       "noOverdue": "Brak faktur po terminie",
+      "invoiceAging": "Wiek faktur",
+      "invoiceAgingDescription": "Należne wystawione sumy wg przedziałów. Niewymagalne osobno.",
+      "notDue": "Niewymagalne",
+      "issuedTrend": "Trend wystawionych",
       "daysOverdue": "dni po terminie",
       "vatType": "Stawka VAT",
       "base": "Podstawa",

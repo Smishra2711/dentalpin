@@ -47,6 +47,13 @@ reference an out-of-clinic patient.
   relative path. `download_pdf` reads that file back (409/404 if not
   generated yet).
 - Alias `pdf.py:DocumentPDFService` — never hand-render HTML elsewhere.
+- **Every host locale renders** (#524). `_LABELS` carries all ten in
+  `PDF_LOCALES`, the endpoint validates with `PDF_LOCALE_PATTERN`, and
+  the page passes the UI locale. Arabic sets `dir="rtl"` on `<html>`,
+  as billing's invoice does. Adding a locale to `PDF_LOCALES` without a
+  label set here fails `tests/test_pdf_label_coverage.py`, which
+  discovers every module shipping a `pdf.py`. Clinical text the user
+  typed is reproduced verbatim — only the captions are localized.
 
 ## Events
 
@@ -106,6 +113,18 @@ Nuxt layer at `frontend/` with:
 - Settings: letterhead editor card registered via
   `registerSettingsPage` (category `billing`).
 - Navigation: sidebar entry gated on `documents.read`, order 75.
+
+## Gotchas
+
+- **GDPR erasure retains generated documents.**
+  `erasure.DocumentsErasureContributor` owns the `documents` coverage
+  scope (ADR 0038, #657) and writes nothing: a prescription or
+  certificate must match the copy handed to the patient or the pharmacy
+  (Art. 17(3)(c)/(h)). `content` is a free-form JSONB snapshot, so all
+  three erasure categories are declared. Because the module is
+  `auto_install: False`, a clinic that never installed it gets no
+  `documents` coverage row at all — the registry only collects from active
+  modules.
 
 ## CHANGELOG
 

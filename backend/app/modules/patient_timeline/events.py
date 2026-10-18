@@ -736,3 +736,85 @@ async def on_item_completed_without_note(data: dict) -> None:
         event_data={"plan_id": data.get("plan_id")},
         created_by_key="user_id",
     )
+
+
+# ---------------------------------------------------------------------------
+# Prescriptions
+# ---------------------------------------------------------------------------
+
+
+async def on_prescription_issued(data: dict) -> None:
+    data = {**data, "source_id": data.get("prescription_id")}
+    await _record(
+        event_type=EventType.PRESCRIPTION_ISSUED,
+        event_category="treatment",
+        source_table="prescriptions",
+        data=data,
+        source_id_key="source_id",
+        title="Receta emitida",
+    )
+
+
+async def on_prescription_cancelled(data: dict) -> None:
+    data = {**data, "source_id": data.get("prescription_id")}
+    await _record(
+        event_type=EventType.PRESCRIPTION_CANCELLED,
+        event_category="treatment",
+        source_table="prescriptions",
+        data=data,
+        source_id_key="source_id",
+        title="Receta cancelada",
+    )
+
+
+async def on_imaging_study_indexed(data: dict) -> None:
+    data = {**data, "source_id": data.get("study_id")}
+    await _record(
+        event_type=EventType.IMAGING_STUDY_INDEXED,
+        event_category="treatment",
+        source_table="imaging_studies",
+        data=data,
+        source_id_key="source_id",
+        title="Estudio de imagen",
+    )
+
+
+# ---------------------------------------------------------------------------
+# Orthodontics
+# ---------------------------------------------------------------------------
+
+
+async def on_ortho_case_created(data: dict) -> None:
+    data = {**data, "source_id": data.get("case_id")}
+    await _record(
+        event_type=EventType.ORTHODONTICS_CASE_CREATED,
+        event_category="treatment",
+        source_table="ortho_cases",
+        data=data,
+        source_id_key="source_id",
+        title="Caso de ortodoncia abierto",
+    )
+
+
+async def on_ortho_case_status_changed(data: dict) -> None:
+    data = {**data, "source_id": data.get("case_id")}
+    await _record(
+        event_type=EventType.ORTHODONTICS_CASE_STATUS_CHANGED,
+        event_category="treatment",
+        source_table="ortho_cases",
+        data=data,
+        source_id_key="source_id",
+        title="Estado de ortodoncia actualizado",
+    )
+
+
+async def on_ortho_control_registered(data: dict) -> None:
+    data = {**data, "source_id": data.get("control_id")}
+    await _record(
+        event_type=EventType.ORTHODONTICS_CONTROL_REGISTERED,
+        event_category="treatment",
+        source_table="ortho_controls",
+        data=data,
+        source_id_key="source_id",
+        title="Control de ortodoncia",
+    )

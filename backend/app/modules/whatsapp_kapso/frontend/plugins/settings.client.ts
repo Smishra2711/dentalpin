@@ -6,6 +6,7 @@ import {
   registerGettingStartedRule,
   registerSettingsPage
 } from '~~/app/composables/useSettingsRegistry'
+import { PERMISSIONS } from '~~/app/config/permissions'
 
 interface KapsoOnboardingState { loaded: boolean, pending: boolean }
 
@@ -19,7 +20,7 @@ export default defineNuxtPlugin(() => {
     labelKey: 'whatsapp_kapso.settings.title',
     descriptionKey: 'whatsapp_kapso.settings.description',
     icon: 'i-lucide-message-circle',
-    permission: 'whatsapp_kapso.settings.write',
+    permission: PERMISSIONS.whatsappKapso.settingsWrite,
     component: () => import('../components/KapsoSettingsPage.vue'),
     searchKeywords: ['whatsapp', 'kapso', 'mensajes', 'messages', 'integracion', 'integration'],
     order: 50
@@ -36,8 +37,8 @@ export default defineNuxtPlugin(() => {
     labelKey: 'whatsapp_kapso.onboarding.label',
     descriptionKey: 'whatsapp_kapso.onboarding.description',
     icon: 'i-lucide-message-circle',
-    to: '/settings/whatsapp-kapso',
-    permission: 'whatsapp_kapso.settings.read',
+    to: '/settings/integrations/whatsapp-kapso',
+    permission: PERMISSIONS.whatsappKapso.settingsRead,
     order: 81,
     optional: true,
     severity: 'warning',

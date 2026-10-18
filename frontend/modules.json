@@ -11,27 +11,42 @@
     "/module_layers/copilot/frontend",
     "/module_layers/documents/frontend",
     "/module_layers/expenses/frontend",
+    "/module_layers/imaging_ai/frontend",
+    "/module_layers/imaging_viewer/frontend",
     "/module_layers/india_gst/frontend",
     "/module_layers/inventory/frontend",
     "/module_layers/lab_orders/frontend",
+    "/module_layers/leads/frontend",
     "/module_layers/media/frontend",
     "/module_layers/medical_reference/frontend",
     "/module_layers/medication_catalog/frontend",
     "/module_layers/migration_import/frontend",
+    "/module_layers/nav_online/frontend",
     "/module_layers/notifications/frontend",
     "/module_layers/odontogram/frontend",
+    "/module_layers/orthodontics/frontend",
     "/module_layers/patient_relationships/frontend",
+    "/module_layers/patient_segments/frontend",
     "/module_layers/patient_timeline/frontend",
     "/module_layers/patients/frontend",
     "/module_layers/patients_clinical/frontend",
     "/module_layers/payments/frontend",
+    "/module_layers/payroll/frontend",
     "/module_layers/periodontogram/frontend",
+    "/module_layers/prescriptions/frontend",
+    "/module_layers/purchase_orders/frontend",
+    "/module_layers/razorpay/frontend",
     "/module_layers/recall_reminders/frontend",
     "/module_layers/recalls/frontend",
     "/module_layers/reports/frontend",
     "/module_layers/schedules/frontend",
+    "/module_layers/sdi_it/frontend",
+    "/module_layers/sistema_ts/frontend",
+    "/module_layers/sms_gateway/frontend",
+    "/module_layers/staff_attendance/frontend",
     "/module_layers/staff_tasks/frontend",
     "/module_layers/telephony/frontend",
+    "/module_layers/treasury/frontend",
     "/module_layers/treatment_consumables/frontend",
     "/module_layers/treatment_plan/frontend",
     "/module_layers/verifactu/frontend",
@@ -57,7 +72,8 @@
       "name": "agenda",
       "path": "/module_layers/agenda/frontend",
       "routes": [
-        "/appointments"
+        "/appointments",
+        "/p/check-in/:token"
       ]
     },
     {
@@ -124,6 +140,20 @@
       ]
     },
     {
+      "name": "imaging_ai",
+      "path": "/module_layers/imaging_ai/frontend",
+      "routes": [
+        "/imaging-ai"
+      ]
+    },
+    {
+      "name": "imaging_viewer",
+      "path": "/module_layers/imaging_viewer/frontend",
+      "routes": [
+        "/imaging"
+      ]
+    },
+    {
       "name": "india_gst",
       "path": "/module_layers/india_gst/frontend",
       "routes": [
@@ -147,6 +177,13 @@
       ]
     },
     {
+      "name": "leads",
+      "path": "/module_layers/leads/frontend",
+      "routes": [
+        "/leads"
+      ]
+    },
+    {
       "name": "media",
       "path": "/module_layers/media/frontend",
       "routes": []
@@ -167,9 +204,15 @@
       "routes": []
     },
     {
+      "name": "nav_online",
+      "path": "/module_layers/nav_online/frontend",
+      "routes": []
+    },
+    {
       "name": "notifications",
       "path": "/module_layers/notifications/frontend",
       "routes": [
+        "/p/push/:token",
         "/settings/notifications"
       ]
     },
@@ -179,8 +222,20 @@
       "routes": []
     },
     {
+      "name": "orthodontics",
+      "path": "/module_layers/orthodontics/frontend",
+      "routes": [
+        "/orthodontics"
+      ]
+    },
+    {
       "name": "patient_relationships",
       "path": "/module_layers/patient_relationships/frontend",
+      "routes": []
+    },
+    {
+      "name": "patient_segments",
+      "path": "/module_layers/patient_segments/frontend",
       "routes": []
     },
     {
@@ -210,9 +265,44 @@
       ]
     },
     {
+      "name": "payroll",
+      "path": "/module_layers/payroll/frontend",
+      "routes": [
+        "/payroll/periods/:id",
+        "/payroll/periods",
+        "/payroll/profiles",
+        "/payroll/reports"
+      ]
+    },
+    {
       "name": "periodontogram",
       "path": "/module_layers/periodontogram/frontend",
       "routes": []
+    },
+    {
+      "name": "prescriptions",
+      "path": "/module_layers/prescriptions/frontend",
+      "routes": [
+        "/prescriptions"
+      ]
+    },
+    {
+      "name": "purchase_orders",
+      "path": "/module_layers/purchase_orders/frontend",
+      "routes": [
+        "/procurement/items",
+        "/procurement/orders",
+        "/procurement/ratings",
+        "/procurement/reorder",
+        "/procurement/suppliers"
+      ]
+    },
+    {
+      "name": "razorpay",
+      "path": "/module_layers/razorpay/frontend",
+      "routes": [
+        "/settings/razorpay"
+      ]
     },
     {
       "name": "recall_reminders",
@@ -242,6 +332,28 @@
       "routes": []
     },
     {
+      "name": "sdi_it",
+      "path": "/module_layers/sdi_it/frontend",
+      "routes": []
+    },
+    {
+      "name": "sistema_ts",
+      "path": "/module_layers/sistema_ts/frontend",
+      "routes": []
+    },
+    {
+      "name": "sms_gateway",
+      "path": "/module_layers/sms_gateway/frontend",
+      "routes": []
+    },
+    {
+      "name": "staff_attendance",
+      "path": "/module_layers/staff_attendance/frontend",
+      "routes": [
+        "/attendance"
+      ]
+    },
+    {
       "name": "staff_tasks",
       "path": "/module_layers/staff_tasks/frontend",
       "routes": [
@@ -253,6 +365,13 @@
       "path": "/module_layers/telephony/frontend",
       "routes": [
         "/calls"
+      ]
+    },
+    {
+      "name": "treasury",
+      "path": "/module_layers/treasury/frontend",
+      "routes": [
+        "/treasury"
       ]
     },
     {

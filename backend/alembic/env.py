@@ -18,7 +18,6 @@ during its own migration and is missing in offline ``--sql`` mode).
 """
 
 import asyncio
-import os
 from logging.config import fileConfig
 from pathlib import Path
 
@@ -66,7 +65,16 @@ from app.modules.catalog.models import (  # noqa: F401
     VatType,
 )
 from app.modules.documents.models import GeneratedDocument  # noqa: F401
+from app.modules.leads.models import (  # noqa: F401
+    Lead,
+    LeadIntakeKey,
+    LeadSettings,
+)
 from app.modules.media.models import Document, MediaAttachment  # noqa: F401
+from app.modules.nav_online.models import (  # noqa: F401
+    NavOnlineRecord,
+    NavOnlineSettings,
+)
 from app.modules.notifications.models import (  # noqa: F401
     ClinicChannelSettings,
     ClinicNotificationSettings,
@@ -111,6 +119,13 @@ from app.modules.schedules.models import (  # noqa: F401
     ProfessionalWeeklySchedule,
     ScheduleShift,
 )
+from app.modules.sdi_it.models import SdiItRecord, SdiItSettings  # noqa: F401
+from app.modules.sistema_ts.models import (  # noqa: F401
+    SistemaTsDocument,
+    SistemaTsItemType,
+    SistemaTsPatientOpposition,
+    SistemaTsSettings,
+)
 from app.modules.telephony.models import (  # noqa: F401
     CallLog,
     TelephonySettings,
@@ -139,11 +154,12 @@ config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 # Register main linear + discovered branches so Alembic can resolve heads
-# across all of them. ``version_path_separator = os`` in alembic.ini, so
-# join on ``os.pathsep``.
+# across all of them. ``alembic.ini`` declares a literal ``:`` separator
+# (``version_path_separator = :``), so join on ``:`` on every platform —
+# ``os.pathsep`` would be ``;`` on Windows and break resolution.
 config.set_main_option(
     "version_locations",
-    os.pathsep.join(discover_version_locations(MAIN_LINEAR, MODULES_ROOT)),
+    ":".join(discover_version_locations(MAIN_LINEAR, MODULES_ROOT)),
 )
 
 if config.config_file_name is not None:

@@ -6,6 +6,7 @@ import type {
   BudgetByStatus
 } from '../../composables/useReports'
 import type { UiColor } from '~~/app/config/severity'
+import { toISODate } from '~~/app/utils/wallClock'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -30,8 +31,8 @@ const byStatus = ref<BudgetByStatus[]>([])
 // Date range
 const today = new Date()
 const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-const dateFrom = ref(firstDayOfMonth.toISOString().slice(0, 10))
-const dateTo = ref(today.toISOString().slice(0, 10))
+const dateFrom = ref(toISODate(firstDayOfMonth))
+const dateTo = ref(toISODate(today))
 
 // Quick date range options
 const dateRangeOptions = computed(() => [
@@ -84,8 +85,8 @@ watch(selectedRange, (range) => {
       return
   }
 
-  dateFrom.value = from.toISOString().slice(0, 10)
-  dateTo.value = to.toISOString().slice(0, 10)
+  dateFrom.value = toISODate(from)
+  dateTo.value = toISODate(to)
 })
 
 // Load all report data
@@ -337,7 +338,7 @@ function goBack() {
                   {{ getBudgetStatusLabel(item.status) }}
                 </UBadge>
               </div>
-              <div class="text-right">
+              <div class="text-end">
                 <p class="font-semibold text-default">
                   {{ item.count }}
                 </p>
@@ -386,7 +387,7 @@ function goBack() {
                   </p>
                 </div>
               </div>
-              <div class="text-right">
+              <div class="text-end">
                 <p class="font-semibold text-default">
                   {{ prof.budget_count }}
                 </p>
@@ -419,16 +420,16 @@ function goBack() {
             <table class="min-w-full divide-y divide-[var(--color-border-subtle)]">
               <thead>
                 <tr>
-                  <th class="px-3 py-2 text-left text-xs font-medium text-subtle uppercase">
+                  <th class="px-3 py-2 text-start text-xs font-medium text-subtle uppercase">
                     {{ t('reports.budgets.labels.treatment') }}
                   </th>
-                  <th class="px-3 py-2 text-right text-xs font-medium text-subtle uppercase">
+                  <th class="px-3 py-2 text-end text-xs font-medium text-subtle uppercase">
                     {{ t('reports.budgets.labels.occurrences') }}
                   </th>
-                  <th class="px-3 py-2 text-right text-xs font-medium text-subtle uppercase">
+                  <th class="px-3 py-2 text-end text-xs font-medium text-subtle uppercase">
                     {{ t('reports.budgets.labels.quantity') }}
                   </th>
-                  <th class="px-3 py-2 text-right text-xs font-medium text-subtle uppercase">
+                  <th class="px-3 py-2 text-end text-xs font-medium text-subtle uppercase">
                     {{ t('invoice.total') }}
                   </th>
                 </tr>
@@ -441,13 +442,13 @@ function goBack() {
                   <td class="px-3 py-2 text-sm text-muted">
                     {{ treatment.treatment_name }}
                   </td>
-                  <td class="px-3 py-2 text-sm text-right text-muted">
+                  <td class="px-3 py-2 text-sm text-end text-muted">
                     {{ treatment.occurrence_count }}
                   </td>
-                  <td class="px-3 py-2 text-sm text-right text-muted">
+                  <td class="px-3 py-2 text-sm text-end text-muted">
                     {{ treatment.total_quantity }}
                   </td>
-                  <td class="px-3 py-2 text-sm text-right font-medium text-default">
+                  <td class="px-3 py-2 text-sm text-end font-medium text-default">
                     {{ formatCurrency(treatment.total_amount) }}
                   </td>
                 </tr>

@@ -2,7 +2,7 @@
 module: documents
 screen: documents
 route: /documents
-last_verified_commit: c80c3015
+last_verified_commit: 10085df
 related_endpoints:
   - GET /api/v1/documents
   - POST /api/v1/documents
@@ -38,7 +38,11 @@ la clínica, ordenados por los más recientes.
 - **Generar** — renderiza el documento como un PDF con la marca de
   agua de la clínica (nombre, logotipo, dirección, número de
   registro). Un documento generado aparece en la línea de tiempo del
-  paciente.
+  paciente. Las etiquetas del PDF y su título (*Carta de derivación*,
+  *Certificado médico*, …) siguen el idioma en el que estés usando la
+  aplicación — los diez, con el árabe maquetado de derecha a
+  izquierda. El texto clínico que hayas escrito se reproduce tal cual;
+  no se traduce.
 - **Descargar** — guarda el PDF generado desde una fila con estado
   `generado`.
 - **Archivar** (borrado suave) — oculta el documento de la lista

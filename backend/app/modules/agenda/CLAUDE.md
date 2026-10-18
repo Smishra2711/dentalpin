@@ -8,6 +8,22 @@ its state machine.
 Routes mounted at `/api/v1/agenda/`. See `router.py` for the full
 surface (appointments CRUD, transitions, cabinet assignments, kanban).
 
+**QR check-in.** Staff mints a signed 15-minute token per appointment
+(`POST /appointments/{id}/check-in-token`, returns the token plus the
+patient-facing URL built server-side from `ALLOWED_ORIGINS`); tokens are
+signed with `AGENDA_PUBLIC_SECRET_KEY`, hard-required in production
+(`SECRET_KEY` fallback is dev-only, #538);
+`GET .../check-in-qr` renders the same URL as PNG. Patients consume it
+unauthenticated at the agenda-owned `/p/check-in/<token>` page via
+`POST /public/check-in/{token}` (per-IP + per-token limits,
+`note="kiosk-checkin"`), through the canonical status machine.
+The token carries a `source` claim (ADR 0037): `counter` (staff mint
+default) auto-submits on scan; `reminder` (mailed links, minted by the
+notification sweep with a clinic-day TTL) requires a press, so
+mail-scanner pre-fetches check nobody in; missing/unknown fails safe
+to `reminder`. Check-in is accepted only inside the start_time window
+(two hours before start until one hour after end).
+
 ## Dependencies
 
 `manifest.depends = ["patients", "catalog", "odontogram"]`.

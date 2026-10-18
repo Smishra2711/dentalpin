@@ -42,6 +42,27 @@ class AppointmentTreatmentNoteUpdate(BaseModel):
     completed_in_appointment: bool | None = None
 
 
+class CheckinTokenResponse(BaseModel):
+    """Minted check-in token (single appointment).
+
+    Counter tokens keep the 15-minute TTL; reminder tokens live until
+    the end of the appointment's clinic-local day (ADR 0037). ``url``
+    is the patient-facing link, built server-side — the frontend
+    copies it verbatim and builds no check-in URLs itself.
+    """
+
+    token: str
+    expires_at: datetime
+    url: str
+
+
+class CheckinResultResponse(BaseModel):
+    """Outcome of a public check-in (minimal PII by design)."""
+
+    appointment_id: UUID
+    status: str
+
+
 class AppointmentTreatmentResponse(BaseModel):
     """Response for a single AppointmentTreatment (visit bridge row)."""
 

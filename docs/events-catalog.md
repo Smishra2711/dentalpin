@@ -55,6 +55,15 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 | `document.uploaded` | `EventType.DOCUMENT_UPLOADED` | `media` | `patient_timeline` |
 | `email.failed` | `EventType.EMAIL_FAILED` | `notifications` | — |
 | `email.sent` | `EventType.EMAIL_SENT` | `notifications` | — |
+| `gdpr.breach.reported` | `EventType.GDPR_BREACH_REPORTED` | `gdpr` | — |
+| `gdpr.consent.granted` | `EventType.GDPR_CONSENT_GRANTED` | `gdpr` | — |
+| `gdpr.consent.withdrawn` | `EventType.GDPR_CONSENT_WITHDRAWN` | `gdpr` | — |
+| `gdpr.erasure.executed` | `EventType.GDPR_ERASURE_EXECUTED` | `gdpr` | — |
+| `gdpr.request.created` | `EventType.GDPR_REQUEST_CREATED` | `gdpr` | — |
+| `gdpr.request.status_changed` | `EventType.GDPR_REQUEST_STATUS_CHANGED` | `gdpr` | — |
+| `imaging.ai_job_confirmed` | `EventType.IMAGING_AI_JOB_CONFIRMED` | `imaging_ai` | — |
+| `imaging.ai_job_done` | `EventType.IMAGING_AI_JOB_DONE` | `imaging_ai` | — |
+| `imaging.study_indexed` | `EventType.IMAGING_STUDY_INDEXED` | `imaging_viewer` | `patient_timeline` |
 | `inventory.low_stock` | `EventType.INVENTORY_STOCK_LOW` | `inventory` | — |
 | `invoice.cancelled` | `EventType.INVOICE_CANCELLED` | — | — |
 | `invoice.created` | `EventType.INVOICE_CREATED` | — | — |
@@ -68,7 +77,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 | `media.attachment_unlinked` | `EventType.ATTACHMENT_UNLINKED` | `media` | — |
 | `media.pair_created` | `EventType.PAIR_CREATED` | `media` | `patient_timeline` |
 | `media.pair_removed` | `EventType.PAIR_REMOVED` | `media` | — |
-| `media.photo_uploaded` | `EventType.PHOTO_UPLOADED` | `media` | `patient_timeline` |
+| `media.photo_uploaded` | `EventType.PHOTO_UPLOADED` | `media` | `imaging_viewer`, `patient_timeline` |
 | `migration.binary.resolved` | `EventType.MIGRATION_BINARY_RESOLVED` | `migration_import` | — |
 | `migration.entity.persisted` | `EventType.MIGRATION_ENTITY_PERSISTED` | `migration_import` | — |
 | `migration.job.completed` | `EventType.MIGRATION_JOB_COMPLETED` | `migration_import` | — |
@@ -86,23 +95,37 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 | `odontogram.treatment.deleted` | `EventType.ODONTOGRAM_TREATMENT_DELETED` | `odontogram` | — |
 | `odontogram.treatment.performed` | `EventType.ODONTOGRAM_TREATMENT_PERFORMED` | `odontogram` | `activity_journal`, `patient_timeline`, `payments`, `periodontogram`, `treatment_consumables`, `treatment_plan` |
 | `odontogram.treatment.status_changed` | `EventType.ODONTOGRAM_TREATMENT_STATUS_CHANGED` | `odontogram` | — |
-| `patient.archived` | `EventType.PATIENT_ARCHIVED` | `patients` | `activity_journal`, `media`, `periodontogram`, `recalls` |
+| `orthodontics.case_created` | `EventType.ORTHODONTICS_CASE_CREATED` | `orthodontics` | `patient_timeline` |
+| `orthodontics.case_status_changed` | `EventType.ORTHODONTICS_CASE_STATUS_CHANGED` | `orthodontics` | `patient_timeline` |
+| `orthodontics.control_registered` | `EventType.ORTHODONTICS_CONTROL_REGISTERED` | `orthodontics` | `patient_timeline` |
+| `patient.archived` | `EventType.PATIENT_ARCHIVED` | `patients` | `activity_journal`, `imaging_viewer`, `media`, `periodontogram`, `recalls` |
 | `patient.created` | `EventType.PATIENT_CREATED` | `patients` | `activity_journal`, `integrations`, `notifications` |
 | `patient.medical_updated` | `EventType.PATIENT_MEDICAL_UPDATED` | `patients_clinical` | `patient_timeline` |
+| `patient.restored` | `EventType.PATIENT_RESTORED` | `patients` | `media` |
 | `patient.updated` | `EventType.PATIENT_UPDATED` | `patients` | — |
 | `payment.allocated` | `EventType.PAYMENT_ALLOCATED` | `payments` | `activity_journal`, `billing` |
 | `payment.recorded` | `EventType.PAYMENT_RECORDED` | `payments` | — |
 | `payment.refunded` | `EventType.PAYMENT_REFUNDED` | `payments` | `activity_journal`, `billing` |
 | `payment.voided` | `EventType.PAYMENT_VOIDED` | — | — |
+| `payroll.period.status_changed` | `EventType.PAYROLL_PERIOD_STATUS_CHANGED` | `payroll` | — |
+| `payroll.profile.updated` | `EventType.PAYROLL_PROFILE_UPDATED` | `payroll` | — |
 | `periodontogram.snapshot.closed` | `EventType.PERIODONTOGRAM_SNAPSHOT_CLOSED` | `periodontogram` | — |
+| `prescription.cancelled` | `EventType.PRESCRIPTION_CANCELLED` | `prescriptions` | `activity_journal`, `patient_timeline` |
+| `prescription.issued` | `EventType.PRESCRIPTION_ISSUED` | `prescriptions` | `activity_journal`, `patient_timeline` |
+| `purchase_order.created` | `EventType.PURCHASE_ORDER_CREATED` | `purchase_orders` | — |
+| `purchase_order.received` | `EventType.PURCHASE_ORDER_RECEIVED` | `purchase_orders` | — |
+| `purchase_order.status_changed` | `EventType.PURCHASE_ORDER_STATUS_CHANGED` | `purchase_orders` | — |
 | `recall.cancelled` | `EventType.RECALL_CANCELLED` | `recalls` | — |
 | `recall.completed` | `EventType.RECALL_COMPLETED` | `recalls` | — |
 | `recall.created` | `EventType.RECALL_CREATED` | `recalls` | `activity_journal`, `recall_reminders` |
 | `recall.due` | `EventType.RECALL_DUE` | — | — |
 | `recall.snoozed` | `EventType.RECALL_SNOOZED` | `recalls` | — |
+| `staff_attendance.clocked` | `EventType.STAFF_ATTENDANCE_CLOCKED` | `staff_attendance` | `activity_journal` |
 | `staff_task.created` | `EventType.STAFF_TASK_CREATED` | `staff_tasks` | — |
 | `staff_task.status_changed` | `EventType.STAFF_TASK_STATUS_CHANGED` | `staff_tasks` | — |
 | `tenant.resolved` | `EventType.TENANT_RESOLVED` | — | — |
+| `treasury.corrected` | `EventType.TREASURY_CORRECTED` | `treasury` | `activity_journal` |
+| `treasury.transferred` | `EventType.TREASURY_TRANSFERRED` | `treasury` | `activity_journal` |
 | `treatment.completed` | `EventType.TREATMENT_COMPLETED` | — | — |
 | `treatment_plan.budget_sync_requested` | `EventType.TREATMENT_PLAN_BUDGET_SYNC_REQUESTED` | `treatment_plan` | `activity_journal`, `budget` |
 | `treatment_plan.closed` | `EventType.TREATMENT_PLAN_CLOSED` | `treatment_plan` | `patient_timeline` |
@@ -494,6 +517,71 @@ Maintained by `backend/scripts/generate_catalogs.py`.
   - `notifications` — `backend/app/modules/notifications/gateway.py`
 - **Subscribers:** —
 
+### `gdpr.breach.reported`
+
+- **Constant:** `EventType.GDPR_BREACH_REPORTED`
+- **Publishers:**
+  - `gdpr` — `backend/app/modules/gdpr/service.py`
+- **Subscribers:** —
+
+### `gdpr.consent.granted`
+
+- **Constant:** `EventType.GDPR_CONSENT_GRANTED`
+- **Publishers:**
+  - `gdpr` — `backend/app/modules/gdpr/service.py`
+- **Subscribers:** —
+
+### `gdpr.consent.withdrawn`
+
+- **Constant:** `EventType.GDPR_CONSENT_WITHDRAWN`
+- **Publishers:**
+  - `gdpr` — `backend/app/modules/gdpr/service.py`
+- **Subscribers:** —
+
+### `gdpr.erasure.executed`
+
+- **Constant:** `EventType.GDPR_ERASURE_EXECUTED`
+- **Publishers:**
+  - `gdpr` — `backend/app/modules/gdpr/service.py`
+- **Subscribers:** —
+
+### `gdpr.request.created`
+
+- **Constant:** `EventType.GDPR_REQUEST_CREATED`
+- **Publishers:**
+  - `gdpr` — `backend/app/modules/gdpr/service.py`
+- **Subscribers:** —
+
+### `gdpr.request.status_changed`
+
+- **Constant:** `EventType.GDPR_REQUEST_STATUS_CHANGED`
+- **Publishers:**
+  - `gdpr` — `backend/app/modules/gdpr/service.py`
+- **Subscribers:** —
+
+### `imaging.ai_job_confirmed`
+
+- **Constant:** `EventType.IMAGING_AI_JOB_CONFIRMED`
+- **Publishers:**
+  - `imaging_ai` — `backend/app/modules/imaging_ai/service.py`
+- **Subscribers:** —
+
+### `imaging.ai_job_done`
+
+- **Constant:** `EventType.IMAGING_AI_JOB_DONE`
+- **Publishers:**
+  - `imaging_ai` — `backend/app/modules/imaging_ai/service.py`
+- **Subscribers:** —
+
+### `imaging.study_indexed`
+
+- **Constant:** `EventType.IMAGING_STUDY_INDEXED`
+- **Publishers:**
+  - `imaging_viewer` — `backend/app/modules/imaging_viewer/__init__.py`
+  - `imaging_viewer` — `backend/app/modules/imaging_viewer/service.py`
+- **Subscribers:**
+  - `patient_timeline`
+
 ### `inventory.low_stock`
 
 - **Constant:** `EventType.INVENTORY_STOCK_LOW`
@@ -594,6 +682,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:**
   - `media` — `backend/app/modules/media/service.py`
 - **Subscribers:**
+  - `imaging_viewer`
   - `patient_timeline`
 
 ### `migration.binary.resolved`
@@ -724,6 +813,30 @@ Maintained by `backend/scripts/generate_catalogs.py`.
   - `odontogram` — `backend/app/modules/odontogram/service.py`
 - **Subscribers:** —
 
+### `orthodontics.case_created`
+
+- **Constant:** `EventType.ORTHODONTICS_CASE_CREATED`
+- **Publishers:**
+  - `orthodontics` — `backend/app/modules/orthodontics/service.py`
+- **Subscribers:**
+  - `patient_timeline`
+
+### `orthodontics.case_status_changed`
+
+- **Constant:** `EventType.ORTHODONTICS_CASE_STATUS_CHANGED`
+- **Publishers:**
+  - `orthodontics` — `backend/app/modules/orthodontics/service.py`
+- **Subscribers:**
+  - `patient_timeline`
+
+### `orthodontics.control_registered`
+
+- **Constant:** `EventType.ORTHODONTICS_CONTROL_REGISTERED`
+- **Publishers:**
+  - `orthodontics` — `backend/app/modules/orthodontics/service.py`
+- **Subscribers:**
+  - `patient_timeline`
+
 ### `patient.archived`
 
 - **Constant:** `EventType.PATIENT_ARCHIVED`
@@ -731,6 +844,7 @@ Maintained by `backend/scripts/generate_catalogs.py`.
   - `patients` — `backend/app/modules/patients/service.py`
 - **Subscribers:**
   - `activity_journal`
+  - `imaging_viewer`
   - `media`
   - `periodontogram`
   - `recalls`
@@ -752,6 +866,14 @@ Maintained by `backend/scripts/generate_catalogs.py`.
   - `patients_clinical` — `backend/app/modules/patients_clinical/router.py`
 - **Subscribers:**
   - `patient_timeline`
+
+### `patient.restored`
+
+- **Constant:** `EventType.PATIENT_RESTORED`
+- **Publishers:**
+  - `patients` — `backend/app/modules/patients/service.py`
+- **Subscribers:**
+  - `media`
 
 ### `patient.updated`
 
@@ -791,11 +913,64 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Publishers:** _none in tree — declared but unused_
 - **Subscribers:** —
 
+### `payroll.period.status_changed`
+
+- **Constant:** `EventType.PAYROLL_PERIOD_STATUS_CHANGED`
+- **Publishers:**
+  - `payroll` — `backend/app/modules/payroll/service.py`
+- **Subscribers:** —
+
+### `payroll.profile.updated`
+
+- **Constant:** `EventType.PAYROLL_PROFILE_UPDATED`
+- **Publishers:**
+  - `payroll` — `backend/app/modules/payroll/service.py`
+- **Subscribers:** —
+
 ### `periodontogram.snapshot.closed`
 
 - **Constant:** `EventType.PERIODONTOGRAM_SNAPSHOT_CLOSED`
 - **Publishers:**
   - `periodontogram` — `backend/app/modules/periodontogram/service.py`
+- **Subscribers:** —
+
+### `prescription.cancelled`
+
+- **Constant:** `EventType.PRESCRIPTION_CANCELLED`
+- **Publishers:**
+  - `prescriptions` — `backend/app/modules/prescriptions/service.py`
+- **Subscribers:**
+  - `activity_journal`
+  - `patient_timeline`
+
+### `prescription.issued`
+
+- **Constant:** `EventType.PRESCRIPTION_ISSUED`
+- **Publishers:**
+  - `prescriptions` — `backend/app/modules/prescriptions/service.py`
+- **Subscribers:**
+  - `activity_journal`
+  - `patient_timeline`
+
+### `purchase_order.created`
+
+- **Constant:** `EventType.PURCHASE_ORDER_CREATED`
+- **Publishers:**
+  - `purchase_orders` — `backend/app/modules/purchase_orders/service.py`
+- **Subscribers:** —
+
+### `purchase_order.received`
+
+- **Constant:** `EventType.PURCHASE_ORDER_RECEIVED`
+- **Publishers:**
+  - `purchase_orders` — `backend/app/modules/purchase_orders/service.py`
+- **Subscribers:** —
+
+### `purchase_order.status_changed`
+
+- **Constant:** `EventType.PURCHASE_ORDER_STATUS_CHANGED`
+- **Publishers:**
+  - `purchase_orders` — `backend/app/modules/purchase_orders/service.py`
 - **Subscribers:** —
 
 ### `recall.cancelled`
@@ -834,6 +1009,14 @@ Maintained by `backend/scripts/generate_catalogs.py`.
   - `recalls` — `backend/app/modules/recalls/service.py`
 - **Subscribers:** —
 
+### `staff_attendance.clocked`
+
+- **Constant:** `EventType.STAFF_ATTENDANCE_CLOCKED`
+- **Publishers:**
+  - `staff_attendance` — `backend/app/modules/staff_attendance/service.py`
+- **Subscribers:**
+  - `activity_journal`
+
 ### `staff_task.created`
 
 - **Constant:** `EventType.STAFF_TASK_CREATED`
@@ -853,6 +1036,22 @@ Maintained by `backend/scripts/generate_catalogs.py`.
 - **Constant:** `EventType.TENANT_RESOLVED`
 - **Publishers:** _none in tree — declared but unused_
 - **Subscribers:** —
+
+### `treasury.corrected`
+
+- **Constant:** `EventType.TREASURY_CORRECTED`
+- **Publishers:**
+  - `treasury` — `backend/app/modules/treasury/service.py`
+- **Subscribers:**
+  - `activity_journal`
+
+### `treasury.transferred`
+
+- **Constant:** `EventType.TREASURY_TRANSFERRED`
+- **Publishers:**
+  - `treasury` — `backend/app/modules/treasury/service.py`
+- **Subscribers:**
+  - `activity_journal`
 
 ### `treatment.completed`
 
